@@ -186,7 +186,12 @@ def simple_encrypt(seed, input):
 
     return bytes(output)
 
+def simple_decrypt_string(input):
+    return simple_decrypt(PPPP_SIMPLE_SEED, input)
+
+def simple_encrypt_string(input):
+    return simple_encrypt(PPPP_SIMPLE_SEED, input)
+
 if __name__ == "__main__":
-    seed = PPPP_SIMPLE_SEED
-    print(simple_encrypt(seed, b"foo"))
-    print(simple_decrypt(seed, simple_encrypt(seed, b"foo")))
+    print(simple_encrypt_string(b"foo"))
+    print(simple_decrypt_string(simple_encrypt_string(b"foo")))
