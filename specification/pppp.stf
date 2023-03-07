@@ -1,0 +1,346 @@
+enum Type
+    HELLO                     = 0x00
+    HELLO_ACK                 = 0x01
+    HELLO_TO                  = 0x02
+    HELLO_TO_ACK              = 0x03
+    QUERY_DID                 = 0x08
+    QUERY_DID_ACK             = 0x09
+    DEV_LGN                   = 0x10
+    DEV_LGN_ACK               = 0x11
+    DEV_LGN_CRC               = 0x12
+    DEV_LGN_ACK_CRC           = 0x13
+    DEV_LGN_KEY               = 0x14
+    DEV_LGN_ACK_KEY           = 0x15
+    DEV_LGN_DSK               = 0x16
+    DEV_ONLINE_REQ            = 0x18
+    DEV_ONLINE_REQ_ACK        = 0x19
+    P2P_REQ                   = 0x20
+    P2P_REQ_ACK               = 0x21
+    P2P_REQ_DSK               = 0x26
+    LAN_SEARCH                = 0x30
+    LAN_NOTIFY                = 0x31
+    LAN_NOTIFY_ACK            = 0x32
+    PUNCH_TO                  = 0x40
+    PUNCH_PKT                 = 0x41
+    PUNCH_PKT_EX              = 0x41
+    P2P_RDY                   = 0x42
+    P2P_RDY_EX                = 0x42
+    P2P_RDY_ACK               = 0x43
+    RS_LGN                    = 0x60
+    RS_LGN_ACK                = 0x61
+    RS_LGN1                   = 0x62
+    RS_LGN1_ACK               = 0x63
+    LIST_REQ1                 = 0x67
+    LIST_REQ                  = 0x68
+    LIST_REQ_ACK              = 0x69
+    LIST_REQ_DSK              = 0x6A
+    RLY_HELLO                 = 0x70
+    RLY_HELLO_ACK             = 0x71
+    RLY_PORT                  = 0x72
+    RLY_PORT_ACK              = 0x73
+    RLY_PORT_KEY              = 0x74
+    RLY_PORT_ACK_KEY          = 0x75
+    RLY_BYTE_COUNT            = 0x78
+    RLY_REQ                   = 0x80
+    RLY_REQ_ACK               = 0x81
+    RLY_TO                    = 0x82
+    RLY_PKT                   = 0x83
+    RLY_RDY                   = 0x84
+    RLY_TO_ACK                = 0x85
+    RLY_SERVER_REQ            = 0x87
+    RLY_SERVER_REQ_ACK        = 0x87
+    SDEV_RUN                  = 0x90
+    SDEV_LGN                  = 0x91
+    SDEV_LGN_ACK              = 0x91
+    SDEV_LGN_CRC              = 0x92
+    SDEV_LGN_ACK_CRC          = 0x92
+    SDEV_REPORT               = 0x94
+    CONNECT_REPORT            = 0xA0
+    REPORT_REQ                = 0xA1
+    REPORT                    = 0xA2
+    DRW                       = 0xD0
+    DRW_ACK                   = 0xD1
+    PSR                       = 0xD8
+    ALIVE                     = 0xE0
+    ALIVE_ACK                 = 0xE1
+    CLOSE                     = 0xF0
+    MGM_DUMP_LOGIN_DID        = 0xF4
+    MGM_DUMP_LOGIN_DID_DETAIL = 0xF5
+    MGM_DUMP_LOGIN_DID_1      = 0xF6
+    MGM_LOG_CONTROL           = 0xF7
+    MGM_REMOTE_MANAGEMENT     = 0xF8
+    REPORT_SESSION_READY      = 0xF9
+
+    INVALID                   = 0xFF
+
+struct Host
+    pad0: zeroes<1>
+
+    # Adress family. Set to AF_INET (2)
+    afam: u8le
+
+    # Port number
+    port: u16le
+
+    # IP address
+    addr: IPv4
+
+    pad1: zeroes<8>
+
+struct Duid
+    # duid "prefix", 7 chars + NULL terminator
+    prefix: string<8>
+    ## prefix: array<u8, 8>
+
+    # device serial number
+    serial: u32
+
+    # checkcode relating to prefix+serial
+    check: string<6>
+    ## check: array<u8, 6>
+
+    # padding
+    pad0: zeroes<2>
+
+struct Xzyh
+    magic: bytes<4>
+
+struct Aabb
+    # Signature bytes. Must be 0xAABB
+    magic: u16
+
+    # Unknown field
+    unk: u16
+
+    # Command field (unknown function)
+    cmd: u32
+
+    # Length field
+    len: u32
+
+struct Dsk
+    @size = 24
+    key: bytes<24>
+
+struct Version
+    @size = 3
+    major: u8
+    minor: u8
+    patch: u8
+
+# Base message class
+struct Message
+    # Signature byte. Must be 0xF1
+    magic: u8
+
+    # Packet type
+    type: Type
+
+    # Packet length
+    len: u16
+
+struct PktDrw
+    # Signature byte. Must be 0xD1
+    magic: u8
+
+    # Channel index
+    chan: u8
+
+    # Packet index
+    index: u16
+
+struct PktDrwAck
+    # Signature byte. Must be 0xD1
+    magic: u8
+
+    # Channel index
+    chan: u8
+
+    # Number of acks following
+    count: u16
+
+    # Array of acknowledged DRW packet
+    acks: array<u16, count>
+
+struct PktPunchTo
+    host: Host
+
+struct PktHello
+    @size = 0
+
+struct PktLanSearch
+    @size = 0
+
+struct PktRlyHello
+    @size = 0
+
+struct PktAlive
+    @size = 0
+
+struct PktAliveAck
+    @size = 0
+
+struct PktClose
+    @size = 0
+
+struct PktHelloAck
+    host: Host
+
+struct PktPunchPkt
+    duid: Duid
+
+struct PktP2pRdy
+    duid: Duid
+
+struct PktP2pReq
+    duid: Duid
+    host: Host
+
+struct PktP2pReqAck
+
+struct PktP2pReqDsk
+    duid: Duid
+    host: Host
+    nat_type: u8
+    version: Version
+    dsk: Dsk
+
+struct PktP2pRdyAck
+    duid: Duid
+    host: Host
+    pad: zeroes<8>
+
+struct PktListReqDsk
+    # Device id
+    duid: Duid
+
+    # Device secret key
+    dsk: Dsk
+
+struct PktListReqAck
+    # Number of relays
+    numr: u8
+
+    # Padding
+    pad: zeroes<3>
+
+    # Available relay hosts
+    relays: array<Host, numr>
+
+struct PktDevLgnCrc
+    @crypto_type = 2
+
+    duid: Duid
+    nat_type: u8
+    version: Version
+    host: Host
+
+struct PktRlyTo
+    host: Host
+    mark: u32
+
+struct PktRlyPkt
+    mark: u32
+    duid: Duid
+
+struct PktRlyRdy
+    duid: Duid
+
+struct PktDevLgnAckCrc
+    @crypto_type = 2
+
+    pad0: zeroes<4>
+
+struct PktSessionReady
+    @size = 84
+    @crypto_type = 1
+
+    duid: Duid
+
+    handle: i32
+    max_handles: u16
+    active_handles: u16
+    startup_ticks: u16
+    b1: u8
+    b2: u8
+    b3: u8
+    b4: u8
+    pad0: zeroes<2>
+    addr_local: Host
+    addr_wan:   Host
+    addr_relay: Host
+
+parser MessageType
+    @type: Type
+
+    HELLO                     : PktHello
+    HELLO_ACK                 : PktHelloAck
+    ## HELLO_TO                  = 0x02
+    ## HELLO_TO_ACK              = 0x03
+    ## QUERY_DID                 = 0x08
+    ## QUERY_DID_ACK             = 0x09
+    ## DEV_LGN                   = 0x10
+    ## DEV_LGN_ACK               = 0x11
+    DEV_LGN_CRC               : PktDevLgnCrc
+    DEV_LGN_ACK_CRC           : PktDevLgnAckCrc
+    ## DEV_LGN_KEY               = 0x14
+    ## DEV_LGN_ACK_KEY           = 0x15
+    ## DEV_LGN_DSK               = 0x16
+    ## DEV_ONLINE_REQ            = 0x18
+    ## DEV_ONLINE_REQ_ACK        = 0x19
+    P2P_REQ                   : PktP2pReq
+    P2P_REQ_ACK               : PktP2pReqAck
+    P2P_REQ_DSK               : PktP2pReqDsk
+    LAN_SEARCH                : PktLanSearch
+    ## LAN_NOTIFY                = 0x31
+    ## LAN_NOTIFY_ACK            = 0x32
+    PUNCH_TO                  : PktPunchTo
+    PUNCH_PKT                 : PktPunchPkt
+    ## PUNCH_PKT_EX              = 0x41
+    P2P_RDY                   : PktP2pRdy
+    ## P2P_RDY_EX                = 0x42
+    P2P_RDY_ACK               : PktP2pRdyAck
+    ## RS_LGN                    = 0x60
+    ## RS_LGN_ACK                = 0x61
+    ## RS_LGN1                   = 0x62
+    ## RS_LGN1_ACK               = 0x63
+    ## LIST_REQ1                 = 0x67
+    ## LIST_REQ                  = 0x68
+    LIST_REQ_ACK              : PktListReqAck
+    LIST_REQ_DSK              : PktListReqDsk
+    RLY_HELLO                 : PktRlyHello
+    ## RLY_HELLO_ACK             = 0x71
+    ## RLY_PORT                  = 0x72
+    ## RLY_PORT_ACK              = 0x73
+    ## RLY_PORT_KEY              = 0x74
+    ## RLY_PORT_ACK_KEY          = 0x75
+    ## RLY_BYTE_COUNT            = 0x78
+    ## RLY_REQ                   = 0x80
+    ## RLY_REQ_ACK               = 0x81
+    RLY_TO                    : PktRlyTo
+    RLY_PKT                   : PktRlyPkt
+    RLY_RDY                   : PktRlyRdy
+    ## RLY_TO_ACK                = 0x85
+    ## RLY_SERVER_REQ            = 0x87
+    ## RLY_SERVER_REQ_ACK        = 0x87
+    ## SDEV_RUN                  = 0x90
+    ## SDEV_LGN                  = 0x91
+    ## SDEV_LGN_ACK              = 0x91
+    ## SDEV_LGN_CRC              = 0x92
+    ## SDEV_LGN_ACK_CRC          = 0x92
+    ## SDEV_REPORT               = 0x94
+    ## CONNECT_REPORT            = 0xA0
+    ## REPORT_REQ                = 0xA1
+    ## REPORT                    = 0xA2
+    DRW                       : PktDrw
+    DRW_ACK                   : PktDrwAck
+    ## PSR                       = 0xD8
+    ALIVE                     : PktAlive
+    ALIVE_ACK                 : PktAliveAck
+    CLOSE                     : PktClose
+    ## MGM_DUMP_LOGIN_DID        = 0xF4
+    ## MGM_DUMP_LOGIN_DID_DETAIL = 0xF5
+    ## MGM_DUMP_LOGIN_DID_1      = 0xF6
+    ## MGM_LOG_CONTROL           = 0xF7
+    ## MGM_REMOTE_MANAGEMENT     = 0xF8
+    REPORT_SESSION_READY      : PktSessionReady
