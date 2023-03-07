@@ -1,0 +1,185 @@
+## Anker MQTT protocol specification
+
+enum MqttMsgType
+    # Whole message in a single packet. No further packets in this stream
+    Single = 0xc0
+
+    # Reallocate buffer memory, *then* append to message. Unless this is used
+    # for the first packet in a series, the result is a message buffer with
+    # valid contents in the middle, but random data in the beginning.
+    MultiBegin = 0xc1
+
+    # Append to existing message buffer.
+    MultiAppend = 0xc2
+
+    # Append data, then handle complete message.
+    MultiFinish = 0xc3
+
+struct MqttMsg
+    # Magic constant: 'M'
+    m1: u8
+
+    # Magic constant: 'A'
+    m2: u8
+
+    # length of packet, including header and checksum (minimum 65).
+    size: u16
+
+    # Magic constant: 5
+    m3: u8
+
+    # Magic constant: 1
+    m4: u8
+
+    # Magic constant: 2
+    m5: u8
+
+    # Magic constant: 5
+    m6: u8
+
+    # Magic constant: 'F'
+    m7: u8
+
+    # Packet type. Only seen as 0xc0
+    packet_type: MqttMsgType
+
+    # maybe for fragmented messages?
+    # set to 1 for unfragmented messages.
+    packet_num:  u16
+
+    # `gettimeofday()` in whole seconds
+    time:        u32
+
+    # device guid, as hex string
+    device_guid: string<40>
+
+    # padding bytes, allways zero
+    padding:     zeroes<8>
+
+    ## data follows here
+    ## data:         [u8] * .size
+
+    ## xor checksum
+    ## xor:          u8
+
+enum MqttMsgType
+
+    #
+    ZZ_MQTT_CMD_EVENT_NOTIFY           = 0x3e8
+
+    #
+    ZZ_MQTT_CMD_PRINT_SCHEDULE         = 0x3a9
+
+    # Not implemented?
+    ZZ_MQTT_CMD_FIRMWARE_VERSION       = 0x3ea
+
+    # Set nozzle temperature in units of 1/100th deg C (i.e.31337 is 313.37C)
+    ZZ_MQTT_CMD_NOZZLE_TEMP            = 0x3eb
+
+    # Set hotbed temperature in units of 1/100th deg C (i.e. 1337 is 13.37C)
+    ZZ_MQTT_CMD_HOTBED_TEMP            = 0x3ec
+
+    # Set fan speed
+    ZZ_MQTT_CMD_FAN_SPEED              = 0x3ed
+
+    # ? Set print speed
+    ZZ_MQTT_CMD_PRINT_SPEED            = 0x3ee
+
+    # (probably) Perform auto-levelling procedure
+    ZZ_MQTT_CMD_AUTO_LEVELING          = 0x3ef
+
+    #
+    ZZ_MQTT_CMD_PRINT_CONTROL          = 0x3f0
+
+    # Request on-board file list (value == 1) or usb file list (value != 1)
+    ZZ_MQTT_CMD_FILE_LIST_REQUEST      = 0x3f1
+
+    #
+    ZZ_MQTT_CMD_GCODE_FILE_REQUEST     = 0x3f2
+
+    #
+    ZZ_MQTT_CMD_ALLOW_FIRMWARE_UPDATE  = 0x3f3
+
+    #
+    ZZ_MQTT_CMD_GCODE_FILE_DOWNLOAD    = 0x3fc
+
+    # ?
+    ZZ_MQTT_CMD_Z_AXIS_RECOUP          = 0x3fd
+
+    # (probably) run the extrusion stepper
+    ZZ_MQTT_CMD_EXTRUSION_STEP         = 0x3fe
+
+    # maybe related to filament change?
+    ZZ_MQTT_CMD_ENTER_OR_QUIT_MATERIEL = 0x3ff
+
+    #
+    ZZ_MQTT_CMD_MOVE_STEP              = 0x400
+
+    #
+    ZZ_MQTT_CMD_MOVE_DIRECTION         = 0x401
+
+    # (probably) Move to home position
+    ZZ_MQTT_CMD_MOVE_ZERO              = 0x402
+
+    #
+    ZZ_MQTT_CMD_APP_QUERY_STATUS       = 0x403
+
+    #
+    ZZ_MQTT_CMD_ONLINE_NOTIFY          = 0x404
+
+    #
+    ZZ_MQTT_CMD_APP_RECOVER_FACTORY    = 0x405
+
+    # (probably) Enable/disable Bluetooth Low Energy ("ble") radio
+    ZZ_MQTT_CMD_BLE_ONOFF              = 0x407
+
+    # (probably) Delete specified gcode file
+    ZZ_MQTT_CMD_DELETE_GCODE_FILE      = 0x408
+
+    # ?
+    ZZ_MQTT_CMD_RESET_GCODE_PARAM      = 0x409
+
+    #
+    ZZ_MQTT_CMD_DEVICE_NAME_SET        = 0x40a
+
+    #
+    ZZ_MQTT_CMD_DEVICE_LOG_UPLOAD      = 0x40b
+
+    # ?
+    ZZ_MQTT_CMD_ONOFF_MODAL            = 0x40c
+
+    # ?
+    ZZ_MQTT_CMD_MOTOR_LOCK             = 0x40d
+
+    # ?
+    ZZ_MQTT_CMD_PREHEAT_CONFIG         = 0x40e
+
+    #
+    ZZ_MQTT_CMD_BREAK_POINT            = 0x40f
+
+    #
+    ZZ_MQTT_CMD_AI_CALIB               = 0x410
+
+    # ?
+    ZZ_MQTT_CMD_VIDEO_ONOFF            = 0x411
+
+    # ?
+    ZZ_MQTT_CMD_ADVANCED_PARAMETERS    = 0x412
+
+    # Run custom GCode command
+    ZZ_MQTT_CMD_GCODE_COMMAND          = 0x413
+
+    #
+    ZZ_MQTT_CMD_PREVIEW_IMAGE_URL      = 0x414
+
+    # ?
+    ZZ_MQTT_CMD_SYSTEM_CHECK           = 0x419
+
+    # ?
+    ZZ_MQTT_CMD_AI_SWITCH              = 0x41a
+
+    # ?
+    ZZ_STEST_CMD_GCODE_TRANSPOR        = 0x7e2
+
+    #
+    ZZ_MQTT_CMD_ALEXA_MSG              = 0xbb8
