@@ -3,7 +3,7 @@ ${python.header()}
 
 import enum
 from dataclasses import dataclass
-from amtypes import *
+from .amtypes import *
 
 % for enum in _mqtt:
 % if enum.expr == "enum":

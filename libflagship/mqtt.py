@@ -7,7 +7,7 @@
 
 import enum
 from dataclasses import dataclass
-from amtypes import *
+from .amtypes import *
 
 class MqttMsgType(enum.IntEnum):
     Single      = 0xc0 # Whole message in a single packet. No further packets in this stream
