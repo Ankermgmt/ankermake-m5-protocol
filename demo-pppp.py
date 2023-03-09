@@ -3,7 +3,6 @@ from rich import print
 
 # binary message to parse
 input = b'\xf1C\x00,EUPRAKM\x00\x00\x0009ABCDE\x00\x00\x00\x00\x02iz(\x1e\x14\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-
 print(f"input:   {input}")
 
 # parsing a message into structured data
