@@ -57,74 +57,137 @@ class IPv4(str):
         return socket.inet_aton(self)[::-1]
 
 class IntType(int):
+    pass
 
-    size: int
-    desc: str
+class i8be(IntType):
+    size = 1
 
     @classmethod
     def parse(cls, p):
-        return cls(struct.unpack(cls.desc, p[:cls.size])[0]), p[cls.size:]
+        return cls(struct.unpack(">b", p[:cls.size])[0]), p[cls.size:]
 
     def pack(self):
-        return struct.pack(self.desc, self)
-
-class i8be(IntType):
-    desc = ">b"
-    size = 1
+        return struct.pack(">b", self)
 
 class i8le(IntType):
-    desc = "<b"
     size = 1
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("<b", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack("<b", self)
 
 i8 = i8be
 
 class u8be(IntType):
-    desc = ">B"
     size = 1
 
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack(">B", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack(">B", self)
+
 class u8le(IntType):
-    desc = "<B"
     size = 1
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("<B", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack("<B", self)
 
 u8 = u8be
 
 class i16be(IntType):
-    desc = ">h"
     size = 2
 
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack(">h", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack(">h", self)
+
 class i16le(IntType):
-    desc = "<h"
     size = 2
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("<h", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack("<h", self)
 
 i16 = i16be
 
 class u16be(IntType):
-    desc = ">H"
     size = 2
 
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack(">H", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack(">H", self)
+
 class u16le(IntType):
-    desc = "<H"
     size = 2
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("<H", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack("<H", self)
 
 u16 = u16be
 
 class i32be(IntType):
-    desc = ">i"
     size = 4
 
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack(">i", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack(">i", self)
+
 class i32le(IntType):
-    desc = "<i"
     size = 4
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("<i", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack("<i", self)
 
 i32 = i32be
 
 class u32be(IntType):
-    desc = ">I"
     size = 4
 
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack(">I", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack(">I", self)
+
 class u32le(IntType):
-    desc = "<I"
     size = 4
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("<I", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack("<I", self)
 
 u32 = u32be
 

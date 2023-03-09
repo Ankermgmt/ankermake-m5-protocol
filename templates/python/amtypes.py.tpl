@@ -53,16 +53,7 @@ class IPv4(str):
         return socket.inet_aton(self)[::-1]
 
 class IntType(int):
-
-    size: int
-    desc: str
-
-    @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack(cls.desc, p[:cls.size])[0]), p[cls.size:]
-
-    def pack(self):
-        return struct.pack(self.desc, self)
+    pass
 
 %for name, desc, size in [ \
                             ("i8", "b", 1), \
@@ -73,12 +64,24 @@ class IntType(int):
                             ("u32", "I", 4), \
                            ]:
 class ${name}be(IntType):
-    desc = ">${desc}"
     size = ${size}
 
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack(">${desc}", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack(">${desc}", self)
+
 class ${name}le(IntType):
-    desc = "<${desc}"
     size = ${size}
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("<${desc}", p[:cls.size])[0]), p[cls.size:]
+
+    def pack(self):
+        return struct.pack("<${desc}", self)
 
 ${name} = ${name}be
 
