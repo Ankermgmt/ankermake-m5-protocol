@@ -24,10 +24,64 @@ etc, from the same `.stf` source files:
  - [MQTT specification (stf)](specification/mqtt.stf)
 
 libflagship
------------
+===========
 
 A python library (`libflagship`) is provided in this repository, which
 implements the `mqtt` and `pppp` protocols used by Ankermake M5.
+
+Let's take a look at [demo-pppp.py](demo-pppp.py), demonstrating basic usage of
+`libflagship` for working with PPPP data:
+
+```python
+import libflagship.pppp as pppp
+from rich import print
+
+# binary message to parse
+input = b'\xf1C\x00,EUPRAKM\x00\x00\x0009ABCDE\x00\x00\x00\x00\x02iz(\x1e\x14\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
+print(f"input:   {input}")
+
+# parsing a message into structured data
+msg, tail = pppp.Message.parse(input)
+print(f"decoded: {msg}")
+
+# packing a structured message into binary output
+output = msg.pack()
+print(f"encoded: {output}")
+
+# the output must match our original input
+assert input == output
+```
+
+The expected output from running this script is:
+
+```
+input:   b'\xf1C\x00,EUPRAKM\x00\x00\x0009ABCDE\x00\x00\x00\x00\x02iz(\x1e\x14\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+decoded: PktP2pRdyAck(duid=Duid(prefix='EUPRAKM', serial=12345, check='ABCDE'), host=Host(afam=2, port=31337, addr='10.20.30.40'))
+encoded: b'\xf1C\x00,EUPRAKM\x00\x00\x0009ABCDE\x00\x00\x00\x00\x02iz(\x1e\x14\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+```
+
+First line shows the binary input data. The second line shows the structured
+data, which was parsed from the input data.
+
+Finally, the last line demonstrates the serialized form of the structured data,
+demonstrating that the output is identical to the input.
+
+Full PPPP packets can also be constructed entirely in python, like so:
+
+```python
+# import all pppp names into top-level scope, to avoid having to prefix everything with `pppp.`
+from libflagship.pppp import *
+
+# construct message from python. notice how the syntax is identical to the printed output from the demo program above.
+pkt = PktP2pRdyAck(duid=Duid(prefix='EUPRAKM', serial=12345, check='ABCDE'), host=Host(afam=2, port=31337, addr='10.20.30.40'))
+
+# pack structured message back to binary data
+data = pkt.pack()
+```
+
+Development
+-----------
 
 Some files in this library are auto-generated from the `.stf` sources and
 templates. These auto-generated files will have the following header:
