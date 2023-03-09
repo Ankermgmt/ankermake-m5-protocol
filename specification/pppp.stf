@@ -139,7 +139,7 @@ struct Message
     # Packet length
     len: u16
 
-struct PktDrw
+packet PktDrw
     # Signature byte. Must be 0xD1
     magic: u8
 
@@ -149,7 +149,7 @@ struct PktDrw
     # Packet index
     index: u16
 
-struct PktDrwAck
+packet PktDrwAck
     # Signature byte. Must be 0xD1
     magic: u8
 
@@ -162,62 +162,62 @@ struct PktDrwAck
     # Array of acknowledged DRW packet
     acks: array<u16, count>
 
-struct PktPunchTo
+packet PktPunchTo
     host: Host
 
-struct PktHello
+packet PktHello
     @size = 0
 
-struct PktLanSearch
+packet PktLanSearch
     @size = 0
 
-struct PktRlyHello
+packet PktRlyHello
     @size = 0
 
-struct PktAlive
+packet PktAlive
     @size = 0
 
-struct PktAliveAck
+packet PktAliveAck
     @size = 0
 
-struct PktClose
+packet PktClose
     @size = 0
 
-struct PktHelloAck
+packet PktHelloAck
     host: Host
 
-struct PktPunchPkt
+packet PktPunchPkt
     duid: Duid
 
-struct PktP2pRdy
+packet PktP2pRdy
     duid: Duid
 
-struct PktP2pReq
+packet PktP2pReq
     duid: Duid
     host: Host
 
-struct PktP2pReqAck
+packet PktP2pReqAck
 
-struct PktP2pReqDsk
+packet PktP2pReqDsk
     duid: Duid
     host: Host
     nat_type: u8
     version: Version
     dsk: Dsk
 
-struct PktP2pRdyAck
+packet PktP2pRdyAck
     duid: Duid
     host: Host
     pad: zeroes<8>
 
-struct PktListReqDsk
+packet PktListReqDsk
     # Device id
     duid: Duid
 
     # Device secret key
     dsk: Dsk
 
-struct PktListReqAck
+packet PktListReqAck
     # Number of relays
     numr: u8
 
@@ -227,7 +227,7 @@ struct PktListReqAck
     # Available relay hosts
     relays: array<Host, numr>
 
-struct PktDevLgnCrc
+packet PktDevLgnCrc
     @crypto_type = 2
 
     duid: Duid
@@ -235,23 +235,23 @@ struct PktDevLgnCrc
     version: Version
     host: Host
 
-struct PktRlyTo
+packet PktRlyTo
     host: Host
     mark: u32
 
-struct PktRlyPkt
+packet PktRlyPkt
     mark: u32
     duid: Duid
 
-struct PktRlyRdy
+packet PktRlyRdy
     duid: Duid
 
-struct PktDevLgnAckCrc
+packet PktDevLgnAckCrc
     @crypto_type = 2
 
     pad0: zeroes<4>
 
-struct PktSessionReady
+packet PktSessionReady
     @size = 84
     @crypto_type = 1
 

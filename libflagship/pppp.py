@@ -90,6 +90,25 @@ class Type(enum.IntEnum):
         return cls(struct.unpack("B", p[:1])[0]), p[1:]
 
 @dataclass
+class Message:
+
+    type: Type = field(repr=False, init=False)
+
+    @classmethod
+    def parse(cls, m):
+        magic, type, size = struct.unpack(">BBH", m[:4])
+        assert magic == 0xF1
+        type = Type(type)
+        p = m[4:4+size]
+        if type in MessageTypeTable:
+            return MessageTypeTable[type].parse(p)
+        else:
+            raise ValueError(f"unknown message type {type:02x}")
+
+    def pack(self, p):
+        return struct.pack(">BBH", 0xF1, self.type, len(p)) + p
+
+@dataclass
 class Host:
     pad0 : bytes = field(repr=False) # unknown
     afam : u8le # Adress family. Set to AF_INET (2)
@@ -99,11 +118,13 @@ class Host:
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         pad0, p = Zeroes.parse(p, 1)
         afam, p = u8le.parse(p)
         port, p = u16le.parse(p)
         addr, p = IPv4.parse(p)
         pad1, p = Zeroes.parse(p, 8)
+
         return cls(pad0, afam, port, addr, pad1), p
 
     def pack(self):
@@ -112,6 +133,8 @@ class Host:
         p += self.port.pack()
         p += self.addr.pack()
         p += Zeroes.pack(self.pad1, 8)
+
+        # not encrypted
         return p
 
 @dataclass
@@ -123,10 +146,12 @@ class Duid:
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         prefix, p = String.parse(p, 8)
         serial, p = u32.parse(p)
         check, p = String.parse(p, 6)
         pad0, p = Zeroes.parse(p, 2)
+
         return cls(prefix, serial, check, pad0), p
 
     def pack(self):
@@ -134,6 +159,8 @@ class Duid:
         p += self.serial.pack()
         p += String.pack(self.check, 6)
         p += Zeroes.pack(self.pad0, 2)
+
+        # not encrypted
         return p
 
 @dataclass
@@ -142,11 +169,15 @@ class Xzyh:
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         magic, p = bytes.parse(p, 4)
+
         return cls(magic), p
 
     def pack(self):
         p  = self.magic.pack()
+
+        # not encrypted
         return p
 
 @dataclass
@@ -158,10 +189,12 @@ class Aabb:
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         magic, p = u16.parse(p)
         unk, p = u16.parse(p)
         cmd, p = u32.parse(p)
         len, p = u32.parse(p)
+
         return cls(magic, unk, cmd, len), p
 
     def pack(self):
@@ -169,6 +202,8 @@ class Aabb:
         p += self.unk.pack()
         p += self.cmd.pack()
         p += self.len.pack()
+
+        # not encrypted
         return p
 
 @dataclass
@@ -177,11 +212,15 @@ class Dsk:
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         key, p = bytes.parse(p, 24)
+
         return cls(key), p
 
     def pack(self):
         p  = self.key.pack()
+
+        # not encrypted
         return p
 
 @dataclass
@@ -192,38 +231,49 @@ class Version:
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         major, p = u8.parse(p)
         minor, p = u8.parse(p)
         patch, p = u8.parse(p)
+
         return cls(major, minor, patch), p
 
     def pack(self):
         p  = self.major.pack()
         p += self.minor.pack()
         p += self.patch.pack()
+
+        # not encrypted
         return p
 
+
 @dataclass
-class PktDrw:
+class PktDrw(Message):
+    type = Type.DRW
     magic : u8 # Signature byte. Must be 0xD1
     chan  : u8 # Channel index
     index : u16 # Packet index
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         magic, p = u8.parse(p)
         chan, p = u8.parse(p)
         index, p = u16.parse(p)
+
         return cls(magic, chan, index), p
 
     def pack(self):
         p  = self.magic.pack()
         p += self.chan.pack()
         p += self.index.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktDrwAck:
+class PktDrwAck(Message):
+    type = Type.DRW_ACK
     magic : u8 # Signature byte. Must be 0xD1
     chan  : u8 # Channel index
     count : u16 # Number of acks following
@@ -231,10 +281,12 @@ class PktDrwAck:
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         magic, p = u8.parse(p)
         chan, p = u8.parse(p)
         count, p = u16.parse(p)
         acks, p = Array.parse(p, u16, count)
+
         return cls(magic, chan, count, acks), p
 
     def pack(self):
@@ -242,155 +294,218 @@ class PktDrwAck:
         p += self.chan.pack()
         p += self.count.pack()
         p += Array.pack(self.acks, u16)
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktPunchTo:
+class PktPunchTo(Message):
+    type = Type.PUNCH_TO
     host : Host # unknown
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         host, p = Host.parse(p)
+
         return cls(host), p
 
     def pack(self):
         p  = self.host.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktHello:
+class PktHello(Message):
+    type = Type.HELLO
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
+
         return cls(), p
 
     def pack(self):
         p = b""
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktLanSearch:
+class PktLanSearch(Message):
+    type = Type.LAN_SEARCH
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
+
         return cls(), p
 
     def pack(self):
         p = b""
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktRlyHello:
+class PktRlyHello(Message):
+    type = Type.RLY_HELLO
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
+
         return cls(), p
 
     def pack(self):
         p = b""
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktAlive:
+class PktAlive(Message):
+    type = Type.ALIVE
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
+
         return cls(), p
 
     def pack(self):
         p = b""
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktAliveAck:
+class PktAliveAck(Message):
+    type = Type.ALIVE_ACK
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
+
         return cls(), p
 
     def pack(self):
         p = b""
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktClose:
+class PktClose(Message):
+    type = Type.CLOSE
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
+
         return cls(), p
 
     def pack(self):
         p = b""
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktHelloAck:
+class PktHelloAck(Message):
+    type = Type.HELLO_ACK
     host : Host # unknown
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         host, p = Host.parse(p)
+
         return cls(host), p
 
     def pack(self):
         p  = self.host.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktPunchPkt:
+class PktPunchPkt(Message):
+    type = Type.PUNCH_PKT
     duid : Duid # unknown
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         duid, p = Duid.parse(p)
+
         return cls(duid), p
 
     def pack(self):
         p  = self.duid.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktP2pRdy:
+class PktP2pRdy(Message):
+    type = Type.P2P_RDY
     duid : Duid # unknown
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         duid, p = Duid.parse(p)
+
         return cls(duid), p
 
     def pack(self):
         p  = self.duid.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktP2pReq:
+class PktP2pReq(Message):
+    type = Type.P2P_REQ
     duid : Duid # unknown
     host : Host # unknown
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         duid, p = Duid.parse(p)
         host, p = Host.parse(p)
+
         return cls(duid, host), p
 
     def pack(self):
         p  = self.duid.pack()
         p += self.host.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktP2pReqAck:
+class PktP2pReqAck(Message):
+    type = Type.P2P_REQ_ACK
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
+
         return cls(), p
 
     def pack(self):
         p = b""
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktP2pReqDsk:
+class PktP2pReqDsk(Message):
+    type = Type.P2P_REQ_DSK
     duid     : Duid # unknown
     host     : Host # unknown
     nat_type : u8 # unknown
@@ -399,11 +514,13 @@ class PktP2pReqDsk:
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         duid, p = Duid.parse(p)
         host, p = Host.parse(p)
         nat_type, p = u8.parse(p)
         version, p = Version.parse(p)
         dsk, p = Dsk.parse(p)
+
         return cls(duid, host, nat_type, version, dsk), p
 
     def pack(self):
@@ -412,64 +529,82 @@ class PktP2pReqDsk:
         p += self.nat_type.pack()
         p += self.version.pack()
         p += self.dsk.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktP2pRdyAck:
+class PktP2pRdyAck(Message):
+    type = Type.P2P_RDY_ACK
     duid : Duid # unknown
     host : Host # unknown
     pad  : bytes = field(repr=False) # unknown
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         duid, p = Duid.parse(p)
         host, p = Host.parse(p)
         pad, p = Zeroes.parse(p, 8)
+
         return cls(duid, host, pad), p
 
     def pack(self):
         p  = self.duid.pack()
         p += self.host.pack()
         p += Zeroes.pack(self.pad, 8)
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktListReqDsk:
+class PktListReqDsk(Message):
+    type = Type.LIST_REQ_DSK
     duid : Duid # Device id
     dsk  : Dsk # Device secret key
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         duid, p = Duid.parse(p)
         dsk, p = Dsk.parse(p)
+
         return cls(duid, dsk), p
 
     def pack(self):
         p  = self.duid.pack()
         p += self.dsk.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktListReqAck:
+class PktListReqAck(Message):
+    type = Type.LIST_REQ_ACK
     numr   : u8 # Number of relays
     pad    : bytes = field(repr=False) # Padding
     relays : list[Host] # Available relay hosts
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         numr, p = u8.parse(p)
         pad, p = Zeroes.parse(p, 3)
         relays, p = Array.parse(p, Host, numr)
+
         return cls(numr, pad, relays), p
 
     def pack(self):
         p  = self.numr.pack()
         p += Zeroes.pack(self.pad, 3)
         p += Array.pack(self.relays, Host)
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktDevLgnCrc:
+class PktDevLgnCrc(Message):
+    type = Type.DEV_LGN_CRC
     duid     : Duid # unknown
     nat_type : u8 # unknown
     version  : Version # unknown
@@ -482,6 +617,7 @@ class PktDevLgnCrc:
         nat_type, p = u8.parse(p)
         version, p = Version.parse(p)
         host, p = Host.parse(p)
+
         return cls(duid, nat_type, version, host), p
 
     def pack(self):
@@ -489,69 +625,91 @@ class PktDevLgnCrc:
         p += self.nat_type.pack()
         p += self.version.pack()
         p += self.host.pack()
-        return crypto_curse_string(p)
+
+        p = crypto_curse_string(p)
+        return super().pack(p)
 
 @dataclass
-class PktRlyTo:
+class PktRlyTo(Message):
+    type = Type.RLY_TO
     host : Host # unknown
     mark : u32 # unknown
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         host, p = Host.parse(p)
         mark, p = u32.parse(p)
+
         return cls(host, mark), p
 
     def pack(self):
         p  = self.host.pack()
         p += self.mark.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktRlyPkt:
+class PktRlyPkt(Message):
+    type = Type.RLY_PKT
     mark : u32 # unknown
     duid : Duid # unknown
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         mark, p = u32.parse(p)
         duid, p = Duid.parse(p)
+
         return cls(mark, duid), p
 
     def pack(self):
         p  = self.mark.pack()
         p += self.duid.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktRlyRdy:
+class PktRlyRdy(Message):
+    type = Type.RLY_RDY
     duid : Duid # unknown
 
     @classmethod
     def parse(cls, p):
+        # not encrypted
         duid, p = Duid.parse(p)
+
         return cls(duid), p
 
     def pack(self):
         p  = self.duid.pack()
-        return p
+
+        # not encrypted
+        return super().pack(p)
 
 @dataclass
-class PktDevLgnAckCrc:
+class PktDevLgnAckCrc(Message):
+    type = Type.DEV_LGN_ACK_CRC
     pad0 : bytes = field(repr=False) # unknown
 
     @classmethod
     def parse(cls, p):
         p = crypto_decurse_string(p)
         pad0, p = Zeroes.parse(p, 4)
+
         return cls(pad0), p
 
     def pack(self):
         p  = Zeroes.pack(self.pad0, 4)
-        return crypto_curse_string(p)
+
+        p = crypto_curse_string(p)
+        return super().pack(p)
 
 @dataclass
-class PktSessionReady:
+class PktSessionReady(Message):
+    type = Type.REPORT_SESSION_READY
     duid           : Duid # unknown
     handle         : i32 # unknown
     max_handles    : u16 # unknown
@@ -582,6 +740,7 @@ class PktSessionReady:
         addr_local, p = Host.parse(p)
         addr_wan, p = Host.parse(p)
         addr_relay, p = Host.parse(p)
+
         return cls(duid, handle, max_handles, active_handles, startup_ticks, b1, b2, b3, b4, pad0, addr_local, addr_wan, addr_relay), p
 
     def pack(self):
@@ -598,7 +757,9 @@ class PktSessionReady:
         p += self.addr_local.pack()
         p += self.addr_wan.pack()
         p += self.addr_relay.pack()
-        return simple_encrypt_string(p)
+
+        p = simple_encrypt_string(p)
+        return super().pack(p)
 
 
 MessageTypeTable = {
@@ -628,50 +789,3 @@ MessageTypeTable = {
     Type.REPORT_SESSION_READY : PktSessionReady,
 }
 
-MessageTypeRevTable = {
-    "PktHello": Type.HELLO,
-    "PktHelloAck": Type.HELLO_ACK,
-    "PktDevLgnCrc": Type.DEV_LGN_CRC,
-    "PktDevLgnAckCrc": Type.DEV_LGN_ACK_CRC,
-    "PktP2pReq": Type.P2P_REQ,
-    "PktP2pReqAck": Type.P2P_REQ_ACK,
-    "PktP2pReqDsk": Type.P2P_REQ_DSK,
-    "PktLanSearch": Type.LAN_SEARCH,
-    "PktPunchTo": Type.PUNCH_TO,
-    "PktPunchPkt": Type.PUNCH_PKT,
-    "PktP2pRdy": Type.P2P_RDY,
-    "PktP2pRdyAck": Type.P2P_RDY_ACK,
-    "PktListReqAck": Type.LIST_REQ_ACK,
-    "PktListReqDsk": Type.LIST_REQ_DSK,
-    "PktRlyHello": Type.RLY_HELLO,
-    "PktRlyTo": Type.RLY_TO,
-    "PktRlyPkt": Type.RLY_PKT,
-    "PktRlyRdy": Type.RLY_RDY,
-    "PktDrw": Type.DRW,
-    "PktDrwAck": Type.DRW_ACK,
-    "PktAlive": Type.ALIVE,
-    "PktAliveAck": Type.ALIVE_ACK,
-    "PktClose": Type.CLOSE,
-    "PktSessionReady": Type.REPORT_SESSION_READY,
-}
-
-class Message:
-
-    @classmethod
-    def parse(cls, m):
-        magic, typ, size = struct.unpack(">BBH", m[:4])
-        assert magic == 0xF1
-        typ = Type(typ)
-        p = m[4:4+size]
-        if typ in MessageTypeTable:
-            return MessageTypeTable[typ].parse(p)
-        else:
-            raise ValueError(f"unknown message type {typ:02x}")
-
-    @staticmethod
-    def pack(pkt):
-        name = type(pkt).__name__
-        if not name in MessageTypeRevTable:
-            raise ValueError(f"unknown message type {type(pkt)}")
-        p = pkt.pack()
-        return struct.pack(">BBH", 0xF1, MessageTypeRevTable[name], len(p)) + p
