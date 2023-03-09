@@ -45,11 +45,15 @@ To maintain these files, edit the template sources in `templates/python/*.tpl`
 instead:
 
 ```sh
-$EDITOR templates/python/foo.tpl
+# [first time only] install transwarp compiler tools
+make install-tools
+
+# edit input template
+$EDITOR templates/python/pppp.tpl
 
 # show diff between existing auto-generated file, and new result
 make diff
 
-# save new output
+# ...or, save new output
 make update
 ```
