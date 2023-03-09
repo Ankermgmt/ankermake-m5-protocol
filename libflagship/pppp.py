@@ -110,11 +110,11 @@ class Message:
 
 @dataclass
 class Host:
-    pad0 : bytes = field(repr=False) # unknown
+    pad0 : bytes = field(repr=False, kw_only=True, default='\x00' * 1) # unknown
     afam : u8le # Adress family. Set to AF_INET (2)
     port : u16le # Port number
     addr : IPv4 # IP address
-    pad1 : bytes = field(repr=False) # unknown
+    pad1 : bytes = field(repr=False, kw_only=True, default='\x00' * 8) # unknown
 
     @classmethod
     def parse(cls, p):
@@ -125,13 +125,13 @@ class Host:
         addr, p = IPv4.parse(p)
         pad1, p = Zeroes.parse(p, 8)
 
-        return cls(pad0, afam, port, addr, pad1), p
+        return cls(pad0=pad0, afam=afam, port=port, addr=addr, pad1=pad1), p
 
     def pack(self):
         p  = Zeroes.pack(self.pad0, 1)
-        p += self.afam.pack()
-        p += self.port.pack()
-        p += self.addr.pack()
+        p += u8le.pack(self.afam)
+        p += u16le.pack(self.port)
+        p += IPv4.pack(self.addr)
         p += Zeroes.pack(self.pad1, 8)
 
         # not encrypted
@@ -142,7 +142,7 @@ class Duid:
     prefix : bytes # duid "prefix", 7 chars + NULL terminator
     serial : u32 # device serial number
     check  : bytes # checkcode relating to prefix+serial
-    pad0   : bytes = field(repr=False) # padding
+    pad0   : bytes = field(repr=False, kw_only=True, default='\x00' * 2) # padding
 
     @classmethod
     def parse(cls, p):
@@ -152,11 +152,11 @@ class Duid:
         check, p = String.parse(p, 6)
         pad0, p = Zeroes.parse(p, 2)
 
-        return cls(prefix, serial, check, pad0), p
+        return cls(prefix=prefix, serial=serial, check=check, pad0=pad0), p
 
     def pack(self):
         p  = String.pack(self.prefix, 8)
-        p += self.serial.pack()
+        p += u32.pack(self.serial)
         p += String.pack(self.check, 6)
         p += Zeroes.pack(self.pad0, 2)
 
@@ -172,10 +172,10 @@ class Xzyh:
         # not encrypted
         magic, p = bytes.parse(p, 4)
 
-        return cls(magic), p
+        return cls(magic=magic), p
 
     def pack(self):
-        p  = self.magic.pack()
+        p  = bytes.pack(self.magic)
 
         # not encrypted
         return p
@@ -195,13 +195,13 @@ class Aabb:
         cmd, p = u32.parse(p)
         len, p = u32.parse(p)
 
-        return cls(magic, unk, cmd, len), p
+        return cls(magic=magic, unk=unk, cmd=cmd, len=len), p
 
     def pack(self):
-        p  = self.magic.pack()
-        p += self.unk.pack()
-        p += self.cmd.pack()
-        p += self.len.pack()
+        p  = u16.pack(self.magic)
+        p += u16.pack(self.unk)
+        p += u32.pack(self.cmd)
+        p += u32.pack(self.len)
 
         # not encrypted
         return p
@@ -215,10 +215,10 @@ class Dsk:
         # not encrypted
         key, p = bytes.parse(p, 24)
 
-        return cls(key), p
+        return cls(key=key), p
 
     def pack(self):
-        p  = self.key.pack()
+        p  = bytes.pack(self.key)
 
         # not encrypted
         return p
@@ -236,12 +236,12 @@ class Version:
         minor, p = u8.parse(p)
         patch, p = u8.parse(p)
 
-        return cls(major, minor, patch), p
+        return cls(major=major, minor=minor, patch=patch), p
 
     def pack(self):
-        p  = self.major.pack()
-        p += self.minor.pack()
-        p += self.patch.pack()
+        p  = u8.pack(self.major)
+        p += u8.pack(self.minor)
+        p += u8.pack(self.patch)
 
         # not encrypted
         return p
@@ -261,12 +261,12 @@ class PktDrw(Message):
         chan, p = u8.parse(p)
         index, p = u16.parse(p)
 
-        return cls(magic, chan, index), p
+        return cls(magic=magic, chan=chan, index=index), p
 
     def pack(self):
-        p  = self.magic.pack()
-        p += self.chan.pack()
-        p += self.index.pack()
+        p  = u8.pack(self.magic)
+        p += u8.pack(self.chan)
+        p += u16.pack(self.index)
 
         # not encrypted
         return super().pack(p)
@@ -287,12 +287,12 @@ class PktDrwAck(Message):
         count, p = u16.parse(p)
         acks, p = Array.parse(p, u16, count)
 
-        return cls(magic, chan, count, acks), p
+        return cls(magic=magic, chan=chan, count=count, acks=acks), p
 
     def pack(self):
-        p  = self.magic.pack()
-        p += self.chan.pack()
-        p += self.count.pack()
+        p  = u8.pack(self.magic)
+        p += u8.pack(self.chan)
+        p += u16.pack(self.count)
         p += Array.pack(self.acks, u16)
 
         # not encrypted
@@ -308,10 +308,10 @@ class PktPunchTo(Message):
         # not encrypted
         host, p = Host.parse(p)
 
-        return cls(host), p
+        return cls(host=host), p
 
     def pack(self):
-        p  = self.host.pack()
+        p  = Host.pack(self.host)
 
         # not encrypted
         return super().pack(p)
@@ -422,10 +422,10 @@ class PktHelloAck(Message):
         # not encrypted
         host, p = Host.parse(p)
 
-        return cls(host), p
+        return cls(host=host), p
 
     def pack(self):
-        p  = self.host.pack()
+        p  = Host.pack(self.host)
 
         # not encrypted
         return super().pack(p)
@@ -440,10 +440,10 @@ class PktPunchPkt(Message):
         # not encrypted
         duid, p = Duid.parse(p)
 
-        return cls(duid), p
+        return cls(duid=duid), p
 
     def pack(self):
-        p  = self.duid.pack()
+        p  = Duid.pack(self.duid)
 
         # not encrypted
         return super().pack(p)
@@ -458,10 +458,10 @@ class PktP2pRdy(Message):
         # not encrypted
         duid, p = Duid.parse(p)
 
-        return cls(duid), p
+        return cls(duid=duid), p
 
     def pack(self):
-        p  = self.duid.pack()
+        p  = Duid.pack(self.duid)
 
         # not encrypted
         return super().pack(p)
@@ -478,11 +478,11 @@ class PktP2pReq(Message):
         duid, p = Duid.parse(p)
         host, p = Host.parse(p)
 
-        return cls(duid, host), p
+        return cls(duid=duid, host=host), p
 
     def pack(self):
-        p  = self.duid.pack()
-        p += self.host.pack()
+        p  = Duid.pack(self.duid)
+        p += Host.pack(self.host)
 
         # not encrypted
         return super().pack(p)
@@ -521,14 +521,14 @@ class PktP2pReqDsk(Message):
         version, p = Version.parse(p)
         dsk, p = Dsk.parse(p)
 
-        return cls(duid, host, nat_type, version, dsk), p
+        return cls(duid=duid, host=host, nat_type=nat_type, version=version, dsk=dsk), p
 
     def pack(self):
-        p  = self.duid.pack()
-        p += self.host.pack()
-        p += self.nat_type.pack()
-        p += self.version.pack()
-        p += self.dsk.pack()
+        p  = Duid.pack(self.duid)
+        p += Host.pack(self.host)
+        p += u8.pack(self.nat_type)
+        p += Version.pack(self.version)
+        p += Dsk.pack(self.dsk)
 
         # not encrypted
         return super().pack(p)
@@ -538,7 +538,7 @@ class PktP2pRdyAck(Message):
     type = Type.P2P_RDY_ACK
     duid : Duid # unknown
     host : Host # unknown
-    pad  : bytes = field(repr=False) # unknown
+    pad  : bytes = field(repr=False, kw_only=True, default='\x00' * 8) # unknown
 
     @classmethod
     def parse(cls, p):
@@ -547,11 +547,11 @@ class PktP2pRdyAck(Message):
         host, p = Host.parse(p)
         pad, p = Zeroes.parse(p, 8)
 
-        return cls(duid, host, pad), p
+        return cls(duid=duid, host=host, pad=pad), p
 
     def pack(self):
-        p  = self.duid.pack()
-        p += self.host.pack()
+        p  = Duid.pack(self.duid)
+        p += Host.pack(self.host)
         p += Zeroes.pack(self.pad, 8)
 
         # not encrypted
@@ -569,11 +569,11 @@ class PktListReqDsk(Message):
         duid, p = Duid.parse(p)
         dsk, p = Dsk.parse(p)
 
-        return cls(duid, dsk), p
+        return cls(duid=duid, dsk=dsk), p
 
     def pack(self):
-        p  = self.duid.pack()
-        p += self.dsk.pack()
+        p  = Duid.pack(self.duid)
+        p += Dsk.pack(self.dsk)
 
         # not encrypted
         return super().pack(p)
@@ -582,7 +582,7 @@ class PktListReqDsk(Message):
 class PktListReqAck(Message):
     type = Type.LIST_REQ_ACK
     numr   : u8 # Number of relays
-    pad    : bytes = field(repr=False) # Padding
+    pad    : bytes = field(repr=False, kw_only=True, default='\x00' * 3) # Padding
     relays : list[Host] # Available relay hosts
 
     @classmethod
@@ -592,10 +592,10 @@ class PktListReqAck(Message):
         pad, p = Zeroes.parse(p, 3)
         relays, p = Array.parse(p, Host, numr)
 
-        return cls(numr, pad, relays), p
+        return cls(numr=numr, pad=pad, relays=relays), p
 
     def pack(self):
-        p  = self.numr.pack()
+        p  = u8.pack(self.numr)
         p += Zeroes.pack(self.pad, 3)
         p += Array.pack(self.relays, Host)
 
@@ -618,13 +618,13 @@ class PktDevLgnCrc(Message):
         version, p = Version.parse(p)
         host, p = Host.parse(p)
 
-        return cls(duid, nat_type, version, host), p
+        return cls(duid=duid, nat_type=nat_type, version=version, host=host), p
 
     def pack(self):
-        p  = self.duid.pack()
-        p += self.nat_type.pack()
-        p += self.version.pack()
-        p += self.host.pack()
+        p  = Duid.pack(self.duid)
+        p += u8.pack(self.nat_type)
+        p += Version.pack(self.version)
+        p += Host.pack(self.host)
 
         p = crypto_curse_string(p)
         return super().pack(p)
@@ -641,11 +641,11 @@ class PktRlyTo(Message):
         host, p = Host.parse(p)
         mark, p = u32.parse(p)
 
-        return cls(host, mark), p
+        return cls(host=host, mark=mark), p
 
     def pack(self):
-        p  = self.host.pack()
-        p += self.mark.pack()
+        p  = Host.pack(self.host)
+        p += u32.pack(self.mark)
 
         # not encrypted
         return super().pack(p)
@@ -662,11 +662,11 @@ class PktRlyPkt(Message):
         mark, p = u32.parse(p)
         duid, p = Duid.parse(p)
 
-        return cls(mark, duid), p
+        return cls(mark=mark, duid=duid), p
 
     def pack(self):
-        p  = self.mark.pack()
-        p += self.duid.pack()
+        p  = u32.pack(self.mark)
+        p += Duid.pack(self.duid)
 
         # not encrypted
         return super().pack(p)
@@ -681,10 +681,10 @@ class PktRlyRdy(Message):
         # not encrypted
         duid, p = Duid.parse(p)
 
-        return cls(duid), p
+        return cls(duid=duid), p
 
     def pack(self):
-        p  = self.duid.pack()
+        p  = Duid.pack(self.duid)
 
         # not encrypted
         return super().pack(p)
@@ -692,14 +692,14 @@ class PktRlyRdy(Message):
 @dataclass
 class PktDevLgnAckCrc(Message):
     type = Type.DEV_LGN_ACK_CRC
-    pad0 : bytes = field(repr=False) # unknown
+    pad0 : bytes = field(repr=False, kw_only=True, default='\x00' * 4) # unknown
 
     @classmethod
     def parse(cls, p):
         p = crypto_decurse_string(p)
         pad0, p = Zeroes.parse(p, 4)
 
-        return cls(pad0), p
+        return cls(pad0=pad0), p
 
     def pack(self):
         p  = Zeroes.pack(self.pad0, 4)
@@ -719,7 +719,7 @@ class PktSessionReady(Message):
     b2             : u8 # unknown
     b3             : u8 # unknown
     b4             : u8 # unknown
-    pad0           : bytes = field(repr=False) # unknown
+    pad0           : bytes = field(repr=False, kw_only=True, default='\x00' * 2) # unknown
     addr_local     : Host # unknown
     addr_wan       : Host # unknown
     addr_relay     : Host # unknown
@@ -741,22 +741,22 @@ class PktSessionReady(Message):
         addr_wan, p = Host.parse(p)
         addr_relay, p = Host.parse(p)
 
-        return cls(duid, handle, max_handles, active_handles, startup_ticks, b1, b2, b3, b4, pad0, addr_local, addr_wan, addr_relay), p
+        return cls(duid=duid, handle=handle, max_handles=max_handles, active_handles=active_handles, startup_ticks=startup_ticks, b1=b1, b2=b2, b3=b3, b4=b4, pad0=pad0, addr_local=addr_local, addr_wan=addr_wan, addr_relay=addr_relay), p
 
     def pack(self):
-        p  = self.duid.pack()
-        p += self.handle.pack()
-        p += self.max_handles.pack()
-        p += self.active_handles.pack()
-        p += self.startup_ticks.pack()
-        p += self.b1.pack()
-        p += self.b2.pack()
-        p += self.b3.pack()
-        p += self.b4.pack()
+        p  = Duid.pack(self.duid)
+        p += i32.pack(self.handle)
+        p += u16.pack(self.max_handles)
+        p += u16.pack(self.active_handles)
+        p += u16.pack(self.startup_ticks)
+        p += u8.pack(self.b1)
+        p += u8.pack(self.b2)
+        p += u8.pack(self.b3)
+        p += u8.pack(self.b4)
         p += Zeroes.pack(self.pad0, 2)
-        p += self.addr_local.pack()
-        p += self.addr_wan.pack()
-        p += self.addr_relay.pack()
+        p += Host.pack(self.addr_local)
+        p += Host.pack(self.addr_wan)
+        p += Host.pack(self.addr_relay)
 
         p = simple_encrypt_string(p)
         return super().pack(p)

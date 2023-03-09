@@ -71,7 +71,7 @@ class MqttMsg:
     packet_num : u16 # maybe for fragmented messages?set to 1 for unfragmented messages.
     time       : u32 # `gettimeofday()` in whole seconds
     device_guid: bytes # device guid, as hex string
-    padding    : bytes = field(repr=False) # padding bytes, allways zero
+    padding    : bytes = field(repr=False, kw_only=True, default='\x00' * 8) # padding bytes, allways zero
 
     @classmethod
     def parse(cls, p):
@@ -91,17 +91,17 @@ class MqttMsg:
         return cls(m1, m2, size, m3, m4, m5, m6, m7, packet_type, packet_num, time, device_guid, padding), p
 
     def pack(self):
-        p  = self.m1.pack()
-        p += self.m2.pack()
-        p += self.size.pack()
-        p += self.m3.pack()
-        p += self.m4.pack()
-        p += self.m5.pack()
-        p += self.m6.pack()
-        p += self.m7.pack()
-        p += self.packet_type.pack()
-        p += self.packet_num.pack()
-        p += self.time.pack()
+        p  = u8.pack(self.m1)
+        p += u8.pack(self.m2)
+        p += u16.pack(self.size)
+        p += u8.pack(self.m3)
+        p += u8.pack(self.m4)
+        p += u8.pack(self.m5)
+        p += u8.pack(self.m6)
+        p += u8.pack(self.m7)
+        p += MqttMsgType.pack(self.packet_type)
+        p += u16.pack(self.packet_num)
+        p += u32.pack(self.time)
         p += String.pack(self.device_guid, 40)
         p += Zeroes.pack(self.padding, 8)
         return p

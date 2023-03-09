@@ -97,7 +97,7 @@ ${declare_fields(struct)}
     def parse(cls, p):
 ${decrypt(struct)}
 ${unpack_fields(struct)}
-        return cls(${", ".join(f"{f.name}" for f in struct.fields)}), p
+        return cls(${", ".join(f"{f.name}={f.name}" for f in struct.fields)}), p
 
     def pack(self):
 ${pack_fields(struct)}
@@ -122,7 +122,7 @@ ${declare_fields(struct)}
     def parse(cls, p):
 ${decrypt(struct)}
 ${unpack_fields(struct)}
-        return cls(${", ".join(f"{f.name}" for f in struct.fields)}), p
+        return cls(${", ".join(f"{f.name}={f.name}" for f in struct.fields)}), p
 
     def pack(self):
 ${pack_fields(struct)}
