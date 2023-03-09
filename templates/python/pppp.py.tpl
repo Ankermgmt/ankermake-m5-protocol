@@ -1,6 +1,54 @@
 <% import python %>\
 ${python.header()}
 
+<%def name="encrypt(struct)">\
+    %if struct.const("@crypto_type", 0) == 1:
+        p = simple_encrypt_string(p)\
+    %elif struct.const("@crypto_type", 0) == 2:
+        p = crypto_curse_string(p)\
+    %else:
+        # not encrypted\
+    %endif
+</%def>\
+##
+##
+<%def name="decrypt(struct)">\
+    %if struct.const("@crypto_type", 0) == 1:
+        p = simple_decrypt_string(p)\
+    %elif struct.const("@crypto_type", 0) == 2:
+        p = crypto_decurse_string(p)\
+    %else:
+        # not encrypted\
+%endif
+</%def>\
+##
+##
+<%def name="pack_fields(struct)">\
+%if len(struct.fields) > 0:
+        p  = ${python.typepack(struct.fields[0])}
+    %for field in struct.fields[1:]:
+        p += ${python.typepack(field)}
+    %endfor
+%else:
+        p = b""
+%endif
+</%def>\
+##
+##
+<%def name="unpack_fields(struct)">\
+    %for field in struct.fields:
+        ${field.name}, p = ${python.typeparse(field, "p")}
+    %endfor
+</%def>\
+##
+##
+<%def name="declare_fields(struct)">\
+    %for field in struct.fields:
+    ${field.aligned_name} : ${python.typename(field)} # ${"".join(field.comment or "unknown")}
+    %endfor
+</%def>\
+##
+##
 import struct
 import enum
 from dataclasses import dataclass, field
