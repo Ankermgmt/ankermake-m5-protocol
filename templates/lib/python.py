@@ -17,7 +17,7 @@ def typename(field):
     tp = field.type
 
     if tp.name == "zeroes":
-        return f"bytes = field(repr=False)"
+        return f"bytes = field(repr=False, kw_only=True, default='\\x00' * {tp[0]})"
     elif tp.name == "string":
         return "bytes"
     elif tp.name == "array":
@@ -41,4 +41,4 @@ def typepack(field):
         cls = _parsetable[name]
         return f"{cls}.pack(self.{field.name}, {tp[0]})"
     else:
-        return f"self.{field.name}.pack()"
+        return f"{name}.pack(self.{field.name})"
