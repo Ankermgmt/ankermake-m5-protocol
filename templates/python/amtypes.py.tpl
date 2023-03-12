@@ -43,7 +43,7 @@ class Array:
             res.append(item)
         return res, p
 
-    def pack(self, cls):
+    def pack(self, cls, num):
         return b"".join(cls.pack(e) for e in self)
 
 class IPv4(str):

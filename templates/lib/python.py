@@ -44,14 +44,32 @@ def typename(field):
 def typeparse(field, p):
     tp = field.type
     name = _parsetable.get(tp.name, tp.name)
-    return f"{name}.parse({', '.join([p] + [t.name for t in tp.args])})"
+    args = [p]
+    for i in range(len(tp)):
+        if tp[i].name == "field":
+            args.append(tp[i][0].name)
+        else:
+            args.append(tp[i].name)
+
+    if tp.name == "magic":
+        args[2] = repr(magic_default(tp))
+
+    return f"{name}.parse({', '.join(args)})"
 
 def typepack(field):
     tp = field.type
     name = tp.name
 
+    args = [f"self.{field.name}"]
+    for i in range(len(tp)):
+        if tp[i].name == "field":
+            args.append(f"self.{tp[i][0].name}")
+        else:
+            args.append(tp[i].name)
+
+    if tp.name == "magic":
+        args[2] = repr(magic_default(tp))
+
     if name in _parsetable:
-        cls = _parsetable[name]
-        return f"{cls}.pack(self.{field.name}, {tp[0]})"
-    else:
-        return f"{name}.pack(self.{field.name})"
+        name = _parsetable[name]
+    return f"{name}.pack({', '.join(args)})"
