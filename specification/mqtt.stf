@@ -20,7 +20,7 @@ struct MqttMsg
     signature: magic<2, 0x4d41>
 
     # length of packet, including header and checksum (minimum 65).
-    size: u16
+    size: u16le
 
     # Magic constant: 5
     m3: u8
@@ -42,10 +42,10 @@ struct MqttMsg
 
     # maybe for fragmented messages?
     # set to 1 for unfragmented messages.
-    packet_num:  u16
+    packet_num:  u16le
 
     # `gettimeofday()` in whole seconds
-    time:        u32
+    time:        u32le
 
     # device guid, as hex string
     device_guid: string<40>
