@@ -149,6 +149,9 @@ packet PktDrw
     # Packet index
     index: u16
 
+    # Payload
+    data: tail
+
 packet PktDrwAck
     # Signature byte. Must be 0xD1
     signature: magic<1, 0xD1>
