@@ -110,13 +110,13 @@ struct Aabb
     signature: magic<2, 0xAABB>
 
     # Unknown field
-    unk: u16
+    unk: u16le
 
     # Command field (unknown function)
-    cmd: u32
+    cmd: u32le
 
     # Length field
-    len: u32
+    len: u32le
 
 struct Dsk
     @size = 24
