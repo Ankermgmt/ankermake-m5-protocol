@@ -21,6 +21,9 @@ class Bytes(bytes):
     def parse(cls, p, size):
         return p[:size], p[size:]
 
+    def pack(self, size):
+        return self
+
 class String(Bytes):
     @classmethod
     def parse(cls, p, size):

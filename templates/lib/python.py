@@ -13,6 +13,7 @@ _parsetable = {
     "zeroes": "Zeroes",
     "magic": "Magic",
     "tail": "Tail",
+    "bytes": "Bytes",
 }
 
 def magic_default(tp):
