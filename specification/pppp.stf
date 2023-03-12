@@ -103,7 +103,11 @@ struct Duid
     pad0: zeroes<2>
 
 struct Xzyh
-    magic: bytes<4>
+    magic: magic<4, 0x585a5948>
+    cmd: u16le
+    len: u32le
+    pad: zeroes<6>
+    data: bytes<field<len>>
 
 struct Aabb
     # Signature bytes. Must be 0xAABB
