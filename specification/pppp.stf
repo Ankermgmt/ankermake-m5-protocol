@@ -163,7 +163,7 @@ packet PktDrwAck
     count: u16
 
     # Array of acknowledged DRW packet
-    acks: array<u16, count>
+    acks: array<u16, field<count>>
 
 packet PktPunchTo
     host: Host
@@ -228,7 +228,7 @@ packet PktListReqAck
     pad: zeroes<3>
 
     # Available relay hosts
-    relays: array<Host, numr>
+    relays: array<Host, field<numr>>
 
 packet PktDevLgnCrc
     @crypto_type = 2
