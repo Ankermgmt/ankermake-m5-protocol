@@ -107,7 +107,7 @@ struct Xzyh
 
 struct Aabb
     # Signature bytes. Must be 0xAABB
-    magic: u16
+    signature: magic<2, 0xAABB>
 
     # Unknown field
     unk: u16
@@ -141,7 +141,7 @@ struct Message
 
 packet PktDrw
     # Signature byte. Must be 0xD1
-    magic: u8
+    signature: magic<1, 0xD1>
 
     # Channel index
     chan: u8
@@ -151,7 +151,7 @@ packet PktDrw
 
 packet PktDrwAck
     # Signature byte. Must be 0xD1
-    magic: u8
+    signature: magic<1, 0xD1>
 
     # Channel index
     chan: u8
