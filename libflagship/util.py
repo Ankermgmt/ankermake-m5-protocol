@@ -8,3 +8,6 @@ def unhex(s):
 
 def b64e(s):
     return binascii.b2a_base64(s).decode().strip()
+
+def b64d(s):
+    return binascii.a2b_base64(s)
