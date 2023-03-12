@@ -11,7 +11,15 @@ _parsetable = {
     "array": "Array",
     "string": "String",
     "zeroes": "Zeroes",
+    "magic": "Magic",
+    "tail": "Tail",
 }
+
+def magic_default(tp):
+    size = int(str(tp[0]))
+    value = int(str(tp[1]), 16)
+    hexval = f"%0{size * 2}x" % value
+    return bytes.fromhex(hexval)
 
 def typename(field):
     tp = field.type
@@ -19,6 +27,10 @@ def typename(field):
     if tp.name == "zeroes":
         return f"bytes = field(repr=False, kw_only=True, default='\\x00' * {tp[0]})"
     elif tp.name == "string":
+        return "bytes"
+    elif tp.name == "magic":
+        return f"bytes = field(repr=False, kw_only=True, default={magic_default(tp)})"
+    elif tp.name == "tail":
         return "bytes"
     elif tp.name == "array":
         if len(tp.args) in {1, 2}:
