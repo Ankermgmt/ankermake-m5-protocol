@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import libflagship.pppp as pppp
 from rich import print
 
