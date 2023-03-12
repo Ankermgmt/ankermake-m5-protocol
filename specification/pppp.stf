@@ -120,7 +120,8 @@ struct Aabb
 
 struct Dsk
     @size = 24
-    key: bytes<24>
+    key: bytes<20>
+    pad: zeroes<4>
 
 struct Version
     @size = 3
