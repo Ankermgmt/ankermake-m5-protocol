@@ -1,6 +1,6 @@
 ## Anker MQTT protocol specification
 
-enum MqttMsgType
+enum MqttPktType
     # Whole message in a single packet. No further packets in this stream
     Single = 0xc0
 
@@ -37,8 +37,8 @@ struct MqttMsg
     # Magic constant: 'F'
     m7: u8
 
-    # Packet type. Only seen as 0xc0
-    packet_type: MqttMsgType
+    # Packet type
+    packet_type: MqttPktType
 
     # maybe for fragmented messages?
     # set to 1 for unfragmented messages.
