@@ -16,11 +16,8 @@ enum MqttMsgType
     MultiFinish = 0xc3
 
 struct MqttMsg
-    # Magic constant: 'M'
-    m1: u8
-
-    # Magic constant: 'A'
-    m2: u8
+    # Signature: 'MA'
+    signature: magic<2, 0x4d41>
 
     # length of packet, including header and checksum (minimum 65).
     size: u16
