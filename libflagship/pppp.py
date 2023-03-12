@@ -165,43 +165,55 @@ class Duid:
 
 @dataclass
 class Xzyh:
-    magic : bytes # unknown
+    magic : bytes = field(repr=False, kw_only=True, default=b'XZYH') # unknown
+    cmd   : u16le # unknown
+    len   : u32le # unknown
+    pad   : bytes = field(repr=False, kw_only=True, default='\x00' * 6) # unknown
+    data  : bytes # unknown
 
     @classmethod
     def parse(cls, p):
         # not encrypted
-        magic, p = bytes.parse(p, 4)
+        magic, p = Magic.parse(p, 4, b'XZYH')
+        cmd, p = u16le.parse(p)
+        len, p = u32le.parse(p)
+        pad, p = Zeroes.parse(p, 6)
+        data, p = Bytes.parse(p, len)
 
-        return cls(magic=magic), p
+        return cls(magic=magic, cmd=cmd, len=len, pad=pad, data=data), p
 
     def pack(self):
-        p  = bytes.pack(self.magic)
+        p  = Magic.pack(self.magic, 4, b'XZYH')
+        p += u16le.pack(self.cmd)
+        p += u32le.pack(self.len)
+        p += Zeroes.pack(self.pad, 6)
+        p += Bytes.pack(self.data, self.len)
 
         # not encrypted
         return p
 
 @dataclass
 class Aabb:
-    magic : u16 # Signature bytes. Must be 0xAABB
-    unk   : u16 # Unknown field
-    cmd   : u32 # Command field (unknown function)
-    len   : u32 # Length field
+    signature : bytes = field(repr=False, kw_only=True, default=b'\xaa\xbb') # Signature bytes. Must be 0xAABB
+    unk       : u16le # Unknown field
+    cmd       : u32le # Command field (unknown function)
+    len       : u32le # Length field
 
     @classmethod
     def parse(cls, p):
         # not encrypted
-        magic, p = u16.parse(p)
-        unk, p = u16.parse(p)
-        cmd, p = u32.parse(p)
-        len, p = u32.parse(p)
+        signature, p = Magic.parse(p, 2, b'\xaa\xbb')
+        unk, p = u16le.parse(p)
+        cmd, p = u32le.parse(p)
+        len, p = u32le.parse(p)
 
-        return cls(magic=magic, unk=unk, cmd=cmd, len=len), p
+        return cls(signature=signature, unk=unk, cmd=cmd, len=len), p
 
     def pack(self):
-        p  = u16.pack(self.magic)
-        p += u16.pack(self.unk)
-        p += u32.pack(self.cmd)
-        p += u32.pack(self.len)
+        p  = Magic.pack(self.signature, 2, b'\xaa\xbb')
+        p += u16le.pack(self.unk)
+        p += u32le.pack(self.cmd)
+        p += u32le.pack(self.len)
 
         # not encrypted
         return p
@@ -209,16 +221,19 @@ class Aabb:
 @dataclass
 class Dsk:
     key : bytes # unknown
+    pad : bytes = field(repr=False, kw_only=True, default='\x00' * 4) # unknown
 
     @classmethod
     def parse(cls, p):
         # not encrypted
-        key, p = bytes.parse(p, 24)
+        key, p = Bytes.parse(p, 20)
+        pad, p = Zeroes.parse(p, 4)
 
-        return cls(key=key), p
+        return cls(key=key, pad=pad), p
 
     def pack(self):
-        p  = bytes.pack(self.key)
+        p  = Bytes.pack(self.key, 20)
+        p += Zeroes.pack(self.pad, 4)
 
         # not encrypted
         return p
@@ -250,23 +265,26 @@ class Version:
 @dataclass
 class PktDrw(Message):
     type = Type.DRW
-    magic : u8 # Signature byte. Must be 0xD1
-    chan  : u8 # Channel index
-    index : u16 # Packet index
+    signature : bytes = field(repr=False, kw_only=True, default=b'\xd1') # Signature byte. Must be 0xD1
+    chan      : u8 # Channel index
+    index     : u16 # Packet index
+    data      : bytes # Payload
 
     @classmethod
     def parse(cls, p):
         # not encrypted
-        magic, p = u8.parse(p)
+        signature, p = Magic.parse(p, 1, b'\xd1')
         chan, p = u8.parse(p)
         index, p = u16.parse(p)
+        data, p = Tail.parse(p)
 
-        return cls(magic=magic, chan=chan, index=index), p
+        return cls(signature=signature, chan=chan, index=index, data=data), p
 
     def pack(self):
-        p  = u8.pack(self.magic)
+        p  = Magic.pack(self.signature, 1, b'\xd1')
         p += u8.pack(self.chan)
         p += u16.pack(self.index)
+        p += Tail.pack(self.data)
 
         # not encrypted
         return super().pack(p)
@@ -274,26 +292,26 @@ class PktDrw(Message):
 @dataclass
 class PktDrwAck(Message):
     type = Type.DRW_ACK
-    magic : u8 # Signature byte. Must be 0xD1
-    chan  : u8 # Channel index
-    count : u16 # Number of acks following
-    acks  : list[u16] # Array of acknowledged DRW packet
+    signature : bytes = field(repr=False, kw_only=True, default=b'\xd1') # Signature byte. Must be 0xD1
+    chan      : u8 # Channel index
+    count     : u16 # Number of acks following
+    acks      : list[u16] # Array of acknowledged DRW packet
 
     @classmethod
     def parse(cls, p):
         # not encrypted
-        magic, p = u8.parse(p)
+        signature, p = Magic.parse(p, 1, b'\xd1')
         chan, p = u8.parse(p)
         count, p = u16.parse(p)
         acks, p = Array.parse(p, u16, count)
 
-        return cls(magic=magic, chan=chan, count=count, acks=acks), p
+        return cls(signature=signature, chan=chan, count=count, acks=acks), p
 
     def pack(self):
-        p  = u8.pack(self.magic)
+        p  = Magic.pack(self.signature, 1, b'\xd1')
         p += u8.pack(self.chan)
         p += u16.pack(self.count)
-        p += Array.pack(self.acks, u16)
+        p += Array.pack(self.acks, u16, self.count)
 
         # not encrypted
         return super().pack(p)
@@ -360,6 +378,104 @@ class PktRlyHello(Message):
 
     def pack(self):
         p = b""
+
+        # not encrypted
+        return super().pack(p)
+
+@dataclass
+class PktRlyHelloAck(Message):
+    type = Type.RLY_HELLO_ACK
+
+    @classmethod
+    def parse(cls, p):
+        # not encrypted
+
+        return cls(), p
+
+    def pack(self):
+        p = b""
+
+        # not encrypted
+        return super().pack(p)
+
+@dataclass
+class PktRlyPort(Message):
+    type = Type.RLY_PORT
+
+    @classmethod
+    def parse(cls, p):
+        # not encrypted
+
+        return cls(), p
+
+    def pack(self):
+        p = b""
+
+        # not encrypted
+        return super().pack(p)
+
+@dataclass
+class PktRlyPortAck(Message):
+    type = Type.RLY_PORT_ACK
+    mark : u32 # unknown
+    port : u16 # unknown
+    pad  : bytes = field(repr=False, kw_only=True, default='\x00' * 2) # unknown
+
+    @classmethod
+    def parse(cls, p):
+        # not encrypted
+        mark, p = u32.parse(p)
+        port, p = u16.parse(p)
+        pad, p = Zeroes.parse(p, 2)
+
+        return cls(mark=mark, port=port, pad=pad), p
+
+    def pack(self):
+        p  = u32.pack(self.mark)
+        p += u16.pack(self.port)
+        p += Zeroes.pack(self.pad, 2)
+
+        # not encrypted
+        return super().pack(p)
+
+@dataclass
+class PktRlyReq(Message):
+    type = Type.RLY_REQ
+    duid : Duid # unknown
+    host : Host # unknown
+    mark : u32 # unknown
+
+    @classmethod
+    def parse(cls, p):
+        # not encrypted
+        duid, p = Duid.parse(p)
+        host, p = Host.parse(p)
+        mark, p = u32.parse(p)
+
+        return cls(duid=duid, host=host, mark=mark), p
+
+    def pack(self):
+        p  = Duid.pack(self.duid)
+        p += Host.pack(self.host)
+        p += u32.pack(self.mark)
+
+        # not encrypted
+        return super().pack(p)
+
+@dataclass
+class PktRlyReqAck(Message):
+    type = Type.RLY_REQ_ACK
+    mark : u32 # unknown
+
+    @classmethod
+    def parse(cls, p):
+        # not encrypted
+        mark, p = u32.parse(p)
+
+        return cls(mark=mark), p
+
+    def pack(self):
+        p  = u32.pack(self.mark)
 
         # not encrypted
         return super().pack(p)
@@ -490,15 +606,17 @@ class PktP2pReq(Message):
 @dataclass
 class PktP2pReqAck(Message):
     type = Type.P2P_REQ_ACK
+    mark : u32 # unknown
 
     @classmethod
     def parse(cls, p):
         # not encrypted
+        mark, p = u32.parse(p)
 
-        return cls(), p
+        return cls(mark=mark), p
 
     def pack(self):
-        p = b""
+        p  = u32.pack(self.mark)
 
         # not encrypted
         return super().pack(p)
@@ -597,7 +715,7 @@ class PktListReqAck(Message):
     def pack(self):
         p  = u8.pack(self.numr)
         p += Zeroes.pack(self.pad, 3)
-        p += Array.pack(self.relays, Host)
+        p += Array.pack(self.relays, Host, self.numr)
 
         # not encrypted
         return super().pack(p)
@@ -655,18 +773,21 @@ class PktRlyPkt(Message):
     type = Type.RLY_PKT
     mark : u32 # unknown
     duid : Duid # unknown
+    unk  : u32 # unknown
 
     @classmethod
     def parse(cls, p):
         # not encrypted
         mark, p = u32.parse(p)
         duid, p = Duid.parse(p)
+        unk, p = u32.parse(p)
 
-        return cls(mark=mark, duid=duid), p
+        return cls(mark=mark, duid=duid, unk=unk), p
 
     def pack(self):
         p  = u32.pack(self.mark)
         p += Duid.pack(self.duid)
+        p += u32.pack(self.unk)
 
         # not encrypted
         return super().pack(p)
@@ -778,6 +899,11 @@ MessageTypeTable = {
     Type.LIST_REQ_ACK         : PktListReqAck,
     Type.LIST_REQ_DSK         : PktListReqDsk,
     Type.RLY_HELLO            : PktRlyHello,
+    Type.RLY_HELLO_ACK        : PktRlyHelloAck,
+    Type.RLY_PORT             : PktRlyPort,
+    Type.RLY_PORT_ACK         : PktRlyPortAck,
+    Type.RLY_REQ              : PktRlyReq,
+    Type.RLY_REQ_ACK          : PktRlyReqAck,
     Type.RLY_TO               : PktRlyTo,
     Type.RLY_PKT              : PktRlyPkt,
     Type.RLY_RDY              : PktRlyRdy,

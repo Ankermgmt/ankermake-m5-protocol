@@ -25,6 +25,9 @@ class Bytes(bytes):
     def parse(cls, p, size):
         return p[:size], p[size:]
 
+    def pack(self, size):
+        return self
+
 class String(Bytes):
     @classmethod
     def parse(cls, p, size):
@@ -44,7 +47,7 @@ class Array:
             res.append(item)
         return res, p
 
-    def pack(self, cls):
+    def pack(self, cls, num):
         return b"".join(cls.pack(e) for e in self)
 
 class IPv4(str):
@@ -55,6 +58,27 @@ class IPv4(str):
 
     def pack(self):
         return socket.inet_aton(self)[::-1]
+
+class Magic(bytes):
+    @classmethod
+    def parse(cls, p, size, expected):
+        v, p = p[:size], p[size:]
+        assert v == expected
+        return cls(v), p
+
+    def pack(self, size, expected):
+        return self
+
+class Tail(bytes):
+    @classmethod
+    def parse(cls, p):
+        return cls(p), b""
+
+    def pack(self):
+        if isinstance(self, bytes):
+            return self
+        else:
+            return self.pack()
 
 class IntType(int):
     pass
