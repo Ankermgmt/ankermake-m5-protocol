@@ -15,7 +15,7 @@ enum MqttPktType
     # Append data, then handle complete message.
     MultiFinish = 0xc3
 
-struct MqttMsg
+struct _MqttMsg
     # Signature: 'MA'
     signature: magic<2, 0x4d41>
 
@@ -53,11 +53,8 @@ struct MqttMsg
     # padding bytes, allways zero
     padding:     zeroes<11>
 
-    ## data follows here
-    ## data:         [u8] * .size
-
-    ## xor checksum
-    ## xor:          u8
+    # payload data
+    data: tail
 
 enum MqttMsgType
 

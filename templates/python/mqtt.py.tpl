@@ -3,7 +3,9 @@ ${python.header()}
 
 import enum
 from dataclasses import dataclass
+import json
 from .amtypes import *
+from .megajank import mqtt_checksum_add, mqtt_checksum_remove, mqtt_aes_encrypt, mqtt_aes_decrypt
 
 % for enum in _mqtt:
 % if enum.expr == "enum":
@@ -45,3 +47,26 @@ class ${struct.name}:
 
 % endif
 % endfor
+
+class MqttMsg(_MqttMsg):
+
+    @classmethod
+    def parse(cls, p, key):
+        p = mqtt_checksum_remove(p)
+        body, data = p[:64], mqtt_aes_decrypt(p[64:], key)
+        res = super().parse(body + data)
+        assert res[0].size == (len(p) + 1)
+        return res
+
+    def pack(self, key):
+        data = mqtt_aes_encrypt(self.data, key)
+        self.size = 64 + len(data) + 1
+        body = super().pack()[:64]
+        final = mqtt_checksum_add(body + data)
+        return final
+
+    def getjson(self):
+        return json.loads(self.data.decode())
+
+    def setjson(self, val):
+        self.data = json.dumps(val).encode()
