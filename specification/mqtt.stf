@@ -48,10 +48,10 @@ struct MqttMsg
     time:        u32le
 
     # device guid, as hex string
-    device_guid: string<40>
+    device_guid: string<37>
 
     # padding bytes, allways zero
-    padding:     zeroes<8>
+    padding:     zeroes<11>
 
     ## data follows here
     ## data:         [u8] * .size
