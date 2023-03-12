@@ -182,6 +182,28 @@ packet PktLanSearch
 packet PktRlyHello
     @size = 0
 
+packet PktRlyHelloAck
+    @size = 0
+
+packet PktRlyPort
+    @size = 0
+
+packet PktRlyPortAck
+    @size = 0
+    mark: u32
+    port: u16
+    pad: zeroes<2>
+
+packet PktRlyReq
+    @size = 0
+    duid: Duid
+    host: Host
+    mark: u32
+
+packet PktRlyReqAck
+    @size = 0
+    mark: u32
+
 packet PktAlive
     @size = 0
 
@@ -205,6 +227,7 @@ packet PktP2pReq
     host: Host
 
 packet PktP2pReqAck
+    mark: u32
 
 packet PktP2pReqDsk
     duid: Duid
@@ -250,6 +273,7 @@ packet PktRlyTo
 packet PktRlyPkt
     mark: u32
     duid: Duid
+    unk: u32
 
 packet PktRlyRdy
     duid: Duid
@@ -317,14 +341,14 @@ parser MessageType
     LIST_REQ_ACK              : PktListReqAck
     LIST_REQ_DSK              : PktListReqDsk
     RLY_HELLO                 : PktRlyHello
-    ## RLY_HELLO_ACK             = 0x71
-    ## RLY_PORT                  = 0x72
-    ## RLY_PORT_ACK              = 0x73
+    RLY_HELLO_ACK             : PktRlyHelloAck
+    RLY_PORT                  : PktRlyPort
+    RLY_PORT_ACK              : PktRlyPortAck
     ## RLY_PORT_KEY              = 0x74
     ## RLY_PORT_ACK_KEY          = 0x75
     ## RLY_BYTE_COUNT            = 0x78
-    ## RLY_REQ                   = 0x80
-    ## RLY_REQ_ACK               = 0x81
+    RLY_REQ                   : PktRlyReq
+    RLY_REQ_ACK               : PktRlyReqAck
     RLY_TO                    : PktRlyTo
     RLY_PKT                   : PktRlyPkt
     RLY_RDY                   : PktRlyRdy
