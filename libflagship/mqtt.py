@@ -7,13 +7,22 @@
 
 import enum
 from dataclasses import dataclass
+import json
 from .amtypes import *
+from .megajank import mqtt_checksum_add, mqtt_checksum_remove, mqtt_aes_encrypt, mqtt_aes_decrypt
 
-class MqttMsgType(enum.IntEnum):
+class MqttPktType(enum.IntEnum):
     Single      = 0xc0 # Whole message in a single packet. No further packets in this stream
     MultiBegin  = 0xc1 # Reallocate buffer memory, *then* append to message. Unless this is used
     MultiAppend = 0xc2 # Append to existing message buffer.
     MultiFinish = 0xc3 # Append data, then handle complete message.
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+
+    def pack(self):
+        return struct.pack("B", self)
 
 class MqttMsgType(enum.IntEnum):
     ZZ_MQTT_CMD_EVENT_NOTIFY           = 0x03e8 # 
@@ -57,52 +66,82 @@ class MqttMsgType(enum.IntEnum):
     ZZ_STEST_CMD_GCODE_TRANSPOR        = 0x07e2 # ?
     ZZ_MQTT_CMD_ALEXA_MSG              = 0x0bb8 # 
 
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+
+    def pack(self):
+        return struct.pack("B", self)
+
 @dataclass
-class MqttMsg:
-    m1         : u8 # Magic constant: 'M'
-    m2         : u8 # Magic constant: 'A'
-    size       : u16 # length of packet, including header and checksum (minimum 65).
+class _MqttMsg:
+    signature  : bytes = field(repr=False, kw_only=True, default=b'MA') # Signature: 'MA'
+    size       : u16le # length of packet, including header and checksum (minimum 65).
     m3         : u8 # Magic constant: 5
     m4         : u8 # Magic constant: 1
     m5         : u8 # Magic constant: 2
     m6         : u8 # Magic constant: 5
     m7         : u8 # Magic constant: 'F'
-    packet_type: MqttMsgType # Packet type. Only seen as 0xc0
-    packet_num : u16 # maybe for fragmented messages?set to 1 for unfragmented messages.
-    time       : u32 # `gettimeofday()` in whole seconds
+    packet_type: MqttPktType # Packet type
+    packet_num : u16le # maybe for fragmented messages?set to 1 for unfragmented messages.
+    time       : u32le # `gettimeofday()` in whole seconds
     device_guid: bytes # device guid, as hex string
-    padding    : bytes = field(repr=False, kw_only=True, default='\x00' * 8) # padding bytes, allways zero
+    padding    : bytes = field(repr=False, kw_only=True, default='\x00' * 11) # padding bytes, allways zero
+    data       : bytes # payload data
 
     @classmethod
     def parse(cls, p):
-        m1, p = u8.parse(p)
-        m2, p = u8.parse(p)
-        size, p = u16.parse(p)
+        signature, p = Magic.parse(p, 2, b'MA')
+        size, p = u16le.parse(p)
         m3, p = u8.parse(p)
         m4, p = u8.parse(p)
         m5, p = u8.parse(p)
         m6, p = u8.parse(p)
         m7, p = u8.parse(p)
-        packet_type, p = MqttMsgType.parse(p)
-        packet_num, p = u16.parse(p)
-        time, p = u32.parse(p)
-        device_guid, p = String.parse(p, 40)
-        padding, p = Zeroes.parse(p, 8)
-        return cls(m1, m2, size, m3, m4, m5, m6, m7, packet_type, packet_num, time, device_guid, padding), p
+        packet_type, p = MqttPktType.parse(p)
+        packet_num, p = u16le.parse(p)
+        time, p = u32le.parse(p)
+        device_guid, p = String.parse(p, 37)
+        padding, p = Zeroes.parse(p, 11)
+        data, p = Tail.parse(p)
+        return cls(signature=signature, size=size, m3=m3, m4=m4, m5=m5, m6=m6, m7=m7, packet_type=packet_type, packet_num=packet_num, time=time, device_guid=device_guid, padding=padding, data=data), p
 
     def pack(self):
-        p  = u8.pack(self.m1)
-        p += u8.pack(self.m2)
-        p += u16.pack(self.size)
+        p  = Magic.pack(self.signature, 2, b'MA')
+        p += u16le.pack(self.size)
         p += u8.pack(self.m3)
         p += u8.pack(self.m4)
         p += u8.pack(self.m5)
         p += u8.pack(self.m6)
         p += u8.pack(self.m7)
-        p += MqttMsgType.pack(self.packet_type)
-        p += u16.pack(self.packet_num)
-        p += u32.pack(self.time)
-        p += String.pack(self.device_guid, 40)
-        p += Zeroes.pack(self.padding, 8)
+        p += MqttPktType.pack(self.packet_type)
+        p += u16le.pack(self.packet_num)
+        p += u32le.pack(self.time)
+        p += String.pack(self.device_guid, 37)
+        p += Zeroes.pack(self.padding, 11)
+        p += Tail.pack(self.data)
         return p
 
+
+class MqttMsg(_MqttMsg):
+
+    @classmethod
+    def parse(cls, p, key):
+        p = mqtt_checksum_remove(p)
+        body, data = p[:64], mqtt_aes_decrypt(p[64:], key)
+        res = super().parse(body + data)
+        assert res[0].size == (len(p) + 1)
+        return res
+
+    def pack(self, key):
+        data = mqtt_aes_encrypt(self.data, key)
+        self.size = 64 + len(data) + 1
+        body = super().pack()[:64]
+        final = mqtt_checksum_add(body + data)
+        return final
+
+    def getjson(self):
+        return json.loads(self.data.decode())
+
+    def setjson(self, val):
+        self.data = json.dumps(val).encode()
