@@ -12,8 +12,7 @@ def jankauto():
     userdir = os.getlogin()
     useros = platform.system()
 
-    #darfileloc = f'/Users/{userdir}/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json'
-    darfileloc = f'/Users/thomaspatterson/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json'
+    darfileloc = f'/Users/{userdir}/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json'
     winfileloc = os.path.join('C:\\Users\\') + f'{userdir}' + os.path.join('\\AppData\\Local\\Ankermake\\login.json')
     
     try:
