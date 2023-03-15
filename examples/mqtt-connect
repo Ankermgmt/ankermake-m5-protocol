@@ -28,7 +28,7 @@ class AnkerMQTTClient:
         mqtt.subscribe(f"/phone/maker/{self.sn}/notice")
         mqtt.subscribe(f"/phone/maker/{self.sn}/command/reply")
         mqtt.subscribe(f"/phone/maker/{self.sn}/query/reply")
-        print("[*] Connected to MQTT")
+        print("[*] Connected to mqtt")
 
     def _on_publish(self, client, userdata, result):
         # print(client, userdata, result)
@@ -163,7 +163,7 @@ def main():
                 print(f"  {printer['station_sn']}")
         exit()
 
-    print("[*] Requesting printer list..")
+    print("[*] Connecting to mqtt..")
     # collect mqtt arguments
     printer_sn    = printer["station_sn"]
     mqtt_username = "eufy_" + profile["user_id"]
