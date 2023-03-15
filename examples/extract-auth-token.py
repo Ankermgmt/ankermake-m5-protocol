@@ -5,7 +5,7 @@ import libflagship.logincache
 import json
 import sys
 import platform
-import os
+from os import path
 import getopt
 
 def print_login(filename):
@@ -14,11 +14,10 @@ def print_login(filename):
     print(jsonj["data"]["auth_token"])
 
 def main():
-    userdir = os.getlogin()
     useros = platform.system()
 
-    darfileloc = f'/Users/{userdir}/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json'
-    winfileloc = os.path.expandvars(r'%APPDATA%\Local\Ankermake\login.json')
+    darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
+    winfileloc = path.expandvars(r'%APPDATA%\Local\Ankermake\login.json')
     
     try:
         opts, args = getopt.getopt(sys.argv[1:],"haf:", ["help", "auto", "file="])
@@ -29,7 +28,7 @@ def main():
     for opt, arg in opts: 
         if opt == '-h':
             print ('extract-auth-token.py -a OR extract-auth-token.py -f <path-to-login.json> \nIf spaces are in file location remember to escape them with a backslash')
-            return(1)
+            return 1
         elif opt in ("-f", "--file"):
             print_login(arg)
         elif opt in ("-a", "--auto"):
@@ -43,4 +42,3 @@ def main():
 
 if __name__ == "__main__":
     exit(main())
-    
