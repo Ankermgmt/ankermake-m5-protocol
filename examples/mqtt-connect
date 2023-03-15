@@ -44,7 +44,7 @@ class AnkerMQTTClient:
             print(f"UNPARSED TAIL DATA: {tail}")
 
     @classmethod
-    def login(cls, printersn, username, password, key, ca_certs="/etc/ssl/certs/ca-certificates.crt", verify=True):
+    def login(cls, printersn, username, password, key, ca_certs="ankermake-mqtt.crt", verify=True):
         client = mqtt.Client()
 
         if verify:
