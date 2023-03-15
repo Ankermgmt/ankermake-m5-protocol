@@ -8,40 +8,38 @@ import platform
 import os
 import getopt
 
-def jankauto():
+def print_login(filename):
+    data = open(filename).read()
+    jsonj = json.loads(libflagship.logincache.decrypt(data))
+    print(jsonj["data"]["auth_token"])
+
+def main():
     userdir = os.getlogin()
     useros = platform.system()
 
     darfileloc = f'/Users/{userdir}/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json'
-    winfileloc = os.path.join('C:\\Users\\') + f'{userdir}' + os.path.join('\\AppData\\Local\\Ankermake\\login.json')
+    winfileloc = os.path.expandvars(r'%APPDATA%\Local\Ankermake\login.json')
     
     try:
         opts, args = getopt.getopt(sys.argv[1:],"haf:", ["help", "auto", "file="])
     except getopt.GetoptError:
       print ('extract-auth-token.py -a OR extract-auth-token.py -f <path-to-login.json>')
-      sys.exit(2)
+      return 2
 
     for opt, arg in opts: 
         if opt == '-h':
             print ('extract-auth-token.py -a OR extract-auth-token.py -f <path-to-login.json> \nIf spaces are in file location remember to escape them with a backslash')
-            exit(1)
+            return(1)
         elif opt in ("-f", "--file"):
-            data = open(arg).read()
-            jsonj = json.loads(libflagship.logincache.decrypt(data))
-            print(jsonj["data"]["auth_token"])
-            exit(1)
+            print_login(arg)
         elif opt in ("-a", "--auto"):
             if useros == 'Darwin':
-                data = open(f'{darfileloc}').read()
-                jsonj = json.loads(libflagship.logincache.decrypt(data))
-                print(jsonj["data"]["auth_token"])
-                exit(1)
+                print_login({darfileloc})
             elif useros == 'Windows':
-                data = open(f'{winfileloc}').read()
-                jsonj = json.loads(libflagship.logincache.decrypt(data))
-                print(jsonj["data"]["auth_token"])
-                exit(1)
+                print_login({winfileloc})
         else:
-            assert False, "unhandled option"
+            print ("extract-auth-token.py -a OR extract-auth-token.py -f <path-to-login.json>")
+            return 1
 
-jankauto()
+if __name__ == "__main__":
+    exit(main())
