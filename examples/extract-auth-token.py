@@ -10,7 +10,7 @@ import getopt
 
 def print_login(filename):
     data = open(filename).read()
-    jsonj = json.loads(libflagship.logincache.decrypt(data))
+    jsonj = libflagship.logincache.load(data)
     print(jsonj["data"]["auth_token"])
 
 def main():
