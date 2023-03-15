@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import libflagship.pppp as pppp
-from rich import print
 import sys
-import binascii
+sys.path.append("..")
 
-def unhex(s):
-    return binascii.a2b_hex(s)
+import libflagship.pppp as pppp
+from libflagship.util import unhex
+
+from rich import print
 
 if len(sys.argv) < 2:
     print(f"usage: {sys.argv[0]} <hex string> ...")

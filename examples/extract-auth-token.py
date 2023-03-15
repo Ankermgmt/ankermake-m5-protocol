@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
+import sys
+sys.path.append("..")
+
 from libflagship.util import b64d
 import libflagship.logincache
-import json
-import sys
-import platform
+
 from os import path
+import json
+import platform
 import getopt
 
 def print_login(filename):
