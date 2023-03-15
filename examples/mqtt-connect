@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+
+import sys
+import ssl
+import argparse
+import paho.mqtt.client as mqtt
+import paho.mqtt
+import json
+from rich import print
+
+from libflagship.util import enhex, unhex
+from libflagship.mqtt import MqttMsg
+
+class AnkerMQTTClient:
+
+    def __init__(self, printersn, mqtt, key):
+        self._mqtt = mqtt
+        self._printersn = printersn
+        self._key = key
+        self._mqtt.on_connect = self._on_connect
+        self._mqtt.on_message = self._on_message
+        self._mqtt.on_publish = self._on_publish
+
+    def _on_connect(self, client, userdata, flags, rc):
+        if rc != 0:
+            raise IOError(f"could not connect: rc={rc} ({paho.mqtt.client.error_string(rc)})")
+        mqtt = self._mqtt
+        mqtt.subscribe(f"/phone/maker/{self.sn}/notice")
+        mqtt.subscribe(f"/phone/maker/{self.sn}/command/reply")
+        mqtt.subscribe(f"/phone/maker/{self.sn}/query/reply")
+        print("[*] Connected to MQTT")
+
+    def _on_publish(self, client, userdata, result):
+        # print(client, userdata, result)
+        pass
+
+    def _on_message(self, client, userdata, msg):
+        print(f"TOPIC \[{msg.topic}]")
+        sys.stdout.buffer.write(enhex(msg.payload[:]).encode() + b"\n")
+
+        pkt, tail = MqttMsg.parse(msg.payload, key=self._key)
+        print(pkt)
+        if tail:
+            print(f"UNPARSED TAIL DATA: {tail}")
+
+    @classmethod
+    def login(cls, printersn, username, password, key, ca_certs="/etc/ssl/certs/ca-certificates.crt", verify=True):
+        client = mqtt.Client()
+
+        if verify:
+            client.tls_set(ca_certs=ca_certs)
+        else:
+            client.tls_set(ca_certs=ca_certs, cert_reqs=ssl.CERT_NONE)
+            client.tls_insecure_set(True)
+
+        client.username_pw_set(username, password)
+
+        return cls(printersn, client, key)
+
+    def connect(self, server, port=8789, timeout=60):
+        self._mqtt.connect(server, port, timeout)
+
+    @property
+    def sn(self):
+        return self._printersn
+
+    def send(client, topic, msg):
+        raise NotImplemented
+
+    def query(self, msg):
+        return self.send(f"/device/maker/{self.sn}/query", msg)
+
+    def command(self, msg):
+        return self.send(f"/device/maker/{self.sn}/command", msg)
+
+    def loop(self):
+        self._mqtt.loop_forever()
+
+def parse_args():
+    def fmt(prog):
+        return argparse.HelpFormatter(prog,max_help_position=42)
+
+    parser = argparse.ArgumentParser(
+        prog="mqtt-connect",
+        description="Connect to Ankermake M5 mqtt server",
+        formatter_class=fmt
+    )
+
+    parser.add_argument(
+        "-r", "--region",
+        choices=["eu", "us"],
+        required=True,
+        help="Select server region"
+    )
+
+    parser.add_argument(
+        "-P", "--printer",
+        help="Use specified printer serial (instead of first available)"
+    )
+
+    parser.add_argument(
+        "-A", "--auth",
+        help="Auth token"
+    )
+
+    parser.add_argument(
+        "-k", "--insecure",
+        action="store_const",
+        const=True,
+        default=False,
+        help="Disable TLS certificate validation",
+    )
+
+    args = parser.parse_args()
+    if args.auth and len(args.auth) != 48:
+        print("ERROR: Auth token must be 48 characters")
+        exit()
+
+    return args
+
+def find_printer(devices, printer):
+    for dev in devices:
+        if not printer:
+            return dev
+        if dev["station_sn"] == printer:
+            return dev
+
+def main():
+    import libflagship.httpapi
+
+    servertable = {
+        "eu": "make-mqtt-eu.ankermake.com",
+        "us": "make-mqtt.ankermake.com",
+    }
+
+    # parse arguments
+    args = parse_args()
+
+    if args.insecure:
+        import urllib3
+        urllib3.disable_warnings()
+
+    print("[*] Initializing API..")
+    # create api instances
+    appapi = libflagship.httpapi.AnkerHTTPAppApiV1(auth_token=args.auth, region=args.region, verify=not args.insecure)
+    ppapi = libflagship.httpapi.AnkerHTTPPassportApiV1(auth_token=args.auth, region=args.region, verify=not args.insecure)
+
+    # request profile and printer list
+    print("[*] Requesting profile data..")
+    profile = ppapi.profile()
+
+    print("[*] Requesting printer list..")
+    printers = appapi.query_fdm_list()
+
+    # find printer to monitor
+    printer = find_printer(printers, args.printer)
+
+    if not printer:
+        print(f"ERROR: could not find printer [{args.printer}]")
+        if printers:
+            print(f"Available printers:")
+            for printer in printers:
+                print(f"  {printer['station_sn']}")
+        exit()
+
+    print("[*] Requesting printer list..")
+    # collect mqtt arguments
+    printer_sn    = printer["station_sn"]
+    mqtt_username = "eufy_" + profile["user_id"]
+    mqtt_password = profile["email"] # yes, your mqtt password is your email address..
+    mqtt_key      = unhex(printer["secret_key"])
+
+    # get up and running
+    try:
+        client = AnkerMQTTClient.login(printer_sn, mqtt_username, mqtt_password, mqtt_key, verify=not args.insecure)
+        client.connect(server=servertable[args.region])
+        client.loop()
+    except Exception as E:
+        print(f"ERROR: {E}", file=sys.stderr)
+
+if __name__ == "__main__":
+    main()
