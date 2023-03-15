@@ -1,80 +1,28 @@
 #!/usr/bin/env python3
 
 import sys
-import ssl
 import argparse
-import paho.mqtt.client as mqtt
-import paho.mqtt
 import json
 from rich import print
 
 from libflagship.util import enhex, unhex
 from libflagship.mqtt import MqttMsg
+from libflagship.mqttapi import AnkerMQTTBaseClient
 
-class AnkerMQTTClient:
+# inherit from AnkerMQTTBaseClient, and override event handling.
+class AnkerMQTTClient(AnkerMQTTBaseClient):
 
-    def __init__(self, printersn, mqtt, key):
-        self._mqtt = mqtt
-        self._printersn = printersn
-        self._key = key
-        self._mqtt.on_connect = self._on_connect
-        self._mqtt.on_message = self._on_message
-        self._mqtt.on_publish = self._on_publish
-
-    def _on_connect(self, client, userdata, flags, rc):
-        if rc != 0:
-            raise IOError(f"could not connect: rc={rc} ({paho.mqtt.client.error_string(rc)})")
-        mqtt = self._mqtt
-        mqtt.subscribe(f"/phone/maker/{self.sn}/notice")
-        mqtt.subscribe(f"/phone/maker/{self.sn}/command/reply")
-        mqtt.subscribe(f"/phone/maker/{self.sn}/query/reply")
+    def on_connect(self, client, userdata, flags):
         print("[*] Connected to mqtt")
 
-    def _on_publish(self, client, userdata, result):
-        # print(client, userdata, result)
-        pass
-
-    def _on_message(self, client, userdata, msg):
+    def on_message(self, client, userdata, msg, pkt, tail):
         print(f"TOPIC \[{msg.topic}]")
         sys.stdout.buffer.write(enhex(msg.payload[:]).encode() + b"\n")
 
-        pkt, tail = MqttMsg.parse(msg.payload, key=self._key)
         print(pkt)
+
         if tail:
             print(f"UNPARSED TAIL DATA: {tail}")
-
-    @classmethod
-    def login(cls, printersn, username, password, key, ca_certs="ankermake-mqtt.crt", verify=True):
-        client = mqtt.Client()
-
-        if verify:
-            client.tls_set(ca_certs=ca_certs)
-        else:
-            client.tls_set(ca_certs=ca_certs, cert_reqs=ssl.CERT_NONE)
-            client.tls_insecure_set(True)
-
-        client.username_pw_set(username, password)
-
-        return cls(printersn, client, key)
-
-    def connect(self, server, port=8789, timeout=60):
-        self._mqtt.connect(server, port, timeout)
-
-    @property
-    def sn(self):
-        return self._printersn
-
-    def send(client, topic, msg):
-        raise NotImplemented
-
-    def query(self, msg):
-        return self.send(f"/device/maker/{self.sn}/query", msg)
-
-    def command(self, msg):
-        return self.send(f"/device/maker/{self.sn}/command", msg)
-
-    def loop(self):
-        self._mqtt.loop_forever()
 
 def parse_args():
     def fmt(prog):
