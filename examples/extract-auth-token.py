@@ -34,12 +34,13 @@ def main():
             print_login(arg)
         elif opt in ("-a", "--auto"):
             if useros == 'Darwin':
-                print_login({darfileloc})
+                print_login(darfileloc)
             elif useros == 'Windows':
-                print_login({winfileloc})
+                print_login(winfileloc)
         else:
             print ("extract-auth-token.py -a OR extract-auth-token.py -f <path-to-login.json>")
             return 1
 
 if __name__ == "__main__":
     exit(main())
+    
