@@ -6,8 +6,6 @@ The long term plan is to create a standalone CLI printer interface utility from 
 
 This guide is only written for Windows and MacOS since the AnkerMake slicer is required to be installed and is only natively supported on those two platforms at the time of writing this. If you're on Linux, chances are you don't need step-by-step instructions on this and you definitely had to set up Wine to run the slicer.
 
-[TOC]
-
 ## Prerequisites
 
 In order to run these scripts, you'll need to install some supporting software onto your machine (don't worry, it's really easy). Namely, you'll need Python 3, some pip packages (stands for "pip Install Packages" This is the Python package manager that comes bundled with Python), and the AnkerMake slicer.
