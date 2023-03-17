@@ -1,0 +1,4 @@
+paho_mqtt==1.6.1
+pycryptodomex==3.17
+rich==13.3.1
+requests==2.28.2
