@@ -73,6 +73,10 @@ enum Type
 
     INVALID                   = 0xFF
 
+enum P2PCmdType
+    P2P_JSON_CMD              = 0x6a4
+    P2P_SEND_FILE             = 0x3a98
+
 struct Host
     pad0: zeroes<1>
 

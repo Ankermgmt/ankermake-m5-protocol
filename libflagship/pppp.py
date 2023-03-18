@@ -88,6 +88,13 @@ class Type(enum.IntEnum):
     @classmethod
     def parse(cls, p):
         return cls(struct.unpack("B", p[:1])[0]), p[1:]
+class P2PCmdType(enum.IntEnum):
+    P2P_JSON_CMD  = 0x06a4 # unknown
+    P2P_SEND_FILE = 0x3a98 # unknown
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("B", p[:1])[0]), p[1:]
 
 @dataclass
 class Message:
