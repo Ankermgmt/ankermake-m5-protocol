@@ -202,23 +202,26 @@ class Xzyh:
 @dataclass
 class Aabb:
     signature : bytes = field(repr=False, kw_only=True, default=b'\xaa\xbb') # Signature bytes. Must be 0xAABB
-    unk       : u16le # Unknown field
-    cmd       : u32le # Command field (unknown function)
+    flags     : u8 # Flags (unknown meaning, only seen as 0x80)
+    sn        : u8 # Session id
+    cmd       : u32le # Command field (P2PCmdType)
     len       : u32le # Length field
 
     @classmethod
     def parse(cls, p):
         # not encrypted
         signature, p = Magic.parse(p, 2, b'\xaa\xbb')
-        unk, p = u16le.parse(p)
+        flags, p = u8.parse(p)
+        sn, p = u8.parse(p)
         cmd, p = u32le.parse(p)
         len, p = u32le.parse(p)
 
-        return cls(signature=signature, unk=unk, cmd=cmd, len=len), p
+        return cls(signature=signature, flags=flags, sn=sn, cmd=cmd, len=len), p
 
     def pack(self):
         p  = Magic.pack(self.signature, 2, b'\xaa\xbb')
-        p += u16le.pack(self.unk)
+        p += u8.pack(self.flags)
+        p += u8.pack(self.sn)
         p += u32le.pack(self.cmd)
         p += u32le.pack(self.len)
 

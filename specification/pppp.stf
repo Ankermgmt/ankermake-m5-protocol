@@ -117,10 +117,13 @@ struct Aabb
     # Signature bytes. Must be 0xAABB
     signature: magic<2, 0xAABB>
 
-    # Unknown field
-    unk: u16le
+    # Flags (unknown meaning, only seen as 0x80)
+    flags: u8
 
-    # Command field (unknown function)
+    # Session id
+    sn: u8
+
+    # Command field (P2PCmdType)
     cmd: u32le
 
     # Length field
