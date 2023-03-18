@@ -110,7 +110,12 @@ struct Xzyh
     magic: magic<4, 0x585a5948>
     cmd: u16le
     len: u32le
-    pad: zeroes<6>
+    unk0: u8
+    unk1: u8
+    chan: u8
+    unk2: u8
+    unk3: u8
+    dev_type: u8
     data: bytes<field<len>>
 
 struct Aabb
