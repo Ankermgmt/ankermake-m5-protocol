@@ -76,6 +76,13 @@ class AnkerHTTPAppApiV1(AnkerHTTPApi):
     def query_fdm_list(self):
         return self._post("/query_fdm_list", headers={"X-Auth-Token": self._auth})
 
+    @require_auth_token
+    def equipment_get_dsk_keys(self, station_sns, invalid_dsks={}):
+        return self._post("/equipment/get_dsk_keys", headers={"X-Auth-Token": self._auth}, data={
+            "invalid_dsks": invalid_dsks,
+            "station_sns": station_sns,
+        })
+
 class AnkerHTTPPassportApiV1(AnkerHTTPApi):
 
     scope = "/v1/passport"
