@@ -32,8 +32,9 @@ class ColorFormatter(logging.Formatter):
             super().format(rec),
         ])
 
-def setup_logging():
+def setup_logging(level=logging.INFO):
     log = logging.getLogger(__name__)
+    log.setLevel(level)
     ch = logging.StreamHandler()
     ch.setFormatter(ColorFormatter("%(message)s"))
     log.addHandler(ch)
