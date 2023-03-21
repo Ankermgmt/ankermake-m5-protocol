@@ -51,3 +51,8 @@ class Account(Serialize):
     @property
     def mqtt_password(self):
         return self.email
+
+@dataclass
+class Config(Serialize):
+    account: Account
+    printers: [Printer]
