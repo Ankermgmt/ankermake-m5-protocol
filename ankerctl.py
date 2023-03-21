@@ -78,11 +78,65 @@ def config_import(env, fd):
     print(cache)
 
 @config.command("import")
-@click.argument("filename", required=False)
-@click.pass_obj
-def config_import(obj, filename):
-    """Import printer and account information from login.json"""
-    print(f"config_import {filename}")
+@click.argument("fd", required=True, type=click.File("r"), metavar="path/to/login.json")
+@pass_env
+def config_import(env, fd):
+    """
+    Import printer and account information from login.json
+
+    When run without filename, attempt to auto-detect login.json in default
+    install location
+    """
+
+    log.info("Loading cache..")
+
+    # extract auth token
+    cache = libflagship.logincache.load(fd.read())["data"]
+    auth_token=cache["auth_token"]
+
+    # extract account region
+    region=libflagship.logincache.guess_region(cache["ab_code"])
+
+    log.info("Initializing API..")
+    appapi = libflagship.httpapi.AnkerHTTPAppApiV1(auth_token=auth_token, region=region, verify=not env.insecure)
+    ppapi = libflagship.httpapi.AnkerHTTPPassportApiV1(auth_token=auth_token, region=region, verify=not env.insecure)
+
+    # request profile and printer list
+    log.info("Requesting profile data..")
+    profile = ppapi.profile()
+
+    # create config object
+    config = cli.model.Config(account=cli.model.Account(
+        auth_token=auth_token,
+        region=region,
+        user_id=profile['user_id'],
+        email=profile["email"],
+    ), printers=[])
+
+    log.info("Requesting printer list..")
+    printers = appapi.query_fdm_list()
+
+    log.info("Requesting pppp keys..")
+    sns = [pr["station_sn"] for pr in printers]
+    dsks = {dsk["station_sn"]: dsk for dsk in appapi.equipment_get_dsk_keys(station_sns=sns)["dsk_keys"]}
+
+    # populate config object with printer list
+    for pr in printers:
+        station_sn = pr["station_sn"]
+        config.printers.append(cli.model.Printer(
+            sn=station_sn,
+            mqtt_key=unhex(pr["secret_key"]),
+            p2p_conn=pr["p2p_conn"],
+            p2p_duid=pr["p2p_did"],
+            p2p_key=dsks[pr["station_sn"]]["dsk_key"],
+        ))
+        log.info(f"Adding printer [{station_sn}]")
+
+    # save config
+    env.config.save("default", config)
+
+    log.info(f"Finished import")
+
 
 @config.command("show")
 @pass_env
