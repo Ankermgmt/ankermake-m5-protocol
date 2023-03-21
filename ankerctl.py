@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import click
 import logging
 from rich import print
@@ -17,6 +18,30 @@ from libflagship.mqtt import MqttMsg, MqttMsgType
 from libflagship.pppp import PktLanSearch
 from libflagship.mqttapi import AnkerMQTTBaseClient
 from libflagship.ppppapi import AnkerPPPPApi
+
+class AnkerMQTTClient(AnkerMQTTBaseClient):
+
+    def on_connect(self, client, userdata, flags):
+        log.info("Connected to mqtt")
+
+    def on_message(self, client, userdata, msg, pkt, tail):
+        log.info(f"TOPIC [{msg.topic}]")
+        log.debug(enhex(msg.payload[:]))
+
+        for obj in json.loads(pkt.data):
+            try:
+                cmdtype = obj["commandType"]
+                name = MqttMsgType(cmdtype).name
+                if name.startswith("ZZ_MQTT_CMD_"):
+                    name = name[len("ZZ_MQTT_CMD_"):].lower()
+
+                del obj["commandType"]
+                print(f"  [{cmdtype:4}] {name:20} {obj}")
+            except:
+                print(f"  {obj}")
+
+        if tail:
+            log.warning(f"UNPARSED TAIL DATA: {tail}")
 
 class Environment:
     def __init__(self):
@@ -54,6 +79,31 @@ def main(ctx, verbose, quiet, insecure):
 
 @main.group("mqtt", help="Low-level mqtt api access")
 def mqtt(): pass
+
+@mqtt.command("monitor")
+@pass_env
+def mqtt_monitor(env):
+
+    servertable = {
+        "eu": "make-mqtt-eu.ankermake.com",
+        "us": "make-mqtt.ankermake.com",
+    }
+
+    with env.config.open() as cfg:
+        printer = cfg.printers[0]
+        acct = cfg.account
+        server = servertable[acct.region]
+        log.info(f"Connecting to {server}")
+        client = AnkerMQTTClient.login(
+            printer.sn,
+            acct.mqtt_username,
+            acct.mqtt_password,
+            printer.mqtt_key,
+            ca_certs="examples/ankermake-mqtt.crt",
+            verify=not env.insecure,
+        )
+        client.connect(server)
+        client.loop()
 
 @main.group("pppp", help="Low-level pppp api access")
 def pppp(): pass
