@@ -7,6 +7,22 @@ import cli.config
 import cli.model
 import cli.logfmt
 
+import libflagship.httpapi
+import libflagship.logincache
+import libflagship.seccode
+
+from libflagship.util import unhex, enhex
+from libflagship.mqtt import MqttMsg, MqttMsgType
+from libflagship.pppp import PktLanSearch
+from libflagship.mqttapi import AnkerMQTTBaseClient
+from libflagship.ppppapi import AnkerPPPPApi
+
+class Environment:
+    def __init__(self):
+        pass
+
+pass_env = click.make_pass_decorator(Environment)
+
 @click.group()
 @click.pass_context
 def main(ctx):
