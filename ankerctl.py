@@ -64,6 +64,19 @@ def http(): pass
 @main.group("config", help="View and update configuration")
 def config(): pass
 
+@config.command("decode")
+@click.argument("fd", required=True, type=click.File("r"), metavar="path/to/login.json")
+@pass_env
+def config_import(env, fd):
+    """
+    Decode a `login.json` file and print its contents.
+    """
+
+    log.info("Loading file..")
+
+    cache = libflagship.logincache.load(fd.read())["data"]
+    print(cache)
+
 @config.command("import")
 @click.argument("filename", required=False)
 @click.pass_obj
