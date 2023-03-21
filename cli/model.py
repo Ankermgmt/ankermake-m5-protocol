@@ -32,8 +32,10 @@ class Serialize:
 @dataclass
 class Printer(Serialize):
     sn: str
-    duid: str
     mqtt_key: bytes
+    p2p_conn: str
+    p2p_duid: str
+    p2p_key: str
 
 @dataclass
 class Account(Serialize):
