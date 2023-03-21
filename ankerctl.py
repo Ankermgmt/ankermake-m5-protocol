@@ -2,6 +2,7 @@
 
 import click
 import logging
+from rich import print
 
 import cli.config
 import cli.model
