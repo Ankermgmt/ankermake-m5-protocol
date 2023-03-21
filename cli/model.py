@@ -40,5 +40,14 @@ class Printer(Serialize):
 @dataclass
 class Account(Serialize):
     auth_token: str
-    mqtt_username: str
-    mqtt_password: str
+    region: str
+    user_id: str
+    email: str
+
+    @property
+    def mqtt_username(self):
+        return f"eufy_{self.user_id}"
+
+    @property
+    def mqtt_password(self):
+        return self.email
