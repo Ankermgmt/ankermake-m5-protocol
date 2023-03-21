@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import hashlib
-import util
 import random
+from libflagship.util import enhex
 
 def cal_hw_id_suffix(val):
     return sum((
@@ -41,7 +41,7 @@ def gen_check_code_v1(base_code, seed):
         if (str[x+1] > 0x7d) and (str[x+1] > str[x+2]):
             str[x+1] = str[x+1] - str[x+2]
 
-    return util.enhex(str[0x10:0x20]).upper()
+    return enhex(str[0x10:0x20]).upper()
 
 
 def gen_rand_seed(mac):
