@@ -10,6 +10,15 @@ class BaseConfigManager:
         self._dirs = dirs
         dirs.user_config_path.mkdir(exist_ok=True)
 
+    @contextlib.contextmanager
+    def _borrow(self, value, write, default=None):
+        if not default:
+            default = {}
+        pr = self.load(value, default)
+        yield pr
+        if write:
+            self.save(value, pr)
+
     @property
     def config_root(self):
         return self._dirs.user_config_path
@@ -29,13 +38,6 @@ class BaseConfigManager:
         path.write_text(json.dumps(value))
 
 class AnkerConfigManager(BaseConfigManager):
-
-    @contextlib.contextmanager
-    def _borrow(self, value, default, write):
-        pr = self.load(value, default)
-        yield pr
-        if write:
-            self.save(value, pr)
 
     def printers(self, write=False):
         return self._borrow("printers", [], write)
