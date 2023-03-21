@@ -24,10 +24,33 @@ class Environment:
 
 pass_env = click.make_pass_decorator(Environment)
 
-@click.group()
+@click.group(context_settings = dict(help_option_names=["-h", "--help"], allow_interspersed_args=True))
+@click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
+@click.option("--verbose", "-v", count=True, help="Increase verbosity")
+@click.option("--quiet", "-q", count=True, help="Decrease verbosity")
 @click.pass_context
-def main(ctx):
-    ctx.obj = cli.config.configmgr()
+def main(ctx, verbose, quiet, insecure):
+    ctx.ensure_object(Environment)
+    env = ctx.obj
+
+    levels = {
+        -3: logging.CRITICAL,
+        -2: logging.ERROR,
+        -1: logging.WARNING,
+        0: logging.INFO,
+        1: logging.DEBUG,
+    }
+    env.config   = cli.config.configmgr()
+    env.insecure = insecure
+    env.level = max(-3, min(verbose - quiet, 1))
+    env.log = cli.logfmt.setup_logging(levels[env.level])
+
+    global log
+    log = env.log
+
+    if insecure:
+        import urllib3
+        urllib3.disable_warnings()
 
 @main.group("mqtt", help="Low-level mqtt api access")
 def mqtt(): pass
@@ -62,5 +85,4 @@ def config_show(cfg):
             log.error("No printers configured. Run 'config import' to populate.")
 
 if __name__ == "__main__":
-    log = cli.logfmt.setup_logging()
     main()
