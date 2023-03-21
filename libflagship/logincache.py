@@ -4,6 +4,13 @@ import json
 
 cachekey = unhex("1b55f97793d58864571e1055838cac97")
 
+def guess_region(cc):
+    us_regions = {"US", "CA", "MX", "BR", "AR", "CU", "BS", "AU", "NZ"}
+    if cc in us_regions:
+        return "us"
+    else:
+        return "eu"
+
 def decrypt(data, key=cachekey):
     raw = b64d(data)
 
