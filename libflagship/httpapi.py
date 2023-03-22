@@ -48,11 +48,6 @@ class AnkerHTTPApi:
             else:
                 raise ValueError("must specify either base_url or region {'eu', 'us'}")
 
-    @staticmethod
-    def calc_check_code(sn, mac):
-        input = f"{sn}+{sn[-4:]}+{mac}"
-        return hashlib.md5(input.encode()).hexdigest()
-
     @unwrap_api
     def _get(self, url, headers=None):
         return requests.get(f"{self._base}{self.scope}{url}", headers=headers, verify=self._verify)
