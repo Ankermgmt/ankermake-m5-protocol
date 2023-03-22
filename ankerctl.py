@@ -151,7 +151,7 @@ def config_import(env, fd):
         elif useros == 'Windows' and path.exists(winfileloc):
             fd = open(winfileloc, 'r')
         else:
-            exit("This platform does not support autodetection. Please specify file location with -f <filename>")
+            exit("This platform does not support autodetection. Please specify file location")
 
     log.info("Loading cache..")
 
