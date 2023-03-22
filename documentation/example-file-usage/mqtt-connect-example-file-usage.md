@@ -4,11 +4,15 @@ This example file connects to your machine over MQTT to view basic data.
 
 1. Navigate to wherever you cloned this repository to. Open the "examples" folder and open a terminal window there, just like in the previous section.
 
-2. Type in the following command, but replace "YOUR_AUTH_TOKEN_HERE" with your actual Authentication Token and no quotes:
+2. In order to achieve a successful connection via `mqtt-connect.py`, it's important to understand each argument that is required to be input. Here's a valid command to run this script if your AnkerMake account was registered in the USA:
 
    ```bash
    python3 mqtt-connect.py -r us -A "YOUR_AUTH_TOKEN_HERE"
    ```
+
+   The first required argument is `-r`  (or `--region`) for the region your AnkerMake account was registered in. Use either `eu`  or `us`.
+
+   The second required argument is `-A`  (or `--auth`) and you should input your Authentication Token here. You can extract that from your `login.json` file by using the `extract-auth-token.py` example file.
 
 3. **[Optional Step]** If desired, you can save the contents of the output to a log file by adding `> output.log` to the end of the command in the previous step:
 
@@ -32,9 +36,9 @@ MqttMsg(
     packet_num=1,
     time=1678924548,
     device_guid='SOME_DATA_HERE',
-    data=b'[{"commandType":1003,"currentTemp":5263,"targetTemp":18000},{"comman
-dType":1004,"currentTemp":3990,"targetTemp":6000}]'
+    data=b'[{"commandType":1003,"currentTemp":5263,"targetTemp":18000},{"commandType":1004,"currentTemp":3990,"targetTemp":6000}]'
 )
 ```
 
-Refer to the MQTT documentation for information on what you're seeing.
+Refer to the [MQTT documentation](https://github.com/Ankermgmt/ankermake-m5-research/tree/master/mqtt) for information on what values you're seeing in this output. For the general structure and abstract explanation of the AnkerMake MQTT communications, reference the documentation in this repository starting with the [MQTT Overview](../mqtt-overview.md).
+

@@ -16,5 +16,10 @@
     python3 extract-auth-token.py -f /path/to/login.json
    ```
 
-   You should get back a long sequence of numbers and letters in plain text. That's your Authentication Token.
-
+   Here's and example of the output:
+   
+   ```
+   2ab96390c7dbe3439de74d0c9b0b1767
+   ```
+   
+   That's your Authentication Token.
