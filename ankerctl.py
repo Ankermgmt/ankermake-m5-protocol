@@ -17,7 +17,7 @@ from libflagship.util import unhex, enhex
 from libflagship.mqtt import MqttMsg, MqttMsgType
 from libflagship.pppp import PktLanSearch
 from libflagship.mqttapi import AnkerMQTTBaseClient
-from libflagship.ppppapi import AnkerPPPPApi
+# from libflagship.ppppapi import AnkerPPPPApi
 
 class AnkerMQTTClient(AnkerMQTTBaseClient):
 
