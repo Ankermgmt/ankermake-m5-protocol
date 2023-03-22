@@ -113,6 +113,20 @@ def pppp(): pass
 @main.group("http", help="Low-level http api access")
 def http(): pass
 
+@http.command("calc-check-code")
+@click.argument("sn", required=True)
+@click.argument("mac", required=True)
+def http_calc_check_code(sn, mac):
+    """
+    Calculate printer 'check code' for http api version 1
+
+    sn: Printer serial number (looks like EUPRAKM-012345-ABCDEF)
+
+    mac: Printer mac address (looks like 11:22:33:44:55:66)
+    """
+
+    print(libflagship.seccode.calc_check_code(sn, mac.replace(":", "")))
+
 @main.group("config", help="View and update configuration")
 def config(): pass
 
