@@ -12,7 +12,7 @@ This example file connects to your machine over MQTT to view basic data.
 
    The first required argument is `-r`  (or `--region`) for the region your AnkerMake account was registered in. Use either `eu`  or `us`.
 
-   The second required argument is `-A`  (or `--auth`) and you should input your Authentication Token here. You can extract that from your `login.json` file by using the `extract-auth-token.py` example file.
+   The second required argument is `-A`  (or `--auth`) and you should paste in your Authentication Token here. You can extract that from your `login.json` file by following [this guide](/documentation/example-file-usage/extract-auth-token-example-file-usage.md).
 
 3. **[Optional Step]** If desired, you can save the contents of the output to a log file by adding `> output.log` to the end of the command in the previous step:
 

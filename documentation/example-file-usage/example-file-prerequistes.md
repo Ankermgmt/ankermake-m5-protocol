@@ -6,14 +6,15 @@ You'll need Python 3, some pip packages, and the AnkerMake slicer.
 
 If you're on Linux, all these tools are natively supported. To install/run the AnkerMake slicer, you'll need some type of translation layer software such as [Wine](https://www.winehq.org/) or [Proton-Caller](https://github.com/caverym/proton-caller).
 
-We also include the [Transwarp Complier](https://github.com/chrivers/transwarp) in our `requirements.txt` file for convenience should you want to generate new library files from templates.
+We also include the [Transwarp Compiler](https://github.com/chrivers/transwarp) in our `requirements.txt` file for convenience should you want to generate new library files from templates.
 
 ## Installation
 
 ### Windows
 
-1. Install the AnkerMake slicer from [their website](https://www.ankermake.com/software). Make sure you open it and login, then you can close the app.
-
+1. Install the [AnkerMake slicer](https://www.ankermake.com/software). Make sure you open it and login.
+   **NOTE:** The slicer app does not need to be open for the rest of these steps.
+   
 2. Using `git` or [GitHub Desktop](https://desktop.github.com/), clone this repository into a location of your choice and then navigate to that location in File Explorer.
 
 3. Hold down the "Shift" key and right-click on some empty space in the repository top level folder. Select "Open in Terminal" from the context menu dropdown. (If the following commands do not work, try re-opening your terminal window as administrator and use the `cd` command to navigate to where you cloned this repository to)
@@ -54,7 +55,8 @@ We also include the [Transwarp Complier](https://github.com/chrivers/transwarp) 
 
 ### MacOS
 
-1. Install the AnkerMake slicer from [their website](https://www.ankermake.com/software). Make sure you open it and login, then you can close the app.
+1. Install the [AnkerMake slicer](https://www.ankermake.com/software). Make sure you open it and login.
+   **NOTE:** The slicer app does not need to be open for the rest of these steps.
 
 2. Using `git` or [GitHub Desktop](https://desktop.github.com/), clone this repository into a location of your choice and then navigate to that location in Finder.
 
@@ -72,15 +74,15 @@ We also include the [Transwarp Complier](https://github.com/chrivers/transwarp) 
 
 ### Linux
 
-1. Install the AnkerMake slicer. Alternatively, you can install the slicer on a officially supported operating system that you have access to (Windows or MacOS) and use the `login.json` file from that machine. Either way you choose, make sure you open the slicer and login.
+1. Install the [AnkerMake slicer](https://www.ankermake.com/software). Alternatively, you can install the slicer on a officially supported operating system that you have access to (Windows or MacOS) and use the `login.json` file from that machine. Either way you choose, make sure you open the slicer and login.
 
    **NOTE:** The slicer app does not need to be open for the rest of these steps.
 
 2. Using `git`, clone this repository into a location of your choice and then navigate to that location in your terminal app of choice.
 
-4. Install Python3 from whatever package manager your distro uses via the terminal.
+3. Install Python3 from whatever package manager your distro uses via the terminal.
 
-5. Enter in the following command to install the required pip packages and the Transwarp Complier:
+4. Enter in the following command to install the required pip packages and the Transwarp Complier:
 
    ```bash
    pip3 install -r requirements.txt
