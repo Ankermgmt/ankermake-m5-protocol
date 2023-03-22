@@ -125,7 +125,24 @@ def http_calc_check_code(sn, mac):
     mac: Printer mac address (looks like 11:22:33:44:55:66)
     """
 
-    print(libflagship.seccode.calc_check_code(sn, mac.replace(":", "")))
+    check_code = libflagship.seccode.calc_check_code(sn, mac.replace(":", ""))
+    print(f"check_code: {check_code}")
+
+@http.command("calc-sec-code")
+@click.argument("sn", required=True)
+@click.argument("mac", required=True)
+def http_calc_sec_code(sn, mac):
+    """
+    Calculate printer 'security code' for http api version 2
+
+    sn: Printer serial number (looks like EUPRAKM-012345-ABCDEF)
+
+    mac: Printer mac address (looks like 11:22:33:44:55:66)
+    """
+
+    sec_ts, sec_code = libflagship.seccode.create_check_code_v1(sn.encode(), mac.replace(":", "").encode())
+    print(f"sec_ts:   {sec_ts}")
+    print(f"sec_code: {sec_code}")
 
 @main.group("config", help="View and update configuration")
 def config(): pass
