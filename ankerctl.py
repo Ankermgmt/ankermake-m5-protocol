@@ -140,7 +140,6 @@ def config_import(env, fd):
     install location
     """
 
-    # if fd is not provided, try to auto-detect
     if fd is None:
         useros = platform.system()
 
