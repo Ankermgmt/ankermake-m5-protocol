@@ -1,12 +1,12 @@
 # Prerequisites for using the example scripts
 
-In order to run the example scripts, you'll need to install some supporting software onto your machine (don't worry, it's really easy). 
+In order to run the example scripts, you'll need to install some supporting software onto your machine. 
 
 You'll need Python 3, some pip packages, and the AnkerMake slicer. 
 
-If you're on Linux, you'll also need Wine to install the AnkerMake slicer unless you are ok with ripping files from another machine using MacOS or Windows.
+If you're on Linux, all these tools are natively supported. To install/run the AnkerMake slicer, you'll need some type of translation layer software such as [Wine](https://www.winehq.org/) or [Proton-Caller](https://github.com/caverym/proton-caller).
 
-We also include the Transwarp Complier in our `requirements.txt` file for convenience should you want to generate new configs of the standards from this repository.
+We also include the [Transwarp Complier](https://github.com/chrivers/transwarp) in our `requirements.txt` file for convenience should you want to generate new library files from templates.
 
 ## Installation
 
@@ -72,7 +72,7 @@ We also include the Transwarp Complier in our `requirements.txt` file for conven
 
 ### Linux
 
-1. Install the AnkerMake slicer from [their website ](https://www.ankermake.com/software) on your machine via [Wine](https://www.winehq.org/). Alternatively, you can install the slicer on a officially supported operating system that you have access to (Windows or MacOS) and use the `login.json` file from that machine. Either way you choose, make sure you open it and login.
+1. Install the AnkerMake slicer. Alternatively, you can install the slicer on a officially supported operating system that you have access to (Windows or MacOS) and use the `login.json` file from that machine. Either way you choose, make sure you open the slicer and login.
 
    **NOTE:** The slicer app does not need to be open for the rest of these steps.
 
