@@ -3,17 +3,23 @@ import Cryptodome.Cipher.AES
 
 ## mqtt aes handling
 
-def mqtt_aes_encrypt(msg, key, iv=b"3DPrintAnkerMake"):
+def aes_cbc_encrypt(msg, key, iv):
     aes = Cryptodome.Cipher.AES.new(key=key, iv=iv, mode=Cryptodome.Cipher.AES.MODE_CBC)
     pmsg = Cryptodome.Util.Padding.pad(msg, block_size=16)
     cmsg = aes.encrypt(pmsg)
     return cmsg
 
-def mqtt_aes_decrypt(cmsg, key, iv=b"3DPrintAnkerMake"):
+def aes_cbc_decrypt(cmsg, key, iv):
     aes = Cryptodome.Cipher.AES.new(key=key, iv=iv, mode=Cryptodome.Cipher.AES.MODE_CBC)
     pmsg = aes.decrypt(cmsg)
     msg = Cryptodome.Util.Padding.unpad(pmsg, block_size=16)
     return msg
+
+def mqtt_aes_encrypt(msg, key, iv=b"3DPrintAnkerMake"):
+    return aes_cbc_encrypt(msg, key, iv)
+
+def mqtt_aes_decrypt(cmsg, key, iv=b"3DPrintAnkerMake"):
+    return aes_cbc_decrypt(msg, key, iv)
 
 ## mqtt checksum handling
 
