@@ -48,11 +48,6 @@ class AnkerHTTPApi:
             else:
                 raise ValueError("must specify either base_url or region {'eu', 'us'}")
 
-    @staticmethod
-    def calc_check_code(sn, mac):
-        input = f"{sn}+{sn[-4:]}+{mac}"
-        return hashlib.md5(input.encode()).hexdigest()
-
     @unwrap_api
     def _get(self, url, headers=None):
         return requests.get(f"{self._base}{self.scope}{url}", headers=headers, verify=self._verify)
@@ -75,6 +70,13 @@ class AnkerHTTPAppApiV1(AnkerHTTPApi):
     @require_auth_token
     def query_fdm_list(self):
         return self._post("/query_fdm_list", headers={"X-Auth-Token": self._auth})
+
+    @require_auth_token
+    def equipment_get_dsk_keys(self, station_sns, invalid_dsks={}):
+        return self._post("/equipment/get_dsk_keys", headers={"X-Auth-Token": self._auth}, data={
+            "invalid_dsks": invalid_dsks,
+            "station_sns": station_sns,
+        })
 
 class AnkerHTTPPassportApiV1(AnkerHTTPApi):
 
