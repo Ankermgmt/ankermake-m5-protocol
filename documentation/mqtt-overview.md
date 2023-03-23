@@ -27,7 +27,7 @@ The messages consists of two core parts: the Topic and the **Payload**. The Payl
 > ```mermaid
 > graph
 >     A("[Broker] Topic: network/application/clientA/parameter") <-- "Publish: network/application/clientA/parameter" --> B(("Client A"))
->     A <-- "Subcribe: network/application/clientA/parameter" --> C(("Client B"))
+>     A <-- "Subscribe: network/application/clientA/parameter" --> C(("Client B"))
 > 
 > ```
 >
@@ -75,8 +75,8 @@ The basic relationships for AnkerMake MQTT communications can be illustrated as 
 
 ```mermaid
 graph
-    A("[Broker] Ankermake MQTT Servers (Job Queue and Data)") <-- "MQTT Data (TLS + Encrypted Palyoad)" --> B(("M5 Printers"))
-    A <-- "MQTT Data (TLS + Encrypted Palyoad)" --> C(("Client Devices"))
+    A("[Broker] Ankermake MQTT Servers (Job Queue and Data)") <-- "MQTT Data (TLS + Encrypted Payload)" --> B(("M5 Printers"))
+    A <-- "MQTT Data (TLS + Encrypted Payload)" --> C(("Client Devices"))
     D("AnkerMake HTTPS Servers (API)") -- "MQTT Login Info + Key (HTTPS)" --> C
     C -- "Authentication Token (HTTPS)" --> D
 ```
