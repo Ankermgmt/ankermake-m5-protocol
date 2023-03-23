@@ -158,7 +158,7 @@ def config_import(env, fd):
     log.info("Loading file..")
 
     cache = libflagship.logincache.load(fd.read())["data"]
-    print(cache)
+    print(json.dumps(cache, indent=4))
 
 @config.command("import")
 @click.argument("fd", required=False, type=click.File("r"), metavar="path/to/login.json")
