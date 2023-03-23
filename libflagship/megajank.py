@@ -1,5 +1,9 @@
 import Cryptodome.Util.Padding
 import Cryptodome.Cipher.AES
+import tinyec.registry
+import tinyec.ec
+
+from libflagship.util import b64e
 
 ## mqtt aes handling
 
@@ -37,6 +41,39 @@ def xor_bytes(data):
     for x in data:
         s ^= x
     return s
+
+## Elliptic-Curve Diffie-Hellman (ECDH) for password exchange in login api
+
+anker_ec_v1_curve = tinyec.registry.get_curve("secp256r1")
+
+anker_ec_v1_public_key = tinyec.ec.Keypair(anker_ec_v1_curve, pub=tinyec.ec.Point(
+    anker_ec_v1_curve,
+    0xC5C00C4F8D1197CC7C3167C52BF7ACB054D722F0EF08DCD7E0883236E0D72A38,
+    0x68D9750CB47FA4619248F3D83F0F662671DADC6E2D31C2F41DB0161651C7C076
+))
+
+def ec_pubkey_export(key):
+    return f"04{key.x:32x}{key.y:32x}"
+
+def ecdh_encrypt_login_password(password, partner=anker_ec_v1_public_key):
+    # make fresh EC key
+    eckey = tinyec.ec.make_keypair(anker_ec_v1_curve)
+
+    # Create ECDH instance for new key
+    ecdh = tinyec.ec.ECDH(eckey)
+
+    # Perform ECDH with partner key
+    secret = ecdh.get_secret(partner)
+
+    # Extract result as hex, use as AES key
+    key = bytes.fromhex(hex(secret.x)[2:].zfill(64))
+
+    # AES IV is just the first half of the key
+    iv = key[:16]
+
+    # Encrypt password with AES, return base64 encoding
+    return ec_pubkey_export(eckey.pub), b64e(aes_cbc_encrypt(password, key, iv))
+
 
 ## pppp init string decoder
 
