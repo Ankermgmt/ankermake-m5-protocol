@@ -18,8 +18,8 @@ def aes_cbc_decrypt(cmsg, key, iv):
 def mqtt_aes_encrypt(msg, key, iv=b"3DPrintAnkerMake"):
     return aes_cbc_encrypt(msg, key, iv)
 
-def mqtt_aes_decrypt(msg, key, iv=b"3DPrintAnkerMake"):
-    return aes_cbc_decrypt(msg, key, iv)
+def mqtt_aes_decrypt(cmsg, key, iv=b"3DPrintAnkerMake"):
+    return aes_cbc_decrypt(cmsg, key, iv)
 
 ## mqtt checksum handling
 
