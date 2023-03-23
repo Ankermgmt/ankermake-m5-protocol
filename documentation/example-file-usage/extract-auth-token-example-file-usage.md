@@ -10,7 +10,7 @@
     python3 extract-auth-token.py -a
    ```
 
-   For linux users (and MacOS/Windows users that did not use the default installation path), it's a little more complicated since we can't assume where your `login.json` file is. Locate your `login.json` file in your system and use the following command, substituting the path to your file:
+   For linux users, it's a little more complicated since we can't assume where your `login.json` file is. Locate your `login.json` file in your system and use the following command, substituting the path to your file:
 
    ```bash
     python3 extract-auth-token.py -f /path/to/login.json
