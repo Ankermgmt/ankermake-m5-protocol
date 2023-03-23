@@ -4,13 +4,13 @@
 
 1. Navigate to wherever you cloned this repository to and into the `examples` folder in your terminal.
 
-2. MacOS and Windows users (who used the default AnkerMake slicer installation path), type in the following command:
+2. MacOS and Windows users, type in the following command:
 
    ```bash
     python3 extract-auth-token.py -a
    ```
 
-   For linux users, it's a little more complicated since we can't assume where your `login.json` file is. Locate your `login.json` file in your system and use the following command, substituting the path to your file:
+   For Linux users, it's a little more complicated since we can't assume where your `login.json` file is. Locate your `login.json` file in your system and use the following command, substituting the path to your file:
 
    ```bash
     python3 extract-auth-token.py -f /path/to/login.json
