@@ -114,33 +114,33 @@ def pppp(): pass
 def http(): pass
 
 @http.command("calc-check-code")
-@click.argument("sn", required=True)
+@click.argument("duid", required=True)
 @click.argument("mac", required=True)
-def http_calc_check_code(sn, mac):
+def http_calc_check_code(duid, mac):
     """
     Calculate printer 'check code' for http api version 1
 
-    sn: Printer serial number (looks like EUPRAKM-012345-ABCDEF)
+    duid: Printer serial number (looks like EUPRAKM-012345-ABCDEF)
 
     mac: Printer mac address (looks like 11:22:33:44:55:66)
     """
 
-    check_code = libflagship.seccode.calc_check_code(sn, mac.replace(":", ""))
+    check_code = libflagship.seccode.calc_check_code(duid, mac.replace(":", ""))
     print(f"check_code: {check_code}")
 
 @http.command("calc-sec-code")
-@click.argument("sn", required=True)
+@click.argument("duid", required=True)
 @click.argument("mac", required=True)
-def http_calc_sec_code(sn, mac):
+def http_calc_sec_code(duid, mac):
     """
     Calculate printer 'security code' for http api version 2
 
-    sn: Printer serial number (looks like EUPRAKM-012345-ABCDEF)
+    duid: Printer serial number (looks like EUPRAKM-012345-ABCDEF)
 
     mac: Printer mac address (looks like 11:22:33:44:55:66)
     """
 
-    sec_ts, sec_code = libflagship.seccode.create_check_code_v1(sn.encode(), mac.replace(":", "").encode())
+    sec_ts, sec_code = libflagship.seccode.create_check_code_v1(duid.encode(), mac.replace(":", "").encode())
     print(f"sec_ts:   {sec_ts}")
     print(f"sec_code: {sec_code}")
 
@@ -241,7 +241,7 @@ def config_import(env, fd):
         ))
         log.info(f"Adding printer [{station_sn}]")
 
-    # save config
+    # save config to json file named `ankerctl/default.json`
     env.config.save("default", config)
 
     log.info(f"Finished import")
@@ -252,20 +252,22 @@ def config_import(env, fd):
 def config_show(env):
     """Show current config"""
 
+    # read config from json file named `ankerctl/default.json`
     with env.config.open() as cfg:
         if not cfg:
             log.error("No printers configured. Run 'config import' to populate.")
             return
 
         log.info("Account:")
-        print(f"    user_id: {cfg.account.user_id[:20]}...")
+        print(f"    user_id: {cfg.account.user_id[:20]}...<REDACTED>")
         print(f"    email:   {cfg.account.email}")
         print(f"    region:  {cfg.account.region}")
         print()
 
         log.info("Printers:")
         for p in cfg.printers:
-            print(f"    {p.sn}: {p.p2p_duid}")
+            print(f"    sn: {p.sn}")
+            print(f"    duid: {p.p2p_duid}") # Printer Serial Number
 
 if __name__ == "__main__":
     main()
