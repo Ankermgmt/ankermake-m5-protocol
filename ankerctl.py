@@ -148,12 +148,25 @@ def http_calc_sec_code(sn, mac):
 def config(): pass
 
 @config.command("decode")
-@click.argument("fd", required=True, type=click.File("r"), metavar="path/to/login.json")
+@click.argument("fd", required=False, type=click.File("r"), metavar="path/to/login.json")
 @pass_env
 def config_import(env, fd):
     """
     Decode a `login.json` file and print its contents.
     """
+
+    if fd is None:
+        useros = platform.system()
+
+        darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
+        winfileloc = path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json')
+
+        if useros == 'Darwin' and path.exists(darfileloc):
+            fd = open(darfileloc, 'r')
+        elif useros == 'Windows' and path.exists(winfileloc):
+            fd = open(winfileloc, 'r')
+        else:
+            exit("This platform does not support autodetection. Please specify file location")
 
     log.info("Loading file..")
 
