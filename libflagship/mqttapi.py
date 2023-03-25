@@ -147,3 +147,18 @@ class AnkerMQTTBaseClient:
         res = self._queue[:]
         self._queue.clear()
         return res
+
+    def await_response(self, msgtype, timeout=10):
+        msgtype = int(msgtype)
+        start = datetime.now()
+        end = start + timedelta(seconds=timeout)
+
+        while datetime.now() < end:
+            timeout = (end - datetime.now()).total_seconds()
+            self._mqtt.loop(timeout=timeout)
+            for _, body in self.clear_queue():
+                for obj in body:
+                    if obj["commandType"] == msgtype:
+                        return obj
+
+        return None
