@@ -136,14 +136,14 @@ class AnkerMQTTBaseClient:
 
     def fetch(self, timeout=1.0):
         self._mqtt.loop(timeout=timeout)
-        return self.clearqueue()
+        return self.clear_queue()
 
     def fetchloop(self):
         while True:
             self._mqtt.loop(timeout=1.0)
-            yield from self.clearqueue()
+            yield from self.clear_queue()
 
-    def clearqueue(self):
+    def clear_queue(self):
         res = self._queue[:]
         self._queue.clear()
         return res

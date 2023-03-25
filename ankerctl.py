@@ -133,7 +133,7 @@ def mqtt_gcode(env):
             if msg.get("commandType") == MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value:
                 break
 
-        client.clearqueue()
+        client.clear_queue()
 
 @main.group("pppp", help="Low-level pppp api access")
 def pppp(): pass
