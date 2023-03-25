@@ -27,7 +27,7 @@ class AnkerPPPPApi:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         if timeout:
             sock.settimeout(timeout)
-        addr = ("255.255.255.255", libflagship.pppapi.LAN_SEARCH_PORT)
+        addr = ("255.255.255.255", LAN_SEARCH_PORT)
         return cls(sock, addr=addr)
 
     def recv(self):
