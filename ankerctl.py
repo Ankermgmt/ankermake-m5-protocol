@@ -116,13 +116,7 @@ def mqtt_send(env, command_type, args, force):
             return
 
     client = cli.mqtt.mqtt_open(env)
-    client.command(cmd)
-
-    msg = client.await_response(command_type)
-    if msg:
-        click.echo(cli.util.pretty_json(msg))
-    else:
-        log.error("No response from printer")
+    cli.mqtt.mqtt_command(client, cmd)
 
 @mqtt.command("gcode")
 @pass_env
