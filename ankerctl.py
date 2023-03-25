@@ -82,7 +82,7 @@ def mqtt_monitor(env):
                 print(f"  {obj}")
 
 @mqtt.command("send")
-@click.argument("command-type", type=int, required=True)
+@click.argument("command-type", type=cli.util.EnumType(MqttMsgType), required=True, metavar="<cmd>")
 @click.argument("args", type=cli.util.json_key_value, nargs=-1)
 @click.option("--force", "-f", default=False, is_flag=True, help="Allow dangerous commands")
 @pass_env
