@@ -11,6 +11,8 @@ from libflagship.util import enhex
 # FILE_RECV_ERROR	0x4
 # FILE_RECV_ABORT	0x5
 
+LAN_SEARCH_PORT = 32108
+
 class AnkerPPPPApi:
 
     def __init__(self, sock, drw_delay=0.10, addr=None):
@@ -18,6 +20,15 @@ class AnkerPPPPApi:
         self.ctr = [0] * 8
         self._drw_delay = drw_delay
         self.addr = addr
+
+    @classmethod
+    def open_broadcast(cls, timeout=None):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        if timeout:
+            sock.settimeout(timeout)
+        addr = ("255.255.255.255", libflagship.pppapi.LAN_SEARCH_PORT)
+        return cls(sock, addr=addr)
 
     def recv(self):
         data, self.addr = self.sock.recvfrom(4096)
