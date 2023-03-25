@@ -4,6 +4,7 @@ import logging as log
 import ssl
 import json
 import uuid
+from datetime import datetime, timedelta
 
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsg, MqttPktType
@@ -14,11 +15,13 @@ class AnkerMQTTBaseClient:
         self._mqtt = mqtt
         self._printersn = printersn
         self._key = key
-        self._mqtt.on_connect = self._on_connect
-        self._mqtt.on_message = self._on_message
-        self._mqtt.on_publish = self.on_publish
+        self._mqtt.on_connect    = self._on_connect
+        self._mqtt.on_disconnect = self._on_disconnect
+        self._mqtt.on_message    = self._on_message
+        self._mqtt.on_publish    = self.on_publish
         self._queue = []
         self._guid = guid or str(uuid.uuid4())
+        self._connected = False
 
     # internal function
     def _on_connect(self, client, userdata, flags, rc):
@@ -28,7 +31,12 @@ class AnkerMQTTBaseClient:
         mqtt.subscribe(f"/phone/maker/{self.sn}/notice")
         mqtt.subscribe(f"/phone/maker/{self.sn}/command/reply")
         mqtt.subscribe(f"/phone/maker/{self.sn}/query/reply")
+        self._connected = True
         self.on_connect(client, userdata, flags)
+
+    # internal function
+    def _on_disconnect(self, client, userdata, rc):
+        self._connected = False
 
     # public api: override in subclass (if needed)
     def on_connect(self, client, userdata, flags):
@@ -76,6 +84,17 @@ class AnkerMQTTBaseClient:
 
     def connect(self, server, port=8789, timeout=60):
         self._mqtt.connect(server, port, timeout)
+
+        start = datetime.now()
+        end = start + timedelta(seconds=timeout)
+
+        while datetime.now() < end:
+            timeout = (end - datetime.now()).total_seconds()
+            self._mqtt.loop(timeout=timeout)
+            if self._connected:
+                return
+
+        raise IOError("Timeout while connecting to mqtt server")
 
     @property
     def sn(self):
