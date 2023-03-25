@@ -1,5 +1,8 @@
 import json
+import click
 import logging as log
+
+import cli.util
 
 from libflagship.mqttapi import AnkerMQTTBaseClient
 
@@ -24,3 +27,12 @@ def mqtt_open(env):
         )
         client.connect(server)
         return client
+
+def mqtt_command(client, msg):
+    client.command(msg)
+
+    reply = client.await_response(msg["commandType"])
+    if reply:
+        click.echo(cli.util.pretty_json(reply))
+    else:
+        log.error("No response from printer")
