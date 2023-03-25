@@ -1,3 +1,4 @@
+import logging as log
 import requests
 import functools
 import json
@@ -21,9 +22,11 @@ def unwrap_api(func):
             raise ValueError("scope undefined")
         data = func(self, *args, **kwargs)
         if data.ok:
-            json = data.json()
-            if json["code"] == 0:
-                return json.get("data")
+            jsn = data.json()
+            if jsn["code"] == 0:
+                data = jsn.get("data")
+                log.debug(f"JSON result: {json.dumps(jsn, indent=4)}")
+                return data
             else:
                 raise ValueError(f"API error", json)
         else:
