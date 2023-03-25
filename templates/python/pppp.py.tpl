@@ -87,11 +87,30 @@ class Message:
     def pack(self, p):
         return struct.pack(">BBH", 0xF1, self.type, len(p)) + p
 
+class _Host:
+    pass
+
+class _Duid:
+    def __str__(self):
+        return f"{self.prefix}-{self.serial:06}-{self.check}"
+
+class _Xzyh:
+    pass
+
+class _Aabb:
+    pass
+
+class _Dsk:
+    pass
+
+class _Version:
+    pass
+
 ## output all "struct" blocks
 %for struct in _pppp.without("Message"):
 %if struct.expr == "struct":
 @dataclass
-class ${struct.name}:
+class ${struct.name}(_${struct.name}):
 ${declare_fields(struct)}
     @classmethod
     def parse(cls, p):
