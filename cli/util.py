@@ -1,4 +1,5 @@
 import click
+import json
 
 def json_key_value(str):
     if not "=" in str:
@@ -27,3 +28,18 @@ class EnumType(click.ParamType):
                 return self.__enum[value]
             except:
                 self.fail(self.get_missing_message(param), param, ctx)
+
+def parse_json(msg):
+    if isinstance(msg, dict):
+        for key, value in msg.items():
+            msg[key] = parse_json(value)
+    elif isinstance(msg, str):
+        try:
+            msg = parse_json(json.loads(msg))
+        except:
+            pass
+
+    return msg
+
+def pretty_json(msg):
+    return json.dumps(parse_json(msg), indent=4)
