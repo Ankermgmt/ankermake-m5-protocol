@@ -51,7 +51,7 @@ class Environment:
 
 pass_env = click.make_pass_decorator(Environment)
 
-@click.group(context_settings = dict(help_option_names=["-h", "--help"], allow_interspersed_args=True))
+@click.group(context_settings = dict(help_option_names=["-h", "--help"]))
 @click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
 @click.option("--verbose", "-v", count=True, help="Increase verbosity")
 @click.option("--quiet", "-q", count=True, help="Decrease verbosity")
