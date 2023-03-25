@@ -100,14 +100,21 @@ def mqtt_send(env, command_type, args, force):
 
     To see a list of known command types, run this command without arguments.
     """
-    if not force:
-        if command_type == MqttMsgType.ZZ_MQTT_CMD_APP_RECOVER_FACTORY.value:
-            log.fatal("Refusing to perform factory reset (enable with --force)")
 
     cmd = {
         "commandType": command_type,
         **{key: value for (key, value) in args},
     }
+
+    if not force:
+        if command_type == MqttMsgType.ZZ_MQTT_CMD_APP_RECOVER_FACTORY.value:
+            log.fatal("Refusing to perform factory reset (override with --force)")
+            return
+
+        if command_type == MqttMsgType.ZZ_MQTT_CMD_DEVICE_NAME_SET and "devName" not in cmd:
+            log.fatal("Sending DEVICE_NAME_SET without devName=<name> will crash printer (override with --force)")
+            return
+
     client = cli.mqtt.mqtt_open(env)
     client.command(cmd)
 
