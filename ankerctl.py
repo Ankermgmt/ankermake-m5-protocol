@@ -83,8 +83,13 @@ def mqtt_monitor(env):
 @mqtt.command("send")
 @click.argument("command-type", type=int, required=True)
 @click.argument("args", type=cli.util.json_key_value, nargs=-1)
+@click.option("--force", "-f", default=False, is_flag=True, help="Allow dangerous commands")
 @pass_env
-def mqtt_send(env, command_type, args):
+def mqtt_send(env, command_type, args, force):
+    if not force:
+        if command_type == MqttMsgType.ZZ_MQTT_CMD_APP_RECOVER_FACTORY.value:
+            log.fatal("Refusing to perform factory reset (enable with --force)")
+
     cmd = {
         "commandType": command_type,
         **{key: value for (key, value) in args},
