@@ -118,6 +118,23 @@ def mqtt_send(env, command_type, args, force):
     client = cli.mqtt.mqtt_open(env)
     cli.mqtt.mqtt_command(client, cmd)
 
+@mqtt.command("rename-printer")
+@click.argument("newname", type=str, required=True, metavar="<newname>")
+@pass_env
+def mqtt_rename_printer(env, newname):
+    """
+    Set a new nickname for your printer
+    """
+
+    client = cli.mqtt.mqtt_open(env)
+
+    cmd = {
+        "commandType": MqttMsgType.ZZ_MQTT_CMD_DEVICE_NAME_SET,
+        "devName": newname
+    }
+
+    cli.mqtt.mqtt_command(client, cmd)
+
 @mqtt.command("gcode")
 @pass_env
 def mqtt_gcode(env):
