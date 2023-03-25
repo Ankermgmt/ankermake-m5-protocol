@@ -141,12 +141,9 @@ def pppp(): pass
 @pppp.command("lan-search")
 @pass_env
 def pppp_lan_search(env):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sock.settimeout(1.0)
-    api = AnkerPPPPApi(sock)
+    api = AnkerPPPPApi.open_broadcast(timeout=1.0)
     try:
-        resp = api.req(PktLanSearch(), addr=("255.255.255.255", 32108))
+        resp = api.req(PktLanSearch())
     except TimeoutError:
         log.error("No printers responded within timeout. Are you connected to the same network as the printer?")
     else:
