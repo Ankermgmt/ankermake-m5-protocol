@@ -63,6 +63,10 @@ def mqtt(): pass
 @mqtt.command("monitor")
 @pass_env
 def mqtt_monitor(env):
+    """
+    Connect to mqtt broker, and show low-level events in realtime.
+    """
+
     client = cli.mqtt.mqtt_open(env)
 
     for msg, body in client.fetchloop():
@@ -83,10 +87,19 @@ def mqtt_monitor(env):
 
 @mqtt.command("send")
 @click.argument("command-type", type=cli.util.EnumType(MqttMsgType), required=True, metavar="<cmd>")
-@click.argument("args", type=cli.util.json_key_value, nargs=-1)
+@click.argument("args", type=cli.util.json_key_value, nargs=-1, metavar="[key=value] ...")
 @click.option("--force", "-f", default=False, is_flag=True, help="Allow dangerous commands")
 @pass_env
 def mqtt_send(env, command_type, args, force):
+    """
+    Send raw command to printer via mqtt.
+
+    BEWARE: This is intended for developers and experts only. Sending a
+    malformed command can crash your printer, or have other unintended side
+    effects.
+
+    To see a list of known command types, run this command without arguments.
+    """
     if not force:
         if command_type == MqttMsgType.ZZ_MQTT_CMD_APP_RECOVER_FACTORY.value:
             log.fatal("Refusing to perform factory reset (enable with --force)")
