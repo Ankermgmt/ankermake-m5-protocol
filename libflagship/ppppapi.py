@@ -1,4 +1,5 @@
 import socket
+import logging as log
 
 from libflagship.pppp import *
 from libflagship.util import enhex
@@ -20,21 +21,20 @@ class AnkerPPPPApi:
 
     def recv(self):
         data, self.addr = self.sock.recvfrom(4096)
-        print(f"RX {enhex(data)} [{self.addr}]")
+        log.info(f"RX {enhex(data)} [{self.addr}]")
         msg = Message.parse(data)[0]
-        print(f"   {msg}")
+        log.debug(f"   {msg}")
         return msg
 
     def send(self, pkt, addr=None):
         resp = pkt.pack()
-        print(f"TX {enhex(resp)}")
+        log.info(f"TX {enhex(resp)}")
         msg = Message.parse(resp)[0]
-        print(f"   {msg}")
+        log.debug(f"   {msg}")
         self.sock.sendto(resp, addr or self.addr)
 
     def req(self, pkt, addr=None):
-        print()
-        print("Request:")
+        log.debug("Request:")
         self.send(pkt, addr)
         return self.recv()
 
