@@ -122,18 +122,11 @@ def mqtt_gcode(env):
         }
 
         client.command(cmd)
-
-        for _, body in client.fetchloop():
-            for msg in body:
-                if msg["commandType"] != MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value:
-                    continue
-                log.debug(f"raw json respons: {msg}")
-                click.echo(msg["resData"])
-
-            if msg.get("commandType") == MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value:
-                break
-
-        client.clear_queue()
+        msg = client.await_response(MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND)
+        if msg:
+            click.echo(msg["resData"])
+        else:
+            log.error("No response from printer")
 
 @main.group("pppp", help="Low-level pppp api access")
 def pppp(): pass
