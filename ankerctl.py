@@ -11,6 +11,7 @@ import cli.config
 import cli.model
 import cli.logfmt
 import cli.mqtt
+import cli.util
 
 import libflagship.httpapi
 import libflagship.logincache
@@ -78,6 +79,18 @@ def mqtt_monitor(env):
                 print(f"  [{cmdtype:4}] {name:20} {obj}")
             except:
                 print(f"  {obj}")
+
+@mqtt.command("send")
+@click.argument("command-type", type=int, required=True)
+@click.argument("args", type=cli.util.json_key_value, nargs=-1)
+@pass_env
+def mqtt_send(env, command_type, args):
+    cmd = {
+        "commandType": command_type,
+        **{key: value for (key, value) in args},
+    }
+    client = cli.mqtt.mqtt_open(env)
+    client.command(cmd)
 
 @main.group("pppp", help="Low-level pppp api access")
 def pppp(): pass
