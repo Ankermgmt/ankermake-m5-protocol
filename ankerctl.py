@@ -97,6 +97,43 @@ def mqtt_send(env, command_type, args, force):
     client = cli.mqtt.mqtt_open(env)
     client.command(cmd)
 
+@mqtt.command("gcode")
+@pass_env
+def mqtt_gcode(env):
+    """
+    Interactive gcode command line. Send gcode command to the printer, and print the
+    response.
+
+    Press Ctrl-C to exit. (or Ctrl-D to close connection, except on Windows)
+    """
+    client = cli.mqtt.mqtt_open(env)
+
+    while True:
+        gcode = click.prompt("gcode", prompt_suffix="> ")
+
+        if not gcode:
+            break
+
+        cmd = {
+            "commandType": MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value,
+            "cmdData": gcode,
+            "cmdLen": len(gcode),
+        }
+
+        client.command(cmd)
+
+        for _, body in client.fetchloop():
+            for msg in body:
+                if msg["commandType"] != MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value:
+                    continue
+                log.debug(f"raw json respons: {msg}")
+                click.echo(msg["resData"])
+
+            if msg.get("commandType") == MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value:
+                break
+
+        client.clearqueue()
+
 @main.group("pppp", help="Low-level pppp api access")
 def pppp(): pass
 
