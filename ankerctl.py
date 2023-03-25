@@ -2,6 +2,7 @@
 
 import json
 import click
+import socket
 import logging
 import platform
 from os import path
@@ -136,6 +137,21 @@ def mqtt_gcode(env):
 
 @main.group("pppp", help="Low-level pppp api access")
 def pppp(): pass
+
+@pppp.command("lan-search")
+@pass_env
+def pppp_lan_search(env):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    sock.settimeout(1.0)
+    api = AnkerPPPPApi(sock)
+    try:
+        resp = api.req(PktLanSearch(), addr=("255.255.255.255", 32108))
+    except TimeoutError:
+        log.error("No printers responded within timeout. Are you connected to the same network as the printer?")
+    else:
+        if isinstance(resp, libflagship.pppp.PktPunchPkt):
+            log.info(f"Printer [{str(resp.duid)}] is online")
 
 @main.group("http", help="Low-level http api access")
 def http(): pass
