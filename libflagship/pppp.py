@@ -115,8 +115,27 @@ class Message:
     def pack(self, p):
         return struct.pack(">BBH", 0xF1, self.type, len(p)) + p
 
+class _Host:
+    pass
+
+class _Duid:
+    def __str__(self):
+        return f"{self.prefix}-{self.serial:06}-{self.check}"
+
+class _Xzyh:
+    pass
+
+class _Aabb:
+    pass
+
+class _Dsk:
+    pass
+
+class _Version:
+    pass
+
 @dataclass
-class Host:
+class Host(_Host):
     pad0 : bytes = field(repr=False, kw_only=True, default='\x00' * 1) # unknown
     afam : u8le # Adress family. Set to AF_INET (2)
     port : u16le # Port number
@@ -145,7 +164,7 @@ class Host:
         return p
 
 @dataclass
-class Duid:
+class Duid(_Duid):
     prefix : bytes # duid "prefix", 7 chars + NULL terminator
     serial : u32 # device serial number
     check  : bytes # checkcode relating to prefix+serial
@@ -171,7 +190,7 @@ class Duid:
         return p
 
 @dataclass
-class Xzyh:
+class Xzyh(_Xzyh):
     magic    : bytes = field(repr=False, kw_only=True, default=b'XZYH') # unknown
     cmd      : u16le # unknown
     len      : u32le # unknown
@@ -215,7 +234,7 @@ class Xzyh:
         return p
 
 @dataclass
-class Aabb:
+class Aabb(_Aabb):
     signature : bytes = field(repr=False, kw_only=True, default=b'\xaa\xbb') # Signature bytes. Must be 0xAABB
     flags     : u8 # Flags (unknown meaning, only seen as 0x80)
     sn        : u8 # Session id
@@ -244,7 +263,7 @@ class Aabb:
         return p
 
 @dataclass
-class Dsk:
+class Dsk(_Dsk):
     key : bytes # unknown
     pad : bytes = field(repr=False, kw_only=True, default='\x00' * 4) # unknown
 
@@ -264,7 +283,7 @@ class Dsk:
         return p
 
 @dataclass
-class Version:
+class Version(_Version):
     major : u8 # unknown
     minor : u8 # unknown
     patch : u8 # unknown
