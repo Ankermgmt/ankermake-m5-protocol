@@ -89,7 +89,7 @@ filename is specified. Otherwise, you can specify the file path for
 `login.json`. Example for linux:
 
 ```sh
-ankerctl.py config import /home/username/.wine/drive_c/users/username/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json
+ankerctl.py config import ~/.wine/drive_c/users/username/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json
 ```
 
 The expected output is similar to this:
