@@ -7,8 +7,8 @@ NOTE: This software is in early stages, so expect sharp edges and occasional err
 
 The `ankerctl` program uses [`libflagship`](documentation/libflagship.md), a
 library for communicating with the numerous different protocols required for
-connecting to an Ankermake M5 printer. The `libflagship` library is maintained
-in [this repo](libflagship/), along with `ankerctl`.
+connecting to an Ankermake M5 printer. The `libflagship` library is also maintained
+in this repo, under [`libflagship/`](libflagship/).
 
 ## Current features
 
