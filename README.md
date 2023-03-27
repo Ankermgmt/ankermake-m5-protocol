@@ -141,6 +141,40 @@ Some examples:
 ./ankerctl.py mqtt rename-printer BoatyMcBoatFace
 ```
 
+
+## Docker
+
+While running the python script is generally prefered, there may be situations where you want a more portable solution. For this, a docker image is provided.
+
+```sh
+docker build -t ankerctl . --no-cache
+```
+
+Example usage (no peristent storage)
+```bash
+docker run \
+  -v "$HOME/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json:/tmp/login.json" \
+  ankerctl config decode /tmp/login.json
+```
+
+Example usage (with peristent storage)
+```bash
+# create volume where we can store configs
+docker volume create ankerctl_vol
+
+# generate /root/.config/ankerctl/default.json which is mounted to the docker volume
+docker run \
+  -v ankerctl_vol:/root/.config/ankerctl \
+  -v "$HOME/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json:/tmp/login.json" \
+  ankerctl config import /tmp/login.json
+
+# Now that there is a /root/.config/ankerctl/default.json file that persists in the docker volume
+# we can run ankerctl without having to specify the login.json file
+docker run \
+  -v ankerctl_vol:/root/.config/ankerctl \
+  ankerctl config show
+```
+
 ## Legal
 
 This project is in ABSOLUTELY NO WAY endorsed, affiliated with, or supported by
