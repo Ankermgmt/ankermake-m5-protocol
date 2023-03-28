@@ -1,3 +1,6 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
 # Project Specific Line endings
 *.crt   binary
 *.stf   text
@@ -5,6 +8,3 @@
 *.txt   text
 *.tpl   text
 *.py    text diff=python
-
-# Set the default behavior, in case people don't have core.autocrlf set.
-* text=auto
