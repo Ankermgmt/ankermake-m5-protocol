@@ -6,11 +6,15 @@ import enum
 from dataclasses import dataclass, field
 import socket
 
+def _assert_equal(value, expected):
+    if value != expected:
+        raise ValueError(f"expected {expected} but found {value}")
+
 class Zeroes:
     @classmethod
     def parse(cls, p, num):
         body = p[:num]
-        assert set(body) - {0} == set()
+        _assert_equal(set(body) - {0}, set())
         return body, p[num:]
 
     def pack(self, num):
@@ -28,7 +32,7 @@ class String(Bytes):
     @classmethod
     def parse(cls, p, size):
         body, p = super().parse(p, size)
-        assert body[-1] == 0
+        _assert_equal(body[-1], 0)
         return body[:-1].decode(), p
 
     def pack(self, size):
@@ -59,7 +63,7 @@ class Magic(bytes):
     @classmethod
     def parse(cls, p, size, expected):
         v, p = p[:size], p[size:]
-        assert v == expected
+        _assert_equal(v, expected)
         return cls(v), p
 
     def pack(self, size, expected):
