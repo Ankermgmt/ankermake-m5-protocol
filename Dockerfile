@@ -20,9 +20,9 @@ WORKDIR /app
 RUN mkdir -p /root/.config/
 
 # Copy the script and libraries
-COPY ankerctl.py /app/ankerctl.py
-COPY libflagship /app/libflagship
-COPY cli /app/cli
+COPY ankerctl.py /app/
+COPY libflagship /app/
+COPY cli /app/
 
 # Copy the installed dependencies from the build environment
 COPY --from=build-env /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages

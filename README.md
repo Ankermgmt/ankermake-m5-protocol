@@ -147,7 +147,7 @@ Some examples:
 While running the python script is generally prefered, there may be situations where you want a more portable solution. For this, a docker image is provided.
 
 ```sh
-docker build -t ankerctl . --no-cache
+docker build -t ankerctl .
 ```
 
 Example usage (no peristent storage)
