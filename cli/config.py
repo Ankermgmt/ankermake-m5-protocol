@@ -14,7 +14,7 @@ class BaseConfigManager:
             self._classes = {t.__name__: t for t in classes}
         else:
             self._classes = []
-        dirs.user_config_path.mkdir(exist_ok=True)
+        dirs.user_config_path.mkdir(exist_ok=True, parents=True)
 
     @contextlib.contextmanager
     def _borrow(self, value, write, default=None):
