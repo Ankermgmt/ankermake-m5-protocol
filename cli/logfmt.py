@@ -1,6 +1,7 @@
 import click
 import logging
 
+
 class ColorFormatter(logging.Formatter):
 
     def __init__(self, fmt):
@@ -32,8 +33,17 @@ class ColorFormatter(logging.Formatter):
             super().format(rec),
         ])
 
+
+class ExitOnExceptionHandler(logging.StreamHandler):
+
+    def emit(self, record):
+        super().emit(record)
+        if record.levelno == logging.CRITICAL:
+            raise SystemExit(127)
+
+
 def setup_logging(level=logging.INFO):
-    logging.basicConfig()
+    logging.basicConfig(handlers=[ExitOnExceptionHandler()])
     log = logging.getLogger()
     log.setLevel(level)
     handler = log.handlers[0]
