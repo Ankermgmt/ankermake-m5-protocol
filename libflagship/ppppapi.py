@@ -148,6 +148,8 @@ class Channel:
     def write(self, payload, block=True):
         pdata = payload[:]
 
+        tx_ctr_start = self.tx_ctr
+
         # schedule all packets, starting from current time
         deadline = datetime.now()
         while pdata:
@@ -168,6 +170,8 @@ class Channel:
 
             if self.tx_ack >= tx_ctr_done:
                 break
+
+        return (tx_ctr_start, tx_ctr_done)
 
 
 class AnkerPPPPApi(Thread):
@@ -281,7 +285,7 @@ class AnkerPPPPApi(Thread):
         self.send(pkt, addr)
         return self.recv()
 
-    def send_xzyh(self, data, cmd, chan=0, unk0=0, unk1=0, sign_code=0, unk3=0, dev_type=0):
+    def send_xzyh(self, data, cmd, chan=0, unk0=0, unk1=0, sign_code=0, unk3=0, dev_type=0, block=True):
         xzyh = Xzyh(
             cmd=cmd,
             len=len(data),
@@ -294,9 +298,9 @@ class AnkerPPPPApi(Thread):
             dev_type=dev_type
         )
 
-        self.chans[chan].write(xzyh.pack())
+        return self.chans[chan].write(xzyh.pack(), block=block)
 
-    def send_aabb(self, data, sn=0, cmd=0, frametype=0, chan=1):
+    def send_aabb(self, data, sn=0, cmd=0, frametype=0, chan=1, block=True):
         aabb = Aabb(
             frametype=frametype,
             sn=sn,
@@ -304,7 +308,7 @@ class AnkerPPPPApi(Thread):
             len=len(data)
         )
 
-        self.chans[chan].write(aabb.pack_with_crc(data))
+        return self.chans[chan].write(aabb.pack_with_crc(data), block=block)
 
     def recv_xzyh(self, chan=1):
         fd = self.chans[chan]
