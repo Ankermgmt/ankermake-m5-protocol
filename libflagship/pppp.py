@@ -91,6 +91,9 @@ class Type(enum.IntEnum):
     def parse(cls, p):
         return cls(struct.unpack("B", p[:1])[0]), p[1:]
 
+    def pack(self):
+        return struct.pack("B", self)
+
 class P2PCmdType(enum.IntEnum):
     P2P_JSON_CMD  = 0x06a4 # unknown
     P2P_SEND_FILE = 0x3a98 # unknown
@@ -98,6 +101,9 @@ class P2PCmdType(enum.IntEnum):
     @classmethod
     def parse(cls, p):
         return cls(struct.unpack("B", p[:1])[0]), p[1:]
+
+    def pack(self):
+        return struct.pack("B", self)
 
 class P2PSubCmdType(enum.IntEnum):
     START_LIVE          = 0x03e8 # unknown
@@ -112,6 +118,9 @@ class P2PSubCmdType(enum.IntEnum):
     def parse(cls, p):
         return cls(struct.unpack("B", p[:1])[0]), p[1:]
 
+    def pack(self):
+        return struct.pack("B", self)
+
 class FileTransfer(enum.IntEnum):
     BEGIN = 0x00 # Begin file transfer (sent with metadata)
     DATA  = 0x01 # File content
@@ -121,6 +130,9 @@ class FileTransfer(enum.IntEnum):
     @classmethod
     def parse(cls, p):
         return cls(struct.unpack("B", p[:1])[0]), p[1:]
+
+    def pack(self):
+        return struct.pack("B", self)
 
 
 @dataclass

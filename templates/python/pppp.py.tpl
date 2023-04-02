@@ -68,6 +68,9 @@ class ${enum.name}(enum.IntEnum):
     def parse(cls, p):
         return cls(struct.unpack("B", p[:1])[0]), p[1:]
 
+    def pack(self):
+        return struct.pack("B", self)
+
 %endif
 %endfor
 
