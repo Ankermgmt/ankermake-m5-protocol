@@ -341,10 +341,8 @@ class AnkerPPPPApi(Thread):
         aabb, data = Aabb.parse_with_crc(p)[:2]
         return aabb, data
 
-    def aabb_request(self, data, frametype, chan=1, check=True):
-        self.send_aabb(data=data, frametype=frametype, chan=chan)
+    def recv_aabb_reply(self, chan=1, check=True):
         aabb, data = self.recv_aabb(chan=chan)
-
         if len(data) != 1:
             raise ValueError(f"Unexpected reply from aabb request: {data}")
 
@@ -353,3 +351,7 @@ class AnkerPPPPApi(Thread):
             raise PPPPError(res, f"Aabb request failed: {res.name}")
 
         return res
+
+    def aabb_request(self, data, frametype, chan=1, check=True):
+        self.send_aabb(data=data, frametype=frametype, chan=chan)
+        return self.recv_aabb_reply(chan, check)
