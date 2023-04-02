@@ -138,6 +138,10 @@ class Channel:
         # the returned chunks will be (re)transmitted
         return res
 
+    def wait(self):
+        self.event.wait()
+        self.event.clear()
+
     def read(self, nbytes):
         return self.rx.read(nbytes)
 
@@ -160,8 +164,7 @@ class Channel:
         while block:
             # if doing a blocking write, loop on self.event until we have
             # received acknowledgment of our data
-            self.event.wait()
-            self.event.clear()
+            self.wait()
 
             if self.tx_ack >= tx_ctr_done:
                 break
