@@ -6,6 +6,21 @@ from libflagship.util import enhex
 
 LAN_SEARCH_PORT = 32108
 
+
+class FileUploadInfo:
+
+    def __init__(self, name, size, md5, user_name, user_id, machine_id, type=0):
+        self.name = name
+        self.size = size
+        self.md5 = md5
+        self.user_name = user_name
+        self.user_id = user_id
+        self.machine_id = machine_id
+        self.type = type
+
+    def __str__(self):
+        return f"{self.type},{self.name},{self.size},{self.md5},{self.user_name},{self.user_id},{self.machine_id}"
+
 class AnkerPPPPApi:
 
     def __init__(self, sock, drw_delay=0.10, addr=None):
