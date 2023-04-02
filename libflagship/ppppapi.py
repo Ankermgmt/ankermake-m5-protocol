@@ -1,7 +1,9 @@
 import socket
 import logging as log
 
-from multiprocessing import Pipe
+from multiprocessing import Pipe, connection
+from datetime import datetime, timedelta
+from threading import Event
 
 from libflagship.pppp import *
 from libflagship.util import enhex
@@ -38,6 +40,97 @@ class Wire:
 
     def write(self, data):
         self.tx.send(data)
+
+
+class Channel:
+
+    def __init__(self, index):
+        self.index = index
+        self.rxqueue = {}
+        self.txqueue = []
+        self.rx_ctr = 0
+        self.tx_ctr = 0
+        self.tx_ack = 0
+        self.rx = Wire()
+        self.tx = Wire()
+        self.timeout = timedelta(seconds=0.5)
+        self.acks = set()
+        self.event = Event()
+
+    def rx_ack(self, acks):
+        # remove all ACKed packets from transmission queue
+        self.txqueue = [tx for tx in self.txqueue if tx[1] not in acks]
+
+        # record any ACKs that are not yet confirmed
+        for ack in acks:
+            if ack >= self.tx_ack:
+                self.acks.add(ack)
+
+        # update tx_ack step by step
+        while self.tx_ack in self.acks:
+            self.acks.remove(self.tx_ack)
+            self.tx_ack += 1
+
+    def rx_drw(self, index, data):
+        # drop any packets we have already recieved
+        if self.rx_ctr > index:
+            if self.rx_ctr - index > 20:
+                log.warn(f"Dropping old packet: index {index} while expecting {self.rx_ctr}.")
+            return
+
+        # record packet in queue
+        self.rxqueue[index] = data
+
+        # recombine data from queue
+        while self.rx_ctr in self.rxqueue:
+            del self.rxqueue[self.rx_ctr]
+            self.rx_ctr = (self.rx_ctr + 1) & 0xFFFF
+            self.rx.write(data)
+
+    def poll(self):
+        # signal event to make blocking reads check status again
+        self.event.set()
+
+        txq = self.txqueue
+
+        res = []
+        now = datetime.now()
+
+        while txq and txq[0][0] < now:
+            pkt = txq.pop(0)
+            res.append(PktDrw(chan=self.index, index=pkt[1], data=pkt[2]))
+            txq.append((pkt[0] + self.timeout, pkt[1], pkt[2]))
+
+        # the returned chunks will be (re)transmitted
+        return res
+
+    def read(self, nbytes):
+        return self.rx.read(nbytes)
+
+    def write(self, payload, block=True):
+        pdata = payload[:]
+
+        # schedule all packets, starting from current time
+        deadline = datetime.now()
+        while pdata:
+            # schedule transmission in 1kb chunks
+            data, pdata = pdata[:1024], pdata[1024:]
+            self.txqueue.append((deadline, self.tx_ctr, data))
+            self.tx_ctr = (self.tx_ctr + 1) & 0xFFFF
+
+            # schedule packets slightly apart, to avoid huge packet bursts
+            deadline += timedelta(seconds=0.001)
+
+        tx_ctr_done = self.tx_ctr
+
+        while block:
+            # if doing a blocking write, loop on self.event until we have
+            # received acknowledgment of our data
+            self.event.wait()
+            self.event.clear()
+
+            if self.tx_ack >= tx_ctr_done:
+                break
 
 
 class AnkerPPPPApi:
