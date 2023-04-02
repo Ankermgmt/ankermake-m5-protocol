@@ -2,7 +2,6 @@
 
 import json
 import click
-import socket
 import logging
 import platform
 from os import path
@@ -18,7 +17,7 @@ import libflagship.httpapi
 import libflagship.logincache
 import libflagship.seccode
 
-from libflagship.util import unhex, enhex
+from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
 from libflagship.pppp import PktLanSearch
 from libflagship.ppppapi import AnkerPPPPApi
