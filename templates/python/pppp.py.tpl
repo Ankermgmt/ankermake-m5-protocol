@@ -97,6 +97,12 @@ class _Host:
     pass
 
 class _Duid:
+
+    @classmethod
+    def from_string(cls, str):
+        prefix, serial, check = str.split("-")
+        return cls(prefix, int(serial), check)
+
     def __str__(self):
         return f"{self.prefix}-{self.serial:06}-{self.check}"
 
