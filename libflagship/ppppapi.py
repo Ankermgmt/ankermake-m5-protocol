@@ -173,6 +173,11 @@ class AnkerPPPPApi(Thread):
         self.chans = [Channel(n) for n in range(8)]
 
     @classmethod
+    def open_lan(cls, duid, host):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return cls(sock, duid, addr=(host, PPPP_PORT))
+
+    @classmethod
     def open_broadcast(cls, timeout=None):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
