@@ -182,6 +182,7 @@ class AnkerPPPPApi(Thread):
         return cls(sock, duid=None, addr=addr)
 
     def run(self):
+        log.debug("Started pppp thread")
         while True:
             ready = connection.wait([self.sock], timeout=0.05)
             if self.sock in ready:
