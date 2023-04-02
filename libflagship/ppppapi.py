@@ -152,16 +152,16 @@ class AnkerPPPPApi:
 
     def recv(self):
         data, self.addr = self.sock.recvfrom(4096)
-        log.info(f"RX {enhex(data)} [{self.addr}]")
+        log.debug(f"RX {enhex(data)} [{self.addr}]")
         msg = Message.parse(data)[0]
-        log.debug(f"   {msg}")
+        log.debug(f"RX {msg}")
         return msg
 
     def send(self, pkt, addr=None):
         resp = pkt.pack()
-        log.info(f"TX {enhex(resp)}")
+        log.debug(f"TX {enhex(resp)}")
         msg = Message.parse(resp)[0]
-        log.debug(f"   {msg}")
+        log.debug(f"TX {msg}")
         self.sock.sendto(resp, addr or self.addr)
 
     def req(self, pkt, addr=None):
