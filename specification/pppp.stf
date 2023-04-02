@@ -102,6 +102,22 @@ enum FileTransfer
     # Reply from printer
     REPLY                     = 0x80
 
+enum FileTransferReply
+    # Success
+    OK                        = 0x00
+
+    # Timeout during transfer
+    ERR_TIMEOUT               = 0xfc
+
+    # Frame type error
+    ERR_FRAME_TYPE            = 0xfd
+
+    # Checksum did not match
+    ERR_WRONG_MD5             = 0xfe
+
+    # Printer was not ready to receive
+    ERR_BUSY                  = 0xff
+
 struct Host
     pad0: zeroes<1>
 
