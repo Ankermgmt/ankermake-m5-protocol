@@ -179,7 +179,7 @@ class AnkerPPPPApi(Thread):
         if timeout:
             sock.settimeout(timeout)
         addr = ("255.255.255.255", PPPP_PORT)
-        return cls(sock, addr=addr)
+        return cls(sock, duid=None, addr=addr)
 
     def run(self):
         while True:
