@@ -311,3 +311,16 @@ class AnkerPPPPApi(Thread):
         p = data + fd.read(aabb.len + 2)
         aabb, data = Aabb.parse_with_crc(p)[:2]
         return aabb, data
+
+    def aabb_request(self, data, frametype, chan=1, check=True):
+        self.send_aabb(data=data, frametype=frametype, chan=chan)
+        aabb, data = self.recv_aabb(chan=chan)
+
+        if len(data) != 1:
+            raise ValueError(f"Unexpected reply from aabb request: {data}")
+
+        res = FileTransferReply(data[0])
+        if check and res != FileTransferReply.OK:
+            raise ValueError(f"Aabb request failed: {res.name}")
+
+        return res
