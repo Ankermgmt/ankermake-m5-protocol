@@ -12,6 +12,7 @@ import cli.model
 import cli.logfmt
 import cli.mqtt
 import cli.util
+import cli.pppp
 
 import libflagship.httpapi
 import libflagship.logincache
@@ -19,8 +20,9 @@ import libflagship.seccode
 
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
-from libflagship.pppp import PktLanSearch
-from libflagship.ppppapi import AnkerPPPPApi
+from libflagship.pppp import PktLanSearch, FileTransferReply
+from libflagship.ppppapi import AnkerPPPPApi, FileUploadInfo, PPPPError
+
 
 class Environment:
     def __init__(self):
@@ -199,6 +201,37 @@ def pppp_lan_search(env):
     else:
         if isinstance(resp, libflagship.pppp.PktPunchPkt):
             log.info(f"Printer [{str(resp.duid)}] is online")
+
+
+@pppp.command("print-file")
+@click.argument("file", required=True, type=click.File("rb"), metavar="<file.gcode>")
+@click.option("--no-act", "-n", is_flag=True, help="Test transfer (do not start print)")
+@pass_env
+def pppp_print_file(env, file, no_act):
+
+    api = cli.pppp.pppp_open(env)
+
+    data = file.read()
+    fui = FileUploadInfo.from_file(file.name, user_name="ankerctl", user_id="-", machine_id="-")
+
+    # In no_act mode, deliberately set a bad md5sum. This is a reliable way to
+    # avoid printing the sent file, while still testing that the transfer itself
+    # succeeds.
+    if no_act:
+        fui.md5 = "11111111111111111111111111111111"
+
+    try:
+        cli.pppp.pppp_send_file(api, fui, data)
+    except PPPPError as E:
+        if no_act and E.err == FileTransferReply.ERR_WRONG_MD5:
+            log.info("Successfully transferred file and got ERR_WRONG_MD5 as expected (no-act mode)")
+        else:
+            log.error(f"Could not send print job: {E}")
+    else:
+        log.info("Successfully sent print job")
+
+    api.stop()
+
 
 @main.group("http", help="Low-level http api access")
 def http(): pass
