@@ -32,6 +32,8 @@ class Serialize:
 @dataclass
 class Printer(Serialize):
     sn: str
+    wifi_mac: str
+    ip_addr: str
     mqtt_key: bytes
     p2p_conn: str
     p2p_duid: str
