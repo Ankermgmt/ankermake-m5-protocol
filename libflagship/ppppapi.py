@@ -186,6 +186,9 @@ class AnkerPPPPApi(Thread):
         self.rdy = False
         self.chans = [Channel(n) for n in range(8)]
 
+        self.running = True
+        self.stopped = Event()
+
     @classmethod
     def open_lan(cls, duid, host):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -200,9 +203,13 @@ class AnkerPPPPApi(Thread):
         addr = ("255.255.255.255", PPPP_PORT)
         return cls(sock, duid=None, addr=addr)
 
+    def stop(self):
+        self.running = False
+        self.stopped.wait()
+
     def run(self):
         log.debug("Started pppp thread")
-        while True:
+        while self.running:
             ready = connection.wait([self.sock], timeout=0.05)
             if self.sock in ready:
                 msg = self.recv()
@@ -214,6 +221,10 @@ class AnkerPPPPApi(Thread):
             for idx, ch in enumerate(self.chans):
                 for pkt in ch.poll():
                     self.send(pkt)
+
+        self.send(PktClose())
+
+        self.stopped.set()
 
     @property
     def host(self):
