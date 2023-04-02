@@ -1,27 +1,53 @@
 import socket
+import string
+import hashlib
 import logging as log
 
 from multiprocessing import Pipe, connection
 from datetime import datetime, timedelta
 from threading import Thread, Event
 from socket import AF_INET
+from dataclasses import dataclass
 
 from libflagship.pppp import *
 from libflagship.util import enhex
 
 LAN_SEARCH_PORT = 32108
 
-
+@dataclass
 class FileUploadInfo:
+    name: str
+    size: str
+    md5: str
+    user_name: str
+    user_id: str
+    machine_id: str
+    type: int = 0
 
-    def __init__(self, name, size, md5, user_name, user_id, machine_id, type=0):
-        self.name = name
-        self.size = size
-        self.md5 = md5
-        self.user_name = user_name
-        self.user_id = user_id
-        self.machine_id = machine_id
-        self.type = type
+    @staticmethod
+    def sanitize_filename(str):
+        whitelist = string.ascii_letters + string.digits
+
+        def sanitize(c):
+            if c in whitelist:
+                return c
+            else:
+                return "_"
+
+        return "".join(sanitize(c) for c in str)
+
+    @classmethod
+    def from_file(cls, filename, user_name, user_id, machine_id, type=0):
+        data = open(filename, "rb").read()
+        return cls(
+            name=cls.sanitize_filename(filename),
+            size=len(data),
+            md5=hashlib.md5(data).hexdigest(),
+            user_name=user_name,
+            user_id=user_id,
+            machine_id=machine_id,
+            type=type
+        )
 
     def __str__(self):
         return f"{self.type},{self.name},{self.size},{self.md5},{self.user_name},{self.user_id},{self.machine_id}"
