@@ -215,6 +215,10 @@ class AnkerPPPPApi(Thread):
                 for pkt in ch.poll():
                     self.send(pkt)
 
+    @property
+    def host(self):
+        return Host(afam=AF_INET, addr=self.addr[0], port=self.addr[1])
+
     def process(self, msg):
 
         if msg.type == Type.CLOSE:
@@ -250,13 +254,13 @@ class AnkerPPPPApi(Thread):
             self.send(PktDevLgnAckCrc())
 
         elif msg.type == Type.HELLO:
-            self.send(PktHelloAck(host=Host(afam=AF_INET, addr=self.addr[0], port=self.addr[1])))
+            self.send(PktHelloAck(host=self.host))
 
         elif msg.type == Type.ALIVE_ACK:
             pass
 
         elif msg.type == Type.P2P_RDY:
-            self.send(PktP2pRdyAck(duid=self.duid, host=Host(afam=AF_INET, addr=self.addr[0], port=self.addr[1])))
+            self.send(PktP2pRdyAck(duid=self.duid, host=self.host))
 
             self.new = False
             self.rdy = True
