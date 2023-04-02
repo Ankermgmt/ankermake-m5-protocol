@@ -99,6 +99,9 @@ enum FileTransfer
     # Abort file transfer (delete file)
     ABORT                     = 0x03
 
+    # Reply from printer
+    REPLY                     = 0x80
+
 struct Host
     pad0: zeroes<1>
 
