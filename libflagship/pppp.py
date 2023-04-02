@@ -99,6 +99,30 @@ class P2PCmdType(enum.IntEnum):
     def parse(cls, p):
         return cls(struct.unpack("B", p[:1])[0]), p[1:]
 
+class P2PSubCmdType(enum.IntEnum):
+    START_LIVE          = 0x03e8 # unknown
+    CLOSE_LIVE          = 0x03e9 # unknown
+    VIDEO_RECORD_SWITCH = 0x03ea # unknown
+    LIGHT_STATE_SWITCH  = 0x03ab # unknown
+    LIGHT_STATE_GET     = 0x03ec # unknown
+    LIVE_MODE_SET       = 0x03ed # unknown
+    LIVE_MODE_GET       = 0x03ee # unknown
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+
+class FileTransfer(enum.IntEnum):
+    BEGIN = 0x00 # Begin file transfer (sent with metadata)
+    DATA  = 0x01 # File content
+    END   = 0x02 # Complete file transfer (start printing)
+    ABORT = 0x03 # Abort file transfer (delete file)
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+
+
 @dataclass
 class Message:
 
