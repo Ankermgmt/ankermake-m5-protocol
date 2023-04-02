@@ -14,6 +14,13 @@ from libflagship.util import enhex
 
 PPPP_PORT = 32108
 
+
+class PPPPError(Exception):
+
+    def __init__(self, err, message):
+        self.err = err
+        super().__init__(message)
+
 @dataclass
 class FileUploadInfo:
     name: str
@@ -321,6 +328,6 @@ class AnkerPPPPApi(Thread):
 
         res = FileTransferReply(data[0])
         if check and res != FileTransferReply.OK:
-            raise ValueError(f"Aabb request failed: {res.name}")
+            raise PPPPError(res, f"Aabb request failed: {res.name}")
 
         return res
