@@ -232,16 +232,16 @@ class Duid(_Duid):
 
 @dataclass
 class Xzyh(_Xzyh):
-    magic    : bytes = field(repr=False, kw_only=True, default=b'XZYH') # unknown
-    cmd      : u16le # unknown
-    len      : u32le # unknown
-    unk0     : u8 # unknown
-    unk1     : u8 # unknown
-    chan     : u8 # unknown
-    unk2     : u8 # unknown
-    unk3     : u8 # unknown
-    dev_type : u8 # unknown
-    data     : bytes # unknown
+    magic     : bytes = field(repr=False, kw_only=True, default=b'XZYH') # unknown
+    cmd       : u16le # unknown
+    len       : u32le # unknown
+    unk0      : u8 # unknown
+    unk1      : u8 # unknown
+    chan      : u8 # unknown
+    sign_code : u8 # unknown
+    unk3      : u8 # unknown
+    dev_type  : u8 # unknown
+    data      : bytes # unknown
 
     @classmethod
     def parse(cls, p):
@@ -252,12 +252,12 @@ class Xzyh(_Xzyh):
         unk0, p = u8.parse(p)
         unk1, p = u8.parse(p)
         chan, p = u8.parse(p)
-        unk2, p = u8.parse(p)
+        sign_code, p = u8.parse(p)
         unk3, p = u8.parse(p)
         dev_type, p = u8.parse(p)
         data, p = Bytes.parse(p, len)
 
-        return cls(magic=magic, cmd=cmd, len=len, unk0=unk0, unk1=unk1, chan=chan, unk2=unk2, unk3=unk3, dev_type=dev_type, data=data), p
+        return cls(magic=magic, cmd=cmd, len=len, unk0=unk0, unk1=unk1, chan=chan, sign_code=sign_code, unk3=unk3, dev_type=dev_type, data=data), p
 
     def pack(self):
         p  = Magic.pack(self.magic, 4, b'XZYH')
@@ -266,7 +266,7 @@ class Xzyh(_Xzyh):
         p += u8.pack(self.unk0)
         p += u8.pack(self.unk1)
         p += u8.pack(self.chan)
-        p += u8.pack(self.unk2)
+        p += u8.pack(self.sign_code)
         p += u8.pack(self.unk3)
         p += u8.pack(self.dev_type)
         p += Bytes.pack(self.data, self.len)
