@@ -135,6 +135,20 @@ class FileTransfer(enum.IntEnum):
     def pack(self):
         return struct.pack("B", self)
 
+class FileTransferReply(enum.IntEnum):
+    OK             = 0x00 # Success
+    ERR_TIMEOUT    = 0xfc # Timeout during transfer
+    ERR_FRAME_TYPE = 0xfd # Frame type error
+    ERR_WRONG_MD5  = 0xfe # Checksum did not match
+    ERR_BUSY       = 0xff # Printer was not ready to receive
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+
+    def pack(self):
+        return struct.pack("B", self)
+
 
 @dataclass
 class Message:
