@@ -27,6 +27,17 @@ class Environment:
     def __init__(self):
         pass
 
+    def upgrade_config_if_needed(self):
+        try:
+            with self.config.open():
+                pass
+        except (KeyError, TypeError):
+            log.warning("Outdated found. Attempting to refresh...")
+            try:
+                cli.config.attempt_config_upgrade(self.config, "default", self.insecure)
+            except Exception as E:
+                log.critical(f"Failed to refresh config. Please import configuration using 'config import' ({E})")
+
 
 pass_env = click.make_pass_decorator(Environment)
 
@@ -59,6 +70,7 @@ def main(ctx, verbose, quiet, insecure):
         import urllib3
         urllib3.disable_warnings()
 
+    env.upgrade_config_if_needed()
 
 @main.group("mqtt", help="Low-level mqtt api access")
 def mqtt(): pass
