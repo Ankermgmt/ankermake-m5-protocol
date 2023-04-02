@@ -144,8 +144,8 @@ struct Aabb
     # Signature bytes. Must be 0xAABB
     signature: magic<2, 0xAABB>
 
-    # Flags (unknown meaning, only seen as 0x80)
-    flags: u8
+    # Frame type (file transfer control)
+    frametype: FileTransfer
 
     # Session id
     sn: u8
