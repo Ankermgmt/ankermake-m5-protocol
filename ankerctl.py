@@ -27,9 +27,11 @@ class Environment:
     def __init__(self):
         pass
 
+
 pass_env = click.make_pass_decorator(Environment)
 
-@click.group(context_settings = dict(help_option_names=["-h", "--help"]))
+
+@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
 @click.option("--verbose", "-v", count=True, help="Increase verbosity")
 @click.option("--quiet", "-q", count=True, help="Decrease verbosity")
@@ -57,8 +59,10 @@ def main(ctx, verbose, quiet, insecure):
         import urllib3
         urllib3.disable_warnings()
 
+
 @main.group("mqtt", help="Low-level mqtt api access")
 def mqtt(): pass
+
 
 @mqtt.command("monitor")
 @pass_env
@@ -84,6 +88,7 @@ def mqtt_monitor(env):
                 print(f"  [{cmdtype:4}] {name:20} {obj}")
             except:
                 print(f"  {obj}")
+
 
 @mqtt.command("send")
 @click.argument("command-type", type=cli.util.EnumType(MqttMsgType), required=True, metavar="<cmd>")
@@ -118,6 +123,7 @@ def mqtt_send(env, command_type, args, force):
     client = cli.mqtt.mqtt_open(env)
     cli.mqtt.mqtt_command(client, cmd)
 
+
 @mqtt.command("rename-printer")
 @click.argument("newname", type=str, required=True, metavar="<newname>")
 @pass_env
@@ -134,6 +140,7 @@ def mqtt_rename_printer(env, newname):
     }
 
     cli.mqtt.mqtt_command(client, cmd)
+
 
 @mqtt.command("gcode")
 @pass_env
@@ -165,8 +172,10 @@ def mqtt_gcode(env):
         else:
             log.error("No response from printer")
 
+
 @main.group("pppp", help="Low-level pppp api access")
 def pppp(): pass
+
 
 @pppp.command("lan-search")
 @pass_env
@@ -183,6 +192,7 @@ def pppp_lan_search(env):
 @main.group("http", help="Low-level http api access")
 def http(): pass
 
+
 @http.command("calc-check-code")
 @click.argument("duid", required=True)
 @click.argument("mac", required=True)
@@ -197,6 +207,7 @@ def http_calc_check_code(duid, mac):
 
     check_code = libflagship.seccode.calc_check_code(duid, mac.replace(":", ""))
     print(f"check_code: {check_code}")
+
 
 @http.command("calc-sec-code")
 @click.argument("duid", required=True)
@@ -214,8 +225,10 @@ def http_calc_sec_code(duid, mac):
     print(f"sec_ts:   {sec_ts}")
     print(f"sec_code: {sec_code}")
 
+
 @main.group("config", help="View and update configuration")
 def config(): pass
+
 
 @config.command("decode")
 @click.argument("fd", required=False, type=click.File("r"), metavar="path/to/login.json")
@@ -242,6 +255,7 @@ def config_import(env, fd):
 
     cache = libflagship.logincache.load(fd.read())["data"]
     print(json.dumps(cache, indent=4))
+
 
 @config.command("import")
 @click.argument("fd", required=False, type=click.File("r"), metavar="path/to/login.json")
@@ -271,10 +285,10 @@ def config_import(env, fd):
 
     # extract auth token
     cache = libflagship.logincache.load(fd.read())["data"]
-    auth_token=cache["auth_token"]
+    auth_token = cache["auth_token"]
 
     # extract account region
-    region=libflagship.logincache.guess_region(cache["ab_code"])
+    region = libflagship.logincache.guess_region(cache["ab_code"])
 
     log.info("Initializing API..")
     appapi = libflagship.httpapi.AnkerHTTPAppApiV1(auth_token=auth_token, region=region, verify=not env.insecure)
@@ -338,6 +352,7 @@ def config_show(env):
         for p in cfg.printers:
             print(f"    sn: {p.sn}")
             print(f"    duid: {p.p2p_duid}") # Printer Serial Number
+
 
 if __name__ == "__main__":
     main()
