@@ -120,3 +120,17 @@ def load_config_from_api(auth_token, region, insecure):
         log.info(f"Adding printer [{station_sn}]")
 
     return config
+
+
+def attempt_config_upgrade(config, profile, insecure):
+    path = config.config_path("default")
+    data = json.load(path.open())
+    cfg = load_config_from_api(
+        data["account"]["auth_token"],
+        data["account"]["region"],
+        insecure
+    )
+
+    # save config to json file named `ankerctl/default.json`
+    config.save("default", cfg)
+    log.info("Finished import")
