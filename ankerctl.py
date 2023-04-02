@@ -328,7 +328,7 @@ def config_import(env, fd):
     # save config to json file named `ankerctl/default.json`
     env.config.save("default", config)
 
-    log.info(f"Finished import")
+    log.info("Finished import")
 
 
 @config.command("show")
