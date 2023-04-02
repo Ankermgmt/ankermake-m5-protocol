@@ -3,7 +3,8 @@ import logging as log
 
 from multiprocessing import Pipe, connection
 from datetime import datetime, timedelta
-from threading import Event
+from threading import Thread, Event
+from socket import AF_INET
 
 from libflagship.pppp import *
 from libflagship.util import enhex
@@ -133,13 +134,17 @@ class Channel:
                 break
 
 
-class AnkerPPPPApi:
+class AnkerPPPPApi(Thread):
 
-    def __init__(self, sock, drw_delay=0.10, addr=None):
+    def __init__(self, sock, duid, addr=None):
+        super().__init__()
         self.sock = sock
-        self.ctr = [0] * 8
-        self._drw_delay = drw_delay
+        self.duid = duid
         self.addr = addr
+
+        self.new = True
+        self.rdy = False
+        self.chans = [Channel(n) for n in range(8)]
 
     @classmethod
     def open_broadcast(cls, timeout=None):
@@ -149,6 +154,71 @@ class AnkerPPPPApi:
             sock.settimeout(timeout)
         addr = ("255.255.255.255", LAN_SEARCH_PORT)
         return cls(sock, addr=addr)
+
+    def run(self):
+        while True:
+            ready = connection.wait([self.sock], timeout=0.05)
+            if self.sock in ready:
+                msg = self.recv()
+                try:
+                    self.process(msg)
+                except StopIteration:
+                    break
+
+            for idx, ch in enumerate(self.chans):
+                for pkt in ch.poll():
+                    self.send(pkt)
+
+    def process(self, msg):
+
+        if msg.type == Type.CLOSE:
+            log.error("CLOSE")
+            raise StopIteration
+
+        elif msg.type == Type.REPORT_SESSION_READY:
+            pkt = PktSessionReady(
+                duid=self.duid,
+                handle=-3,
+                max_handles=5,
+                active_handles=1,
+                startup_ticks=0,
+                b1=1, b2=0, b3=1, b4=0,
+                addr_local=Host(afam=AF_INET, addr="0.0.0.0", port=0),
+                addr_wan=Host(afam=AF_INET, addr="0.0.0.0", port=0),
+                addr_relay=Host(afam=AF_INET, addr="0.0.0.0", port=0)
+            )
+
+            # self.send(pkt)
+
+        elif msg.type == Type.ALIVE:
+            self.send(PktAliveAck())
+
+        elif msg.type == Type.DRW:
+            self.send(PktDrwAck(chan=msg.chan, count=1, acks=[msg.index]))
+            self.chans[msg.chan].rx_drw(msg.index, msg.data)
+
+        elif msg.type == Type.DRW_ACK:
+            self.chans[msg.chan].rx_ack(msg.acks)
+
+        elif msg.type == Type.DEV_LGN_CRC:
+            self.send(PktDevLgnAckCrc())
+
+        elif msg.type == Type.HELLO:
+            self.send(PktHelloAck(host=Host(afam=AF_INET, addr=self.addr[0], port=self.addr[1])))
+
+        elif msg.type == Type.ALIVE_ACK:
+            pass
+
+        elif msg.type == Type.P2P_RDY:
+            self.send(PktP2pRdyAck(duid=self.duid, host=Host(afam=AF_INET, addr=self.addr[0], port=self.addr[1])))
+
+            self.new = False
+            self.rdy = True
+
+        elif msg.type == Type.PUNCH_PKT:
+            if self.new:
+                self.send(PktClose())
+                self.send(PktP2pRdy(self.duid))
 
     def recv(self):
         data, self.addr = self.sock.recvfrom(4096)
@@ -169,31 +239,43 @@ class AnkerPPPPApi:
         self.send(pkt, addr)
         return self.recv()
 
-    def send_drw(self, chan, data):
-        self.send(PktDrw(chan=chan, index=self.ctr[chan], data=data))
-        self.ctr[chan] += 1
-        time.sleep(self._drw_delay)
-
-    def send_xzyh(self, data, cmd, unk0=0, unk1=0, unk2=0, unk3=0, dev_type=0):
+    def send_xzyh(self, data, cmd, chan=0, unk0=0, unk1=0, sign_code=0, unk3=0, dev_type=0):
         xzyh = Xzyh(
             cmd=cmd,
             len=len(data),
             data=data,
-            chan=0,
+            chan=chan,
             unk0=unk0,
             unk1=unk1,
-            unk2=unk2,
+            sign_code=sign_code,
             unk3=unk3,
             dev_type=dev_type
         )
 
-        self.send_drw(chan=0, data=xzyh)
+        self.chans[chan].write(xzyh.pack())
 
-    def send_aabb(self, data, unk=0, cmd=0):
-        header = Aabb(unk=unk, cmd=cmd, len=len(data)).pack()
-        payload = header + data + ppcs_crc16(header[2:] + data)
+    def send_aabb(self, data, sn=0, cmd=0, frametype=0, chan=1):
+        aabb = Aabb(
+            frametype=frametype,
+            sn=sn,
+            cmd=cmd,
+            len=len(data)
+        )
 
-        pdata = payload[:]
-        while pdata:
-            data, pdata = pdata[:1024], pdata[1024:]
-            self.send_drw(chan=1, data=data)
+        self.chans[chan].write(aabb.pack_with_crc(data))
+
+    def recv_xzyh(self, chan=1):
+        fd = self.chans[chan]
+
+        xzyh = Xzyh.parse(fd.read(16))[0]
+        xzyh.data = fd.read(xzyh.len)
+        return xzyh
+
+    def recv_aabb(self, chan=1):
+        fd = self.chans[chan]
+
+        data = fd.read(12)
+        aabb = Aabb.parse(data)[0]
+        p = data + fd.read(aabb.len + 2)
+        aabb, data = Aabb.parse_with_crc(p)[:2]
+        return aabb, data
