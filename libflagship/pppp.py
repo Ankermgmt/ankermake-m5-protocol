@@ -9,7 +9,9 @@ import struct
 import enum
 from dataclasses import dataclass, field
 from .amtypes import *
+from .amtypes import _assert_equal
 from .megajank import crypto_curse_string, crypto_decurse_string, simple_encrypt_string, simple_decrypt_string
+from .util import ppcs_crc16
 
 class Type(enum.IntEnum):
     HELLO                     = 0x00 # unknown
@@ -88,6 +90,7 @@ class Type(enum.IntEnum):
     @classmethod
     def parse(cls, p):
         return cls(struct.unpack("B", p[:1])[0]), p[1:]
+
 class P2PCmdType(enum.IntEnum):
     P2P_JSON_CMD  = 0x06a4 # unknown
     P2P_SEND_FILE = 0x3a98 # unknown
@@ -126,7 +129,21 @@ class _Xzyh:
     pass
 
 class _Aabb:
-    pass
+
+    @classmethod
+    def parse_with_crc(cls, m):
+        head, m = m[:12], m[12:]
+        header = cls.parse(head)[0]
+        data, m = m[:header.len], m[header.len:]
+        crc1, m  = m[:2], m[2:]
+        crc2 = ppcs_crc16(head[2:] + data)
+        _assert_equal(crc1, crc2)
+        return header, data, m
+
+    def pack_with_crc(self, data):
+        header = self.pack()
+
+        return header + data + ppcs_crc16(header[2:] + data)
 
 class _Dsk:
     pass
