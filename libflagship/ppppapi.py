@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from libflagship.pppp import *
 from libflagship.util import enhex
 
-LAN_SEARCH_PORT = 32108
+PPPP_PORT = 32108
 
 @dataclass
 class FileUploadInfo:
@@ -178,7 +178,7 @@ class AnkerPPPPApi(Thread):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         if timeout:
             sock.settimeout(timeout)
-        addr = ("255.255.255.255", LAN_SEARCH_PORT)
+        addr = ("255.255.255.255", PPPP_PORT)
         return cls(sock, addr=addr)
 
     def run(self):
