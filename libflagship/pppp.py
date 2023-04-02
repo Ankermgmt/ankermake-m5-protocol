@@ -277,7 +277,7 @@ class Xzyh(_Xzyh):
 @dataclass
 class Aabb(_Aabb):
     signature : bytes = field(repr=False, kw_only=True, default=b'\xaa\xbb') # Signature bytes. Must be 0xAABB
-    flags     : u8 # Flags (unknown meaning, only seen as 0x80)
+    frametype : FileTransfer # Frame type (file transfer control)
     sn        : u8 # Session id
     cmd       : u32le # Command field (P2PCmdType)
     len       : u32le # Length field
@@ -286,16 +286,16 @@ class Aabb(_Aabb):
     def parse(cls, p):
         # not encrypted
         signature, p = Magic.parse(p, 2, b'\xaa\xbb')
-        flags, p = u8.parse(p)
+        frametype, p = FileTransfer.parse(p)
         sn, p = u8.parse(p)
         cmd, p = u32le.parse(p)
         len, p = u32le.parse(p)
 
-        return cls(signature=signature, flags=flags, sn=sn, cmd=cmd, len=len), p
+        return cls(signature=signature, frametype=frametype, sn=sn, cmd=cmd, len=len), p
 
     def pack(self):
         p  = Magic.pack(self.signature, 2, b'\xaa\xbb')
-        p += u8.pack(self.flags)
+        p += FileTransfer.pack(self.frametype)
         p += u8.pack(self.sn)
         p += u32le.pack(self.cmd)
         p += u32le.pack(self.len)
