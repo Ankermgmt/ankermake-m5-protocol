@@ -233,7 +233,7 @@ def config(): pass
 @config.command("decode")
 @click.argument("fd", required=False, type=click.File("r"), metavar="path/to/login.json")
 @pass_env
-def config_import(env, fd):
+def config_decode(env, fd):
     """
     Decode a `login.json` file and print its contents.
     """
