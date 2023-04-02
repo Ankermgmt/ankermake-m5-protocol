@@ -1,6 +1,8 @@
 import socket
 import logging as log
 
+from multiprocessing import Pipe
+
 from libflagship.pppp import *
 from libflagship.util import enhex
 
@@ -20,6 +22,23 @@ class FileUploadInfo:
 
     def __str__(self):
         return f"{self.type},{self.name},{self.size},{self.md5},{self.user_name},{self.user_id},{self.machine_id}"
+
+
+class Wire:
+
+    def __init__(self):
+        self.buf = []
+        self.rx, self.tx = Pipe(False)
+
+    def read(self, size):
+        while len(self.buf) < size:
+            self.buf.extend(self.rx.recv())
+        res, self.buf = self.buf[:size], self.buf[size:]
+        return bytes(res)
+
+    def write(self, data):
+        self.tx.send(data)
+
 
 class AnkerPPPPApi:
 
