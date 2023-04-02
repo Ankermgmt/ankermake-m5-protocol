@@ -126,6 +126,7 @@ class FileTransfer(enum.IntEnum):
     DATA  = 0x01 # File content
     END   = 0x02 # Complete file transfer (start printing)
     ABORT = 0x03 # Abort file transfer (delete file)
+    REPLY = 0x80 # Reply from printer
 
     @classmethod
     def parse(cls, p):
