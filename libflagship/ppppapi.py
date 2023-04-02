@@ -4,13 +4,6 @@ import logging as log
 from libflagship.pppp import *
 from libflagship.util import enhex
 
-# FILE_RECV_IDLE	0x0
-# FILE_RECV_START	0x1
-# FILE_RECV_BUSY	0x2
-# FILE_RECV_DONE	0x3
-# FILE_RECV_ERROR	0x4
-# FILE_RECV_ABORT	0x5
-
 LAN_SEARCH_PORT = 32108
 
 class AnkerPPPPApi:
