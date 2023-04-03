@@ -422,10 +422,11 @@ def config_show(env):
 
         log.info("Printers:")
         for p in cfg.printers:
-            print(f"    duid:     {p.p2p_duid}") # Printer Serial Number
-            print(f"    sn:       {p.sn}")
-            print(f"    ip:       {p.ip_addr}")
-            print(f"    wifi_mac: {cli.util.pretty_mac(p.wifi_mac)}")
+            print(f"    duid:      {p.p2p_duid}") # Printer Serial Number
+            print(f"    sn:        {p.sn}")
+            print(f"    ip:        {p.ip_addr}")
+            print(f"    wifi_mac:  {cli.util.pretty_mac(p.wifi_mac)}")
+            print(f"    p2p_hosts: {', '.join(p.p2p_hosts)}")
 
 
 if __name__ == "__main__":
