@@ -1,4 +1,5 @@
 import time
+import uuid
 import click
 import logging as log
 
@@ -30,7 +31,7 @@ def pppp_open(env):
 
 def pppp_send_file(api, fui, data):
     log.info("Requesting file transfer..")
-    api.send_xzyh(b"12345678-1234-12", cmd=P2PCmdType.P2P_SEND_FILE)
+    api.send_xzyh(str(uuid.uuid4())[:16].encode(), cmd=P2PCmdType.P2P_SEND_FILE)
 
     log.info("Sending file metadata..")
     api.aabb_request(bytes(fui), frametype=FileTransfer.BEGIN)
