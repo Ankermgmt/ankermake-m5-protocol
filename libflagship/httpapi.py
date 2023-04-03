@@ -4,12 +4,17 @@ import functools
 import json
 import hashlib
 
+
+class APIError(Exception):
+    pass
+
+
 def require_auth_token(func):
 
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         if not self._auth:
-            raise ValueError("Missing auth token")
+            raise APIError("Missing auth token")
         return func(self, *args, **kwargs)
 
     return wrapper
@@ -20,7 +25,7 @@ def unwrap_api(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         if not self.scope:
-            raise ValueError("scope undefined")
+            raise APIError("scope undefined")
         data = func(self, *args, **kwargs)
         if data.ok:
             jsn = data.json()
@@ -29,9 +34,9 @@ def unwrap_api(func):
                 log.debug(f"JSON result: {json.dumps(jsn, indent=4)}")
                 return data
             else:
-                raise ValueError(f"API error", json)
+                raise APIError("API error", json)
         else:
-            raise ValueError(f"API request failed: {data.status_code} {data.reason}")
+            raise APIError(f"API request failed: {data.status_code} {data.reason}")
 
     return wrapper
 
@@ -51,7 +56,7 @@ class AnkerHTTPApi:
             elif region == "us":
                 self._base = "https://make-app.ankermake.com"
             else:
-                raise ValueError("must specify either base_url or region {'eu', 'us'}")
+                raise APIError("must specify either base_url or region {'eu', 'us'}")
 
     @unwrap_api
     def _get(self, url, headers=None):
