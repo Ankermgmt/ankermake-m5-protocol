@@ -366,6 +366,16 @@ class AnkerPPPPBaseApi(Thread):
         log.debug(f"TX  --> {str(msg)[:128]}")
         self.sock.sendto(resp, addr or self.addr)
 
+    def recv_deadline(self, deadline):
+        now = datetime.now()
+        while now < deadline:
+            seconds = (deadline - now).total_seconds()
+            try:
+                yield self.recv(timeout=seconds)
+            except TimeoutError:
+                break
+            now = datetime.now()
+
     def send_xzyh(self, data, cmd, chan=0, unk0=0, unk1=0, sign_code=0, unk3=0, dev_type=0, block=True):
         xzyh = Xzyh(
             cmd=cmd,

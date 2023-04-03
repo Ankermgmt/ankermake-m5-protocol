@@ -9,6 +9,7 @@ import cli.util
 
 from libflagship.pktdump import PacketWriter
 from libflagship.pppp import Duid, P2PCmdType, FileTransfer
+from libflagship.pppp import *
 from libflagship.ppppapi import AnkerPPPPApi, PPPPState
 
 
@@ -51,6 +52,76 @@ def pppp_open_broadcast(dumpfile=None):
     api.state = PPPPState.Connected
     _pppp_dumpfile(api, dumpfile)
     return api
+
+
+def unique(items):
+    seen = set()
+    res = []
+    for item in items:
+        name = str(item)
+        if name not in seen:
+            res.append(item)
+        seen.add(name)
+    return res
+
+
+def pppp_open_relay(env):
+    with env.config.open() as cfg:
+        printer = cfg.printers[0]
+
+        key = printer.p2p_key.encode()
+        duid = Duid.from_string(printer.p2p_duid)
+
+        for host in printer.api_hosts[::-1]:
+            print(host)
+
+            try:
+                api = AnkerPPPPApi.open_wan(duid, host=host)
+                api.send(PktHello())
+                helloack = api.recv()
+                res = api.send(PktListReqDsk(duid=duid, dsk=Dsk(key=key)))
+
+                relayto = api.recv(timeout=0.5)
+                break
+            except TimeoutError:
+                continue
+        else:
+            log.critical("Could not reach any relay servers")
+
+        relays = api.recv()
+        relay = unique(relays.relays)[0]
+
+        rel = AnkerPPPPApi.open(duid, relay.addr, relay.port)
+
+        rel.send(PktRlyPkt(mark=relayto.mark, duid=duid, unk=0))
+        rel.send(PktRlyHello())
+        rel.recv()
+
+        rel.send(PktRlyPort())
+        rport = rel.recv()
+        print(rport)
+
+        api.send(PktRlyReq(duid=duid, host=Host(afam=2, port=rport.port, addr=relay.addr), mark=rport.mark))
+        api.recv()
+        rto = api.recv()
+
+        rel2 = AnkerPPPPApi.open(duid, rto.host.addr, rto.host.port)
+        rel2.send(PktRlyPkt(mark=rto.mark, duid=duid, unk=0))
+
+        api.send(
+            PktSessionReady(
+                duid=duid, handle=2, max_handles=256, active_handles=2, startup_ticks=599,
+                b1=0, b2=1, b3=126, b4=0,
+                addr_local=Host(afam=2, port=32100, addr='FIXME'),
+                addr_wan=helloack.host,
+                addr_relay=Host(afam=2, addr=rel.addr[0], port=rto.host.port)
+            )
+        )
+
+        api.recv()
+
+        rel2.start()
+        return rel2
 
 
 def pppp_send_file(api, fui, data):
