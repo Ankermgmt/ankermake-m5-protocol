@@ -43,3 +43,10 @@ def parse_json(msg):
 
 def pretty_json(msg):
     return json.dumps(parse_json(msg), indent=4)
+
+def pretty_mac(mac):
+    parts = []
+    while mac:
+        parts.append(mac[:2])
+        mac = mac[2:]
+    return ":".join(parts)
