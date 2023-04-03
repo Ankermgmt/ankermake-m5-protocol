@@ -320,11 +320,11 @@ class AnkerPPPPApi(Thread):
 
         return self.chans[chan].write(xzyh.pack(), block=block)
 
-    def send_aabb(self, data, sn=0, cmd=0, frametype=0, chan=1, block=True):
+    def send_aabb(self, data, sn=0, pos=0, frametype=0, chan=1, block=True):
         aabb = Aabb(
             frametype=frametype,
             sn=sn,
-            cmd=cmd,
+            pos=pos,
             len=len(data)
         )
 
@@ -357,6 +357,6 @@ class AnkerPPPPApi(Thread):
 
         return res
 
-    def aabb_request(self, data, frametype, chan=1, check=True):
-        self.send_aabb(data=data, frametype=frametype, chan=chan)
+    def aabb_request(self, data, frametype, pos=0, chan=1, check=True):
+        self.send_aabb(data=data, frametype=frametype, chan=chan, pos=pos)
         return self.recv_aabb_reply(chan, check)
