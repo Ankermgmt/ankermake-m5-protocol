@@ -220,11 +220,15 @@ def pppp_lan_search(env):
 
 @pppp.command("print-file")
 @click.argument("file", required=True, type=click.File("rb"), metavar="<file>")
-@click.option("--no-act", "-n", is_flag=True, help="Upload only (do not start printing)")
+@click.option("--no-act", "-n", is_flag=True, help="Test upload only (do not print)")
 @pass_env
 def pppp_print_file(env, file, no_act):
     """
     Transfer print job to printer, and start printing.
+
+    The --no-act flag performs the upload, but will not make the printer start
+    executing the print job. NOTE: the printer only ever stores ONE uploaded
+    file, so anytime a file is uploaded, the old one is deleted.
     """
     env.require_config()
     api = cli.pppp.pppp_open(env)
