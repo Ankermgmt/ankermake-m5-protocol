@@ -5,7 +5,8 @@ import tinyec.ec
 
 from libflagship.util import b64e
 
-## mqtt aes handling
+
+# mqtt aes handling
 
 def aes_cbc_encrypt(msg, key, iv):
     aes = Cryptodome.Cipher.AES.new(key=key, iv=iv, mode=Cryptodome.Cipher.AES.MODE_CBC)
@@ -13,19 +14,23 @@ def aes_cbc_encrypt(msg, key, iv):
     cmsg = aes.encrypt(pmsg)
     return cmsg
 
+
 def aes_cbc_decrypt(cmsg, key, iv):
     aes = Cryptodome.Cipher.AES.new(key=key, iv=iv, mode=Cryptodome.Cipher.AES.MODE_CBC)
     pmsg = aes.decrypt(cmsg)
     msg = Cryptodome.Util.Padding.unpad(pmsg, block_size=16)
     return msg
 
+
 def mqtt_aes_encrypt(msg, key, iv=b"3DPrintAnkerMake"):
     return aes_cbc_encrypt(msg, key, iv)
+
 
 def mqtt_aes_decrypt(cmsg, key, iv=b"3DPrintAnkerMake"):
     return aes_cbc_decrypt(cmsg, key, iv)
 
-## mqtt checksum handling
+
+# mqtt checksum handling
 
 def mqtt_checksum_remove(payload):
     if xor_bytes(payload) != 0:
@@ -33,8 +38,10 @@ def mqtt_checksum_remove(payload):
         print(f"MALFORMED MESSAGE: {payload}")
     return payload[:-1]
 
+
 def mqtt_checksum_add(msg):
     return msg + bytes([xor_bytes(msg)])
+
 
 def xor_bytes(data):
     s = 0
@@ -42,7 +49,8 @@ def xor_bytes(data):
         s ^= x
     return s
 
-## Elliptic-Curve Diffie-Hellman (ECDH) for password exchange in login api
+
+# Elliptic-Curve Diffie-Hellman (ECDH) for password exchange in login api
 
 anker_ec_v1_curve = tinyec.registry.get_curve("secp256r1")
 
@@ -52,8 +60,10 @@ anker_ec_v1_public_key = tinyec.ec.Keypair(anker_ec_v1_curve, pub=tinyec.ec.Poin
     0x68D9750CB47FA4619248F3D83F0F662671DADC6E2D31C2F41DB0161651C7C076
 ))
 
+
 def ec_pubkey_export(key):
     return f"04{key.x:32x}{key.y:32x}"
+
 
 def ecdh_encrypt_login_password(password, partner=anker_ec_v1_public_key):
     # make fresh EC key
@@ -75,7 +85,7 @@ def ecdh_encrypt_login_password(password, partner=anker_ec_v1_public_key):
     return ec_pubkey_export(eckey.pub), b64e(aes_cbc_encrypt(password, key, iv))
 
 
-## pppp init string decoder
+# pppp init string decoder
 
 def pppp_decode_initstring_raw(input):
     shuffle = [ 0x49, 0x59, 0x43, 0x3d, 0xb5, 0xbf, 0x6d, 0xa3, 0x47, 0x53,
@@ -102,11 +112,13 @@ def pppp_decode_initstring_raw(input):
 
     return bytes(output)
 
+
 def pppp_decode_initstring(input):
     res = pppp_decode_initstring_raw(input.encode())
     return res.decode().rstrip(",").split(",")
 
-## pppp crypto curses
+
+# pppp crypto curses
 
 PPPP_SEED = "EUPRAKM"
 
@@ -121,6 +133,7 @@ PPPP_SHUFFLE = [
     [ 0x07, 0x53, 0x8b, 0x25, 0x95, 0x47, 0x1f, 0x29, ],
 ]
 
+
 def crypto_decurse(input, key, shuffle):
 
     a, b, c, d = (1, 3, 5, 7)
@@ -128,10 +141,10 @@ def crypto_decurse(input, key, shuffle):
     for q in key:
         q = ord(q)
         a, b, c, d = [
-            shuffle[b + (q%a) & 7][q + (c%d) & 7],
-            shuffle[c + (q%b) & 7][q + (d%a) & 7],
-            shuffle[d + (q%c) & 7][q + (a%b) & 7],
-            shuffle[a + (q%d) & 7][q + (b%c) & 7],
+            shuffle[b + (q % a) & 7][q + (c % d) & 7],
+            shuffle[c + (q % b) & 7][q + (d % a) & 7],
+            shuffle[d + (q % c) & 7][q + (a % b) & 7],
+            shuffle[a + (q % d) & 7][q + (b % c) & 7],
         ]
 
     output = [0] * len(input)
@@ -139,10 +152,10 @@ def crypto_decurse(input, key, shuffle):
         output[p] = x ^ (a^b^c^d)
 
         a, b, c, d = [
-            shuffle[b + (x%a) & 7][x + (c%d) & 7],
-            shuffle[c + (x%b) & 7][x + (d%a) & 7],
-            shuffle[d + (x%c) & 7][x + (a%b) & 7],
-            shuffle[a + (x%d) & 7][x + (b%c) & 7],
+            shuffle[b + (x % a) & 7][x + (c % d) & 7],
+            shuffle[c + (x % b) & 7][x + (d % a) & 7],
+            shuffle[d + (x % c) & 7][x + (a % b) & 7],
+            shuffle[a + (x % d) & 7][x + (b % c) & 7],
         ]
 
     return output
@@ -155,10 +168,10 @@ def crypto_curse(input, key, shuffle):
     for q in key:
         q = ord(q)
         a, b, c, d = [
-            shuffle[b + (q%a) & 7][q + (c%d) & 7],
-            shuffle[c + (q%b) & 7][q + (d%a) & 7],
-            shuffle[d + (q%c) & 7][q + (a%b) & 7],
-            shuffle[a + (q%d) & 7][q + (b%c) & 7],
+            shuffle[b + (q % a) & 7][q + (c % d) & 7],
+            shuffle[c + (q % b) & 7][q + (d % a) & 7],
+            shuffle[d + (q % c) & 7][q + (a % b) & 7],
+            shuffle[a + (q % d) & 7][q + (b % c) & 7],
         ]
 
     output = [0] * (len(input) + 4)
@@ -166,23 +179,24 @@ def crypto_curse(input, key, shuffle):
         x = output[p] = x ^ (a^b^c^d)
 
         a, b, c, d = [
-            shuffle[b + (x%a) & 7][x + (c%d) & 7],
-            shuffle[c + (x%b) & 7][x + (d%a) & 7],
-            shuffle[d + (x%c) & 7][x + (a%b) & 7],
-            shuffle[a + (x%d) & 7][x + (b%c) & 7],
+            shuffle[b + (x % a) & 7][x + (c % d) & 7],
+            shuffle[c + (x % b) & 7][x + (d % a) & 7],
+            shuffle[d + (x % c) & 7][x + (a % b) & 7],
+            shuffle[a + (x % d) & 7][x + (b % c) & 7],
         ]
 
     for p in range(len(input), len(input)+4):
         x = output[p] = a ^ b ^ c ^ d ^ 0x43;
 
         a, b, c, d = [
-            shuffle[b + (x%a) & 7][x + (c%d) & 7],
-            shuffle[c + (x%b) & 7][x + (d%a) & 7],
-            shuffle[d + (x%c) & 7][x + (a%b) & 7],
-            shuffle[a + (x%d) & 7][x + (b%c) & 7],
+            shuffle[b + (x % a) & 7][x + (c % d) & 7],
+            shuffle[c + (x % b) & 7][x + (d % a) & 7],
+            shuffle[d + (x % c) & 7][x + (a % b) & 7],
+            shuffle[a + (x % d) & 7][x + (b % c) & 7],
         ]
 
     return output
+
 
 def crypto_decurse_string(input):
 
@@ -193,13 +207,15 @@ def crypto_decurse_string(input):
 
     return bytes(output[:-4])
 
+
 def crypto_curse_string(input):
 
     output = crypto_curse(input, key=PPPP_SEED, shuffle=PPPP_SHUFFLE)
 
     return bytes(output)
 
-## pppp crypto curse, older(?) version
+
+# pppp crypto curse, older(?) version
 #
 # the simple_* functions have been adapted from https://github.com/fbertone/lib32100/issues/7
 #
@@ -225,6 +241,7 @@ PPPP_SIMPLE_SHUFFLE = [
     0xEA, 0x63, 0x7D, 0x16, 0xB6, 0x8E, 0xD4, 0x68, 0x35, 0xC3, 0x52, 0x9D, 0x46, 0x44, 0x1E, 0x17,
 ]
 
+
 def simple_hash(seed):
     hash = [0] * 4
 
@@ -236,9 +253,11 @@ def simple_hash(seed):
 
     return hash[::-1]
 
+
 def _lookup(hash, b):
     index = hash[b & 0x3] + b
     return PPPP_SIMPLE_SHUFFLE[index % len(PPPP_SIMPLE_SHUFFLE)]
+
 
 def simple_decrypt(seed, input):
     hash = simple_hash(seed)
@@ -250,6 +269,7 @@ def simple_decrypt(seed, input):
 
     return bytes(output)
 
+
 def simple_encrypt(seed, input):
     hash = simple_hash(seed)
     output = [0] * len(input)
@@ -260,11 +280,14 @@ def simple_encrypt(seed, input):
 
     return bytes(output)
 
+
 def simple_decrypt_string(input):
     return simple_decrypt(PPPP_SIMPLE_SEED, input)
 
+
 def simple_encrypt_string(input):
     return simple_encrypt(PPPP_SIMPLE_SEED, input)
+
 
 if __name__ == "__main__":
     print(simple_encrypt_string(b"foo"))
