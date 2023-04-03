@@ -2,6 +2,10 @@ import time
 import click
 import logging as log
 
+from tqdm import tqdm
+
+import cli.util
+
 from libflagship.pppp import PktLanSearch, Duid, P2PCmdType
 from libflagship.ppppapi import AnkerPPPPApi, FileTransfer
 
@@ -32,21 +36,16 @@ def pppp_send_file(api, fui, data):
     api.aabb_request(bytes(fui), frametype=FileTransfer.BEGIN)
 
     log.info("Sending file contents..")
-    ack1, ack2 = api.send_aabb(data, frametype=FileTransfer.DATA, block=False)
 
-    last = ack1
-    with click.progressbar(length=ack2 - ack1, label="File upload") as bar:
-        chan = api.chans[1]
-        while True:
-            chan.wait()
-            bar.update(chan.tx_ack - last, current_item=chan.tx_ack)
-            last = chan.tx_ack
-            if chan.tx_ack >= ack2:
-                break
-        bar.pos = ack2
-        bar.render_progress()
+    blocksize = 1024 * 32
+    chunks = cli.util.split_chunks(data, blocksize)
+    pos = 0
 
-    api.recv_aabb_reply()
+    with tqdm(unit="b", total=len(data), unit_scale=True, unit_divisor=1024) as bar:
+        for chunk in chunks:
+            api.aabb_request(chunk, frametype=FileTransfer.DATA, pos=pos)
+            pos += len(chunk)
+            bar.update(len(chunk))
 
     log.info("Completing file upload")
     api.aabb_request(b"", frametype=FileTransfer.END)
