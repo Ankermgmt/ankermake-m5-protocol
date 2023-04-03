@@ -82,10 +82,11 @@ class Wire:
 
 class Channel:
 
-    def __init__(self, index):
+    def __init__(self, index, max_in_flight=64):
         self.index = index
         self.rxqueue = {}
         self.txqueue = []
+        self.backlog = []
         self.rx_ctr = 0
         self.tx_ctr = 0
         self.tx_ack = 0
@@ -94,6 +95,7 @@ class Channel:
         self.timeout = timedelta(seconds=0.5)
         self.acks = set()
         self.event = Event()
+        self.max_in_flight = max_in_flight
 
     def rx_ack(self, acks):
         # remove all ACKed packets from transmission queue
@@ -131,6 +133,13 @@ class Channel:
 
         txq = self.txqueue
 
+        if self.backlog and len(txq) < self.max_in_flight:
+            while self.backlog and len(txq) < self.max_in_flight:
+                txq.append(self.backlog.pop(0))
+
+            # sort list to make sure oldest deadline is first
+            txq.sort()
+
         res = []
         now = datetime.now()
 
@@ -159,11 +168,8 @@ class Channel:
         while pdata:
             # schedule transmission in 1kb chunks
             data, pdata = pdata[:1024], pdata[1024:]
-            self.txqueue.append((deadline, self.tx_ctr, data))
+            self.backlog.append((deadline, self.tx_ctr, data))
             self.tx_ctr = (self.tx_ctr + 1) & 0xFFFF
-
-            # schedule packets slightly apart, to avoid huge packet bursts
-            deadline += timedelta(seconds=0.001)
 
         tx_ctr_done = self.tx_ctr
 
