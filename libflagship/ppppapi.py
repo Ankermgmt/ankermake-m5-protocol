@@ -49,6 +49,10 @@ class FileUploadInfo:
     @classmethod
     def from_file(cls, filename, user_name, user_id, machine_id, type=0):
         data = open(filename, "rb").read()
+        return cls(data, filename, user_name, user_id, machine_id, type=0)
+
+    @classmethod
+    def from_data(cls, data, filename, user_name, user_id, machine_id, type=0):
         return cls(
             name=cls.sanitize_filename(os.path.basename(filename)),
             size=len(data),
