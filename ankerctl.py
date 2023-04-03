@@ -231,8 +231,8 @@ def pppp_print_file(env, file, no_act):
             log.error(f"Could not send print job: {E}")
     else:
         log.info("Successfully sent print job")
-
-    api.stop()
+    finally:
+        api.stop()
 
 
 @main.group("http", help="Low-level http api access")

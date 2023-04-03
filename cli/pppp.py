@@ -12,6 +12,7 @@ def pppp_open(env):
 
         api = AnkerPPPPApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
         log.info("Trying connect over pppp")
+        api.daemon = True
         api.start()
 
         api.send(PktLanSearch())
