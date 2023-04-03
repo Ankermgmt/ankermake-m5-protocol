@@ -367,12 +367,15 @@ def config_import(env, fd):
         darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
         winfileloc = path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json')
 
-        if useros == 'Darwin' and path.exists(darfileloc):
-            fd = open(darfileloc, 'r')
-        elif useros == 'Windows' and path.exists(winfileloc):
-            fd = open(winfileloc, 'r')
-        else:
-            exit("This platform does not support autodetection. Please specify file location")
+        try:
+            if useros == 'Darwin':
+                fd = open(darfileloc, 'r')
+            elif useros == 'Windows':
+                fd = open(winfileloc, 'r')
+            else:
+                log.critical("This platform does not support autodetection. Please specify file location")
+        except FileNotFoundError:
+            log.critical("Failed to import file - check if you are logged into Ankerslicer")
 
     log.info("Loading cache..")
 
