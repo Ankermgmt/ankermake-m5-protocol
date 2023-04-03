@@ -14,6 +14,7 @@ def require_auth_token(func):
 
     return wrapper
 
+
 def unwrap_api(func):
 
     @functools.wraps(func)
@@ -33,6 +34,7 @@ def unwrap_api(func):
             raise ValueError(f"API request failed: {data.status_code} {data.reason}")
 
     return wrapper
+
 
 class AnkerHTTPApi:
 
@@ -59,6 +61,7 @@ class AnkerHTTPApi:
     def _post(self, url, headers=None, data=None):
         return requests.post(f"{self._base}{self.scope}{url}", headers=headers, verify=self._verify, json=data)
 
+
 class AnkerHTTPAppApiV1(AnkerHTTPApi):
 
     scope = "/v1/app"
@@ -81,6 +84,7 @@ class AnkerHTTPAppApiV1(AnkerHTTPApi):
             "station_sns": station_sns,
         })
 
+
 class AnkerHTTPPassportApiV1(AnkerHTTPApi):
 
     scope = "/v1/passport"
@@ -88,6 +92,7 @@ class AnkerHTTPPassportApiV1(AnkerHTTPApi):
     @require_auth_token
     def profile(self):
         return self._get("/profile", headers={"X-Auth-Token": self._auth})
+
 
 class AnkerHTTPHubApiV1(AnkerHTTPApi):
 
@@ -106,6 +111,7 @@ class AnkerHTTPHubApiV1(AnkerHTTPApi):
             "device_type": device_type,
             "current_version_name": current_version_name,
         })
+
 
 class AnkerHTTPHubApiV2(AnkerHTTPApi):
 
