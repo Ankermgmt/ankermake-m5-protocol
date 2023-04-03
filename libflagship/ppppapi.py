@@ -11,7 +11,8 @@ from dataclasses import dataclass
 
 from libflagship.pppp import *
 
-PPPP_PORT = 32108
+PPPP_LAN_PORT = 32108
+PPPP_WAN_PORT = 32100
 
 
 class PPPPError(Exception):
@@ -199,9 +200,17 @@ class AnkerPPPPApi(Thread):
         self.stopped = Event()
 
     @classmethod
-    def open_lan(cls, duid, host):
+    def open(cls, duid, host, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        return cls(sock, duid, addr=(host, PPPP_PORT))
+        return cls(sock, duid, addr=(host, port))
+
+    @classmethod
+    def open_lan(cls, duid, host):
+        return cls.open(duid, host, PPPP_LAN_PORT)
+
+    @classmethod
+    def open_wan(cls, duid, host):
+        return cls.open(duid, host, PPPP_WAN_PORT)
 
     @classmethod
     def open_broadcast(cls, timeout=None):
