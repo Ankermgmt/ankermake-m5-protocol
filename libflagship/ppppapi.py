@@ -291,7 +291,8 @@ class AnkerPPPPApi(Thread):
                 self.send(PktClose())
                 self.send(PktP2pRdy(self.duid))
 
-    def recv(self):
+    def recv(self, timeout=None):
+        self.sock.settimeout(timeout)
         data, self.addr = self.sock.recvfrom(4096)
         log.debug(f"RX {enhex(data)} [{self.addr}]")
         msg = Message.parse(data)[0]
