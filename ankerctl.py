@@ -201,6 +201,11 @@ def pppp(): pass
 @pppp.command("lan-search")
 @pass_env
 def pppp_lan_search(env):
+    """
+    Attempt to find available printers on local LAN.
+
+    Works by broadcasting a LAN_SEARCH packet, and waiting for a reply.
+    """
     api = AnkerPPPPApi.open_broadcast(timeout=1.0)
     try:
         api.send(PktLanSearch())
@@ -217,7 +222,9 @@ def pppp_lan_search(env):
 @click.option("--no-act", "-n", is_flag=True, help="Test transfer (do not start print)")
 @pass_env
 def pppp_print_file(env, file, no_act):
-
+    """
+    Transfer print job to printer, and start printing.
+    """
     env.require_config()
     api = cli.pppp.pppp_open(env)
 
