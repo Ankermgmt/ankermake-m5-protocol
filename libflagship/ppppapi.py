@@ -3,7 +3,7 @@ import string
 import hashlib
 import logging as log
 
-from multiprocessing import Pipe, connection
+from multiprocessing import Pipe
 from datetime import datetime, timedelta
 from threading import Thread, Event
 from socket import AF_INET
@@ -220,13 +220,13 @@ class AnkerPPPPApi(Thread):
     def run(self):
         log.debug("Started pppp thread")
         while self.running:
-            ready = connection.wait([self.sock], timeout=0.05)
-            if self.sock in ready:
-                msg = self.recv()
-                try:
-                    self.process(msg)
-                except StopIteration:
-                    break
+            try:
+                msg = self.recv(timeout=0.05)
+                self.process(msg)
+            except TimeoutError:
+                pass
+            except StopIteration:
+                break
 
             for idx, ch in enumerate(self.chans):
                 for pkt in ch.poll():
