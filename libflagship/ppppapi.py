@@ -135,9 +135,9 @@ class Channel:
         now = datetime.now()
 
         while txq and txq[0][0] < now:
-            pkt = txq.pop(0)
-            res.append(PktDrw(chan=self.index, index=pkt[1], data=pkt[2]))
-            txq.append((pkt[0] + self.timeout, pkt[1], pkt[2]))
+            deadline, index, pkt = txq.pop(0)
+            res.append(PktDrw(chan=self.index, index=index, data=pkt))
+            txq.append((deadline + self.timeout, index, pkt))
 
         # the returned chunks will be (re)transmitted
         return res
