@@ -3,15 +3,15 @@ import json
 
 
 def json_key_value(str):
-    if not "=" in str:
+    if "=" not in str:
         raise ValueError("Invalid 'key=value' argument")
     key, value = str.split("=", 1)
     try:
         return key, int(value)
-    except:
+    except ValueError:
         try:
             return key, float(value)
-        except:
+        except ValueError:
             return key, value
 
 
@@ -19,16 +19,18 @@ class EnumType(click.ParamType):
     def __init__(self, enum):
         self.__enum = enum
 
-    def get_missing_message(self, param: "Parameter") -> str:
-        return "Choose number or name from:\n{choices}".format(choices="\n".join(f"{e.value:10}: {e.name}" for e in sorted(self.__enum)))
+    def get_missing_message(self, param):
+        return "Choose number or name from:\n{choices}".format(
+            choices="\n".join(f"{e.value:10}: {e.name}" for e in sorted(self.__enum))
+        )
 
     def convert(self, value, param, ctx):
         try:
             return self.__enum(int(value))
-        except:
+        except ValueError:
             try:
                 return self.__enum[value]
-            except:
+            except KeyError:
                 self.fail(self.get_missing_message(param), param, ctx)
 
 
@@ -39,7 +41,7 @@ def parse_json(msg):
     elif isinstance(msg, str):
         try:
             msg = parse_json(json.loads(msg))
-        except:
+        except ValueError:
             pass
 
     return msg
