@@ -109,7 +109,7 @@ class Channel:
     def rx_drw(self, index, data):
         # drop any packets we have already recieved
         if self.rx_ctr > index:
-            if self.rx_ctr - index > 20:
+            if self.rx_ctr - index > 100:
                 log.warn(f"Dropping old packet: index {index} while expecting {self.rx_ctr}.")
             return
 
