@@ -34,7 +34,7 @@ class FileUploadInfo:
 
     @staticmethod
     def sanitize_filename(str):
-        whitelist = string.ascii_letters + string.digits
+        whitelist = string.ascii_letters + string.digits + "._-"
 
         def sanitize(c):
             if c in whitelist:
@@ -42,7 +42,8 @@ class FileUploadInfo:
             else:
                 return "_"
 
-        return "".join(sanitize(c) for c in str)
+        cleaned = "".join(sanitize(c) for c in str)
+        return cleaned.lstrip(".").replace("..", ".")
 
     @classmethod
     def from_file(cls, filename, user_name, user_id, machine_id, type=0):
