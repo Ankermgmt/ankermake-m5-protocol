@@ -242,7 +242,7 @@ def pppp_print_file(env, file, no_act):
         cli.pppp.pppp_send_file(api, fui, data)
     except PPPPError as E:
         if no_act and E.err == FileTransferReply.ERR_WRONG_MD5:
-            log.info("Successfully transferred file and got ERR_WRONG_MD5 as expected (no-act mode)")
+            log.info("Successfully transferred file (no-act mode)")
         else:
             log.error(f"Could not send print job: {E}")
     else:
