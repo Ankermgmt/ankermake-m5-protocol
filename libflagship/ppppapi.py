@@ -220,7 +220,7 @@ class AnkerPPPPApi(Thread):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         if timeout:
             sock.settimeout(timeout)
-        addr = ("255.255.255.255", PPPP_PORT)
+        addr = ("255.255.255.255", PPPP_LAN_PORT)
         return cls(sock, duid=None, addr=addr)
 
     def stop(self):
