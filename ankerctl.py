@@ -417,7 +417,7 @@ def config_show(env):
         print(f"    user_id:    {cfg.account.user_id[:20]}...<REDACTED>")
         print(f"    auth_token: {cfg.account.auth_token[:20]}...<REDACTED>")
         print(f"    email:      {cfg.account.email}")
-        print(f"    region:     {cfg.account.region}")
+        print(f"    region:     {cfg.account.region.upper()}")
         print()
 
         log.info("Printers:")
