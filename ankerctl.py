@@ -7,6 +7,7 @@ import platform
 from os import path
 from rich import print
 from tqdm import tqdm
+from flask import Flask, request
 
 import cli.config
 import cli.model
@@ -432,6 +433,87 @@ def config_show(env):
             print(f"    wifi_mac:  {cli.util.pretty_mac(p.wifi_mac)}")
             print(f"    api_hosts: {', '.join(p.api_hosts)}")
             print(f"    p2p_hosts: {', '.join(p.p2p_hosts)}")
+
+
+@main.group("webserver", help="Built-in webserver support")
+@pass_env
+def webserver(env):
+    env.require_config()
+
+
+app = Flask(__name__)
+
+
+@app.get("/")
+def app_root():
+    prefix = "https://github.com/Ankermgmt"
+    return f"""<html>
+    <head><title>ankerctl web server</title></head>
+    <body>
+    <a href=\"{prefix}/ankermake-m5-protocol\">{prefix}/ankermake-m5-protocol</a>
+    <h1>Connecting prusaslicer:</h1>
+    <ul>
+    <li>Select "window" menu, "Printer Settings Tab"</li>
+    <li>Select gear icon ("Edit Physical Printer")</li>
+    <li>Input these settings</li>
+    <ul>
+    <li>Host type: OctoPrint</li>
+    <li>Hostname, IP or URL: localhost:{app.config["port"]}</li>
+    </ul>
+    <li>Select "OK"</li>
+    <li>Enjoy printing using ankerctl :)</li>
+    </ul>
+    </html>"""
+
+
+@app.get("/api/version")
+def app_api_version():
+    return {
+        "api": "0.1",
+        "server": "1.3.10",
+        "text": "OctoPrint 1.3.10"
+    }
+
+
+@app.post("/api/files/local")
+def app_api_files_local():
+    env = app.config["env"]
+
+    user_name = request.headers.get("User-Agent", "ankerctl").split("/")[0]
+
+    no_act = not cli.util.parse_http_bool(request.form["print"])
+
+    if no_act:
+        cli.util.http_abort(409, "Upload-only not supported by Ankermake M5")
+
+    fd = request.files["file"]
+
+    api = cli.pppp.pppp_open(env)
+
+    data = fd.read()
+    fui = FileUploadInfo.from_data(data, fd.filename, user_name=user_name, user_id="-", machine_id="-")
+    log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")
+    try:
+        cli.pppp.pppp_send_file(api, fui, data)
+        log.info("File upload complete. Requesting print start of job.")
+        api.aabb_request(b"", frametype=FileTransfer.END)
+    except PPPPError as E:
+        log.error(f"Could not send print job: {E}")
+    else:
+        log.info("Successfully sent print job")
+    finally:
+        api.stop()
+
+    return {}
+
+
+@webserver.command("run", help="Run ankerctl webserver")
+@pass_env
+def webserver(env, port=4470):
+    env.require_config()
+    app.config["env"] = env
+    app.config["port"] = port
+    app.run(port=port)
 
 
 if __name__ == "__main__":
