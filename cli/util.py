@@ -1,6 +1,7 @@
 import click
 import json
 
+
 def json_key_value(str):
     if not "=" in str:
         raise ValueError("Invalid 'key=value' argument")
@@ -12,6 +13,7 @@ def json_key_value(str):
             return key, float(value)
         except:
             return key, value
+
 
 class EnumType(click.ParamType):
     def __init__(self, enum):
@@ -29,6 +31,7 @@ class EnumType(click.ParamType):
             except:
                 self.fail(self.get_missing_message(param), param, ctx)
 
+
 def parse_json(msg):
     if isinstance(msg, dict):
         for key, value in msg.items():
@@ -41,8 +44,10 @@ def parse_json(msg):
 
     return msg
 
+
 def pretty_json(msg):
     return json.dumps(parse_json(msg), indent=4)
+
 
 def pretty_mac(mac):
     parts = []
