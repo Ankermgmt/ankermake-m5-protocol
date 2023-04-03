@@ -19,11 +19,11 @@ in this repo, under [`libflagship/`](libflagship/).
 
  - Low-level access to MQTT, PPPP and HTTPS APIs
 
-## Upcoming and planned features
-
  - Send print jobs to the printer
 
  - Stream camera image/video to your computer
+
+## Upcoming and planned features
 
  - Easily monitor print status
 
@@ -139,6 +139,12 @@ Some examples:
 
 # set printer name
 ./ankerctl.py mqtt rename-printer BoatyMcBoatFace
+
+# print boaty.gcode
+./ankerctl.py pppp print-file boaty.gcode
+
+# capture 4mb of video from camera
+./ankerctl.py pppp capture-video -m 4mb output.h264
 ```
 
 
