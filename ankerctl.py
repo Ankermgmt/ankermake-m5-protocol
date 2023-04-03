@@ -242,9 +242,20 @@ def pppp_print_file(env, file, no_act):
     except PPPPError as E:
         log.error(f"Could not send print job: {E}")
     else:
-        log.info("Successfully sent print job")
+        if not no_act:
+            log.info("Successfully sent print job")
     finally:
         api.stop()
+
+
+@pppp.command("upload-file")
+@click.argument("file", required=True, type=click.File("rb"), metavar="<file>")
+@click.pass_context
+def pppp_upload_file(ctx, file):
+    """
+    Transfer print job to printer storage.
+    """
+    return ctx.invoke(pppp_print_file, file=file, no_act=True)
 
 
 @pppp.command("capture-video")
