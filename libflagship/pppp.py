@@ -266,8 +266,8 @@ class Duid(_Duid):
 @dataclass
 class Xzyh(_Xzyh):
     magic     : bytes = field(repr=False, kw_only=True, default=b'XZYH') # unknown
-    cmd       : u16le # unknown
-    len       : u32le # unknown
+    cmd       : u16le # Command field (P2PCmdType)
+    len       : u32le # Payload length
     unk0      : u8 # unknown
     unk1      : u8 # unknown
     chan      : u8 # unknown

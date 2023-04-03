@@ -149,7 +149,11 @@ struct Duid
 
 struct Xzyh
     magic: magic<4, 0x585a5948>
+
+    # Command field (P2PCmdType)
     cmd: u16le
+
+    # Payload length
     len: u32le
     unk0: u8
     unk1: u8
