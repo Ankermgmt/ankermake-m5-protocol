@@ -296,11 +296,6 @@ class AnkerPPPPApi(Thread):
         log.debug(f"TX {msg}")
         self.sock.sendto(resp, addr or self.addr)
 
-    def req(self, pkt, addr=None):
-        log.debug("Request:")
-        self.send(pkt, addr)
-        return self.recv()
-
     def send_xzyh(self, data, cmd, chan=0, unk0=0, unk1=0, sign_code=0, unk3=0, dev_type=0, block=True):
         xzyh = Xzyh(
             cmd=cmd,
