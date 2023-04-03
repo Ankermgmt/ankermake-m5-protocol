@@ -34,6 +34,28 @@ class EnumType(click.ParamType):
                 self.fail(self.get_missing_message(param), param, ctx)
 
 
+class FileSizeType(click.ParamType):
+
+    name = "filesize"
+
+    def convert(self, value, param, ctx):
+        value = value.lower().rstrip("b")
+        try:
+            num = int(value[:-1])
+            if value.endswith("k"):
+                return num * 1024**1
+            elif value.endswith("m"):
+                return num * 1024**2
+            elif value.endswith("g"):
+                return num * 1024**3
+            elif value.endswith("t"):
+                return num * 1024**4
+            else:
+                raise ValueError()
+        except ValueError:
+            self.fail("Invalid file size: use {kb,gb,mb,tb} suffix (examples: 1337kb, 42mb, 17gb)", param, ctx)
+
+
 def parse_json(msg):
     if isinstance(msg, dict):
         for key, value in msg.items():
@@ -57,3 +79,11 @@ def pretty_mac(mac):
         parts.append(mac[:2])
         mac = mac[2:]
     return ":".join(parts)
+
+
+def pretty_size(size):
+    for unit in ["", "KB", "MB", "GB", "TB"]:
+        if size < 1024.0:
+            break
+        size /= 1024.0
+    return f"{size:3.2f}{unit}"
