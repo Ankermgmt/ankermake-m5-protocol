@@ -294,13 +294,13 @@ class AnkerPPPPApi(Thread):
         self.sock.settimeout(timeout)
         data, self.addr = self.sock.recvfrom(4096)
         msg = Message.parse(data)[0]
-        log.debug(f"RX {msg}")
+        log.debug(f"RX <--  {msg}")
         return msg
 
     def send(self, pkt, addr=None):
         resp = pkt.pack()
         msg = Message.parse(resp)[0]
-        log.debug(f"TX {msg}")
+        log.debug(f"TX  --> {msg}")
         self.sock.sendto(resp, addr or self.addr)
 
     def send_xzyh(self, data, cmd, chan=0, unk0=0, unk1=0, sign_code=0, unk3=0, dev_type=0, block=True):
