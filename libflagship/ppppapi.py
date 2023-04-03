@@ -10,7 +10,6 @@ from socket import AF_INET
 from dataclasses import dataclass
 
 from libflagship.pppp import *
-from libflagship.util import enhex
 
 PPPP_PORT = 32108
 
@@ -294,14 +293,12 @@ class AnkerPPPPApi(Thread):
     def recv(self, timeout=None):
         self.sock.settimeout(timeout)
         data, self.addr = self.sock.recvfrom(4096)
-        log.debug(f"RX {enhex(data)} [{self.addr}]")
         msg = Message.parse(data)[0]
         log.debug(f"RX {msg}")
         return msg
 
     def send(self, pkt, addr=None):
         resp = pkt.pack()
-        log.debug(f"TX {enhex(resp)}")
         msg = Message.parse(resp)[0]
         log.debug(f"TX {msg}")
         self.sock.sendto(resp, addr or self.addr)
