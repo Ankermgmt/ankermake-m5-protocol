@@ -351,7 +351,12 @@ def config_import(env, fd):
     # extract account region
     region = libflagship.logincache.guess_region(cache["ab_code"])
 
-    config = cli.config.load_config_from_api(auth_token, region, env.insecure)
+    try:
+        config = cli.config.load_config_from_api(auth_token, region, env.insecure)
+    except libflagship.httpapi.APIError as E:
+        log.critical(f"Config import failed: {E} (auth token might be expired: make sure Ankermake Slicer can connect, then try again")
+    except Exception as E:
+        log.critical(f"Config import failed: {E}")
 
     # save config to json file named `ankerctl/default.json`
     env.config.save("default", config)
