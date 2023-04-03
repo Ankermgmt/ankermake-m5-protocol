@@ -60,6 +60,9 @@ class FileUploadInfo:
     def __str__(self):
         return f"{self.type},{self.name},{self.size},{self.md5},{self.user_name},{self.user_id},{self.machine_id}"
 
+    def __bytes__(self):
+        return str(self).encode() + b"\x00"
+
 
 class Wire:
 

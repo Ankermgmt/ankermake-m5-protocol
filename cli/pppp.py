@@ -29,7 +29,7 @@ def pppp_send_file(api, fui, data):
     api.send_xzyh(b"12345678-1234-12", cmd=P2PCmdType.P2P_SEND_FILE)
 
     log.info("Sending file metadata..")
-    api.aabb_request(str(fui).encode(), frametype=FileTransfer.BEGIN)
+    api.aabb_request(bytes(fui), frametype=FileTransfer.BEGIN)
 
     log.info("Sending file contents..")
     ack1, ack2 = api.send_aabb(data, frametype=FileTransfer.DATA, block=False)
