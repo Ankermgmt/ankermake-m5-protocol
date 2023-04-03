@@ -1,5 +1,6 @@
 import click
 import json
+from flask import make_response, abort
 
 
 def json_key_value(str):
@@ -96,3 +97,18 @@ def split_chunks(data, chunksize):
         res.append(data[:chunksize])
         data = data[chunksize:]
     return res
+
+
+def parse_http_bool(str):
+    if str in {"true", "True", "1"}:
+        return True
+    elif str in {"false", "False", "0"}:
+        return False
+    else:
+        raise ValueError(f"Could not parse {str!r} as boolean")
+
+
+def http_abort(code, message):
+    response = make_response(f"{message}")
+    response.status_code = code
+    abort(response)
