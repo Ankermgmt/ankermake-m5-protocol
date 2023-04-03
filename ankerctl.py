@@ -349,6 +349,9 @@ def config_import(env, fd):
 def config_show(env):
     """Show current config"""
 
+    log.info(f"Loading config from {env.config.config_path('default')}")
+    print()
+
     # read config from json file named `ankerctl/default.json`
     with env.config.open() as cfg:
         if not cfg:
