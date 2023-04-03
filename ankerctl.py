@@ -28,6 +28,11 @@ class Environment:
     def __init__(self):
         pass
 
+    def require_config(self):
+        with self.config.open() as config:
+            if not getattr(config, 'printers', False):
+                log.critical("No printers found in config. Please import configuration using 'config import'")
+
     def upgrade_config_if_needed(self):
         try:
             with self.config.open():
@@ -75,7 +80,9 @@ def main(ctx, verbose, quiet, insecure):
 
 
 @main.group("mqtt", help="Low-level mqtt api access")
-def mqtt(): pass
+@pass_env
+def mqtt(env):
+    env.require_config()
 
 
 @mqtt.command("monitor")
@@ -211,6 +218,7 @@ def pppp_lan_search(env):
 @pass_env
 def pppp_print_file(env, file, no_act):
 
+    env.require_config()
     api = cli.pppp.pppp_open(env)
 
     data = file.read()
