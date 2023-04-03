@@ -87,3 +87,12 @@ def pretty_size(size):
             break
         size /= 1024.0
     return f"{size:3.2f}{unit}"
+
+
+def split_chunks(data, chunksize):
+    data = data[:]
+    res = []
+    while data:
+        res.append(data[:chunksize])
+        data = data[chunksize:]
+    return res
