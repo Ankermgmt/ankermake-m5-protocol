@@ -1,3 +1,4 @@
+import os
 import socket
 import string
 import hashlib
@@ -49,7 +50,7 @@ class FileUploadInfo:
     def from_file(cls, filename, user_name, user_id, machine_id, type=0):
         data = open(filename, "rb").read()
         return cls(
-            name=cls.sanitize_filename(filename),
+            name=cls.sanitize_filename(os.path.basename(filename)),
             size=len(data),
             md5=hashlib.md5(data).hexdigest(),
             user_name=user_name,
