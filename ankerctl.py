@@ -426,6 +426,7 @@ def config_show(env):
             print(f"    sn:        {p.sn}")
             print(f"    ip:        {p.ip_addr}")
             print(f"    wifi_mac:  {cli.util.pretty_mac(p.wifi_mac)}")
+            print(f"    api_hosts: {', '.join(p.api_hosts)}")
             print(f"    p2p_hosts: {', '.join(p.p2p_hosts)}")
 
 
