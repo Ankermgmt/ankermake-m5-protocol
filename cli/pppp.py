@@ -36,7 +36,6 @@ def pppp_send_file(api, fui, data):
     api.aabb_request(bytes(fui), frametype=FileTransfer.BEGIN)
 
     log.info("Sending file contents..")
-
     blocksize = 1024 * 32
     chunks = cli.util.split_chunks(data, blocksize)
     pos = 0
@@ -46,6 +45,3 @@ def pppp_send_file(api, fui, data):
             api.aabb_request(chunk, frametype=FileTransfer.DATA, pos=pos)
             pos += len(chunk)
             bar.update(len(chunk))
-
-    log.info("Completing file upload")
-    api.aabb_request(b"", frametype=FileTransfer.END)

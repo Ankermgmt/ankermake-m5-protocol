@@ -21,7 +21,7 @@ import libflagship.seccode
 
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
-from libflagship.pppp import PktLanSearch, FileTransferReply, P2PCmdType, P2PSubCmdType
+from libflagship.pppp import PktLanSearch, FileTransferReply, P2PCmdType, P2PSubCmdType, FileTransfer
 from libflagship.ppppapi import AnkerPPPPApi, FileUploadInfo, PPPPError
 
 
@@ -219,8 +219,8 @@ def pppp_lan_search(env):
 
 
 @pppp.command("print-file")
-@click.argument("file", required=True, type=click.File("rb"), metavar="<file.gcode>")
-@click.option("--no-act", "-n", is_flag=True, help="Test transfer (do not start print)")
+@click.argument("file", required=True, type=click.File("rb"), metavar="<file>")
+@click.option("--no-act", "-n", is_flag=True, help="Upload only (do not start printing)")
 @pass_env
 def pppp_print_file(env, file, no_act):
     """
@@ -231,20 +231,16 @@ def pppp_print_file(env, file, no_act):
 
     data = file.read()
     fui = FileUploadInfo.from_file(file.name, user_name="ankerctl", user_id="-", machine_id="-")
-
-    # In no_act mode, deliberately set a bad md5sum. This is a reliable way to
-    # avoid printing the sent file, while still testing that the transfer itself
-    # succeeds.
-    if no_act:
-        fui.md5 = "11111111111111111111111111111111"
-
+    log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")
     try:
         cli.pppp.pppp_send_file(api, fui, data)
-    except PPPPError as E:
-        if no_act and E.err == FileTransferReply.ERR_WRONG_MD5:
-            log.info("Successfully transferred file (no-act mode)")
+        if no_act:
+            log.info("File upload complete")
         else:
-            log.error(f"Could not send print job: {E}")
+            log.info("File upload complete. Requesting print start of job.")
+            api.aabb_request(b"", frametype=FileTransfer.END)
+    except PPPPError as E:
+        log.error(f"Could not send print job: {E}")
     else:
         log.info("Successfully sent print job")
     finally:
