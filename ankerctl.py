@@ -359,15 +359,18 @@ def config_show(env):
             return
 
         log.info("Account:")
-        print(f"    user_id: {cfg.account.user_id[:20]}...<REDACTED>")
-        print(f"    email:   {cfg.account.email}")
-        print(f"    region:  {cfg.account.region}")
+        print(f"    user_id:    {cfg.account.user_id[:20]}...<REDACTED>")
+        print(f"    auth_token: {cfg.account.auth_token[:20]}...<REDACTED>")
+        print(f"    email:      {cfg.account.email}")
+        print(f"    region:     {cfg.account.region}")
         print()
 
         log.info("Printers:")
         for p in cfg.printers:
-            print(f"    sn: {p.sn}")
-            print(f"    duid: {p.p2p_duid}") # Printer Serial Number
+            print(f"    duid:     {p.p2p_duid}") # Printer Serial Number
+            print(f"    sn:       {p.sn}")
+            print(f"    ip:       {p.ip_addr}")
+            print(f"    wifi_mac: {cli.util.pretty_mac(p.wifi_mac)}")
 
 
 if __name__ == "__main__":
