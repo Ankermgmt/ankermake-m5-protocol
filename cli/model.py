@@ -35,6 +35,7 @@ class Printer(Serialize):
     wifi_mac: str
     ip_addr: str
     mqtt_key: bytes
+    api_hosts: str
     p2p_hosts: str
     p2p_duid: str
     p2p_key: str

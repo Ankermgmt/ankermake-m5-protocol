@@ -114,6 +114,7 @@ def load_config_from_api(auth_token, region, insecure):
             mqtt_key=unhex(pr["secret_key"]),
             wifi_mac=pr["wifi_mac"],
             ip_addr=pr["ip_addr"],
+            api_hosts=pppp_decode_initstring(pr["app_conn"]),
             p2p_hosts=pppp_decode_initstring(pr["p2p_conn"]),
             p2p_duid=pr["p2p_did"],
             p2p_key=dsks[pr["station_sn"]]["dsk_key"],
