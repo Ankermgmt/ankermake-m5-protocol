@@ -248,16 +248,6 @@ def pppp_print_file(env, file, no_act):
         api.stop()
 
 
-@pppp.command("upload-file")
-@click.argument("file", required=True, type=click.File("rb"), metavar="<file>")
-@click.pass_context
-def pppp_upload_file(ctx, file):
-    """
-    Transfer print job to printer storage.
-    """
-    return ctx.invoke(pppp_print_file, file=file, no_act=True)
-
-
 @pppp.command("capture-video")
 @click.argument("file", required=True, type=click.File("wb"), metavar="<output.h264>")
 @click.option("--max-size", "-m", required=True, type=cli.util.FileSizeType(), help="Stop capture at this size (kb, mb, gb, etc)")
