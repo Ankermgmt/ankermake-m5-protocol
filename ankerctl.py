@@ -6,6 +6,7 @@ import logging
 import platform
 from os import path
 from rich import print
+from tqdm import tqdm
 
 import cli.config
 import cli.model
@@ -20,7 +21,7 @@ import libflagship.seccode
 
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
-from libflagship.pppp import PktLanSearch, FileTransferReply
+from libflagship.pppp import PktLanSearch, FileTransferReply, P2PCmdType, P2PSubCmdType
 from libflagship.ppppapi import AnkerPPPPApi, FileUploadInfo, PPPPError
 
 
@@ -248,6 +249,40 @@ def pppp_print_file(env, file, no_act):
         log.info("Successfully sent print job")
     finally:
         api.stop()
+
+
+@pppp.command("capture-video")
+@click.argument("file", required=True, type=click.File("wb"), metavar="<output.h264>")
+@click.option("--max-size", "-m", required=True, type=cli.util.FileSizeType(), help="Stop capture at this size (kb, mb, gb, etc)")
+@pass_env
+def pppp_capture_video(env, file, max_size):
+    """
+    Capture video stream from printer camera.
+
+    The output is in h264 ES (Elementary Stream) format. It can be played with
+    "ffplay" from the ffmpeg program suite.
+    """
+    env.require_config()
+    api = cli.pppp.pppp_open(env)
+
+    cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
+    api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
+    try:
+        with tqdm(unit="b", total=max_size, unit_scale=True, unit_divisor=1024) as bar:
+            size = 0
+            while True:
+                d = api.recv_xzyh(chan=1)
+                size += len(d.data)
+                file.write(d.data)
+                bar.set_postfix(size=cli.util.pretty_size(size), refresh=False)
+                bar.update(len(d.data))
+                if size >= max_size:
+                    break
+    finally:
+        cmd = {"commandType": P2PSubCmdType.CLOSE_LIVE}
+        api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
+
+    log.info(f"Successfully captured {cli.util.pretty_size(size)} video stream into {file.name}")
 
 
 @main.group("http", help="Low-level http api access")
