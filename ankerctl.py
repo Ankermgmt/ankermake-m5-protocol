@@ -73,6 +73,7 @@ def main(ctx, verbose, quiet, insecure):
 
     env.upgrade_config_if_needed()
 
+
 @main.group("mqtt", help="Low-level mqtt api access")
 def mqtt(): pass
 
