@@ -169,8 +169,8 @@ struct Aabb
     # Session id
     sn: u8
 
-    # Command field (P2PCmdType)
-    cmd: u32le
+    # File offset to write to
+    pos: u32le
 
     # Length field
     len: u32le
