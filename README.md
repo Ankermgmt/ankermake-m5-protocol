@@ -199,7 +199,6 @@ docker run \
 docker run \
   -v ankerctl_vol:/root/.config/ankerctl \
   ankerctl config show
-
 ```
 
 
