@@ -147,6 +147,26 @@ Some examples:
 ./ankerctl.py pppp capture-video -m 4mb output.h264
 ```
 
+## Webserver
+
+ankerctl can also be used as a webserver to allow slicers like prusaslicer to print directly to the printer. 
+
+
+![Screenshot of prusa slicer](https://user-images.githubusercontent.com/242382/229643454-eef1088c-c8b7-493d-851e-c5ef7bd26a35.png)
+
+To start the webserver run the following command, then navigate to [http://localhost:4470](http://localhost:4470)
+
+```sh
+./ankerctl.py webserver run
+```
+
+You can alternativly use docker compose to start the webserver running behind nginx
+
+```sh
+docker compose up
+```
+
+
 
 ## Docker
 
@@ -180,12 +200,8 @@ docker run \
   -v ankerctl_vol:/root/.config/ankerctl \
   ankerctl config show
 
-# Run the webserver for slicer integration
-docker run \
-  -v ankerctl_vol:/root/.config/ankerctl \
-  -p 4470:4470 \
-  ankerctl webserver run --host '0.0.0.0' --port 4470
 ```
+
 
 ## Legal
 
