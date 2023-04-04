@@ -370,13 +370,17 @@ def config_import(env, fd):
         useros = platform.system()
 
         darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
-        winfileloc = path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json')
+        winfileloc1 = path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json')
+        winfileloc2 = path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json')
 
         try:
             if useros == 'Darwin':
                 fd = open(darfileloc, 'r')
             elif useros == 'Windows':
-                fd = open(winfileloc, 'r')
+                if path.isfile(winfileloc1):
+                    fd = open(winfileloc1, 'r')
+                else:
+                    fd = open(winfileloc2, 'r')
             else:
                 log.critical("This platform does not support autodetection. Please specify file location")
         except FileNotFoundError:
