@@ -453,7 +453,7 @@ def webserver(env):
 
 
 app = Flask(__name__, template_folder='./static')
-app.config['TEMPLATES_AUTO_RELOAD'] = True
+# app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 @app.get("/")
 def app_root():
