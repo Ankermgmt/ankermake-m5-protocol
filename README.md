@@ -179,6 +179,12 @@ docker run \
 docker run \
   -v ankerctl_vol:/root/.config/ankerctl \
   ankerctl config show
+
+# Run the webserver for slicer integration
+docker run \
+  -v ankerctl_vol:/root/.config/ankerctl \
+  -p 4470:4470 \
+  ankerctl webserver run --host '0.0.0.0' --port 4470
 ```
 
 ## Legal
