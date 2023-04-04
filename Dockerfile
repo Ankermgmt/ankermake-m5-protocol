@@ -1,6 +1,8 @@
 # First stage: build environment
 FROM python:3.11-bullseye AS build-env
 
+EXPOSE 4470
+
 # Set the working directory to /app
 WORKDIR /app
 
@@ -21,8 +23,8 @@ RUN mkdir -p /root/.config/
 
 # Copy the script and libraries
 COPY ankerctl.py /app/
-COPY libflagship /app/
-COPY cli /app/
+COPY libflagship /app/libflagship/
+COPY cli /app/cli/
 
 # Copy the installed dependencies from the build environment
 COPY --from=build-env /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
