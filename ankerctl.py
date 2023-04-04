@@ -7,7 +7,7 @@ import platform
 from os import path
 from rich import print
 from tqdm import tqdm
-from flask import Flask, request
+from flask import Flask, request, render_template
 
 import cli.config
 import cli.model
@@ -452,45 +452,19 @@ def webserver(env):
     env.require_config()
 
 
-app = Flask(__name__)
-
+app = Flask(__name__, template_folder='./static')
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 @app.get("/")
 def app_root():
-    prefix = "https://github.com/Ankermgmt"
-    return f"""<html>
-    <head>
-    <title>ankerctl web server</title>
-    <style type="text/css">
-    img {{ margin: 1em; }}
-    </style>
-    </head>
-    <body>
-    <a href=\"{prefix}/ankermake-m5-protocol\">{prefix}/ankermake-m5-protocol</a>
-    <h1>Connecting prusaslicer:</h1>
-    <ul>
-    <li>Select "window" menu, "Printer Settings Tab"</li>
-    <li>Select gear icon ("Edit Physical Printer")</li>
-    <li>Input these settings</li>
-    <ul>
-    <li>Host type: OctoPrint</li>
-    <li>Hostname, IP or URL: localhost:{app.config["port"]}</li>
-    </ul>
-    </ul>
-    <img src="static/prusaslicer-setup.png">
-    <ul>
-    <li>Select "OK"</li>
-    <li>Enjoy printing using ankerctl :)</li>
-    </ul>
-    </html>"""
-
+    return render_template("index.html", configPort = app.config["port"], configHost = app.config["host"])
 
 @app.get("/api/version")
 def app_api_version():
     return {
         "api": "0.1",
-        "server": "1.3.10",
-        "text": "OctoPrint 1.3.10"
+        "server": "1.9.0",
+        "text": "OctoPrint 1.9.0"
     }
 
 
@@ -534,6 +508,7 @@ def webserver(env, host, port):
     env.require_config()
     app.config["env"] = env
     app.config["port"] = port
+    app.config["host"] = host
     app.run(host=host,port=port)
 
 
