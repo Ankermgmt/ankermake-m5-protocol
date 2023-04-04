@@ -448,7 +448,12 @@ app = Flask(__name__)
 def app_root():
     prefix = "https://github.com/Ankermgmt"
     return f"""<html>
-    <head><title>ankerctl web server</title></head>
+    <head>
+    <title>ankerctl web server</title>
+    <style type="text/css">
+    img {{ margin: 1em; }}
+    </style>
+    </head>
     <body>
     <a href=\"{prefix}/ankermake-m5-protocol\">{prefix}/ankermake-m5-protocol</a>
     <h1>Connecting prusaslicer:</h1>
@@ -460,6 +465,9 @@ def app_root():
     <li>Host type: OctoPrint</li>
     <li>Hostname, IP or URL: localhost:{app.config["port"]}</li>
     </ul>
+    </ul>
+    <img src="static/prusaslicer-setup.png">
+    <ul>
     <li>Select "OK"</li>
     <li>Enjoy printing using ankerctl :)</li>
     </ul>
