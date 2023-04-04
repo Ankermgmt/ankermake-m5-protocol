@@ -1,8 +1,6 @@
 # First stage: build environment
 FROM python:3.11-bullseye AS build-env
 
-EXPOSE 4470
-
 # Set the working directory to /app
 WORKDIR /app
 
