@@ -11,8 +11,8 @@ from libflagship.pppp import PktLanSearch, Duid, P2PCmdType
 from libflagship.ppppapi import AnkerPPPPApi, FileTransfer
 
 
-def pppp_open(env):
-    with env.config.open() as cfg:
+def pppp_open(config):
+    with config.open() as cfg:
         printer = cfg.printers[0]
 
         api = AnkerPPPPApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
