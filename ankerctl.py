@@ -95,7 +95,7 @@ def mqtt_monitor(env):
     Connect to mqtt broker, and show low-level events in realtime.
     """
 
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.insecure)
 
     for msg, body in client.fetchloop():
         log.info(f"TOPIC [{msg.topic}]")
@@ -144,7 +144,7 @@ def mqtt_send(env, command_type, args, force):
             log.fatal("Sending DEVICE_NAME_SET without devName=<name> will crash printer (override with --force)")
             return
 
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.insecure)
     cli.mqtt.mqtt_command(client, cmd)
 
 
@@ -156,7 +156,7 @@ def mqtt_rename_printer(env, newname):
     Set a new nickname for your printer
     """
 
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.insecure)
 
     cmd = {
         "commandType": MqttMsgType.ZZ_MQTT_CMD_DEVICE_NAME_SET,
@@ -175,7 +175,7 @@ def mqtt_gcode(env):
 
     Press Ctrl-C to exit. (or Ctrl-D to close connection, except on Windows)
     """
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.insecure)
 
     while True:
         gcode = click.prompt("gcode", prompt_suffix="> ")
