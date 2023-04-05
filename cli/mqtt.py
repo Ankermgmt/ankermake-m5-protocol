@@ -11,22 +11,24 @@ servertable = {
     "us": "make-mqtt.ankermake.com",
 }
 
-def mqtt_open(env):
-    with env.config.open() as cfg:
+
+def mqtt_open(config, insecure):
+    with config.open() as cfg:
         printer = cfg.printers[0]
         acct = cfg.account
         server = servertable[acct.region]
-        env.log.info(f"Connecting to {server}")
+        log.info(f"Connecting to {server}")
         client = AnkerMQTTBaseClient.login(
             printer.sn,
             acct.mqtt_username,
             acct.mqtt_password,
             printer.mqtt_key,
             ca_certs="examples/ankermake-mqtt.crt",
-            verify=not env.insecure,
+            verify=not insecure,
         )
         client.connect(server)
         return client
+
 
 def mqtt_command(client, msg):
     client.command(msg)
