@@ -503,12 +503,14 @@ def app_api_files_local():
 @webserver.command("run", help="Run ankerctl webserver")
 @click.option("--host", default='127.0.0.1', envvar="FLASK_HOST", help="Network interface to bind to")
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
+@click.option("--no-cache", "-nc", is_flag=True, help="Disbale the template cache")
 @pass_env
-def webserver(env, host, port):
+def webserver(env, host, port, no_cache):
     env.require_config()
     app.config["env"] = env
     app.config["port"] = port
     app.config["host"] = host
+    app.config['TEMPLATES_AUTO_RELOAD'] = no_cache
     app.run(host=host,port=port)
 
 
