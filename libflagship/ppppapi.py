@@ -219,11 +219,9 @@ class AnkerPPPPApi(Thread):
         return cls.open(duid, host, PPPP_WAN_PORT)
 
     @classmethod
-    def open_broadcast(cls, timeout=None):
+    def open_broadcast(cls):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        if timeout:
-            sock.settimeout(timeout)
         addr = ("255.255.255.255", PPPP_LAN_PORT)
         return cls(sock, duid=None, addr=addr)
 
