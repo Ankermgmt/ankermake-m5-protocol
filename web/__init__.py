@@ -54,35 +54,22 @@ class MultiQueue(Thread):
             self.stop()
 
 
-class MqttQueue(Thread):
-
-    def __init__(self):
-        super().__init__()
-        self.targets = []
-        self.client = cli.mqtt.mqtt_open(app.config["config"], True)
+class MqttQueue(MultiQueue):
 
     def run(self):
-        client = self.client
-        for msg, body in client.fetchloop():
-            log.info(f"TOPIC [{msg.topic}]")
-            log.debug(enhex(msg.payload[:]))
+        client = cli.mqtt.mqtt_open(app.config["config"], True)
+        while self.running:
+            for msg, body in client.fetch(timeout=0.5):
+                log.info(f"TOPIC [{msg.topic}]")
+                log.debug(enhex(msg.payload[:]))
 
-            for obj in body:
-                for target in self.targets:
-                    target.put(obj)
-
-    def add_target(self, target):
-        self.targets.append(target)
-
-    def del_target(self, target):
-        if target in self.targets:
-            self.targets.remove(target)
+                for obj in body:
+                    self.put(obj)
 
 
 @app.before_first_request
 def startup():
     app.mqttq = MqttQueue()
-    app.mqttq.start()
 
 
 @sock.route("/mqtt")
