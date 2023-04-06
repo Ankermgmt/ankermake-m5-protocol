@@ -12,6 +12,8 @@ in this repo, under [`libflagship/`](libflagship/).
 
 ## Current features
 
+ - Print directly from PrusaSlicer, SuperSlicer
+
  - Connect to Ankermake M5 and Ankermake APIs without using closed-source Anker
    software.
 
@@ -22,6 +24,7 @@ in this repo, under [`libflagship/`](libflagship/).
  - Send print jobs to the printer
 
  - Stream camera image/video to your computer
+
 
 ## Upcoming and planned features
 
@@ -39,17 +42,18 @@ your platform.
 
 Verify that you can start `ankerctl.py`, and get the help screen:
 
+### For Windows, use: 
 ```powershell
-## For Windows, use:
 python3 ankerctl.py -h
 ```
+If that does not work then try running using `python ankerctl.py -h`
 
+### Linux and MacOS, use:
 ```sh
-## Linux and MacOS:
 ./ankerctl.py -h
 ```
 
-You should see this output:
+You should see the below output - if not then head back to [installation instructions](documentation/example-file-usage/example-file-prerequistes.md)
 ```
 Usage: ankerctl.py [OPTIONS] COMMAND [ARGS]...
 
@@ -151,8 +155,7 @@ Some examples:
 
 ankerctl can also be used as a webserver to allow slicers like prusaslicer to print directly to the printer. 
 
-
-![Screenshot of prusa slicer](https://user-images.githubusercontent.com/242382/229643454-eef1088c-c8b7-493d-851e-c5ef7bd26a35.png)
+![Screenshot of prusa slicer](/static/img/setup/prusaslicer-2.png?raw=true "Screenshot of prusa slicer")
 
 To start the webserver run the following command, then navigate to [http://localhost:4470](http://localhost:4470)
 
