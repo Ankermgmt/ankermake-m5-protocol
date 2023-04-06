@@ -8,6 +8,9 @@
     </head>
     <body>
         <div class="container my-5">
+            <video playsinline autoplay muted id="player"></video>
+        </div>
+        <div class="container my-5">
             <div class="p-2 text-center bg-body-tertiary rounded-3">
                 <h1 class="text-body-emphasis display-3">ankerctl</h1>
                 <p class="lead">Congratulations on running ankerctl</p>
@@ -44,18 +47,7 @@
         </div>
         <script src="/static/vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js"></script>
         <script src="/static/vendor/cash.min.js"></script>
-        <script>
-         $(function () {
-             socket = new WebSocket("ws://" + location.host + "/mqtt");
-             socket.addEventListener('message', ev => {
-                 console.log(JSON.parse(ev.data));
-             });
-
-             $('#configData').on('click',function(){
-                 navigator.clipboard.writeText("{{ requestHost }}:{{ requestPort }}");
-                 return false;
-             })
-         });
-        </script>
+        <script type="text/javascript" src="/static/vendor/jmuxer.min.js"></script>
+        <script type="text/javascript" src="/static/ankersrv.js"></script>
     </body>
 </html>
