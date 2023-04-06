@@ -7,7 +7,6 @@ import platform
 from os import path
 from rich import print # you need python3
 from tqdm import tqdm
-from flask import Flask, request, render_template
 
 import cli.config
 import cli.model
@@ -25,6 +24,8 @@ from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
 from libflagship.pppp import PktLanSearch, P2PCmdType, P2PSubCmdType, FileTransfer
 from libflagship.ppppapi import AnkerPPPPApi, FileUploadInfo, PPPPError
+
+import web
 
 
 class Environment:
@@ -454,68 +455,13 @@ def webserver(env):
     env.require_config()
 
 
-app = Flask(__name__, template_folder='./static')
-# app.config['TEMPLATES_AUTO_RELOAD'] = True
-
-
-@app.get("/")
-def app_root():
-    host = request.host.split(':')
-    requestPort = host[1] if len(host) > 1 else '80' # If there is no 2nd array entry, the request port is 80
-    return render_template("index.html", requestPort=requestPort, requestHost=host[0])
-
-
-@app.get("/api/version")
-def app_api_version():
-    return {
-        "api": "0.1",
-        "server": "1.9.0",
-        "text": "OctoPrint 1.9.0"
-    }
-
-
-@app.post("/api/files/local")
-def app_api_files_local():
-    env = app.config["env"]
-
-    user_name = request.headers.get("User-Agent", "ankerctl").split("/")[0]
-
-    no_act = not cli.util.parse_http_bool(request.form["print"])
-
-    if no_act:
-        cli.util.http_abort(409, "Upload-only not supported by Ankermake M5")
-
-    fd = request.files["file"]
-
-    api = cli.pppp.pppp_open(env)
-
-    data = fd.read()
-    fui = FileUploadInfo.from_data(data, fd.filename, user_name=user_name, user_id="-", machine_id="-")
-    log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")
-    try:
-        cli.pppp.pppp_send_file(api, fui, data)
-        log.info("File upload complete. Requesting print start of job.")
-        api.aabb_request(b"", frametype=FileTransfer.END)
-    except PPPPError as E:
-        log.error(f"Could not send print job: {E}")
-    else:
-        log.info("Successfully sent print job")
-    finally:
-        api.stop()
-
-    return {}
-
-
 @webserver.command("run", help="Run ankerctl webserver")
 @click.option("--host", default='127.0.0.1', envvar="FLASK_HOST", help="Network interface to bind to")
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
 @pass_env
 def webserver(env, host, port):
     env.require_config()
-    app.config["env"] = env
-    app.config["port"] = port
-    app.config["host"] = host
-    app.run(host=host,port=port)
+    web.webserver(env.config, host, port)
 
 
 if __name__ == "__main__":
