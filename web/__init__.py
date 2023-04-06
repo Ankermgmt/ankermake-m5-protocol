@@ -8,6 +8,7 @@ from threading import Thread
 from multiprocessing import Queue
 
 from libflagship.util import enhex
+from libflagship.pppp import P2PSubCmdType, P2PCmdType
 from libflagship.ppppapi import FileUploadInfo, PPPPError, FileTransfer
 
 import cli.mqtt
@@ -67,9 +68,30 @@ class MqttQueue(MultiQueue):
                     self.put(obj)
 
 
+class VideoQueue(MultiQueue):
+
+    def __init__(self):
+        super().__init__()
+
+    def run(self):
+        api = cli.pppp.pppp_open(app.config["config"])
+        cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
+        api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
+
+        try:
+            while self.running:
+                d = api.recv_xzyh(chan=1)
+                log.debug(f"Video data packet: {enhex(d.data):32}...")
+                self.put(d.data)
+        finally:
+            cmd = {"commandType": P2PSubCmdType.CLOSE_LIVE}
+            api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
+
+
 @app.before_first_request
 def startup():
     app.mqttq = MqttQueue()
+    app.videoq = VideoQueue()
 
 
 @sock.route("/mqtt")
@@ -84,6 +106,18 @@ def mqtt(sock):
             sock.send(json.dumps(data))
     finally:
         app.mqttq.del_target(queue)
+
+
+@sock.route("/video")
+def video(sock):
+    queue = Queue()
+    app.videoq.add_target(queue)
+    try:
+        while True:
+            data = queue.get()
+            sock.send(data)
+    finally:
+        app.videoq.del_target(queue)
 
 
 @app.get("/")
