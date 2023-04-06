@@ -23,6 +23,37 @@ app.config.from_prefixed_env()
 sock = Sock(app)
 
 
+class MultiQueue(Thread):
+
+    def __init__(self):
+        super().__init__()
+        self.running = False
+        self.targets = []
+
+    def start(self):
+        self.running = True
+        super().start()
+
+    def stop(self):
+        self.running = False
+        self.join()
+
+    def put(self, obj):
+        for target in self.targets:
+            target.put(obj)
+
+    def add_target(self, target):
+        if not self.running:
+            self.start()
+        self.targets.append(target)
+
+    def del_target(self, target):
+        if target in self.targets:
+            self.targets.remove(target)
+        if not self.targets and self.running:
+            self.stop()
+
+
 class MqttQueue(Thread):
 
     def __init__(self):
