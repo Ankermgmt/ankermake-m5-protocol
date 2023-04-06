@@ -12,7 +12,7 @@ in this repo, under [`libflagship/`](libflagship/).
 
 ## Current features
 
-- Print directly from PrusaSlicer, SuperSlicer and Cura
+- Print directly from PrusaSlicer, SuperSlicer
 
 - Connect to Ankermake M5 and Ankermake APIs without using closed-source Anker
    software.
