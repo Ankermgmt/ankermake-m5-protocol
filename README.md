@@ -12,9 +12,9 @@ in this repo, under [`libflagship/`](libflagship/).
 
 ## Current features
 
-- Print directly from PrusaSlicer, SuperSlicer
+ - Print directly from PrusaSlicer, SuperSlicer
 
-- Connect to Ankermake M5 and Ankermake APIs without using closed-source Anker
+ - Connect to Ankermake M5 and Ankermake APIs without using closed-source Anker
    software.
 
  - Send raw gcode commands directly to the printer (and see the response)
@@ -42,13 +42,13 @@ your platform.
 
 Verify that you can start `ankerctl.py`, and get the help screen:
 
-#### For Windows, use: 
+### For Windows, use: 
 ```powershell
 python3 ankerctl.py -h
 ```
-If that does not work then try running using ```python ankerctl.py -h```
+If that does not work then try running using `python ankerctl.py -h`
 
-#### Linux and MacOS, use:
+### Linux and MacOS, use:
 ```sh
 ./ankerctl.py -h
 ```
