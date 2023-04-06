@@ -208,10 +208,10 @@ def pppp_lan_search(env):
 
     Works by broadcasting a LAN_SEARCH packet, and waiting for a reply.
     """
-    api = AnkerPPPPApi.open_broadcast(timeout=1.0)
+    api = AnkerPPPPApi.open_broadcast()
     try:
         api.send(PktLanSearch())
-        resp = api.recv()
+        resp = api.recv(timeout=1.0)
     except TimeoutError:
         log.error("No printers responded within timeout. Are you connected to the same network as the printer?")
     else:
