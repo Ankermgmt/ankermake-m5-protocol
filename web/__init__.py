@@ -18,8 +18,9 @@ app = Flask(
     static_folder="../static",
     template_folder="../static"
 )
+app.config.from_prefixed_env()
+
 sock = Sock(app)
-# app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 
 class MqttQueue(Thread):
