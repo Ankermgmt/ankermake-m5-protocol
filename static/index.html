@@ -46,6 +46,11 @@
         <script src="/static/vendor/cash.min.js"></script>
         <script>
          $(function () {
+             socket = new WebSocket("ws://" + location.host + "/mqtt");
+             socket.addEventListener('message', ev => {
+                 console.log(JSON.parse(ev.data));
+             });
+
              $('#configData').on('click',function(){
                  navigator.clipboard.writeText("{{ requestHost }}:{{ requestPort }}");
                  return false;

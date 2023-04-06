@@ -1,7 +1,13 @@
+import json
 import logging as log
 
 from flask import Flask, request, render_template
+from flask_sock import Sock
 
+from threading import Thread
+from multiprocessing import Queue
+
+from libflagship.util import enhex
 from libflagship.ppppapi import FileUploadInfo, PPPPError, FileTransfer
 
 import cli.mqtt
@@ -12,7 +18,53 @@ app = Flask(
     static_folder="../static",
     template_folder="../static"
 )
+sock = Sock(app)
 # app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+
+class MqttQueue(Thread):
+
+    def __init__(self):
+        super().__init__()
+        self.targets = []
+        self.client = cli.mqtt.mqtt_open(app.config["config"], True)
+
+    def run(self):
+        client = self.client
+        for msg, body in client.fetchloop():
+            log.info(f"TOPIC [{msg.topic}]")
+            log.debug(enhex(msg.payload[:]))
+
+            for obj in body:
+                for target in self.targets:
+                    target.put(obj)
+
+    def add_target(self, target):
+        self.targets.append(target)
+
+    def del_target(self, target):
+        if target in self.targets:
+            self.targets.remove(target)
+
+
+@app.before_first_request
+def startup():
+    app.mqttq = MqttQueue()
+    app.mqttq.start()
+
+
+@sock.route("/mqtt")
+def mqtt(sock):
+
+    queue = Queue()
+    app.mqttq.add_target(queue)
+    try:
+        while True:
+            data = queue.get()
+            log.debug(f"MQTT message: {data}")
+            sock.send(json.dumps(data))
+    finally:
+        app.mqttq.del_target(queue)
 
 
 @app.get("/")
