@@ -34,6 +34,19 @@ $(function () {
     });
 
 
+    var wsctrl = new WebSocket("ws://" + location.host + "/ws/ctrl");
+
+    $('#light-on').on('click', function() {
+        wsctrl.send(JSON.stringify({"light": true}));
+        return false;
+    });
+
+    $('#light-off').on('click', function() {
+        wsctrl.send(JSON.stringify({"light": false}));
+        return false;
+    });
+
+
     $('#configData').on('click',function(){
         navigator.clipboard.writeText("{{ configHost }}:{{ configPort }}");
         return false;
