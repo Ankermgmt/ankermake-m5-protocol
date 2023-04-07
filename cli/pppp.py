@@ -26,9 +26,9 @@ def pppp_open(config, timeout=None):
         api.send(PktLanSearch())
 
         while not api.rdy:
+            time.sleep(0.1)
             if api.stopped.is_set() or (timeout and (datetime.now() > deadline)):
                 raise ConnectionRefusedError("Connection rejected by device")
-            time.sleep(0.1)
 
         log.info("Established pppp connection")
         return api
