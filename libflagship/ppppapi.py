@@ -76,7 +76,7 @@ class Wire:
         self.buf = []
         self.rx, self.tx = Pipe(False)
 
-    def read(self, size, timeout=None):
+    def peek(self, size, timeout=None):
         if timeout:
             deadline = datetime.now() + timedelta(seconds=timeout)
 
@@ -85,8 +85,13 @@ class Wire:
                 return None
             self.buf.extend(self.rx.recv())
 
-        res, self.buf = self.buf[:size], self.buf[size:]
-        return bytes(res)
+        return bytes(self.buf[:size])
+
+    def read(self, size, timeout=None):
+        res = self.peek(size, timeout)
+        if res:
+            self.buf = self.buf[size:]
+        return res
 
     def write(self, data):
         self.tx.send(data)
