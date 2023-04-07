@@ -1,6 +1,19 @@
+import sys
 import click
 import json
 from flask import make_response, abort
+
+
+def require_python_version(major, minor):
+    vi = sys.version_info
+    if vi.major < major or vi.minor < minor:
+        sys.stderr.write(
+            "ERROR: Python version too old (%d.%d required but %d.%d installed)\n" % (
+                major, minor,
+                vi.major, vi.minor
+            )
+        )
+        exit(1)
 
 
 def json_key_value(str):
