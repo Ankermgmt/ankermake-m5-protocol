@@ -1,10 +1,13 @@
 import json
+import atexit
 import logging as log
 
+from datetime import datetime, timedelta
+from enum import Enum
 from flask import Flask, request, render_template, Response
 from flask_sock import Sock
 
-from threading import Thread
+from threading import Thread, Event
 from multiprocessing import Queue
 
 from libflagship.util import enhex
@@ -24,68 +27,175 @@ app.config.from_prefixed_env()
 sock = Sock(app)
 
 
+class RunState(Enum):
+    Starting = 2
+    Running  = 3
+    # Idle     = 4
+    Stopping = 5
+    Stopped  = 6
+
+
 class MultiQueue(Thread):
 
-    def __init__(self):
+    def __init__(self, idle_timeout=10):
         super().__init__()
-        self.running = False
-        self.targets = []
-
-    def start(self):
+        self.timeout = timedelta(seconds=idle_timeout)
         self.running = True
+        self.deadline = None
+        self.state = RunState.Stopped
+        self.wanted = False
+        self.targets = []
+        self._event = Event()
+        atexit.register(self.atexit)
         super().start()
 
-    def stop(self):
+    def atexit(self):
+        log.info(f"{self.name}: Requesting thread exit..")
         self.running = False
         self.join()
+        log.info(f"{self.name}: Thread cleanup done")
+
+    @property
+    def name(self):
+        return type(self).__name__
+
+    def start(self):
+        log.info(f"{self.name}: Requesting start")
+        self.wanted = True
+        self._event.set()
+
+    def stop(self):
+        log.info(f"{self.name}: Requesting stop")
+        self.wanted = False
+        self._event.set()
+
+    def run(self):
+        holdoff = None
+
+        while self.running:
+            if self.state == RunState.Starting:
+                log.debug(f"{self.name}: {datetime.now()} vs holdoff {holdoff}")
+                if datetime.now() > holdoff:
+                    try:
+                        log.info(f"{self.name} worker start")
+                        self.worker_start()
+                    except Exception as E:
+                        log.error(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
+                        holdoff = datetime.now() + timedelta(seconds=1)
+                    else:
+                        log.info(f"{self.name}: Worked started")
+                        self.state = RunState.Running
+                else:
+                    self._event.wait(timeout=0.1)
+                    self._event.clear()
+
+            elif self.state == RunState.Running:
+                if self.wanted:
+                    self.worker_run(timeout=0.3)
+                else:
+                    log.info(f"{self.name}: Stopping worker")
+                    holdoff = datetime.now()
+                    self.state = RunState.Stopping
+
+            elif self.state == RunState.Stopping:
+                if datetime.now() > holdoff:
+                    try:
+                        self.worker_stop()
+                    except Exception as E:
+                        log.error(f"{self.name}: Failed to stop worker: {E}. Retrying in 1 second.")
+                        holdoff = datetime.now() + timedelta(seconds=1)
+                    else:
+                        log.info(f"{self.name}: Worked stopped")
+                        self.state = RunState.Stopped
+                else:
+                    self._event.wait(timeout=0.1)
+                    self._event.clear()
+
+            elif self.state == RunState.Stopped:
+                if self.wanted:
+                    log.info(f"{self.name}: Starting worker")
+                    holdoff = datetime.now()
+                    self.state = RunState.Starting
+                else:
+                    self._event.wait()
+                    self._event.clear()
+            else:
+                raise ValueError("Unknown state value")
+
+        log.info(f"{self.name}: Shutting down thread")
+        if self.state == RunState.Running:
+            self.worker_stop()
+        log.info(f"{self.name}: Thread exit")
 
     def put(self, obj):
         for target in self.targets:
             target.put(obj)
 
     def add_target(self, target):
-        if not self.running:
+        if not self.targets:
             self.start()
         self.targets.append(target)
 
     def del_target(self, target):
         if target in self.targets:
             self.targets.remove(target)
-        if not self.targets and self.running:
-            self.stop()
+            if not self.targets:
+                self.stop()
+
+    def worker_start(self):
+        pass
+
+    def worker_run(self, timeout):
+        pass
+
+    def worker_stop(self):
+        pass
 
 
 class MqttQueue(MultiQueue):
 
-    def run(self):
-        client = cli.mqtt.mqtt_open(app.config["config"], True)
-        while self.running:
-            for msg, body in client.fetch(timeout=0.5):
-                log.info(f"TOPIC [{msg.topic}]")
-                log.debug(enhex(msg.payload[:]))
+    def worker_start(self):
+        self.client = cli.mqtt.mqtt_open(app.config["config"], True)
 
-                for obj in body:
-                    self.put(obj)
+    def worker_run(self, timeout):
+        for msg, body in self.client.fetch(timeout=timeout):
+            log.info(f"TOPIC [{msg.topic}]")
+            log.debug(enhex(msg.payload[:]))
+
+            for obj in body:
+                self.put(obj)
+
+    def worker_stop(self):
+        del self.client
 
 
 class VideoQueue(MultiQueue):
 
-    def __init__(self):
-        super().__init__()
+    def send_command(self, commandType, **kwargs):
+        cmd = {
+            "commandType": commandType,
+            **kwargs
+        }
+        return self.api.send_xzyh(
+            json.dumps(cmd).encode(),
+            cmd=P2PCmdType.P2P_JSON_CMD
+        )
 
-    def run(self):
-        api = cli.pppp.pppp_open(app.config["config"])
-        cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
-        api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
+    def worker_start(self):
+        self.api = cli.pppp.pppp_open(app.config["config"], timeout=1)
 
-        try:
-            while self.running:
-                d = api.recv_xzyh(chan=1)
-                log.debug(f"Video data packet: {enhex(d.data):32}...")
-                self.put(d.data)
-        finally:
-            cmd = {"commandType": P2PSubCmdType.CLOSE_LIVE}
-            api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
+        self.send_command(P2PSubCmdType.START_LIVE, data={"encryptkey": "x", "accountId": "y"})
+
+    def worker_run(self, timeout):
+        d = self.api.recv_xzyh(chan=1, timeout=timeout)
+        if not d:
+            return
+
+        log.debug(f"Video data packet: {enhex(d.data):32}...")
+        self.put(d.data)
+
+    def worked_stop(self):
+        self.api.send_command(P2PSubCmdType.CLOSE_LIVE)
 
 
 @app.before_first_request
