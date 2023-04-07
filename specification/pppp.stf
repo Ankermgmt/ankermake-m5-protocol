@@ -81,7 +81,7 @@ enum P2PSubCmdType
     START_LIVE                = 0x03e8
     CLOSE_LIVE                = 0x03e9
     VIDEO_RECORD_SWITCH       = 0x03ea
-    LIGHT_STATE_SWITCH        = 0x03ab
+    LIGHT_STATE_SWITCH        = 0x03eb
     LIGHT_STATE_GET           = 0x03ec
     LIVE_MODE_SET             = 0x03ed
     LIVE_MODE_GET             = 0x03ee
