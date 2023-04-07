@@ -1,6 +1,6 @@
 $(function () {
 
-    socket = new WebSocket("ws://" + location.host + "/mqtt");
+    socket = new WebSocket("ws://" + location.host + "/ws/mqtt");
     socket.addEventListener('message', ev => {
         console.log(JSON.parse(ev.data));
     });
@@ -21,7 +21,7 @@ $(function () {
         }
     });
 
-    var ws = new WebSocket("ws://" + location.host + "/video");
+    var ws = new WebSocket("ws://" + location.host + "/ws/video");
     ws.binaryType = 'arraybuffer';
     ws.addEventListener('message',function(event) {
         jmuxer.feed({
