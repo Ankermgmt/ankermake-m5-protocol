@@ -23,7 +23,7 @@ import libflagship.seccode
 
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
-from libflagship.pppp import PktLanSearch, FileTransferReply, P2PCmdType, P2PSubCmdType, FileTransfer
+from libflagship.pppp import PktLanSearch, P2PCmdType, P2PSubCmdType, FileTransfer
 from libflagship.ppppapi import AnkerPPPPApi, FileUploadInfo, PPPPError
 
 
