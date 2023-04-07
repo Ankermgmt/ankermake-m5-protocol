@@ -101,7 +101,10 @@ def mqtt(sock):
     app.mqttq.add_target(queue)
     try:
         while True:
-            data = queue.get()
+            try:
+                data = queue.get()
+            except EOFError:
+                break
             log.debug(f"MQTT message: {data}")
             sock.send(json.dumps(data))
     finally:
@@ -114,7 +117,10 @@ def video(sock):
     app.videoq.add_target(queue)
     try:
         while True:
-            data = queue.get()
+            try:
+                data = queue.get()
+            except EOFError:
+                break
             sock.send(data)
     finally:
         app.videoq.del_target(queue)
@@ -128,7 +134,10 @@ def video2():
         app.videoq.add_target(queue)
         try:
             while True:
-                data = queue.get()
+                try:
+                    data = queue.get()
+                except EOFError:
+                    break
                 yield data
         finally:
             app.videoq.del_target(queue)
