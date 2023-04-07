@@ -109,7 +109,7 @@ class P2PSubCmdType(enum.IntEnum):
     START_LIVE          = 0x03e8 # unknown
     CLOSE_LIVE          = 0x03e9 # unknown
     VIDEO_RECORD_SWITCH = 0x03ea # unknown
-    LIGHT_STATE_SWITCH  = 0x03ab # unknown
+    LIGHT_STATE_SWITCH  = 0x03eb # unknown
     LIGHT_STATE_GET     = 0x03ec # unknown
     LIVE_MODE_SET       = 0x03ed # unknown
     LIVE_MODE_GET       = 0x03ee # unknown
