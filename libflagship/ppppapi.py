@@ -167,8 +167,8 @@ class Channel:
         self.event.wait()
         self.event.clear()
 
-    def read(self, nbytes):
-        return self.rx.read(nbytes)
+    def read(self, nbytes, timeout=None):
+        return self.rx.read(nbytes, timeout)
 
     def write(self, payload, block=True):
         pdata = payload[:]
