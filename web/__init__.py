@@ -237,6 +237,19 @@ def video(sock):
             sock.send(data)
 
 
+@sock.route("/ws/ctrl")
+def ctrl(sock):
+
+    while True:
+        msg = json.loads(sock.receive())
+
+        if "light" in msg:
+            app.videoq.send_command(
+                P2PSubCmdType.LIGHT_STATE_SWITCH,
+                data={"open": int(msg["light"])}
+            )
+
+
 @app.get("/video")
 def video2():
 
