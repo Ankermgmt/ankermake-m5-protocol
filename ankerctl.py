@@ -15,6 +15,7 @@ import cli.logfmt
 import cli.mqtt
 import cli.util
 import cli.pppp
+import cli.checkver # check python version
 
 import libflagship.httpapi
 import libflagship.logincache
