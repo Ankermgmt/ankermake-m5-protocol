@@ -1,6 +1,7 @@
 import json
 import atexit
 import logging as log
+import contextlib
 
 from datetime import datetime, timedelta
 from enum import Enum
@@ -142,6 +143,13 @@ class MultiQueue(Thread):
             if not self.targets:
                 self.stop()
 
+    @contextlib.contextmanager
+    def tap(self):
+        queue = Queue()
+        self.add_target(queue)
+        yield queue
+        self.del_target(queue)
+
     def worker_start(self):
         pass
 
@@ -207,9 +215,7 @@ def startup():
 @sock.route("/ws/mqtt")
 def mqtt(sock):
 
-    queue = Queue()
-    app.mqttq.add_target(queue)
-    try:
+    with app.mqttq.tap() as queue:
         while True:
             try:
                 data = queue.get()
@@ -217,23 +223,18 @@ def mqtt(sock):
                 break
             log.debug(f"MQTT message: {data}")
             sock.send(json.dumps(data))
-    finally:
-        app.mqttq.del_target(queue)
 
 
 @sock.route("/ws/video")
 def video(sock):
-    queue = Queue()
-    app.videoq.add_target(queue)
-    try:
+
+    with app.videoq.tap() as queue:
         while True:
             try:
                 data = queue.get()
             except EOFError:
                 break
             sock.send(data)
-    finally:
-        app.videoq.del_target(queue)
 
 
 @app.get("/video")
