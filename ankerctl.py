@@ -5,7 +5,7 @@ import click
 import logging
 import platform
 from os import path
-from rich import print
+from rich import print # you need python3
 from tqdm import tqdm
 from flask import Flask, request, render_template
 
