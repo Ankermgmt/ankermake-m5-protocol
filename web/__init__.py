@@ -1,7 +1,7 @@
 import json
 import logging as log
 
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, Response
 from flask_sock import Sock
 
 from threading import Thread
@@ -118,6 +118,22 @@ def video(sock):
             sock.send(data)
     finally:
         app.videoq.del_target(queue)
+
+
+@app.get("/video")
+def video2():
+
+    def generate():
+        queue = Queue()
+        app.videoq.add_target(queue)
+        try:
+            while True:
+                data = queue.get()
+                yield data
+        finally:
+            app.videoq.del_target(queue)
+
+    return Response(generate(), mimetype='video/mp4')
 
 
 @app.get("/")
