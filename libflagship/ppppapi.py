@@ -76,9 +76,15 @@ class Wire:
         self.buf = []
         self.rx, self.tx = Pipe(False)
 
-    def read(self, size):
+    def read(self, size, timeout=None):
+        if timeout:
+            deadline = datetime.now() + timedelta(seconds=timeout)
+
         while len(self.buf) < size:
+            if timeout and not self.rx.poll(timeout=(deadline - datetime.now()).total_seconds()):
+                return None
             self.buf.extend(self.rx.recv())
+
         res, self.buf = self.buf[:size], self.buf[size:]
         return bytes(res)
 
