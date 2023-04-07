@@ -8,12 +8,20 @@
     </head>
     <body>
         <div class="container my-5">
-            <video playsinline autoplay muted id="player"></video>
-        </div>
-        <div class="container my-5">
             <div class="p-2 text-center bg-body-tertiary rounded-3">
                 <h1 class="text-body-emphasis display-3">ankerctl</h1>
                 <p class="lead">Congratulations on running ankerctl</p>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row text-body-emphasis display-3">
+                <div class="col px-3 rounded-3">
+                    <video class="w-100 rounded-3" playsinline autoplay muted id="player"></video>
+                </div>
+                <div class="col px-3 rounded-3">
+                    <button class="btn btn-primary" id="light-on">💡 Light on</button>
+                    <button class="btn btn-secondary" id="light-off">💡 Light off</button>
+                </div>
             </div>
         </div>
         <div class="container mb-4">
