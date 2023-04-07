@@ -347,11 +347,11 @@ class AnkerPPPPApi(Thread):
 
         return self.chans[chan].write(aabb.pack_with_crc(data), block=block)
 
-    def recv_xzyh(self, chan=1):
+    def recv_xzyh(self, chan=1, timeout=None):
         fd = self.chans[chan]
 
         xzyh = Xzyh.parse(fd.read(16))[0]
-        xzyh.data = fd.read(xzyh.len)
+        xzyh.data = fd.read(xzyh.len, timeout=timeout)
         return xzyh
 
     def recv_aabb(self, chan=1):
