@@ -172,6 +172,9 @@ class Channel:
         self.event.wait()
         self.event.clear()
 
+    def peek(self, nbytes, timeout=None):
+        return self.rx.peek(nbytes, timeout)
+
     def read(self, nbytes, timeout=None):
         return self.rx.read(nbytes, timeout)
 
