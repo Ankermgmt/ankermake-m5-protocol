@@ -3,6 +3,7 @@ import uuid
 import click
 import logging as log
 
+from datetime import datetime, timedelta
 from tqdm import tqdm
 
 import cli.util
@@ -11,18 +12,22 @@ from libflagship.pppp import PktLanSearch, Duid, P2PCmdType
 from libflagship.ppppapi import AnkerPPPPApi, FileTransfer
 
 
-def pppp_open(config):
+def pppp_open(config, timeout=None):
+    if timeout:
+        deadline = datetime.now() + timedelta(seconds=timeout)
+
     with config.open() as cfg:
         printer = cfg.printers[0]
 
         api = AnkerPPPPApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
         log.info("Trying connect over pppp")
-        api.daemon = True
         api.start()
 
         api.send(PktLanSearch())
 
         while not api.rdy:
+            if api.stopped.is_set() or (timeout and (datetime.now() > deadline)):
+                raise ConnectionRefusedError("Connection rejected by device")
             time.sleep(0.1)
 
         log.info("Established pppp connection")
