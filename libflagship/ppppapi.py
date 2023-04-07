@@ -358,8 +358,17 @@ class AnkerPPPPApi(Thread):
     def recv_xzyh(self, chan=1, timeout=None):
         fd = self.chans[chan]
 
-        xzyh = Xzyh.parse(fd.read(16))[0]
-        xzyh.data = fd.read(xzyh.len, timeout=timeout)
+        hdr = fd.peek(16, timeout=timeout)
+        if not hdr:
+            return None
+
+        xzyh = Xzyh.parse(hdr)[0]
+
+        data = fd.read(xzyh.len + 16, timeout=timeout)
+        if not data:
+            return None
+
+        xzyh.data = data[16:]
         return xzyh
 
     def recv_aabb(self, chan=1):
