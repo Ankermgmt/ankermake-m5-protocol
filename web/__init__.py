@@ -94,7 +94,7 @@ def startup():
     app.videoq = VideoQueue()
 
 
-@sock.route("/mqtt")
+@sock.route("/ws/mqtt")
 def mqtt(sock):
 
     queue = Queue()
@@ -108,7 +108,7 @@ def mqtt(sock):
         app.mqttq.del_target(queue)
 
 
-@sock.route("/video")
+@sock.route("/ws/video")
 def video(sock):
     queue = Queue()
     app.videoq.add_target(queue)
