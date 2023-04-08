@@ -23,7 +23,7 @@ import libflagship.seccode
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
 from libflagship.pppp import PktLanSearch, P2PCmdType, P2PSubCmdType, FileTransfer
-from libflagship.ppppapi import AnkerPPPPApi, FileUploadInfo, PPPPError
+from libflagship.ppppapi import FileUploadInfo
 
 import web
 
@@ -53,11 +53,12 @@ pass_env = click.make_pass_decorator(Environment)
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.option("--pppp-dump", required=False, metavar="<file.log>", type=click.Path(), help="Enable logging of PPPP data to <file.log>")
 @click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
 @click.option("--verbose", "-v", count=True, help="Increase verbosity")
 @click.option("--quiet", "-q", count=True, help="Decrease verbosity")
 @click.pass_context
-def main(ctx, verbose, quiet, insecure):
+def main(ctx, pppp_dump, verbose, quiet, insecure):
     ctx.ensure_object(Environment)
     env = ctx.obj
 
@@ -71,6 +72,7 @@ def main(ctx, verbose, quiet, insecure):
     env.config   = cli.config.configmgr()
     env.insecure = insecure
     env.level = max(-3, min(verbose - quiet, 1))
+    env.pppp_dump = pppp_dump
 
     cli.logfmt.setup_logging(levels[env.level])
 
@@ -208,7 +210,7 @@ def pppp_lan_search(env):
 
     Works by broadcasting a LAN_SEARCH packet, and waiting for a reply.
     """
-    api = AnkerPPPPApi.open_broadcast()
+    api = cli.pppp.pppp_open_broadcast(env.pppp_dump)
     try:
         api.send(PktLanSearch())
         resp = api.recv(timeout=1.0)
@@ -232,7 +234,7 @@ def pppp_print_file(env, file, no_act):
     file, so anytime a file is uploaded, the old one is deleted.
     """
     env.require_config()
-    api = cli.pppp.pppp_open(env.config)
+    api = cli.pppp.pppp_open(env.config, env.pppp_dump)
 
     data = file.read()
     fui = FileUploadInfo.from_file(file.name, user_name="ankerctl", user_id="-", machine_id="-")
@@ -265,7 +267,7 @@ def pppp_capture_video(env, file, max_size):
     "ffplay" from the ffmpeg program suite.
     """
     env.require_config()
-    api = cli.pppp.pppp_open(env.config)
+    api = cli.pppp.pppp_open(env.config, env.pppp_dump)
 
     cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
     api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)

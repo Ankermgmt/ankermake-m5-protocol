@@ -7,11 +7,19 @@ from tqdm import tqdm
 
 import cli.util
 
+from libflagship.pktdump import PacketWriter
 from libflagship.pppp import PktLanSearch, Duid, P2PCmdType
 from libflagship.ppppapi import AnkerPPPPApi, FileTransfer
 
 
-def pppp_open(config, timeout=None):
+def _pppp_dumpfile(api, dumpfile):
+    if dumpfile:
+        log.info(f"Logging all pppp traffic to {dumpfile!r}")
+        pktwr = PacketWriter.open(dumpfile)
+        api.set_dumper(pktwr)
+
+
+def pppp_open(config, timeout=None, dumpfile=None):
     if timeout:
         deadline = datetime.now() + timedelta(seconds=timeout)
 
@@ -19,6 +27,8 @@ def pppp_open(config, timeout=None):
         printer = cfg.printers[0]
 
         api = AnkerPPPPApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
+        _pppp_dumpfile(api, dumpfile)
+
         log.info("Trying connect over pppp")
         api.start()
 
@@ -31,6 +41,12 @@ def pppp_open(config, timeout=None):
 
         log.info("Established pppp connection")
         return api
+
+
+def pppp_open_broadcast(dumpfile=None):
+    api = AnkerPPPPApi.open_broadcast()
+    _pppp_dumpfile(api, dumpfile)
+    return api
 
 
 def pppp_send_file(api, fui, data):
