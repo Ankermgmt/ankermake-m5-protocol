@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.9.1'
 
 # You must manually run `ankerctl config import` atleast once
 # docker run \
@@ -10,6 +10,7 @@ services:
     image: ankerctl/ankerctl:latest
     container_name: ankerctl
     restart: unless-stopped
+    pull_policy: build
     build: .
     environment:
       - FLASK_PORT=4470
