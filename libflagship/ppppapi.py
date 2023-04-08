@@ -218,6 +218,7 @@ class AnkerPPPPApi(Thread):
 
         self.running = True
         self.stopped = Event()
+        self.dumper = None
 
     @classmethod
     def open(cls, duid, host, port):
@@ -238,6 +239,9 @@ class AnkerPPPPApi(Thread):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         addr = ("255.255.255.255", PPPP_LAN_PORT)
         return cls(sock, duid=None, addr=addr)
+
+    def set_dumper(self, dumper):
+        self.dumper = dumper
 
     def stop(self):
         self.running = False
@@ -320,12 +324,16 @@ class AnkerPPPPApi(Thread):
     def recv(self, timeout=None):
         self.sock.settimeout(timeout)
         data, self.addr = self.sock.recvfrom(4096)
+        if self.dumper:
+            self.dumper.rx(data, self.addr)
         msg = Message.parse(data)[0]
         log.debug(f"RX <--  {msg}")
         return msg
 
     def send(self, pkt, addr=None):
         resp = pkt.pack()
+        if self.dumper:
+            self.dumper.tx(resp, self.addr)
         msg = Message.parse(resp)[0]
         log.debug(f"TX  --> {msg}")
         self.sock.sendto(resp, addr or self.addr)
