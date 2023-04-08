@@ -36,14 +36,16 @@ $(function () {
 
     var wsctrl = new WebSocket("ws://" + location.host + "/ws/ctrl");
 
-    $('#light-on').on('click', function() {
-        wsctrl.send(JSON.stringify({"light": true}));
-        return false;
-    });
-
-    $('#light-off').on('click', function() {
-        wsctrl.send(JSON.stringify({"light": false}));
-        return false;
+    $('#light').on('change', function() {
+        if(this.checked) {
+            console.log('Turning light on')
+            wsctrl.send(JSON.stringify({"light": true}));
+            return false;
+        } else {
+            console.log('Turning light off')
+            wsctrl.send(JSON.stringify({"light": false}));
+            return false;
+        }
     });
 
 
