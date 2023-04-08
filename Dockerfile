@@ -1,5 +1,5 @@
 # First stage: build environment
-FROM python:3.11-bullseye AS build-env
+FROM python:3 AS build-env
 
 # Set the working directory to /app
 WORKDIR /app
@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Second stage: runtime environment
-FROM python:3.11-slim
+FROM python:3-slim
 
 # Set the working directory to /app
 WORKDIR /app
@@ -24,8 +24,12 @@ COPY ankerctl.py /app/
 COPY static /app/static/
 COPY libflagship /app/libflagship/
 COPY cli /app/cli/
+COPY specification /app/specification
+COPY web /app/web
+COPY transwarp /app/transwarp
 
 # Copy the installed dependencies from the build environment
 COPY --from=build-env /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
 ENTRYPOINT ["python", "/app/ankerctl.py"]
+CMD ["webserver", "run"]
