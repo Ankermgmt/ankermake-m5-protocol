@@ -32,5 +32,5 @@ COPY examples/ankermake-mqtt.crt /app/ankermake-mqtt.crt
 # Copy the installed dependencies from the build environment
 COPY --from=build-env /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
-ENTRYPOINT ["python", "/app/ankerctl.py"]
+ENTRYPOINT ["/app/ankerctl.py"]
 CMD ["webserver", "run"]
