@@ -274,7 +274,7 @@ def app_root():
     return render_template(
         "index.html",
         configPort=app.config["port"],
-        configHost=app.config["host"]
+        configHost=request.host.split(':')[0]
     )
 
 
