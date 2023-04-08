@@ -458,7 +458,7 @@ app = Flask(__name__, template_folder='./static')
 
 @app.get("/")
 def app_root():
-    return render_template("index.html", configPort = app.config["port"], configHost = app.config["host"])
+    return render_template("index.html", requestPort = request.host.split(':')[1], requestHost = request.host.split(':')[0])
 
 @app.get("/api/version")
 def app_api_version():
