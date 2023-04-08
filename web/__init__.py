@@ -190,7 +190,7 @@ class VideoQueue(MultiQueue):
         )
 
     def worker_start(self):
-        self.api = cli.pppp.pppp_open(app.config["config"], timeout=1)
+        self.api = cli.pppp.pppp_open(app.config["config"], timeout=1, dumpfile=app.config.get("pppp_dump"))
 
         self.send_command(P2PSubCmdType.START_LIVE, data={"encryptkey": "x", "accountId": "y"})
 
@@ -302,7 +302,7 @@ def app_api_files_local():
 
     fd = request.files["file"]
 
-    api = cli.pppp.pppp_open(config)
+    api = cli.pppp.pppp_open(config, dumpfile=app.config.get("pppp_dump"))
 
     data = fd.read()
     fui = FileUploadInfo.from_data(data, fd.filename, user_name=user_name, user_id="-", machine_id="-")
@@ -321,8 +321,9 @@ def app_api_files_local():
     return {}
 
 
-def webserver(config, host, port):
+def webserver(config, host, port, **kwargs):
     app.config["config"] = config
     app.config["port"] = port
     app.config["host"] = host
+    app.config.update(kwargs)
     app.run(host=host, port=port)

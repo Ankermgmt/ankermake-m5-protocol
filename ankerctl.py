@@ -461,7 +461,7 @@ def webserver(env):
 @pass_env
 def webserver(env, host, port):
     env.require_config()
-    web.webserver(env.config, host, port)
+    web.webserver(env.config, host, port, pppp_dump=env.pppp_dump)
 
 
 if __name__ == "__main__":
