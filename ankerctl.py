@@ -2,8 +2,8 @@
 
 import json
 import click
-import logging
 import platform
+import logging as log
 from os import path
 from rich import print # you need python3
 from tqdm import tqdm
@@ -62,19 +62,17 @@ def main(ctx, verbose, quiet, insecure):
     env = ctx.obj
 
     levels = {
-        -3: logging.CRITICAL,
-        -2: logging.ERROR,
-        -1: logging.WARNING,
-        0: logging.INFO,
-        1: logging.DEBUG,
+        -3: log.CRITICAL,
+        -2: log.ERROR,
+        -1: log.WARNING,
+        0: log.INFO,
+        1: log.DEBUG,
     }
     env.config   = cli.config.configmgr()
     env.insecure = insecure
     env.level = max(-3, min(verbose - quiet, 1))
-    env.log = cli.logfmt.setup_logging(levels[env.level])
 
-    global log
-    log = env.log
+    cli.logfmt.setup_logging(levels[env.level])
 
     if insecure:
         import urllib3
