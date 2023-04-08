@@ -1,6 +1,5 @@
 import time
 import uuid
-import click
 import logging as log
 
 from datetime import datetime, timedelta
