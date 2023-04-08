@@ -27,6 +27,7 @@ COPY cli /app/cli/
 COPY specification /app/specification
 COPY web /app/web
 COPY transwarp /app/transwarp
+COPY examples/ankermake-mqtt.crt /app/ankermake-mqtt.crt
 
 # Copy the installed dependencies from the build environment
 COPY --from=build-env /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
