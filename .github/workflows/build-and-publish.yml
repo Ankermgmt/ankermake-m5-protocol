@@ -69,15 +69,15 @@ jobs:
       uses: TheDoctor0/zip-release@0.7.1
       with:
         type: 'zip'
-        filename: release/ankerctl.zip
-        exclusions: '*.git* release'
+        filename: release/ankerctl-${{ github.ref_name }}.zip
+        exclusions: '*.git* /*release/*'
         
     - name: GZip Release
       if: github.event_name == 'push'
       uses: TheDoctor0/zip-release@0.7.1
       with:
         type: 'tar'
-        filename: release/ankerctl.tar.gz
+        filename: release/ankerctl-${{ github.ref_name }}.tar.gz
         exclusions: '*.git* release'
         
     - name: Release
@@ -86,7 +86,5 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        args: |
-          release/ankerctl.zip
-          release/ankerctl.tar.gz
+        args: release/ankerctl*
   
