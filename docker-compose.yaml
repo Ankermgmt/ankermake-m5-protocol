@@ -10,6 +10,7 @@ services:
     image: ankerctl/ankerctl:latest
     container_name: ankerctl
     restart: unless-stopped
+    pull_policy: build
     build: .
     environment:
       - FLASK_PORT=4470
