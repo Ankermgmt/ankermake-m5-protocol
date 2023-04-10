@@ -6,7 +6,7 @@ import logging as log
 
 from multiprocessing import Pipe
 from datetime import datetime, timedelta
-from threading import Thread, Event
+from threading import Thread, Event, Lock
 from socket import AF_INET
 from dataclasses import dataclass
 
@@ -115,6 +115,7 @@ class Channel:
         self.event = Event()
         self.max_in_flight = max_in_flight
         self.max_age_warn = max_age_warn
+        self.lock = Lock()
 
     def rx_ack(self, acks):
         # remove all ACKed packets from transmission queue
@@ -368,18 +369,19 @@ class AnkerPPPPApi(Thread):
     def recv_xzyh(self, chan=1, timeout=None):
         fd = self.chans[chan]
 
-        hdr = fd.peek(16, timeout=timeout)
-        if not hdr:
-            return None
+        with fd.lock:
+            hdr = fd.peek(16, timeout=timeout)
+            if not hdr:
+                return None
 
-        xzyh = Xzyh.parse(hdr)[0]
+            xzyh = Xzyh.parse(hdr)[0]
 
-        data = fd.read(xzyh.len + 16, timeout=timeout)
-        if not data:
-            return None
+            data = fd.read(xzyh.len + 16, timeout=timeout)
+            if not data:
+                return None
 
-        xzyh.data = data[16:]
-        return xzyh
+            xzyh.data = data[16:]
+            return xzyh
 
     def recv_aabb(self, chan=1):
         fd = self.chans[chan]
