@@ -210,7 +210,7 @@ def pppp_lan_search(env):
 
     Works by broadcasting a LAN_SEARCH packet, and waiting for a reply.
     """
-    api = cli.pppp.pppp_open_broadcast(env.pppp_dump)
+    api = cli.pppp.pppp_open_broadcast(dumpfile=env.pppp_dump)
     try:
         api.send(PktLanSearch())
         resp = api.recv(timeout=1.0)
@@ -234,7 +234,7 @@ def pppp_print_file(env, file, no_act):
     file, so anytime a file is uploaded, the old one is deleted.
     """
     env.require_config()
-    api = cli.pppp.pppp_open(env.config, env.pppp_dump)
+    api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
 
     data = file.read()
     fui = FileUploadInfo.from_file(file.name, user_name="ankerctl", user_id="-", machine_id="-")
@@ -267,7 +267,7 @@ def pppp_capture_video(env, file, max_size):
     "ffplay" from the ffmpeg program suite.
     """
     env.require_config()
-    api = cli.pppp.pppp_open(env.config, env.pppp_dump)
+    api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
 
     cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
     api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
