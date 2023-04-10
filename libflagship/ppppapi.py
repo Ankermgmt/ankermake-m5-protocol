@@ -10,6 +10,7 @@ from threading import Thread, Event
 from socket import AF_INET
 from dataclasses import dataclass
 
+from libflagship.cyclic import CyclicU16
 from libflagship.pppp import *
 
 PPPP_LAN_PORT = 32108
@@ -104,9 +105,9 @@ class Channel:
         self.rxqueue = {}
         self.txqueue = []
         self.backlog = []
-        self.rx_ctr = 0
-        self.tx_ctr = 0
-        self.tx_ack = 0
+        self.rx_ctr = CyclicU16(0)
+        self.tx_ctr = CyclicU16(0)
+        self.tx_ack = CyclicU16(0)
         self.rx = Wire()
         self.tx = Wire()
         self.timeout = timedelta(seconds=0.5)
@@ -141,7 +142,7 @@ class Channel:
         # recombine data from queue
         while self.rx_ctr in self.rxqueue:
             del self.rxqueue[self.rx_ctr]
-            self.rx_ctr = (self.rx_ctr + 1) & 0xFFFF
+            self.rx_ctr += 1
             self.rx.write(data)
 
     def poll(self):
@@ -189,7 +190,7 @@ class Channel:
             # schedule transmission in 1kb chunks
             data, pdata = pdata[:1024], pdata[1024:]
             self.backlog.append((deadline, self.tx_ctr, data))
-            self.tx_ctr = (self.tx_ctr + 1) & 0xFFFF
+            self.tx_ctr += 1
 
         tx_ctr_done = self.tx_ctr
 
