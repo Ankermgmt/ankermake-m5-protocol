@@ -459,7 +459,7 @@ app = Flask(__name__, template_folder='./static')
 @app.get("/")
 def app_root():
     host = request.host.split(':')
-    requestPort = host[1] if len(host) > 1 else '80'
+    requestPort = host[1] if len(host) > 1 else '80' # If there is no 2nd array entry, the request port is 80
     return render_template("index.html", requestPort = requestPort, requestHost = host[0])
 
 @app.get("/api/version")
