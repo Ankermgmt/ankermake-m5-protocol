@@ -100,7 +100,7 @@ class Wire:
 
 class Channel:
 
-    def __init__(self, index, max_in_flight=64):
+    def __init__(self, index, max_in_flight=64, max_age_warn=128):
         self.index = index
         self.rxqueue = {}
         self.txqueue = []
@@ -114,6 +114,7 @@ class Channel:
         self.acks = set()
         self.event = Event()
         self.max_in_flight = max_in_flight
+        self.max_age_warn = max_age_warn
 
     def rx_ack(self, acks):
         # remove all ACKed packets from transmission queue
@@ -132,7 +133,7 @@ class Channel:
     def rx_drw(self, index, data):
         # drop any packets we have already recieved
         if self.rx_ctr > index:
-            if self.rx_ctr - index > 100:
+            if self.max_age_warn and (self.rx_ctr - index > self.max_age_warn):
                 log.warn(f"Dropping old packet: index {index} while expecting {self.rx_ctr}.")
             return
 
