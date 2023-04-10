@@ -37,7 +37,11 @@ class CyclicU16(int):
         return int.__new__(cls, k & 0xFFFF)
 
     def __init__(self, k, wrap=0x100):
-        self.wrap = wrap
+        self._wrap = wrap
+
+    @property
+    def wrap(self):
+        return self._wrap
 
     def __hash__(self):
         return int(self)
