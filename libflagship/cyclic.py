@@ -34,7 +34,7 @@ class CyclicU16(int):
     """
 
     def __new__(cls, k):
-        return int.__new__(cls, k & 0xFFFF)
+        return int.__new__(cls, cls.trunc(k))
 
     def __init__(self, k, wrap=0x100):
         self._wrap = wrap
@@ -42,6 +42,10 @@ class CyclicU16(int):
     @property
     def wrap(self):
         return self._wrap
+
+    @staticmethod
+    def trunc(n):
+        return int(n) & 0xFFFF
 
     def __hash__(self):
         return int(self)
@@ -53,16 +57,16 @@ class CyclicU16(int):
         return type(self)(int(self) - int(k))
 
     def __eq__(self, k):
-        return int(self) == int(k)
+        return int(self) == self.trunc(k)
 
     def __ne__(self, k):
         return not self.__eq__(k)
 
     def __lt__(self, other):
-        return int(self - self.wrap) < int(other - self.wrap)
+        return self.trunc(self - self.wrap) < self.trunc(other - self.wrap)
 
     def __gt__(self, other):
-        return int(self - self.wrap) > int(other - self.wrap)
+        return self.trunc(self - self.wrap) > self.trunc(other - self.wrap)
 
     def __le__(self, other):
         return not self.__gt__(other)
