@@ -251,7 +251,7 @@ struct Xzyh
     magic: magic<4, 0x585a5948>
 
     # Command field (P2PCmdType)
-    cmd: u16le
+    cmd: P2PCmdType<u16le>
 
     # Payload length
     len: u32le

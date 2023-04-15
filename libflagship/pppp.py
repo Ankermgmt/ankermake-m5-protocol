@@ -370,7 +370,7 @@ class Duid(_Duid):
 @dataclass
 class Xzyh(_Xzyh):
     magic     : bytes = field(repr=False, kw_only=True, default=b'XZYH') # unknown
-    cmd       : u16le # Command field (P2PCmdType)
+    cmd       : P2PCmdType # Command field (P2PCmdType)
     len       : u32le # Payload length
     unk0      : u8 # unknown
     unk1      : u8 # unknown
@@ -384,7 +384,7 @@ class Xzyh(_Xzyh):
     def parse(cls, p):
         # not encrypted
         magic, p = Magic.parse(p, 4, b'XZYH')
-        cmd, p = u16le.parse(p)
+        cmd, p = P2PCmdType.parse(p, u16le)
         len, p = u32le.parse(p)
         unk0, p = u8.parse(p)
         unk1, p = u8.parse(p)
@@ -398,7 +398,7 @@ class Xzyh(_Xzyh):
 
     def pack(self):
         p  = Magic.pack(self.magic, 4, b'XZYH')
-        p += u16le.pack(self.cmd)
+        p += P2PCmdType.pack(self.cmd, u16le)
         p += u32le.pack(self.len)
         p += u8.pack(self.unk0)
         p += u8.pack(self.unk1)
