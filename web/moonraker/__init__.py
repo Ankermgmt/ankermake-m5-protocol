@@ -1,3 +1,4 @@
+import web.moonraker.rpc_printer
 import web.moonraker.rpc_server
 import web.moonraker.rpc_server_database
 import web.moonraker.rpc_server_files
