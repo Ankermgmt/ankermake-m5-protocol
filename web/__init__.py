@@ -20,8 +20,9 @@ import cli.mqtt
 
 app = Flask(
     __name__,
-    static_folder="../static",
-    template_folder="../static"
+    root_path=".",
+    static_folder="static",
+    template_folder="static"
 )
 app.config.from_prefixed_env()
 
