@@ -60,6 +60,7 @@ sock = Sock(app)
 #
 # https://flask.palletsprojects.com/en/2.2.x/patterns/packages/
 import web.moonraker
+import web.moonraker.server
 
 
 # Register CORS handler for rpc endpoints, to allow mainsail to accept files and

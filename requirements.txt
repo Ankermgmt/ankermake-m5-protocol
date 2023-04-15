@@ -11,3 +11,4 @@ flask==2.3.2
 flask-sock==0.6.0
 Flask-Cors==3.0.10
 user-agents==2.2.0
+json-rpc==1.14.0
