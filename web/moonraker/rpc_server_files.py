@@ -2,6 +2,25 @@ from jsonrpc import dispatcher
 from pathlib import Path
 
 
+@dispatcher.add_method(name="server.files.list")
+def server_files_list(root):
+    pth = Path("database") / root
+
+    files = []
+
+    for p in pth.iterdir():
+        st = p.stat()
+        if p.is_file():
+            files.append({
+                "modified": st.st_mtime,
+                "size": st.st_size,
+                "permissions": "rw",
+                "filename": p.name,
+            })
+
+    return files
+
+
 @dispatcher.add_method(name="server.files.post_directory")
 def server_files_post_directory(path: Path):
     pth = Path("database") / path
