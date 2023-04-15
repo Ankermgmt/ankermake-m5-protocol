@@ -1,6 +1,6 @@
 from jsonrpc import dispatcher
 
-from ..jsondb import JsonDatabase
+from ....jsondb import JsonDatabase
 
 
 database = JsonDatabase("db.json")
