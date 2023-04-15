@@ -65,11 +65,12 @@ class ${enum.name}(enum.IntEnum):
 %endfor
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u8):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u8):
+        return typ.pack(self)
 
 %endif
 %endfor

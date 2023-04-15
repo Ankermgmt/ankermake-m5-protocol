@@ -88,22 +88,24 @@ class Type(enum.IntEnum):
     INVALID                   = 0xff # unknown
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u8):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u8):
+        return typ.pack(self)
 
 class P2PCmdType(enum.IntEnum):
     P2P_JSON_CMD  = 0x06a4 # unknown
     P2P_SEND_FILE = 0x3a98 # unknown
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u8):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u8):
+        return typ.pack(self)
 
 class P2PSubCmdType(enum.IntEnum):
     START_LIVE          = 0x03e8 # unknown
@@ -115,11 +117,12 @@ class P2PSubCmdType(enum.IntEnum):
     LIVE_MODE_GET       = 0x03ee # unknown
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u8):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u8):
+        return typ.pack(self)
 
 class FileTransfer(enum.IntEnum):
     BEGIN = 0x00 # Begin file transfer (sent with metadata)
@@ -129,11 +132,12 @@ class FileTransfer(enum.IntEnum):
     REPLY = 0x80 # Reply from printer
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u8):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u8):
+        return typ.pack(self)
 
 class FileTransferReply(enum.IntEnum):
     OK             = 0x00 # Success
@@ -143,11 +147,12 @@ class FileTransferReply(enum.IntEnum):
     ERR_BUSY       = 0xff # Printer was not ready to receive
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u8):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u8):
+        return typ.pack(self)
 
 
 @dataclass
