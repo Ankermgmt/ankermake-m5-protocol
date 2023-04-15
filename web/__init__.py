@@ -53,6 +53,7 @@ class MultiQueue(Thread):
     def atexit(self):
         log.info(f"{self.name}: Requesting thread exit..")
         self.running = False
+        self._event.set()
         self.join()
         log.info(f"{self.name}: Thread cleanup done")
 
