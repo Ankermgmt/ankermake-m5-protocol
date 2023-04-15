@@ -54,6 +54,14 @@ app.svc = ServiceManager()
 
 sock = Sock(app)
 
+# We have to import these modules here, since they need access to "app" and
+# "sock" defined above. Even though this is technically a circular import, it is
+# actually the recommended way, as described in the flask documentation:
+#
+# https://flask.palletsprojects.com/en/2.2.x/patterns/packages/
+import web.moonraker
+
+
 # Register CORS handler for rpc endpoints, to allow mainsail to accept files and
 # resources from ankerctl.
 cors = CORS(
