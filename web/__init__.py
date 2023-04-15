@@ -31,6 +31,7 @@ import logging as log
 from secrets import token_urlsafe as token
 from flask import Flask, flash, request, render_template, Response, session, url_for
 from flask_sock import Sock
+from flask_cors import CORS
 from user_agents import parse as user_agent_parse
 
 from libflagship import ROOT_DIR
@@ -52,6 +53,16 @@ app.config.from_prefixed_env()
 app.svc = ServiceManager()
 
 sock = Sock(app)
+
+# Register CORS handler for rpc endpoints, to allow mainsail to accept files and
+# resources from ankerctl.
+cors = CORS(
+    app,
+    resources={
+        r"/server/*": {"origins": "*"},
+        r"/video/*": {"origins": "*"},
+    }
+)
 
 
 # autopep8: off
