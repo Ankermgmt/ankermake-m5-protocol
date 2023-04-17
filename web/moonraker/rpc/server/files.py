@@ -1,3 +1,5 @@
+import psutil
+
 from jsonrpc import dispatcher
 from pathlib import Path
 
@@ -93,13 +95,14 @@ def server_files_get_directory(path):
             obj["dirname"] = p.name
             dirs.append(obj)
 
+    du = psutil.disk_usage(pth)
     return {
         "dirs": dirs,
         "files": files,
         "disk_usage": {
-            "total": 7522213888,
-            "used": 4280369152,
-            "free": 2903625728
+            "total": du.total,
+            "used": du.used,
+            "free": du.free,
         },
         "root_info": {
             "name": path,
