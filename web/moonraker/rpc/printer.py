@@ -1,4 +1,4 @@
-import json
+import psutil
 
 from jsonrpc import dispatcher
 from pathlib import Path
@@ -78,12 +78,12 @@ def printer_objects_subscribe(**kwargs):
                 }
             },
             "heater_bed": {
-                "temperature": 103.26,
+                "temperature": 0,
                 "target": 0,
                 "power": 0
             },
             "extruder": {
-                "temperature": 103.26,
+                "temperature": 0,
                 "target": 0,
                 "power": 0,
                 "can_extrude": True,
@@ -252,7 +252,7 @@ def printer_objects_subscribe(**kwargs):
                         "nozzle_diameter": "0.400",
                         "filament_diameter": "1.750",
                         "min_temp": "0",
-                        "max_temp": "250",
+                        "max_temp": "260",
                         "min_extrude_temp": "50",
                         "max_extrude_only_distance": "50.0",
                         "pressure_advance": "0.1",
@@ -712,7 +712,7 @@ def printer_objects_subscribe(**kwargs):
                         "inline_resistor": 0,
                         "sensor_pin": "PA7",
                         "min_temp": 0,
-                        "max_temp": 250,
+                        "max_temp": 260,
                         "min_extrude_temp": 50,
                         "max_power": 1,
                         "smooth_time": 1,
@@ -749,18 +749,18 @@ def printer_objects_subscribe(**kwargs):
                 "save_config_pending_items": {}
             },
             "mcu": {
-                "mcu_version": "v0.11.0-173-ga8b1b0ef",
-                "mcu_build_versions": "gcc: (GCC) 5.4.0 binutils: (GNU Binutils) 2.26.20160125",
+                "mcu_version": "Linux 4.4.94",
+                "mcu_build_versions": "Ingenic r4.1.1-gcc720-glibc226-fp64 2020.11-05",
                 "mcu_constants": {
                     "ADC_MAX": 1023,
                     "BUS_PINS_spi": "PB6,PB5,PB7",
                     "BUS_PINS_twi": "PC0,PC1",
                     "CLOCK_FREQ": 20000000,
-                    "MCU": "atmega644p",
+                    "MCU": "Ingenic XBurst@II.V2",
                     "PWM_MAX": 255,
                     "RECEIVE_WINDOW": 192,
                     "RESERVE_PINS_serial": "PD0,PD1",
-                    "SERIAL_BAUD": 250000,
+                    "SERIAL_BAUD": 10000000,
                     "STATS_SUMSQ_BASE": 256
                 },
                 "last_stats": {
@@ -935,9 +935,9 @@ def printer_objects_subscribe(**kwargs):
                 "last_query": {}
             },
             "system_stats": {
-                "sysload": 2.99,
-                "cputime": 1.820428993,
-                "memavail": 29998476
+                "sysload": psutil.getloadavg()[0],
+                "cputime": psutil.cpu_times().user,
+                "memavail": psutil.virtual_memory().available,
             },
             "manual_probe": {
                 "is_active": False,
