@@ -322,4 +322,6 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
         app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
         app.websockets = []
+        app.heater_target = 0.0
+        app.hotbed_target = 0.0
         app.run(host=host, port=port)
