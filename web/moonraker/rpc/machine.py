@@ -6,6 +6,8 @@ import platform
 
 from jsonrpc import dispatcher
 
+from ... import app
+
 
 @dispatcher.add_method(name="machine.system_info")
 def machine_system_info(**kwargs):
@@ -298,5 +300,5 @@ def machine_proc_stats(**kwargs):
             "cpu3": 1
         },
         "system_uptime": 2876970.38089603,
-        "websocket_connections": 4
+        "websocket_connections": len(app.websockets),
     }
