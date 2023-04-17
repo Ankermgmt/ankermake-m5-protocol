@@ -37,9 +37,26 @@ def server_files_post_directory(path: Path):
     }
 
 
+@dispatcher.add_method(name="server.files.delete_file")
+def server_files_delete_file(path: Path):
+    pth = Path("database") / path.lstrip("/")
+    print(pth, path)
+    pth.unlink()
+    return {
+        "item": {
+            "path": pth.name,
+            "root": pth.parts[0],
+            "modified": 0,
+            "size": 0,
+            "permissions": ""
+        },
+        "action": "delete_file"
+    }
+
+
 @dispatcher.add_method(name="server.files.delete_directory")
 def server_files_delete_directory(path: Path, force: bool):
-    pth = Path("database") / path
+    pth = Path("database") / path.lstrip("/")
     pth.rmdir()
     return {
         "item": {
