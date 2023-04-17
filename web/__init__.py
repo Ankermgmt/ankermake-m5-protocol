@@ -321,4 +321,5 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.svc.register("videoqueue", web.service.video.VideoQueue())
         app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
         app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
+        app.websockets = []
         app.run(host=host, port=port)

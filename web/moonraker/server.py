@@ -11,16 +11,16 @@ from .. import sock, app, rpcutil
 @sock.route("/websocket")
 def websocket(sock):
 
-    while True:
-        msg = sock.receive()
-        response = JSONRPCResponseManager.handle(msg, dispatcher)
-        jmsg = json.loads(msg)
-        rpcutil.log_jsonrpc_req(jmsg, response)
-        sock.send(response.json)
-
-        # Send dummy response to gcode commands
-        if jmsg["method"] == "printer.gcode.script":
-            sock.send(rpcutil.make_jsonrpc_req("notify_gcode_response", "Yep"))
+    app.websockets.append(sock)
+    try:
+        while True:
+            msg = sock.receive()
+            response = JSONRPCResponseManager.handle(msg, dispatcher)
+            jmsg = json.loads(msg)
+            rpcutil.log_jsonrpc_req(jmsg, response)
+            sock.send(response.json)
+    finally:
+        app.websockets.remove(sock)
 
 
 @app.get("/server/files/<string:root>/<path:path>")
