@@ -5,7 +5,15 @@ from flask import request, send_from_directory
 from jsonrpc import JSONRPCResponseManager, dispatcher
 from werkzeug.utils import secure_filename
 
+from ..lib.mqttnotifier import MqttNotifier
+
 from .. import sock, app, rpcutil
+
+
+@app.before_first_request
+def mqtt_tap():
+    app.mqttn = MqttNotifier()
+    app.mqttn.start()
 
 
 @sock.route("/websocket")
