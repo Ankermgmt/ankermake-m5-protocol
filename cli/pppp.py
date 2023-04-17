@@ -37,6 +37,7 @@ def pppp_open(config, timeout=None, dumpfile=None):
         while not api.rdy:
             time.sleep(0.1)
             if api.stopped.is_set() or (timeout and (datetime.now() > deadline)):
+                api.stop()
                 raise ConnectionRefusedError("Connection rejected by device")
 
         log.info("Established pppp connection")
