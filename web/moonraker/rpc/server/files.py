@@ -79,20 +79,19 @@ def server_files_get_directory(path):
 
     for p in pth.iterdir():
         st = p.stat()
+
+        obj = {
+            "modified": st.st_mtime,
+            "size": st.st_size,
+            "permissions": "rw",
+        }
+
         if p.is_file():
-            files.append({
-                "modified": st.st_mtime,
-                "size": st.st_size,
-                "permissions": "rw",
-                "filename": p.name,
-            })
-        if p.is_dir():
-            dirs.append({
-                "modified": st.st_mtime,
-                "size": st.st_size,
-                "permissions": "rw",
-                "dirname": p.name,
-            })
+            obj["filename"] = p.name
+            files.append(obj)
+        elif p.is_dir():
+            obj["dirname"] = p.name
+            dirs.append(obj)
 
     return {
         "dirs": dirs,
