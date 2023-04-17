@@ -1,7 +1,11 @@
 import psutil
 
 from jsonrpc import dispatcher
-from pathlib import Path
+
+from libflagship.mqtt import MqttMsgType
+
+from ... import app
+from ...lib.gcode import GCode
 
 
 @dispatcher.add_method(name="printer.emergency_stop")
@@ -981,5 +985,28 @@ def printer_gcode_help(**kwargs):
 
 
 @dispatcher.add_method(name="printer.gcode.script")
-def printer_gcode_script(**kwargs):
+def printer_gcode_script(script):
+    gcode = GCode(script)
+    if gcode.cmd == "SET_HEATER_TEMPERATURE":
+        if gcode.vals["HEATER"] == "extruder":
+            app.heater_target = float(gcode.vals["TARGET"])
+        elif gcode.vals["HEATER"] == "heater_bed":
+            app.hotbed_target = float(gcode.vals["TARGET"])
+
+        update = {
+            "commandType": MqttMsgType.ZZ_MQTT_CMD_PREHEAT_CONFIG.value,
+            "userid": "ankerctl",
+            "value": int(bool(app.heater_target or app.hotbed_target)),
+            "nozzle": int(app.heater_target * 100),
+            "heatbed": int(app.hotbed_target * 100),
+        }
+    else:
+        update = {
+            "commandType": MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value,
+            "cmdData": script,
+            "cmdLen": len(script),
+        }
+
+    app.mqttq.client.command(update)
+
     return "ok"
