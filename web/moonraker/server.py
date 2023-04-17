@@ -30,15 +30,19 @@ def server_files(root, path):
 
 @app.post("/server/files/upload")
 def server_files_upload():
+    root = request.values["root"]
+    if root not in {"gcodes", "config", "config_examples", "docs"}:
+        raise ValueError(f"Forbidden root {root!r}")
+
     file = request.files['file']
     filename = secure_filename(file.filename)
-    path = Path("database") / "gcodes" / filename
+    path = Path("database") / root / filename
     file.save(path)
     stat = path.stat()
     return {
         "item": {
             "path": filename,
-            "root": "gcodes",
+            "root": root,
             "modified": stat.st_mtime,
             "size": stat.st_size,
             "permissions": "rw"
