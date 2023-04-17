@@ -1,19 +1,30 @@
+import sys
+import distro
+import psutil
+import cpuinfo
+import platform
+
 from jsonrpc import dispatcher
 
 
 @dispatcher.add_method(name="machine.system_info")
 def machine_system_info(**kwargs):
+    version_parts = distro.version_parts()
+    cpuid = cpuinfo.CPUID()
+    cpu_brand = cpuid.get_processor_brand(cpuid.get_max_extension_support())
+    cpu_vendor = cpuid.get_vendor_id()
+
     return {
         "system_info": {
             "cpu_info": {
-                "cpu_count": 4,
-                "bits": "32bit",
-                "processor": "armv7l",
-                "cpu_desc": "ARMv7 Processor rev 4 (v7l)",
-                "serial_number": "b898bdb4",
-                "hardware_desc": "BCM2835",
-                "model": "Raspberry Pi 3 Model B Rev 1.2",
-                "total_memory": 945364,
+                "cpu_count": psutil.cpu_count(),
+                "bits": platform.architecture()[0],
+                "processor": platform.machine(),
+                "cpu_desc": cpu_brand,
+                "serial_number": "1337",
+                "hardware_desc": cpu_vendor,
+                "model": cpu_brand,
+                "total_memory": psutil.virtual_memory().total // 1024,
                 "memory_units": "kB"
             },
             "sd_info": {
@@ -28,21 +39,21 @@ def machine_system_info(**kwargs):
                 "total_bytes": 31914983424
             },
             "distribution": {
-                "name": "Raspbian GNU/Linux 10 (buster)",
-                "id": "raspbian",
-                "version": "10",
+                "name": f"{distro.name()} {distro.version()} ({distro.codename()})",
+                "id": distro.id(),
+                "version": distro.version(),
                 "version_parts": {
-                    "major": "10",
-                    "minor": "",
-                    "build_number": ""
+                    "major": str(version_parts[0]),
+                    "minor": str(version_parts[1]),
+                    "build_number": str(version_parts[2]),
                 },
-                "like": "debian",
-                "codename": "buster"
+                "like": distro.like(),
+                "codename": distro.codename(),
             },
             "available_services": [
                 "klipper",
                 "klipper_mcu",
-                "moonraker"
+                "moonraker",
             ],
             "instance_ids": {
                 "moonraker": "moonraker",
@@ -68,13 +79,11 @@ def machine_system_info(**kwargs):
             },
             "python": {
                 "version": [
-                    3,
-                    7,
-                    3,
+                    *platform.python_version_tuple(),
                     "final",
                     0
                 ],
-                "version_string": "3.7.3 (default, Jan 22 2021, 20:04:44)  [GCC 8.3.0]"
+                "version_string": sys.version,
             },
             "network": {
                 "wlan0": {
@@ -268,7 +277,7 @@ def machine_proc_stats(**kwargs):
             "bits": 0,
             "flags": []
         },
-        "cpu_temp": 45.622,
+        "cpu_temp": 42.0,
         "network": {
             "lo": {
                 "rx_bytes": 113516429,
