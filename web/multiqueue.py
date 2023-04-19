@@ -65,7 +65,7 @@ class MultiQueue(Thread):
                         log.error(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
                         holdoff = datetime.now() + timedelta(seconds=1)
                     else:
-                        log.info(f"{self.name}: Worked started")
+                        log.info(f"{self.name}: Worker started")
                         self.state = RunState.Running
                 else:
                     self._event.wait(timeout=0.1)
