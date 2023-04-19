@@ -143,6 +143,7 @@ class Channel:
 
         # recombine data from queue
         while self.rx_ctr in self.rxqueue:
+            data = self.rxqueue[self.rx_ctr]
             del self.rxqueue[self.rx_ctr]
             self.rx_ctr += 1
             self.rx.write(data)
