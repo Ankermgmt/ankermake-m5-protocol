@@ -73,7 +73,13 @@ class MultiQueue(Thread):
 
             elif self.state == RunState.Running:
                 if self.wanted:
-                    self.worker_run(timeout=0.3)
+                    try:
+                        self.worker_run(timeout=0.3)
+                    except Exception:
+                        log.exception("Unexpected exception while running worker")
+                        log.warning(f"{self.name}: Stopping worker due to exception")
+                        holdoff = datetime.now()
+                        self.state = RunState.Stopping
                 else:
                     log.info(f"{self.name}: Stopping worker")
                     holdoff = datetime.now()
