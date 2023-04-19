@@ -96,7 +96,7 @@ def video(sock):
         while True:
             try:
                 data = queue.get()
-            except EOFError:
+            except (EOFError, OSError):
                 break
             sock.send(data)
 
