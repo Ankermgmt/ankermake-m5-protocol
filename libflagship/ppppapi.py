@@ -1,4 +1,5 @@
 import os
+import sys
 import socket
 import string
 import hashlib
@@ -11,6 +12,7 @@ from threading import Thread, Event, Lock
 from socket import AF_INET
 from dataclasses import dataclass
 
+from libflagship.util import enhex
 from libflagship.cyclic import CyclicU16
 from libflagship.pppp import Type, \
     PktDrw, PktDrwAck, PktClose, PktSessionReady, PktAliveAck, PktDevLgnAckCrc, \
@@ -127,7 +129,12 @@ class Channel:
         self.max_age_warn = max_age_warn
         self.lock = Lock()
 
+    def log(self, msg):
+        now = datetime.now()
+        print(f"[{now:%Y-%m-%d %H:%M:%S.%f}] [c{self.index}:r{len(self.rxqueue)}:t{len(self.txqueue)}:b{len(self.backlog)}:rc{self.rx_ctr}:tc{self.tx_ctr}:ta{self.tx_ack}] {msg}", file=sys.stderr)
+
     def rx_ack(self, acks):
+        self.log(f"rx_ack BEGIN {acks=} {self.acks=}")
         # remove all ACKed packets from transmission queue
         self.txqueue = [tx for tx in self.txqueue if tx[1] not in acks]
 
@@ -140,8 +147,11 @@ class Channel:
         while self.tx_ack in self.acks:
             self.acks.remove(self.tx_ack)
             self.tx_ack += 1
+        self.log(f"rx_ack END {self.acks=}")
 
     def rx_drw(self, index, data):
+        self.log(f"rx_drw BEGIN {index=} {len(data)=} rxq={list(self.rxqueue.keys())}")
+
         # drop any packets we have already recieved
         if self.rx_ctr > index:
             if self.max_age_warn and (self.rx_ctr - index > self.max_age_warn):
@@ -154,9 +164,12 @@ class Channel:
         # recombine data from queue
         while self.rx_ctr in self.rxqueue:
             data = self.rxqueue[self.rx_ctr]
+            self.log(f"       PKT {enhex(data[:16])}...")
             del self.rxqueue[self.rx_ctr]
             self.rx_ctr += 1
             self.rx.write(data)
+
+        self.log(f"rx_drw END {index=} {len(data)=} rxq={list(self.rxqueue.keys())}")
 
     def poll(self):
         # signal event to make blocking reads check status again
