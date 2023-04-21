@@ -63,10 +63,18 @@ class CyclicU16(int):
         return not self.__eq__(k)
 
     def __lt__(self, other):
-        return self.trunc(self - self.wrap) < self.trunc(other - self.wrap)
+        # if sign bit differs, take wrap into account
+        if (self ^ other) & 0x8000:
+            return self.trunc(self - self.wrap) < self.trunc(other - self.wrap)
+        else:
+            return int(self) < other
 
     def __gt__(self, other):
-        return self.trunc(self - self.wrap) > self.trunc(other - self.wrap)
+        # if sign bit differs, take wrap into account
+        if (self ^ other) & 0x8000:
+            return self.trunc(self - self.wrap) > self.trunc(other - self.wrap)
+        else:
+            return int(self) > other
 
     def __le__(self, other):
         return not self.__gt__(other)
@@ -90,6 +98,8 @@ class TestCyclic(unittest.TestCase):
         self.assertFalse(C(0xFFFF) < C(0xFFFF))
         self.assertTrue(C(0x1) < C(0x2))
         self.assertFalse(C(0x2) < C(0x1))
+        self.assertTrue(C(0x90) < C(0x120))
+        self.assertFalse(C(0x120) < C(0x90))
         self.assertTrue(C(0x101) < C(0x120))
         self.assertFalse(C(0x120) < C(0x101))
         self.assertTrue(C(0xFFFE) < C(0xFFFF))
@@ -103,6 +113,8 @@ class TestCyclic(unittest.TestCase):
         self.assertFalse(C(0xFFFF) > C(0xFFFF))
         self.assertTrue(C(0x2) > C(0x1))
         self.assertFalse(C(0x1) > C(0x2))
+        self.assertTrue(C(0x120) > C(0x90))
+        self.assertFalse(C(0x90) > C(0x120))
         self.assertTrue(C(0x120) > C(0x101))
         self.assertFalse(C(0x101) > C(0x120))
         self.assertTrue(C(0xFFFF) > C(0xFFFE))
