@@ -415,3 +415,22 @@ class AnkerPPPPApi(AnkerPPPPBaseApi):
     def aabb_request(self, data, frametype, pos=0, chan=1, check=True):
         self.send_aabb(data=data, frametype=frametype, chan=chan, pos=pos)
         return self.recv_aabb_reply(chan, check)
+
+
+class AnkerPPPPAsyncApi(AnkerPPPPBaseApi):
+
+    def poll(self, timeout=None):
+        msg = None
+        try:
+            msg = self.recv(timeout=timeout)
+            self.process(msg)
+        except TimeoutError:
+            pass
+        except StopIteration:
+            raise ConnectionRefusedError("Connection rejected by device")
+
+        for idx, ch in enumerate(self.chans):
+            for pkt in ch.poll():
+                self.send(pkt)
+
+        return msg
