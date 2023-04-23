@@ -213,7 +213,7 @@ class Channel:
         return (tx_ctr_start, tx_ctr_done)
 
 
-class AnkerPPPPApi(Thread):
+class AnkerPPPPBaseApi(Thread):
 
     def __init__(self, sock, duid, addr=None):
         super().__init__()
@@ -371,6 +371,9 @@ class AnkerPPPPApi(Thread):
         )
 
         return self.chans[chan].write(aabb.pack_with_crc(data), block=block)
+
+
+class AnkerPPPPApi(AnkerPPPPBaseApi):
 
     def recv_xzyh(self, chan=1, timeout=None):
         fd = self.chans[chan]
