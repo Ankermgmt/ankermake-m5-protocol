@@ -1,10 +1,13 @@
 import json
 import logging as log
 
+from queue import Empty
+from multiprocessing import Queue
+
 from ..lib.service import Service
 from .. import app
 
-from libflagship.pppp import P2PSubCmdType
+from libflagship.pppp import P2PSubCmdType, Xzyh
 from libflagship.util import enhex
 
 
@@ -31,16 +34,40 @@ class VideoQueue(Service):
 
     def worker_start(self):
         self.pppp = app.svc.get("pppp")
+        self._tap = Queue()
+
+        def handler(data):
+            self._tap.put(data)
+
+        self._handler = handler
+        self.pppp.handlers.append(handler)
+
         self.api_start_live()
 
     def worker_run(self, timeout):
-        d = self.pppp.api.recv_xzyh(chan=1, timeout=timeout)
-        if not d:
+        try:
+            data = self._tap.get(timeout=timeout)
+        except (Empty, OSError):
             return
 
-        log.debug(f"Video data packet: {enhex(d.data):32}...")
-        self.notify(d.data)
+        if not data:
+            return
+
+        chan, msg = data
+
+        if chan != 1:
+            return
+
+        if not isinstance(msg, Xzyh):
+            return
+
+        log.debug(f"Video data packet: {enhex(msg.data):32}...")
+        self.notify(msg.data)
 
     def worker_stop(self):
         self.api_stop_live()
+        self.pppp.handlers.remove(self._handler)
+        del self._handler
+        del self._tap
+
         app.svc.put("pppp")
