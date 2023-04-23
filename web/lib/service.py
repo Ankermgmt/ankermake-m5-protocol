@@ -135,3 +135,72 @@ class Service(Thread):
             yield self
         finally:
             self.handlers.remove(handler)
+
+
+class ServiceManager:
+
+    def __init__(self):
+        self.svcs = {}
+        self.refs = {}
+
+    def register(self, name: str, svc: Service):
+        if name in self.svcs:
+            raise KeyError(f"Trying to register {name!r} as {svc} while already taken by {self.svcs[name]}")
+
+        self.svcs[name] = svc
+        self.refs[name] = 0
+
+    def unregister(self, name: str):
+        if name not in self.svcs:
+            raise KeyError(f"Trying to unregister unknown service {name!r}")
+
+        del self.svcs[name]
+        del self.refs[name]
+
+    def get(self, name: str) -> Service:
+        if name not in self.svcs:
+            raise KeyError(f"Requested unknown service {name!r}")
+
+        svc = self.svcs[name]
+
+        if not self.refs[name]:
+            svc.start()
+
+        self.refs[name] += 1
+
+        return svc
+
+    def put(self, name: str):
+        if name not in self.svcs:
+            raise KeyError(f"Requested unknown service {name!r}")
+
+        svc = self.svcs[name]
+
+        assert self.refs[name]
+
+        self.refs[name] -= 1
+
+        if not self.refs[name]:
+            svc.stop()
+
+    @contextlib.contextmanager
+    def borrow(self, name: str):
+        svc = self.get(name)
+        try:
+            yield svc
+        finally:
+            self.put(name)
+
+    def stream(self, name: str):
+        with self.borrow(name) as svc:
+            queue = Queue()
+
+            def handler(data):
+                queue.put(data)
+
+            with svc.tap(handler):
+                while True:
+                    try:
+                        yield queue.get()
+                    except (EOFError, OSError):
+                        break
