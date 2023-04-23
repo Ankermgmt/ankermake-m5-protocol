@@ -4,14 +4,10 @@ import logging as log
 from flask import Flask, request, render_template, Response
 from flask_sock import Sock
 
-from libflagship.util import enhex
-from libflagship.pppp import P2PSubCmdType, P2PCmdType
+from libflagship.pppp import P2PSubCmdType
 from libflagship.ppppapi import FileUploadInfo, PPPPError, FileTransfer
 
-from web.multiqueue import MultiQueue
-
-import cli.mqtt
-
+from web.lib.service import ServiceManager
 
 app = Flask(
     __name__,
@@ -20,85 +16,34 @@ app = Flask(
     template_folder="static"
 )
 app.config.from_prefixed_env()
+app.svc = ServiceManager()
 
 sock = Sock(app)
 
 
-class MqttQueue(MultiQueue):
-
-    def worker_start(self):
-        self.client = cli.mqtt.mqtt_open(app.config["config"], True)
-
-    def worker_run(self, timeout):
-        for msg, body in self.client.fetch(timeout=timeout):
-            log.info(f"TOPIC [{msg.topic}]")
-            log.debug(enhex(msg.payload[:]))
-
-            for obj in body:
-                self.put(obj)
-
-    def worker_stop(self):
-        del self.client
-
-
-class VideoQueue(MultiQueue):
-
-    def send_command(self, commandType, **kwargs):
-        cmd = {
-            "commandType": commandType,
-            **kwargs
-        }
-        return self.api.send_xzyh(
-            json.dumps(cmd).encode(),
-            cmd=P2PCmdType.P2P_JSON_CMD
-        )
-
-    def worker_start(self):
-        self.api = cli.pppp.pppp_open(app.config["config"], timeout=1, dumpfile=app.config.get("pppp_dump"))
-
-        self.send_command(P2PSubCmdType.START_LIVE, data={"encryptkey": "x", "accountId": "y"})
-
-    def worker_run(self, timeout):
-        d = self.api.recv_xzyh(chan=1, timeout=timeout)
-        if not d:
-            return
-
-        log.debug(f"Video data packet: {enhex(d.data):32}...")
-        self.put(d.data)
-
-    def worked_stop(self):
-        self.api.send_command(P2PSubCmdType.CLOSE_LIVE)
+import web.service.mqtt
+import web.service.video
 
 
 @app.before_first_request
 def startup():
-    app.mqttq = MqttQueue()
-    app.videoq = VideoQueue()
+    app.svc.register("videoqueue", web.service.video.VideoQueue())
+    app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
 
 
 @sock.route("/ws/mqtt")
 def mqtt(sock):
 
-    with app.mqttq.tap() as queue:
-        while True:
-            try:
-                data = queue.get()
-            except EOFError:
-                break
-            log.debug(f"MQTT message: {data}")
-            sock.send(json.dumps(data))
+    for data in app.svc.stream("mqttqueue"):
+        log.debug(f"MQTT message: {data}")
+        sock.send(json.dumps(data))
 
 
 @sock.route("/ws/video")
 def video(sock):
 
-    with app.videoq.tap() as queue:
-        while True:
-            try:
-                data = queue.get()
-            except (EOFError, OSError):
-                break
-            sock.send(data)
+    for data in app.svc.stream("videoqueue"):
+        sock.send(data)
 
 
 @sock.route("/ws/ctrl")
