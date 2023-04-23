@@ -51,6 +51,10 @@ class Service(Thread):
         self.wanted = False
         self._event.set()
 
+    def idle(self, timeout=None):
+        if self._event.wait(timeout=timeout):
+            self._event.clear()
+
     def run(self):
         holdoff = None
 
@@ -68,8 +72,7 @@ class Service(Thread):
                         log.debug(f"{self.name}: Worker started")
                         self.state = RunState.Running
                 else:
-                    self._event.wait(timeout=0.1)
-                    self._event.clear()
+                    self.idle(timeout=0.1)
 
             elif self.state == RunState.Running:
                 if self.wanted:
@@ -96,8 +99,7 @@ class Service(Thread):
                         log.debug(f"{self.name}: Worked stopped")
                         self.state = RunState.Stopped
                 else:
-                    self._event.wait(timeout=0.1)
-                    self._event.clear()
+                    self.idle(timeout=0.1)
 
             elif self.state == RunState.Stopped:
                 if self.wanted:
@@ -105,8 +107,7 @@ class Service(Thread):
                     holdoff = datetime.now()
                     self.state = RunState.Starting
                 else:
-                    self._event.wait()
-                    self._event.clear()
+                    self.idle()
             else:
                 raise ValueError("Unknown state value")
 
