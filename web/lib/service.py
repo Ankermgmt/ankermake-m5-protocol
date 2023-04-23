@@ -140,7 +140,7 @@ class Service(Thread):
     def await_ready(self):
         while True:
             log.debug(f"{self.name}: Awaiting ready ({self.state})")
-            if not self.wanted:
+            if not self.running:
                 raise RuntimeError(f"{self.name}: Waiting for stopped thread")
 
             if self.state == RunState.Running:
