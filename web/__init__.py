@@ -23,12 +23,14 @@ app.svc = ServiceManager()
 sock = Sock(app)
 
 
-import web.service.mqtt
+import web.service.pppp
 import web.service.video
+import web.service.mqtt
 
 
 @app.before_first_request
 def startup():
+    app.svc.register("pppp", web.service.pppp.PPPPService())
     app.svc.register("videoqueue", web.service.video.VideoQueue())
     app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
 
@@ -56,17 +58,11 @@ def ctrl(sock):
 
         if "light" in msg:
             with app.svc.borrow("videoqueue") as vq:
-                vq.send_command(
-                    P2PSubCmdType.LIGHT_STATE_SWITCH,
-                    data={"open": int(msg["light"])}
-                )
+                vq.api_light_state(msg["light"])
 
         if "quality" in msg:
             with app.svc.borrow("videoqueue") as vq:
-                vq.send_command(
-                    P2PSubCmdType.LIVE_MODE_SET,
-                    data={"mode": int(msg["quality"])}
-                )
+                vq.api_video_mode(msg["quality"])
 
 
 @app.get("/video")
