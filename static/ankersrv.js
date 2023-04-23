@@ -46,6 +46,16 @@ $(function () {
         return false;
     });
 
+    $('#quality-low').on('click', function() {
+        wsctrl.send(JSON.stringify({"quality": 0}));
+        return false;
+    });
+
+    $('#quality-high').on('click', function() {
+        wsctrl.send(JSON.stringify({"quality": 1}));
+        return false;
+    });
+
 
     $('#configData').on('click',function(){
         navigator.clipboard.writeText("{{ configHost }}:{{ configPort }}");

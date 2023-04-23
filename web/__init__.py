@@ -55,10 +55,18 @@ def ctrl(sock):
         msg = json.loads(sock.receive())
 
         if "light" in msg:
-            app.videoq.send_command(
-                P2PSubCmdType.LIGHT_STATE_SWITCH,
-                data={"open": int(msg["light"])}
-            )
+            with app.svc.borrow("videoqueue") as vq:
+                vq.send_command(
+                    P2PSubCmdType.LIGHT_STATE_SWITCH,
+                    data={"open": int(msg["light"])}
+                )
+
+        if "quality" in msg:
+            with app.svc.borrow("videoqueue") as vq:
+                vq.send_command(
+                    P2PSubCmdType.LIVE_MODE_SET,
+                    data={"mode": int(msg["quality"])}
+                )
 
 
 @app.get("/video")
