@@ -9,6 +9,8 @@ from libflagship.ppppapi import FileUploadInfo, PPPPError, FileTransfer
 
 from web.lib.service import ServiceManager
 
+import cli.util
+
 app = Flask(
     __name__,
     root_path=".",
