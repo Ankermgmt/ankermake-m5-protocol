@@ -31,11 +31,11 @@ class Service(Thread):
         super().start()
 
     def atexit(self):
-        log.info(f"{self.name}: Requesting thread exit..")
+        log.debug(f"{self.name}: Requesting thread exit..")
         self.running = False
         self._event.set()
         self.join()
-        log.info(f"{self.name}: Thread cleanup done")
+        log.debug(f"{self.name}: Thread cleanup done")
 
     @property
     def name(self):
@@ -59,13 +59,13 @@ class Service(Thread):
                 log.debug(f"{self.name}: {datetime.now()} vs holdoff {holdoff}")
                 if datetime.now() > holdoff:
                     try:
-                        log.info(f"{self.name} worker start")
+                        log.debug(f"{self.name} worker start")
                         self.worker_start()
                     except Exception as E:
                         log.error(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
                         holdoff = datetime.now() + timedelta(seconds=1)
                     else:
-                        log.info(f"{self.name}: Worker started")
+                        log.debug(f"{self.name}: Worker started")
                         self.state = RunState.Running
                 else:
                     self._event.wait(timeout=0.1)
@@ -81,7 +81,7 @@ class Service(Thread):
                         holdoff = datetime.now()
                         self.state = RunState.Stopping
                 else:
-                    log.info(f"{self.name}: Stopping worker")
+                    log.debug(f"{self.name}: Stopping worker")
                     holdoff = datetime.now()
                     self.state = RunState.Stopping
 
@@ -93,7 +93,7 @@ class Service(Thread):
                         log.error(f"{self.name}: Failed to stop worker: {E}. Retrying in 1 second.")
                         holdoff = datetime.now() + timedelta(seconds=1)
                     else:
-                        log.info(f"{self.name}: Worked stopped")
+                        log.debug(f"{self.name}: Worked stopped")
                         self.state = RunState.Stopped
                 else:
                     self._event.wait(timeout=0.1)
@@ -101,7 +101,7 @@ class Service(Thread):
 
             elif self.state == RunState.Stopped:
                 if self.wanted:
-                    log.info(f"{self.name}: Starting worker")
+                    log.debug(f"{self.name}: Starting worker")
                     holdoff = datetime.now()
                     self.state = RunState.Starting
                 else:
@@ -110,7 +110,7 @@ class Service(Thread):
             else:
                 raise ValueError("Unknown state value")
 
-        log.info(f"{self.name}: Shutting down thread")
+        log.debug(f"{self.name}: Shutting down thread")
         if self.state == RunState.Running:
             self.worker_stop()
         log.info(f"{self.name}: Thread exit")
