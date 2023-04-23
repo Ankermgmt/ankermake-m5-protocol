@@ -78,7 +78,12 @@ class Wire:
         self.rx, self.tx = Pipe(False)
 
     def peek(self, size, timeout=None):
-        if timeout:
+        # Zero timeout on self.rx.poll() means "wait forever", but we want it to
+        # mean "no wait", so we emulate that by setting it to 1us.
+        if timeout == 0.0:
+            timeout = 0.000001
+
+        if timeout is not None:
             deadline = datetime.now() + timedelta(seconds=timeout)
 
         while len(self.buf) < size:
