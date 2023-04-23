@@ -217,7 +217,7 @@ def pppp_lan_search(env):
         log.error("No printers responded within timeout. Are you connected to the same network as the printer?")
     else:
         if isinstance(resp, libflagship.pppp.PktPunchPkt):
-            log.info(f"Printer [{str(resp.duid)}] is online")
+            log.info(f"Printer [{str(resp.duid)}] is online at {str(api.addr[0])}")
 
 
 @pppp.command("print-file")
