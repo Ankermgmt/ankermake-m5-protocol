@@ -1,13 +1,13 @@
 import json
-
 import logging as log
+
+from datetime import datetime, timedelta
 
 from ..lib.service import Service
 from .. import app
 
-from libflagship.pppp import P2PCmdType
-
-import cli.pppp
+from libflagship.pppp import P2PCmdType, PktLanSearch, PktClose, Duid, Type, Xzyh
+from libflagship.ppppapi import AnkerPPPPAsyncApi
 
 
 class PPPPService(Service):
@@ -23,11 +23,59 @@ class PPPPService(Service):
         )
 
     def worker_start(self):
-        self.api = cli.pppp.pppp_open(app.config["config"], timeout=1, dumpfile=app.config.get("pppp_dump"))
+        config = app.config["config"]
+
+        deadline = datetime.now() + timedelta(seconds=2)
+
+        with config.open() as cfg:
+            printer = cfg.printers[0]
+
+        api = AnkerPPPPAsyncApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
+        # _pppp_dumpfile(api, dumpfile)
+
+        log.info("Trying connect over pppp")
+
+        api.send(PktLanSearch())
+
+        while not api.rdy:
+            try:
+                msg = api.recv(timeout=(deadline - datetime.now()).total_seconds())
+                api.process(msg)
+            except StopIteration:
+                raise ConnectionRefusedError("Connection rejected by device")
+
+        log.info("Established pppp connection")
+        self.api = api
 
     def worker_run(self, timeout):
-        self.idle(timeout)
+        msg = self.api.poll(timeout=timeout)
+        if not msg or msg.type != Type.DRW:
+            return
+
+        ch = self.api.chans[msg.chan]
+
+        with ch.lock:
+            data = ch.peek(16, timeout=0)
+            if not data:
+                return
+
+            if data[:4] == b'XZYH':
+                hdr = ch.peek(16, timeout=0)
+                if not hdr:
+                    return
+
+                xzyh = Xzyh.parse(hdr)[0]
+                data = ch.read(xzyh.len + 16, timeout=0)
+                if not data:
+                    return None
+
+                xzyh.data = data[16:]
+                self.notify((msg.chan, xzyh))
+            elif data[:2] == b'\xAA\xBB':
+                ...
+            else:
+                raise ValueError(f"Unexpected data in stream: {data!r}")
 
     def worker_stop(self):
-        self.api.stop()
+        self.api.send(PktClose())
         del self.api
