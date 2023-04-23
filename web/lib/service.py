@@ -123,3 +123,15 @@ class Service(Thread):
 
     def worker_stop(self):
         pass
+
+    def notify(self, data):
+        for handler in self.handlers:
+            handler(data)
+
+    @contextlib.contextmanager
+    def tap(self, handler):
+        self.handlers.append(handler)
+        try:
+            yield self
+        finally:
+            self.handlers.remove(handler)
