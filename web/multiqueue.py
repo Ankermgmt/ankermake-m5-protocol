@@ -16,7 +16,7 @@ class RunState(Enum):
     Stopped  = 6
 
 
-class MultiQueue(Thread):
+class Service(Thread):
 
     def __init__(self, idle_timeout=10):
         super().__init__()
@@ -25,7 +25,6 @@ class MultiQueue(Thread):
         self.deadline = None
         self.state = RunState.Stopped
         self.wanted = False
-        self.targets = []
         self._event = Event()
         atexit.register(self.atexit)
         super().start()
@@ -115,6 +114,49 @@ class MultiQueue(Thread):
             self.worker_stop()
         log.info(f"{self.name}: Thread exit")
 
+    def worker_start(self):
+        pass
+
+    def worker_run(self, timeout):
+        pass
+
+    def worker_stop(self):
+        pass
+
+
+class QueueTap:
+
+    def __init__(self, queue):
+        self.queue = queue
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            return self.get()
+        except (EOFError, OSError):
+            raise StopIteration()
+
+    def get(self, timeout=None):
+        return self.queue.get(timeout=timeout)
+
+
+class MultiQueue(Service):
+
+    def __init__(self, idle_timeout=10):
+        super().__init__(idle_timeout)
+        self.targets = []
+
+    @contextlib.contextmanager
+    def tap(self):
+        queue = Queue()
+        self.add_target(queue)
+        try:
+            yield QueueTap(queue)
+        finally:
+            self.del_target(queue)
+
     def put(self, obj):
         for target in self.targets:
             target.put(obj)
@@ -129,19 +171,3 @@ class MultiQueue(Thread):
             self.targets.remove(target)
             if not self.targets:
                 self.stop()
-
-    @contextlib.contextmanager
-    def tap(self):
-        queue = Queue()
-        self.add_target(queue)
-        yield queue
-        self.del_target(queue)
-
-    def worker_start(self):
-        pass
-
-    def worker_run(self, timeout):
-        pass
-
-    def worker_stop(self):
-        pass
