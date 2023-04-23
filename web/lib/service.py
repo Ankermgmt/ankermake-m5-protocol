@@ -170,16 +170,17 @@ class ServiceManager:
         del self.svcs[name]
         del self.refs[name]
 
-    def get(self, name: str) -> Service:
+    def get(self, name: str, ready=True) -> Service:
         if name not in self.svcs:
             raise KeyError(f"Requested unknown service {name!r}")
 
         svc = self.svcs[name]
-
-        if not self.refs[name]:
-            svc.start()
-
         self.refs[name] += 1
+
+        if self.refs[name] == 1:
+            svc.start()
+            if ready:
+                svc.await_ready()
 
         return svc
 
