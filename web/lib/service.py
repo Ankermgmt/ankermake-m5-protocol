@@ -137,6 +137,18 @@ class Service(Thread):
         finally:
             self.handlers.remove(handler)
 
+    def await_ready(self):
+        while True:
+            log.debug(f"{self.name}: Awaiting ready ({self.state})")
+            if not self.wanted:
+                raise RuntimeError(f"{self.name}: Waiting for stopped thread")
+
+            if self.state == RunState.Running:
+                log.debug(f"{self.name}: Ready")
+                return True
+
+            self.idle(timeout=0.1)
+
 
 class ServiceManager:
 
