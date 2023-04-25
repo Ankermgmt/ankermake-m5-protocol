@@ -32,10 +32,13 @@ class Environment:
     def __init__(self):
         pass
 
-    def require_config(self):
+    def require_config(self, required=True):
         with self.config.open() as config:
             if not getattr(config, 'printers', False):
-                log.critical("No printers found in config. Please import configuration using 'config import'")
+                if not required:
+                    log.info("No printers found in config. Please upload configuration using web browser")
+                else:
+                    log.critical("No printers found in config. Please import configuration using 'config import'")
 
     def upgrade_config_if_needed(self):
         try:
@@ -452,7 +455,7 @@ def config_show(env):
 @main.group("webserver", help="Built-in webserver support")
 @pass_env
 def webserver(env):
-    env.require_config()
+    env.require_config(False)
 
 
 @webserver.command("run", help="Run ankerctl webserver")
@@ -460,7 +463,6 @@ def webserver(env):
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
 @pass_env
 def webserver(env, host, port):
-    env.require_config()
     web.webserver(env.config, host, port, pppp_dump=env.pppp_dump)
 
 

@@ -1,3 +1,4 @@
+import re
 import json
 import logging as log
 
@@ -10,7 +11,17 @@ from libflagship.ppppapi import FileUploadInfo, PPPPError
 
 from web.lib.service import ServiceManager
 
+from user_agents import parse
+
 import cli.util
+import cli.config
+
+
+def dict_match(dict, match):
+    for key in dict:
+        if re.match(rf"^{key}.*", match):
+            return key
+
 
 app = Flask(
     __name__,
@@ -34,10 +45,11 @@ import web.service.filetransfer
 
 @app.before_first_request
 def startup():
-    app.svc.register("pppp", web.service.pppp.PPPPService())
-    app.svc.register("videoqueue", web.service.video.VideoQueue())
-    app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
-    app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
+    if app.config["login"]:
+        app.svc.register("pppp", web.service.pppp.PPPPService())
+        app.svc.register("videoqueue", web.service.video.VideoQueue())
+        app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
+        app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
 
 
 @sock.route("/ws/mqtt")
@@ -82,12 +94,24 @@ def video_download():
 
 @app.get("/")
 def app_root():
+    config = app.config["config"]
+    user_agent = parse(request.headers.get('User-Agent'))
+    login_path = {
+        'Mac OS': '~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json',
+        'Windows': r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json',
+        'None': 'Unsupported OS, supply path to login.json',
+    }
+    useros = dict_match(login_path, user_agent.os.family)
+
     host = request.host.split(':')
     requestPort = host[1] if len(host) > 1 else '80' # If there is no 2nd array entry, the request port is 80
     return render_template(
         "index.html",
         requestPort=requestPort,
         requestHost=host[0]
+        configure=app.config["login"],
+        loginFilePath=login_path[useros] if useros in login_path else login_path["None"],
+        ankerConfig=str(config.open()) if app.config["login"] else 'No config found...',
     )
 
 
@@ -98,12 +122,13 @@ def app_api_version():
         "server": "1.9.0",
         "text": "OctoPrint 1.9.0"
     }
-    
+
 
 @app.post('/api/config/upload')
 def app_api_config_upload():
     config = app.config["config"]
-    
+    ua = request.headers.get('User-Agent')
+
     if request.method == 'POST':
         f = request.files['loginFile']
         f.save(f.filename)
@@ -128,8 +153,10 @@ def app_api_files_local():
 
 
 def webserver(config, host, port, **kwargs):
-    app.config["config"] = config
-    app.config["port"] = port
-    app.config["host"] = host
-    app.config.update(kwargs)
-    app.run(host=host, port=port)
+    with config.open() as cfg:
+        app.config["config"] = config
+        app.config["login"] = True if cfg else False
+        app.config["port"] = port
+        app.config["host"] = host
+        app.config.update(kwargs)
+        app.run(host=host, port=port)
