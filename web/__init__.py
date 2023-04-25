@@ -98,6 +98,16 @@ def app_api_version():
         "server": "1.9.0",
         "text": "OctoPrint 1.9.0"
     }
+    
+
+@app.post('/api/config/upload')
+def app_api_config_upload():
+    config = app.config["config"]
+    
+    if request.method == 'POST':
+        f = request.files['loginFile']
+        f.save(f.filename)
+        return 'Login uploaded successfully'
 
 
 @app.post("/api/files/local")

@@ -13,49 +13,92 @@
                 <p class="lead">Congratulations on running ankerctl</p>
             </div>
         </div>
-        <div class="container">
-            <div class="row text-body-emphasis display-3">
-                <div class="col-lg-8 px-3 rounded-3">
-                    <video class="w-100 rounded-3" playsinline autoplay muted id="player"></video>
-                </div>
-                <div class="col-lg-4 px-3 rounded-3">
-                    <div class="row">
-                        <div class="col-6 px-3"><button class="w-100 btn btn-primary" id="light-on">💡 Light on</button></div>
-                        <div class="col-6 px-3"><button class="w-100 btn btn-secondary" id="light-off">💡 Light off</button></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-6 px-3"><button class="w-100 btn btn-primary" id="quality-low">💾 Quality: low</button></div>
-                        <div class="col-6 px-3"><button class="w-100 btn btn-secondary" id="quality-high">📀 Quality: high</button></div>
+        <div class="container navigation">
+            <ul class="nav nav-pills mb-3" id="tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="home-tab" data-bs-toggle="pill" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Home</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="instructions-tab" data-bs-toggle="pill" data-bs-target="#instructions" type="button" role="tab" aria-controls="instructions" aria-selected="false">Instructions</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="setup-tab" data-bs-toggle="pill" data-bs-target="#setup" type="button" role="tab" aria-controls="setup" aria-selected="false">Setup</button>
+                </li>
+            </ul>
+        </div>
+        <div class="tab-content" id="ankerctlContent">
+            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                <div class="container">
+                    <div class="row text-body-emphasis display-3">
+                        <div class="col-lg-8 px-3 rounded-3">
+                            <video class="w-100 rounded-3" playsinline autoplay muted id="player"></video>
+                        </div>
+                        <div class="col-lg-4 px-3 rounded-3">
+                            <div class="row">
+                                <div class="col-6 px-3"><button class="w-100 btn btn-primary" id="light-on">💡 Light on</button></div>
+                                <div class="col-6 px-3"><button class="w-100 btn btn-secondary" id="light-off">💡 Light off</button></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6 px-3"><button class="w-100 btn btn-primary" id="quality-low">💾 Quality: low</button></div>
+                                <div class="col-6 px-3"><button class="w-100 btn btn-secondary" id="quality-high">📀 Quality: high</button></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="container mb-4">
-            <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xxl-2 g-3 p-2">
-                <div class="col-12 col-lg-12">
-                    <h2 class="display-6 fs-2 mb-2">Connecting PrusaSlicer/SuperSlicer</h2>
-                    <ol class="list-group list-group-numbered">
-                        <li class="list-group-item">Go to "Printer settings" tab</li>
-                        <li class="list-group-item">Click "Gear"⚙️ (Add/Edit Physical Printer)</li>
-                        <li class="list-group-item">Fill in "Descriptive name for the printer" with whatever you like</li>
-                        <li class="list-group-item">Select your Ankermake printer profile from the dropdown menu</li>
-                        <li class="list-group-item">Under "Host Type" select "OctoPrint"</li>
-                        <li class="list-group-item">In "Hostname, IP or URL" fill in with: <kbd>{{ requestHost }}:{{ requestPort }}</kbd>&nbsp;<a class="text-decoration-none" href="#" title="Copy to clipboard" id="configData">📋</a></li>
-                        <li class="list-group-item">Leave "API Key / Password" blank</a></li>
-                        <li class="list-group-item">Click "Test" to validate input</li>
-                        <li class="list-group-item">Click "Ok" to close the window</li>
-                        <li class="list-group-item">Slice your file as normal</li>
-                        <li class="list-group-item">Click "G&#x3E;" button to start direct upload to the printer</li>
-                        <li class="list-group-item">Click "Upload and print" - the "Upload"-only is not supported</li>
-                        <li class="list-group-item">Enjoy printing with ankerctl 😉</li>
-                    </ol>
-                    <br><span class="fw-light">Hint: <kbd>Ctrl+Shift+G</kbd> will slice and open the upload to printer window</span>
+            <div class="tab-pane fade" id="instructions" role="tabpanel" aria-labelledby="instructions-tab">
+                <div class="container mb-4">
+                    <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xxl-2 g-3 p-2">
+                        <div class="col-12 col-lg-12">
+                            <h2 class="display-6 fs-2 mb-2">Connecting PrusaSlicer/SuperSlicer</h2>
+                            <ol class="list-group list-group-numbered">
+                                <li class="list-group-item">Go to "Printer settings" tab</li>
+                                <li class="list-group-item">Click "Gear"⚙️ (Add/Edit Physical Printer)</li>
+                                <li class="list-group-item">Fill in "Descriptive name for the printer" with whatever you like</li>
+                                <li class="list-group-item">Select your Ankermake printer instructions from the dropdown menu</li>
+                                <li class="list-group-item">Under "Host Type" select "OctoPrint"</li>
+                                <li class="list-group-item">In "Hostname, IP or URL" fill in with: <kbd>{{ requestHost }}:{{ requestPort }}</kbd>&nbsp;<a class="text-decoration-none" href="#" title="Copy to clipboard" id="configData">📋</a></li>
+                                <li class="list-group-item">Leave "API Key / Password" blank</a></li>
+                                <li class="list-group-item">Click "Test" to validate input</li>
+                                <li class="list-group-item">Click "Ok" to close the window</li>
+                                <li class="list-group-item">Slice your file as normal</li>
+                                <li class="list-group-item">Click "G&#x3E;" button to start direct upload to the printer</li>
+                                <li class="list-group-item">Click "Upload and print" - the "Upload"-only is not supported</li>
+                                <li class="list-group-item">Enjoy printing with ankerctl 😉</li>
+                            </ol>
+                            <br><span class="fw-light">Hint: <kbd>Ctrl+Shift+G</kbd> will slice and open the upload to printer window</span>
+                        </div>
+                        <div class="col-12 col-lg-12 text-center">
+                            <img src="/static/img/setup/prusaslicer-1.png" class="img-thumbnail" alt="step 1">
+                            <img src="/static/img/setup/prusaslicer-2.png" class="img-thumbnail mt-2" alt="step 2">
+                            <img src="/static/img/setup/prusaslicer-3.png" class="img-thumbnail mt-2" alt="step 3">
+                            <img src="/static/img/setup/prusaslicer-4.png" class="img-thumbnail mt-2" alt="step 4">
+                        </div>
+                    </div>
                 </div>
-                <div class="col-12 col-lg-12 text-center">
-                    <img src="/static/img/setup/prusaslicer-1.png" class="img-thumbnail" alt="step 1">
-                    <img src="/static/img/setup/prusaslicer-2.png" class="img-thumbnail mt-2" alt="step 2">
-                    <img src="/static/img/setup/prusaslicer-3.png" class="img-thumbnail mt-2" alt="step 3">
-                    <img src="/static/img/setup/prusaslicer-4.png" class="img-thumbnail mt-2" alt="step 4">
+            </div>
+            <div class="tab-pane fade" id="setup" role="tabpanel" aria-labelledby="setup-tab">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <form action="/api/config/upload" method="POST" enctype="multipart/form-data">
+                                <div class="mb-3" id="config-upload-form">
+                                    <label for="loginFile" class="form-label">Upload AnkerMake Login File</label>
+                                    <div class="input-group w-auto">
+                                        <input class="form-control" type="file" id="loginFile" name="loginFile">
+                                        <button class="btn btn-primary" type="submit" id="upload">Upload</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-7">
+                            <span class="mr-auto pl-4">
+                                <code id="ankerctl-settings">
+                                    {{ ankerConfig }}
+                                </code>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
