@@ -142,11 +142,11 @@ def app_api_config_upload():
 
         if request.method == 'POST':
             if 'loginFile' not in request.files:
-                flash('No file found', 'error')
+                flash('No file found', 'danger')
                 return redirect('/')
             file = request.files['loginFile']
             if file.filename == '':
-                flash('No file selected', 'error')
+                flash('No file selected', 'danger')
                 return redirect('/')
             if file and allowed_file(file.filename, ALLOWED_EXTENSIONS):
                 filename = secure_filename(file.filename)
