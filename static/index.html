@@ -30,6 +30,7 @@
             <div class="tab-pane fade{% if configure %} show active{% endif %}" id="home" role="tabpanel" aria-labelledby="home-tab">
                 <div class="container">
                     <div class="row text-body-emphasis display-3">
+                        {% if configure %}
                         <div class="col-lg-8 px-3 rounded-3">
                             <video class="w-100 rounded-3" playsinline autoplay muted id="player"></video>
                         </div>
@@ -43,6 +44,11 @@
                                 <div class="col-6 px-3"><button class="w-100 btn btn-secondary" id="quality-high">📀 Quality: high</button></div>
                             </div>
                         </div>
+                        {% else %}
+                        <div class="col-lg-12 px-3 rounded-3">
+                            <span>No printer configuration found, upload config in <b>Setup</b></span>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
