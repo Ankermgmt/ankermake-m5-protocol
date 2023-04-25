@@ -15,80 +15,84 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='ankersrv.css') }}" />
     </head>
     <body>
-        <!-- Header -->
-        <header class="container my-3">
-            <div class="p-3 text-center bg-body-tertiary rounded-3">
-                <h1 class="text-body-emphasis display-6">ankerctl</h1>
-                {%if printer_serial %}
-                <h4>{{ printer_serial }}</h4>
-                {% endif %}
-            </div>
-        </header>
-        <!-- Navigation Menu -->
-        <div class="container navigation">
-            <ul class="nav nav-pills mb-3" id="tab" role="tablist">
-                {% if configure %}
-                <li class="nav-item mx-1" role="presentation">
-                    <button
-                        class="nav-link{% if configure %} active{% endif %}"
-                        id="home-tab"
-                        data-bs-toggle="pill"
-                        data-bs-target="#home"
-                        type="button"
-                        role="tab"
-                        aria-controls="home"
-                        aria-selected="{% if configure %}true{% else %}false{% endif %}"
+        <div class="container">
+            <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+                <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+                    <svg
+                        class="bi me-2"
+                        width="100%"
+                        height="40px"
+                        viewBox="0 0 46 47"
+                        version="1.1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        xmlns:xlink="http://www.w3.org/1999/xlink"
+                        xml:space="preserve"
+                        style="fill-rule: evenodd; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2"
                     >
-                        <i class="bi bi-house"></i>&nbsp;Home
-                    </button>
-                </li>
-                <li class="nav-item mx-1" role="presentation">
-                    <button
-                        class="nav-link"
-                        id="instructions-tab"
-                        data-bs-toggle="pill"
-                        data-bs-target="#instructions"
-                        type="button"
-                        role="tab"
-                        aria-controls="instructions"
-                        aria-selected="false"
-                    >
-                        <i class="bi bi-list-check"></i>&nbsp;Instructions
-                    </button>
-                </li>
-                {% endif %}
-                <li class="nav-item mx-1" role="presentation">
-                    <button
-                        class="nav-link{% if not configure %} active{% endif %}"
-                        id="setup-tab"
-                        data-bs-toggle="pill"
-                        data-bs-target="#setup"
-                        type="button"
-                        role="tab"
-                        aria-controls="setup"
-                        aria-selected="{% if not configure %}true{% else %}false{% endif %}"
-                    >
-                        <i class="bi bi-gear-fill"></i>&nbsp;Setup
-                    </button>
-                </li>
-            </ul>
+                        <g>
+                            <path
+                                id="path1042"
+                                d="M22.621,46.99l-22.621,0l0,-4.488l8.497,-8.487c7.37,-7.361 8.552,-8.458 8.906,-8.264c0.225,0.123 1.868,1.698 3.651,3.499c2.764,2.792 3.21,3.335 3.021,3.678c-0.122,0.221 -0.917,1.088 -1.767,1.926c-0.85,0.839 -1.545,1.576 -1.545,1.639c-0,0.064 5.286,0.089 11.747,0.058c6.461,-0.032 11.969,-0.004 12.24,0.059l0.491,0.116l0,10.264l-22.62,0Zm10.382,-36.718c-6.732,0 -12.24,0.076 -12.24,0.17c0,0.094 0.738,0.902 1.639,1.798c0.958,0.951 1.64,1.811 1.64,2.068c-0,0.598 -6.286,6.892 -6.883,6.892c-0.289,0 -3.324,-2.883 -8.8,-8.361l-8.359,-8.361l0,-4.478l45.242,0l-0,10.272l-12.239,0Z"
+                                style="fill: #d40000; fill-rule: nonzero"
+                            />
+                            <path
+                                id="path1036"
+                                d="M19.502,23.431l7.021,-7.021l7.022,7.021l-7.022,7.022l-7.021,-7.022Z"
+                                style="fill: #d40000; fill-rule: nonzero"
+                            />
+                        </g>
+                    </svg>
+
+                    <span class="text-body-emphasis display-6">ankerctl</span>
+                </a>
+                <ul class="nav nav-pills" id="tab" role="tablist">
+                    {% if configure %}
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link{% if configure %} active{% endif %}"
+                            id="home-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#home"
+                            type="button"
+                            role="tab"
+                            aria-controls="home"
+                            aria-selected="{% if configure %}true{% else %}false{% endif %}"
+                        >
+                            <i class="bi bi-house"></i>&nbsp;Home
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link"
+                            id="instructions-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#instructions"
+                            type="button"
+                            role="tab"
+                            aria-controls="instructions"
+                            aria-selected="false"
+                        >
+                            <i class="bi bi-list-check"></i>&nbsp;Instructions
+                        </button>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link{% if not configure %} active{% endif %}"
+                            id="setup-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#setup"
+                            type="button"
+                            role="tab"
+                            aria-controls="setup"
+                            aria-selected="{% if not configure %}true{% else %}false{% endif %}"
+                        >
+                            <i class="bi bi-gear-fill"></i>&nbsp;Setup
+                        </button>
+                    </li>
+                </ul>
+            </header>
         </div>
-        <!-- Modal -->
-        <div
-            class="modal fade"
-            id="popupModal"
-            tabindex="-1"
-            role="dialog"
-            aria-labelledby="popupModal"
-            aria-hidden="true"
-        >
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content d-flex align-items-center">
-                    <div id="popupModalBody" class="modal-body"></div>
-                </div>
-            </div>
-        </div>
-        <!-- Message Center -->
         <div class="container text-center" id="messages">
             {% with messages = get_flashed_messages(with_categories=true) %}
             <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
@@ -108,10 +112,8 @@
             </div>
             {% endfor %} {% endif %} {% endwith %}
         </div>
-        <!-- Content Area -->
         <div class="tab-content my-3" id="ankerctlContent">
             {% if configure %}
-            <!-- Home Tab -->
             <div
                 class="tab-pane fade{% if configure %} show active{% endif %}"
                 id="home"
@@ -119,40 +121,62 @@
                 aria-labelledby="home-tab"
             >
                 <div class="container">
-                    <div class="row text-body-emphasis display-3">
-                        <div class="col-lg-8 px-3 rounded-3">
-                            <video
-                                class="w-100 rounded-3"
-                                playsinline
-                                autoplay
-                                muted
-                                id="player"
-                                poster="{{ url_for('static', filename='img/loading.jpg') }}"
-                            ></video>
+                    <div class="row text-body-emphasis">
+                        <div class="col-lg-8 px-3 rounded-3 display-3">
+                            <video class="w-100 rounded-3" playsinline autoplay muted id="player"></video>
                             <div id="overlay" class="col-md-12 px-3 rounded-3"></div>
                         </div>
                         <div class="col-lg-4 px-3 rounded-3">
-                            <div class="row">
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-primary" id="light-on">💡 Light on</button>
+                            <div class="row mb-3">
+                                {%if printer_serial %}
+                                <div class="container" id="connection">
+                                    <div class="p-3 border rounded-3 fs-6 bg-body-tertiary">
+                                        Connected to: <strong>{{ printer_serial }}</strong>
+                                        <i class="bi-check-lg icon-green"></i>
+                                    </div>
                                 </div>
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-secondary" id="light-off">💡 Light off</button>
-                                </div>
+                                {% endif %}
                             </div>
                             <div class="row">
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-primary" id="quality-low">💾 Quality: low</button>
-                                </div>
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-secondary" id="quality-high">📀 Quality: high</button>
+                                <div class="container" id="controls">
+                                    <div class="card">
+                                        <div class="card-header">Light Control</div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-6 px-3">
+                                                    <button class="w-100 btn btn-secondary" id="light-on">
+                                                        <i class="bi-lightbulb"></i> Light on
+                                                    </button>
+                                                </div>
+                                                <div class="col-6 px-3">
+                                                    <button class="w-100 btn btn-secondary" id="light-off">
+                                                        <i class="bi-lightbulb-off"></i> Light off
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-header">Video Quality</div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-6 px-3">
+                                                    <button class="w-100 btn btn-secondary" id="quality-low">
+                                                        <i class="bi-badge-sd"></i> SD Quality
+                                                    </button>
+                                                </div>
+                                                <div class="col-6 px-3">
+                                                    <button class="w-100 btn btn-secondary" id="quality-high">
+                                                        <i class="bi-badge-hd"></i> HD Quality
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- Instructions Tab -->
             <div class="tab-pane fade" id="instructions" role="tabpanel" aria-labelledby="instructions-tab">
                 <div class="container mb-4">
                     <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xxl-2 g-3 p-2">
@@ -207,7 +231,6 @@
                 </div>
             </div>
             {% endif %}
-            <!-- Setup Tab -->
             <div
                 class="tab-pane fade{% if not configure %} show active{% endif %}"
                 id="setup"
@@ -262,11 +285,8 @@
                                         class="btn btn-secondary submit"
                                         id="reload"
                                         role="button"
-                                        data-message="Ankerctl is restarting..."
                                     >
-                                        <span data-bs-toggle="modal" data-bs-target="#popupModal">
-                                            <i class="bi bi-bootstrap-reboot"></i>&nbsp;Reload Services
-                                        </span>
+                                        <i class="bi bi-bootstrap-reboot"></i>&nbsp;Reload Services
                                     </a>
                                 </div>
                             </div>
@@ -283,12 +303,13 @@
                 </div>
             </div>
         </div>
-        <!-- Footer -->
-        <footer class="container my-3">
-            <div class="p-3 text-center bg-body-tertiary rounded-3">
+        <footer class="container my-3 text-center bg-body-tertiary rounded-3 text-center text-lg-start">
+            <div class="p-1 text-center">
                 &copy;
-                <span id="copyYear">...</span>
-                Copyright -
+                <script>
+                    document.write(new Date().getFullYear());
+                </script>
+                Copyright:
                 <a
                     class="text-light"
                     href="https://github.com/Ankermgmt/ankermake-m5-protocol"
@@ -306,12 +327,12 @@
                 >
             </div>
         </footer>
-        <script type="text/javascript" src="{{ url_for('static', filename='vendor/cash.min.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='vendor/jmuxer.min.js') }}"></script>
         <script
             type="text/javascript"
             src="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js')}}"
         ></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='vendor/cash.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='vendor/jmuxer.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='ankersrv.js') }}"></script>
     </body>
 </html>
