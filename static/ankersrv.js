@@ -56,9 +56,17 @@ $(function () {
         return false;
     });
 
-
     $('#configData').on('click',function(){
         navigator.clipboard.writeText("{{ configHost }}:{{ configPort }}");
+        console.log('Copied {{ configHost }}:{{ configPort }} to clipboard...')
         return false;
     });
+
+    $('#copyFilePath').on('click',function(){
+        navigator.clipboard.writeText("{{ loginFilePath }}");
+        console.log('Copied {{ loginFilePath }} to clipboard...')
+        return false;
+    })
+
+    $(".alert").alert()
 });
