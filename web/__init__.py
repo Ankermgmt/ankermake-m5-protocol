@@ -1,9 +1,14 @@
+import os
 import re
 import json
+import tempfile
 import logging as log
 
-from flask import Flask, request, render_template, Response
+from secrets import token_urlsafe as token
+
+from flask import Flask, flash, request, redirect, url_for, render_template, Response
 from flask_sock import Sock
+from werkzeug.utils import secure_filename
 
 from libflagship.pppp import P2PSubCmdType, FileTransfer
 from libflagship.ppppapi import FileUploadInfo, PPPPError
@@ -29,6 +34,7 @@ app = Flask(
     static_folder="static",
     template_folder="static"
 )
+app.secret_key = token(24)
 app.config.from_prefixed_env()
 app.svc = ServiceManager()
 
@@ -124,15 +130,33 @@ def app_api_version():
     }
 
 
+def allowed_file(filename, ALLOWED_EXTENSIONS):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.post('/api/config/upload')
 def app_api_config_upload():
-    config = app.config["config"]
-    ua = request.headers.get('User-Agent')
+    ALLOWED_EXTENSIONS = set(['json'])
+    with tempfile.TemporaryDirectory(prefix='ankerctl_') as tmpdir:
+        config = app.config["config"]
 
-    if request.method == 'POST':
-        f = request.files['loginFile']
-        f.save(f.filename)
-        return 'Login uploaded successfully'
+        if request.method == 'POST':
+            if 'loginFile' not in request.files:
+                flash('No file found', 'error')
+                return redirect('/')
+            file = request.files['loginFile']
+            if file.filename == '':
+                flash('No file selected', 'error')
+                return redirect('/')
+            if file and allowed_file(file.filename, ALLOWED_EXTENSIONS):
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(tmpdir, filename)
+                file.save(filepath)
+                flash(f'Login file uploaded to {filepath}', 'success')
+                return redirect('/')
+            elif file and not allowed_file(file.filename, ALLOWED_EXTENSIONS):
+                flash(f'File must be of type: {str(ALLOWED_EXTENSIONS)}', 'warning')
+                return redirect('/')
 
 
 @app.post("/api/files/local")
