@@ -56,17 +56,13 @@ $(function () {
         return false;
     });
 
-    $('#configData').on('click',function(){
-        navigator.clipboard.writeText("{{ configHost }}:{{ configPort }}");
-        console.log('Copied {{ configHost }}:{{ configPort }} to clipboard...')
-        return false;
+    let alert_list = document.querySelectorAll('.alert');
+    alert_list.forEach(function(alert) {
+        new bootstrap.Alert(alert);
+
+        let alert_timeout = alert.getAttribute('data-timeout');
+        setTimeout(() => {
+            bootstrap.Alert.getInstance(alert).close();
+        }, +alert_timeout);
     });
-
-    $('#copyFilePath').on('click',function(){
-        navigator.clipboard.writeText("{{ loginFilePath }}");
-        console.log('Copied {{ loginFilePath }} to clipboard...')
-        return false;
-    })
-
-    $(".alert").alert()
 });

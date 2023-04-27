@@ -120,7 +120,7 @@ def app_root():
         requestHost=host[0]
         configure=app.config["login"],
         loginFilePath=login_path[useros] if useros in login_path else login_path["None"],
-        ankerConfig=str(config.open()) if app.config["login"] else 'No config found...',
+        ankerConfig=str(config_show()) if app.config["login"] else '<p>No printers found, please load your login config...</p>',
     )
 
 
@@ -135,6 +135,28 @@ def app_api_version():
 
 def allowed_file(filename, ALLOWED_EXTENSIONS):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def config_show():
+    config = app.config["config"]
+    with config.open() as cfg:
+        config_output = f'''<p>Account:</p><p>
+            user_id:    {cfg.account.user_id[:10]}...[REDACTED] <br/>
+            auth_token: {cfg.account.auth_token[:10]}...[REDACTED] <br/>
+            email:      {cfg.account.email} <br/>
+            region:     {cfg.account.region.upper()} </p
+        '''
+        config_output += '<p>Printers:</p><hr/>'
+        for p in cfg.printers:
+            config_output += f'''<p>
+                duid:      {p.p2p_duid} <br/>
+                sn:        {p.sn} <br/>
+                ip:        {p.ip_addr} <br/>
+                wifi_mac:  {cli.util.pretty_mac(p.wifi_mac)} <br/>
+                api_hosts: {', '.join(p.api_hosts)} <br/>
+                p2p_hosts: {', '.join(p.p2p_hosts)} <hr/></p>
+            '''
+        return config_output
 
 
 def config_import(loginFile):
