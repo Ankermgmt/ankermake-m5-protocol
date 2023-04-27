@@ -10,6 +10,9 @@ from flask import Flask, flash, request, redirect, url_for, render_template, Res
 from flask_sock import Sock
 from werkzeug.utils import secure_filename
 
+import libflagship.httpapi
+import libflagship.logincache
+
 from libflagship.pppp import P2PSubCmdType, FileTransfer
 from libflagship.ppppapi import FileUploadInfo, PPPPError
 
@@ -134,6 +137,35 @@ def allowed_file(filename, ALLOWED_EXTENSIONS):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def config_import(loginFile):
+    file = open(loginFile, 'r')
+    config = app.config["config"]
+
+    # extract auth token
+    cache = libflagship.logincache.load(file.read())["data"]
+    auth_token = cache["auth_token"]
+
+    # extract account region
+    region = libflagship.logincache.guess_region(cache["ab_code"])
+
+    try:
+        newConfig = cli.config.load_config_from_api(auth_token, region, False)
+    except libflagship.httpapi.APIError as E:
+        flash(f"Config import failed: {E} (auth token might be expired: make sure Ankermake Slicer can connect, then try again", 'danger')
+        return redirect('/')
+    except Exception as E:
+        flash(f"Config import failed: {E}", 'danger')
+        return redirect('/')
+
+    try:
+        config.save("default", newConfig)
+    except Exception as E:
+        flash(f"Config import failed: {E}", 'danger')
+        return redirect('/')
+    flash("Configuration imported! Restarting...", 'success')
+    return redirect('/')
+
+
 @app.post('/api/config/upload')
 def app_api_config_upload():
     ALLOWED_EXTENSIONS = set(['json'])
@@ -152,8 +184,8 @@ def app_api_config_upload():
                 filename = secure_filename(file.filename)
                 filepath = os.path.join(tmpdir, filename)
                 file.save(filepath)
-                flash(f'Login file uploaded to {filepath}', 'success')
-                return redirect('/')
+                config_import(filepath)
+                return redirect('/reload')
             elif file and not allowed_file(file.filename, ALLOWED_EXTENSIONS):
                 flash(f'File must be of type: {str(ALLOWED_EXTENSIONS)}', 'warning')
                 return redirect('/')
@@ -174,6 +206,18 @@ def app_api_files_local():
         ft.send_file(fd, user_name)
 
     return {}
+
+
+@app.get("/reload")
+def reload_webserver():
+    config = app.config["config"]
+    with config.open() as cfg:
+        app.config["config"] = config
+        app.config["login"] = True if cfg else False
+        if cfg:
+            flash('Configuration loaded', 'success')
+            startup()
+            return redirect('/')
 
 
 def webserver(config, host, port, **kwargs):
