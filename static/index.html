@@ -12,10 +12,6 @@
         <script type="text/javascript" src="{{ url_for('static', filename='ankersrv.js')}}"></script>
         <script type="text/javascript">
          $(function () {
-             function copyToClipboard(text) {
-                 navigator.clipboard.writeText(text);
-                 console.log(`Copied ${text} to clipboard...`);
-             }
              $('#configData').on('click',function(){
                  navigator.clipboard.writeText("{{ configHost }}:{{ configPort }}");
                  console.log('Copied {{ configHost }}:{{ configPort }} to clipboard...')
