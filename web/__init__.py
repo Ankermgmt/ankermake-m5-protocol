@@ -121,7 +121,7 @@ def app_root():
     return render_template(
         "index.html",
         requestPort=requestPort,
-        requestHost=host[0]
+        requestHost=host[0],
         configure=app.config["login"],
         loginFilePath=login_path[useros] if useros in login_path else login_path["None"],
         ankerConfig=str(config_show()) if app.config["login"] else '<p>No printers found, please load your login config...</p>',
