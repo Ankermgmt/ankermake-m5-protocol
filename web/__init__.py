@@ -64,39 +64,43 @@ def startup():
 @sock.route("/ws/mqtt")
 def mqtt(sock):
 
-    for data in app.svc.stream("mqttqueue"):
-        log.debug(f"MQTT message: {data}")
-        sock.send(json.dumps(data))
+    if app.config["login"]:
+        for data in app.svc.stream("mqttqueue"):
+            log.debug(f"MQTT message: {data}")
+            sock.send(json.dumps(data))
 
 
 @sock.route("/ws/video")
 def video(sock):
 
-    for msg in app.svc.stream("videoqueue"):
-        sock.send(msg.data)
+    if app.config["login"]:
+        for msg in app.svc.stream("videoqueue"):
+            sock.send(msg.data)
 
 
 @sock.route("/ws/ctrl")
 def ctrl(sock):
 
-    while True:
-        msg = json.loads(sock.receive())
+    if app.config["login"]:
+        while True:
+            msg = json.loads(sock.receive())
 
-        if "light" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_light_state(msg["light"])
+            if "light" in msg:
+                with app.svc.borrow("videoqueue") as vq:
+                    vq.api_light_state(msg["light"])
 
-        if "quality" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_video_mode(msg["quality"])
+            if "quality" in msg:
+                with app.svc.borrow("videoqueue") as vq:
+                    vq.api_video_mode(msg["quality"])
 
 
 @app.get("/video")
 def video_download():
 
     def generate():
-        for msg in app.svc.stream("videoqueue"):
-            yield msg.data
+        if app.config["login"]:
+            for msg in app.svc.stream("videoqueue"):
+                yield msg.data
 
     return Response(generate(), mimetype='video/mp4')
 
