@@ -6,7 +6,7 @@ import logging as log
 
 from secrets import token_urlsafe as token
 
-from flask import Flask, flash, request, redirect, url_for, render_template, Response
+from flask import Flask, flash, request, redirect, url_for, render_template, Response, session
 from flask_sock import Sock
 from werkzeug.utils import secure_filename
 
@@ -215,6 +215,7 @@ def reload_webserver():
         app.config["config"] = config
         app.config["login"] = True if cfg else False
         if cfg:
+            session['_flashes'].clear()
             flash('Configuration loaded', 'success')
             startup()
             return redirect('/')
