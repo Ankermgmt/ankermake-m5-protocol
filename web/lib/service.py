@@ -292,8 +292,8 @@ class ServiceManager:
             queue = Queue()
 
             with svc.tap(lambda data: queue.put(data)):
-                while True:
+                while svc.state == RunState.Running:
                     try:
                         yield queue.get()
-                    except (EOFError, OSError):
+                    except (EOFError, OSError, ServiceStoppedError):
                         break
