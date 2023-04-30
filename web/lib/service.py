@@ -92,8 +92,13 @@ class Service(Thread):
             log.debug(f"{self.name} worker start")
             self.worker_start()
         except Exception as E:
-            log.exception(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
-            self._holdoff.reset(delay=1)
+            if self.wanted:
+                if not isinstance(E, TimeoutError):
+                    log.exception(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
+                self._holdoff.reset(delay=1)
+            else:
+                log.error(f"{self.name}: Failed to start worker: {E}. Shutting down service.")
+                self.state = RunState.Stopped
         else:
             log.info(f"{self.name}: Worker started")
             self.state = RunState.Running
