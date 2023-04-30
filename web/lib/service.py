@@ -8,6 +8,21 @@ from datetime import datetime, timedelta
 from multiprocessing import Queue
 
 
+class Holdoff:
+
+    def __init__(self):
+        self.deadline = None
+
+    def reset(self, delay=None):
+        if delay:
+            delay = timedelta(seconds=delay)
+        self.deadline = datetime.now()
+
+    @property
+    def passed(self):
+        return datetime.now() > self.deadline
+
+
 class RunState(Enum):
     Starting = 2
     Running  = 3
@@ -27,7 +42,7 @@ class Service(Thread):
         self.wanted = False
         self._event = Event()
         self.handlers = []
-        self._holdoff = None
+        self._holdoff = Holdoff()
         atexit.register(self.atexit)
         super().start()
 
@@ -62,7 +77,7 @@ class Service(Thread):
             self.worker_start()
         except Exception as E:
             log.exception(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
-            self._holdoff = datetime.now() + timedelta(seconds=1)
+            self._holdoff.reset(delay=1)
         else:
             log.debug(f"{self.name}: Worker started")
             self.state = RunState.Running
@@ -73,7 +88,7 @@ class Service(Thread):
         except Exception:
             log.exception(f"{self.name}: Unexpected exception while running worker")
             log.warning(f"{self.name}: Stopping worker due to exception")
-            self._holdoff = datetime.now()
+            self._holdoff.reset()
             self.state = RunState.Stopping
 
     def _attempt_stop(self):
@@ -81,7 +96,7 @@ class Service(Thread):
             self.worker_stop()
         except Exception as E:
             log.exception(f"{self.name}: Failed to stop worker: {E}. Retrying in 1 second.")
-            self._holdoff = datetime.now() + timedelta(seconds=1)
+            self._holdoff.reset(delay=1)
         else:
             log.debug(f"{self.name}: Worked stopped")
             self.state = RunState.Stopped
@@ -89,7 +104,7 @@ class Service(Thread):
     def run(self):
         while self.running:
             if self.state == RunState.Starting:
-                if datetime.now() > self._holdoff:
+                if self._holdoff.passed:
                     self._attempt_start()
                 else:
                     self.idle(timeout=0.1)
@@ -99,11 +114,11 @@ class Service(Thread):
                     self._attempt_run()
                 else:
                     log.debug(f"{self.name}: Stopping worker")
-                    self._holdoff = datetime.now()
+                    self._holdoff.reset()
                     self.state = RunState.Stopping
 
             elif self.state == RunState.Stopping:
-                if datetime.now() > self._holdoff:
+                if self._holdoff.passed:
                     self._attempt_stop()
                 else:
                     self.idle(timeout=0.1)
@@ -111,7 +126,7 @@ class Service(Thread):
             elif self.state == RunState.Stopped:
                 if self.wanted:
                     log.debug(f"{self.name}: Starting worker")
-                    self._holdoff = datetime.now()
+                    self._holdoff.reset()
                     self.state = RunState.Starting
                 else:
                     self.idle()
