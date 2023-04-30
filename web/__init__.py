@@ -4,8 +4,9 @@ import logging as log
 from flask import Flask, request, render_template, Response
 from flask_sock import Sock
 
-from libflagship.pppp import P2PSubCmdType
-from libflagship.ppppapi import FileUploadInfo, PPPPError, FileTransfer
+from libflagship.pppp import P2PSubCmdType, FileTransfer
+from libflagship.ppppapi import FileUploadInfo, PPPPError
+
 
 from web.lib.service import ServiceManager
 

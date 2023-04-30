@@ -12,7 +12,10 @@ from socket import AF_INET
 from dataclasses import dataclass
 
 from libflagship.cyclic import CyclicU16
-from libflagship.pppp import *
+from libflagship.pppp import Type, \
+    PktDrw, PktDrwAck, PktClose, PktSessionReady, PktAliveAck, PktDevLgnAckCrc, \
+    PktHelloAck, PktP2pRdyAck, PktP2pRdy, PktLanSearch, \
+    Host, Message, Xzyh, Aabb, FileTransferReply
 
 PPPP_LAN_PORT = 32108
 PPPP_WAN_PORT = 32100
