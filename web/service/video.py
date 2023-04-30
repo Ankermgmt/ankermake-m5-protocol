@@ -52,6 +52,8 @@ class VideoQueue(Service):
         self.api_start_live()
 
     def worker_run(self, timeout):
+        self.idle(timeout=timeout)
+
         if not self.pppp.connected:
             raise ServiceRestartSignal("No pppp connection")
 
