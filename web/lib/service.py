@@ -27,6 +27,7 @@ class Service(Thread):
         self.wanted = False
         self._event = Event()
         self.handlers = []
+        self._holdoff = None
         atexit.register(self.atexit)
         super().start()
 
@@ -55,56 +56,62 @@ class Service(Thread):
         if self._event.wait(timeout=timeout):
             self._event.clear()
 
-    def run(self):
-        holdoff = None
+    def _attempt_start(self):
+        try:
+            log.debug(f"{self.name} worker start")
+            self.worker_start()
+        except Exception as E:
+            log.exception(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
+            self._holdoff = datetime.now() + timedelta(seconds=1)
+        else:
+            log.debug(f"{self.name}: Worker started")
+            self.state = RunState.Running
 
+    def _attempt_run(self):
+        try:
+            self.worker_run(timeout=0.3)
+        except Exception:
+            log.exception(f"{self.name}: Unexpected exception while running worker")
+            log.warning(f"{self.name}: Stopping worker due to exception")
+            self._holdoff = datetime.now()
+            self.state = RunState.Stopping
+
+    def _attempt_stop(self):
+        try:
+            self.worker_stop()
+        except Exception as E:
+            log.exception(f"{self.name}: Failed to stop worker: {E}. Retrying in 1 second.")
+            self._holdoff = datetime.now() + timedelta(seconds=1)
+        else:
+            log.debug(f"{self.name}: Worked stopped")
+            self.state = RunState.Stopped
+
+    def run(self):
         while self.running:
             if self.state == RunState.Starting:
-                log.debug(f"{self.name}: {datetime.now()} vs holdoff {holdoff}")
-                if datetime.now() > holdoff:
-                    try:
-                        log.debug(f"{self.name} worker start")
-                        self.worker_start()
-                    except Exception as E:
-                        log.error(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
-                        holdoff = datetime.now() + timedelta(seconds=1)
-                    else:
-                        log.debug(f"{self.name}: Worker started")
-                        self.state = RunState.Running
+                if datetime.now() > self._holdoff:
+                    self._attempt_start()
                 else:
                     self.idle(timeout=0.1)
 
             elif self.state == RunState.Running:
                 if self.wanted:
-                    try:
-                        self.worker_run(timeout=0.3)
-                    except Exception:
-                        log.exception("Unexpected exception while running worker")
-                        log.warning(f"{self.name}: Stopping worker due to exception")
-                        holdoff = datetime.now()
-                        self.state = RunState.Stopping
+                    self._attempt_run()
                 else:
                     log.debug(f"{self.name}: Stopping worker")
-                    holdoff = datetime.now()
+                    self._holdoff = datetime.now()
                     self.state = RunState.Stopping
 
             elif self.state == RunState.Stopping:
-                if datetime.now() > holdoff:
-                    try:
-                        self.worker_stop()
-                    except Exception as E:
-                        log.error(f"{self.name}: Failed to stop worker: {E}. Retrying in 1 second.")
-                        holdoff = datetime.now() + timedelta(seconds=1)
-                    else:
-                        log.debug(f"{self.name}: Worked stopped")
-                        self.state = RunState.Stopped
+                if datetime.now() > self._holdoff:
+                    self._attempt_stop()
                 else:
                     self.idle(timeout=0.1)
 
             elif self.state == RunState.Stopped:
                 if self.wanted:
                     log.debug(f"{self.name}: Starting worker")
-                    holdoff = datetime.now()
+                    self._holdoff = datetime.now()
                     self.state = RunState.Starting
                 else:
                     self.idle()
