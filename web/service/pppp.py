@@ -21,7 +21,8 @@ class PPPPService(Service):
         }
         return self._api.send_xzyh(
             json.dumps(cmd).encode(),
-            cmd=P2PCmdType.P2P_JSON_CMD
+            cmd=P2PCmdType.P2P_JSON_CMD,
+            block=False
         )
 
     def worker_start(self):
