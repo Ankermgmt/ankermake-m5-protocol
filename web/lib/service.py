@@ -23,6 +23,22 @@ class Holdoff:
         return datetime.now() > self.deadline
 
 
+class ServiceError(Exception):
+    pass
+
+
+class ServiceStoppedError(ServiceError):
+    pass
+
+
+class ServiceSignal(Exception):
+    pass
+
+
+class ServiceRestartSignal(ServiceSignal):
+    pass
+
+
 class RunState(Enum):
     Starting = 2
     Running  = 3
