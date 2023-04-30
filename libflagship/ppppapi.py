@@ -444,8 +444,6 @@ class AnkerPPPPAsyncApi(AnkerPPPPBaseApi):
             self.process(msg)
         except TimeoutError:
             pass
-        except ConnectionResetError:
-            raise ConnectionRefusedError("Connection rejected by device")
 
         for idx, ch in enumerate(self.chans):
             for pkt in ch.poll():
