@@ -8,7 +8,6 @@ from ..lib.service import Service
 from .. import app
 
 from libflagship.pppp import P2PSubCmdType, Xzyh
-from libflagship.util import enhex
 
 
 class VideoQueue(Service):
@@ -41,7 +40,6 @@ class VideoQueue(Service):
         if not isinstance(msg, Xzyh):
             return
 
-        log.debug(f"Video data packet: {enhex(msg.data):32}...")
         self.notify(msg)
 
     def worker_start(self):
