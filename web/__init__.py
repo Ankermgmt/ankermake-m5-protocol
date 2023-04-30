@@ -27,6 +27,7 @@ sock = Sock(app)
 import web.service.pppp
 import web.service.video
 import web.service.mqtt
+import web.service.filetransfer
 
 
 @app.before_first_request
@@ -34,6 +35,7 @@ def startup():
     app.svc.register("pppp", web.service.pppp.PPPPService())
     app.svc.register("videoqueue", web.service.video.VideoQueue())
     app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
+    app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
 
 
 @sock.route("/ws/mqtt")
@@ -107,8 +109,6 @@ def app_api_version():
 
 @app.post("/api/files/local")
 def app_api_files_local():
-    config = app.config["config"]
-
     user_name = request.headers.get("User-Agent", "ankerctl").split("/")[0]
 
     no_act = not cli.util.parse_http_bool(request.form["print"])
@@ -118,21 +118,8 @@ def app_api_files_local():
 
     fd = request.files["file"]
 
-    api = cli.pppp.pppp_open(config, dumpfile=app.config.get("pppp_dump"))
-
-    data = fd.read()
-    fui = FileUploadInfo.from_data(data, fd.filename, user_name=user_name, user_id="-", machine_id="-")
-    log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")
-    try:
-        cli.pppp.pppp_send_file(api, fui, data)
-        log.info("File upload complete. Requesting print start of job.")
-        api.aabb_request(b"", frametype=FileTransfer.END)
-    except PPPPError as E:
-        log.error(f"Could not send print job: {E}")
-    else:
-        log.info("Successfully sent print job")
-    finally:
-        api.stop()
+    with app.svc.borrow("filetransfer") as ft:
+        ft.send_file(fd, user_name)
 
     return {}
 
