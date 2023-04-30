@@ -343,6 +343,9 @@ class AnkerPPPPBaseApi(Thread):
                 self.send(PktP2pRdy(self.duid))
 
     def recv(self, timeout=None):
+        if self.state in {PPPPState.Idle, PPPPState.Disconnected}:
+            raise ConnectionError(f"Tried to recv packet in state {self.state}")
+
         self.sock.settimeout(timeout)
         data, self.addr = self.sock.recvfrom(4096)
         if self.dumper:
@@ -352,6 +355,9 @@ class AnkerPPPPBaseApi(Thread):
         return msg
 
     def send(self, pkt, addr=None):
+        if self.state in {PPPPState.Idle, PPPPState.Disconnected}:
+            raise ConnectionError(f"Tried to send packet in state {self.state}")
+
         resp = pkt.pack()
         if self.dumper:
             self.dumper.tx(resp, self.addr)
