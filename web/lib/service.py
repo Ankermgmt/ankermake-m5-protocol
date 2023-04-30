@@ -58,15 +58,7 @@ class Service(Thread):
         self._event = Event()
         self.handlers = []
         self._holdoff = Holdoff()
-        atexit.register(self.atexit)
         super().start()
-
-    def atexit(self):
-        log.debug(f"{self.name}: Requesting thread exit..")
-        self.running = False
-        self._event.set()
-        self.join()
-        log.debug(f"{self.name}: Thread cleanup done")
 
     @property
     def name(self):
@@ -209,6 +201,33 @@ class ServiceManager:
     def __init__(self):
         self.svcs = {}
         self.refs = {}
+        atexit.register(self.atexit)
+
+    def atexit(self):
+        log.debug("ServiceManager: Shutting down threads..")
+        self.dump()
+        for svc in self.svcs.values():
+            if svc.state != RunState.Stopped:
+                svc.stop()
+
+        log.debug("ServiceManager: Waiting for threads to stop..")
+        self.dump()
+        for svc in self.svcs.values():
+            svc.await_stopped()
+
+        log.debug("ServiceManager: Cleaning up threads..")
+        self.dump()
+        for svc in self.svcs.values():
+            svc.shutdown()
+
+        log.info("ServiceManager: Shutdown complete")
+
+    def dump(self):
+        log.debug("Service state")
+        for name in self.svcs:
+            svc = self.svcs[name]
+            ref = self.refs[name]
+            log.debug(f"  [{ref:>4}] {name:20} running={svc.running} state={svc.state} wanted={svc.wanted}")
 
     def register(self, name: str, svc: Service):
         if name in self.svcs:
