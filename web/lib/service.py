@@ -95,7 +95,7 @@ class Service(Thread):
             log.exception(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
             self._holdoff.reset(delay=1)
         else:
-            log.debug(f"{self.name}: Worker started")
+            log.info(f"{self.name}: Worker started")
             self.state = RunState.Running
 
     def _attempt_run(self):
@@ -118,7 +118,7 @@ class Service(Thread):
             log.exception(f"{self.name}: Failed to stop worker: {E}. Retrying in 1 second.")
             self._holdoff.reset(delay=1)
         else:
-            log.debug(f"{self.name}: Worked stopped")
+            log.info(f"{self.name}: Worker stopped")
             self.state = RunState.Stopped
 
     def run(self):
@@ -156,7 +156,7 @@ class Service(Thread):
         log.debug(f"{self.name}: Shutting down thread")
         if self.state == RunState.Running:
             self.worker_stop()
-        log.info(f"{self.name}: Thread exit")
+        log.debug(f"{self.name}: Thread exit")
 
     def worker_start(self):
         pass
