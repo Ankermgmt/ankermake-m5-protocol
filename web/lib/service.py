@@ -268,7 +268,10 @@ class ServiceManager:
         if self.refs[name] == 1:
             svc.start()
             if ready:
-                svc.await_ready()
+                try:
+                    svc.await_ready()
+                except ServiceError:
+                    self.put(name)
 
         return svc
 
