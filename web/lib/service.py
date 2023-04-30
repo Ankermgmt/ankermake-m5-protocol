@@ -156,7 +156,7 @@ class Service(Thread):
                     self._holdoff.reset()
                     self.state = RunState.Starting
                 else:
-                    self.idle()
+                    self.idle(timeout=0.1)
             else:
                 raise ValueError("Unknown state value")
 
