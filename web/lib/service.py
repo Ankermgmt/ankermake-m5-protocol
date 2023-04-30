@@ -101,6 +101,10 @@ class Service(Thread):
     def _attempt_run(self):
         try:
             self.worker_run(timeout=0.3)
+        except ServiceRestartSignal:
+            log.info(f"{self.name}: Service requested restart.")
+            self._holdoff.reset()
+            self.state = RunState.Stopping
         except Exception:
             log.exception(f"{self.name}: Unexpected exception while running worker")
             log.warning(f"{self.name}: Stopping worker due to exception")
