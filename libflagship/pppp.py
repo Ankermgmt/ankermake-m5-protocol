@@ -199,11 +199,11 @@ class P2PCmdType(enum.IntEnum):
     P2P_SEND_FILE                     = 0x3a98 # unknown
 
     @classmethod
-    def parse(cls, p, typ=u8):
+    def parse(cls, p, typ=u16le):
         d = typ.parse(p)
         return cls(d[0]), d[1]
 
-    def pack(self, typ=u8):
+    def pack(self, typ=u16le):
         return typ.pack(self)
 
 class P2PSubCmdType(enum.IntEnum):
@@ -216,11 +216,11 @@ class P2PSubCmdType(enum.IntEnum):
     LIVE_MODE_GET       = 0x03ee # unknown
 
     @classmethod
-    def parse(cls, p, typ=u8):
+    def parse(cls, p, typ=u16le):
         d = typ.parse(p)
         return cls(d[0]), d[1]
 
-    def pack(self, typ=u8):
+    def pack(self, typ=u16le):
         return typ.pack(self)
 
 class FileTransfer(enum.IntEnum):
