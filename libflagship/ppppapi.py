@@ -4,6 +4,7 @@ import string
 import hashlib
 import logging as log
 
+from enum import Enum
 from multiprocessing import Pipe
 from datetime import datetime, timedelta
 from threading import Thread, Event, Lock
@@ -213,6 +214,13 @@ class Channel:
         return (tx_ctr_start, tx_ctr_done)
 
 
+class PPPPState(Enum):
+    Idle         = 1
+    Connecting   = 2
+    Connected    = 3
+    Disconnected = 4
+
+
 class AnkerPPPPBaseApi(Thread):
 
     def __init__(self, sock, duid, addr=None):
@@ -221,8 +229,7 @@ class AnkerPPPPBaseApi(Thread):
         self.duid = duid
         self.addr = addr
 
-        self.new = True
-        self.rdy = False
+        self.state = PPPPState.Idle
         self.chans = [Channel(n) for n in range(8)]
 
         self.running = True
@@ -248,6 +255,10 @@ class AnkerPPPPBaseApi(Thread):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         addr = ("255.255.255.255", PPPP_LAN_PORT)
         return cls(sock, duid=None, addr=addr)
+
+    def connect_lan_search(self):
+        self.state = PPPPState.Connecting
+        self.send(PktLanSearch())
 
     def set_dumper(self, dumper):
         self.dumper = dumper
@@ -321,12 +332,10 @@ class AnkerPPPPBaseApi(Thread):
 
         elif msg.type == Type.P2P_RDY:
             self.send(PktP2pRdyAck(duid=self.duid, host=self.host))
-
-            self.new = False
-            self.rdy = True
+            self.state = PPPPState.Connected
 
         elif msg.type == Type.PUNCH_PKT:
-            if self.new:
+            if self.state == PPPPState.Connecting:
                 self.send(PktClose())
                 self.send(PktP2pRdy(self.duid))
 

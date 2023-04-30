@@ -8,8 +8,8 @@ from tqdm import tqdm
 import cli.util
 
 from libflagship.pktdump import PacketWriter
-from libflagship.pppp import PktLanSearch, Duid, P2PCmdType
-from libflagship.ppppapi import AnkerPPPPApi, FileTransfer
+from libflagship.pppp import Duid, P2PCmdType, FileTransfer
+from libflagship.ppppapi import AnkerPPPPApi, PPPPState
 
 
 def _pppp_dumpfile(api, dumpfile):
@@ -32,9 +32,9 @@ def pppp_open(config, timeout=None, dumpfile=None):
         log.info("Trying connect over pppp")
         api.start()
 
-        api.send(PktLanSearch())
+        api.connect_lan_search()
 
-        while not api.rdy:
+        while api.state != PPPPState.Connected:
             time.sleep(0.1)
             if api.stopped.is_set() or (timeout and (datetime.now() > deadline)):
                 api.stop()

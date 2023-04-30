@@ -7,7 +7,7 @@ from ..lib.service import Service
 from .. import app
 
 from libflagship.pppp import P2PCmdType, PktLanSearch, PktClose, Duid, Type, Xzyh
-from libflagship.ppppapi import AnkerPPPPAsyncApi
+from libflagship.ppppapi import AnkerPPPPAsyncApi, PPPPState
 
 
 class PPPPService(Service):
@@ -35,9 +35,9 @@ class PPPPService(Service):
 
         log.info("Trying connect over pppp")
 
-        api.send(PktLanSearch())
+        api.connect_lan_search()
 
-        while not api.rdy:
+        while api.state != PPPPState.Connected:
             try:
                 msg = api.recv(timeout=(deadline - datetime.now()).total_seconds())
                 api.process(msg)
@@ -79,3 +79,9 @@ class PPPPService(Service):
     def worker_stop(self):
         self.api.send(PktClose())
         del self.api
+
+    @property
+    def connected(self):
+        if not hasattr(self, "_api"):
+            return False
+        return self._api.state == PPPPState.Connected
