@@ -228,6 +228,51 @@ enum FileTransferReply
     # Printer was not ready to receive
     ERR_BUSY                  = 0xff
 
+enum Result
+    @type: u32
+
+    ERROR_P2P_SUCCESSFUL                         = 0
+    TFCARD_VOLUME_OVERFLOW                       = 0xffffff7c
+    PARAM_NO_CHANGE                              = 0xffffff8c
+    NOT_FACE                                     = 0xffffff8d
+    DEV_BUSY                                     = 0xffffff8e
+    DEV_UPDATEING                                = 0xffffff8f
+    HUB_UPDATEING                                = 0xffffff90
+    OPEN_FILE_FAIL                               = 0xffffff91
+    INVALID_PARAM                                = 0xffffff92
+    DEV_OFFLINE                                  = 0xffffff93
+    WAIT_TIMEOUT                                 = 0xffffff94
+    NVALID_PARAM_LEN                             = 0xffffff95
+    NOT_FIND_DEV                                 = 0xffffff96
+    WRITE_FLASH                                  = 0xffffff97
+    INVALID_ACCOUNT                              = 0xffffff98
+    INVALID_COMMAND                              = 0xffffff99
+    MAX_HUB_CONNECT_NUM                          = 0xffffff9a
+    HAVE_CONNECT                                 = 0xffffff9b
+    NULL_POINT                                   = 0xffffff9c
+    ERROR_P2P_FAIL_TO_CREATE_THREAD              = 0xffffffea
+    ERROR_P2P_INVALID_APILICENSE                 = 0xffffffeb
+    ERROR_P2P_SESSION_CLOSED_INSUFFICIENT_MEMORY = 0xffffffec
+    ERROR_P2P_USER_CONNECT_BREAK                 = 0xffffffed
+    ERROR_P2P_UDP_PORT_BIND_FAILED               = 0xffffffee
+    ERROR_P2P_MAX_SESSION                        = 0xffffffef
+    ERROR_P2P_USER_LISTEN_BREAK                  = 0xfffffff0
+    ERROR_P2P_REMOTE_SITE_BUFFER_FULL            = 0xfffffff1
+    ERROR_P2P_SESSION_CLOSED_CALLED              = 0xfffffff2
+    ERROR_P2P_SESSION_CLOSED_TIMEOUT             = 0xfffffff3
+    ERROR_P2P_SESSION_CLOSED_REMOTE              = 0xfffffff4
+    ERROR_P2P_INVALID_SESSION_HANDLE             = 0xfffffff5
+    ERROR_P2P_NO_RELAY_SERVER_AVAILABLE          = 0xfffffff6
+    ERROR_P2P_ID_OUT_OF_DATE                     = 0xfffffff7
+    ERROR_P2P_INVALID_PREFIX                     = 0xfffffff8
+    ERROR_P2P_FAIL_TO_RESOLVE_NAME               = 0xfffffff9
+    ERROR_P2P_DEVICE_NOT_ONLINE                  = 0xfffffffa
+    ERROR_PPCS_INVALID_PARAMETER                 = 0xfffffffb
+    ERROR_P2P_INVALID_ID                         = 0xfffffffc
+    ERROR_P2P_TIME_OUT                           = 0xfffffffd
+    ERROR_P2P_ALREADY_INITIALIZED                = 0xfffffffe
+    ERROR_P2P_NOT_INITIALIZED                    = 0xffffffff
+
 struct Host
     pad0: zeroes<1>
 

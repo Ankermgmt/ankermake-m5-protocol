@@ -253,6 +253,57 @@ class FileTransferReply(enum.IntEnum):
     def pack(self, typ=u8):
         return typ.pack(self)
 
+class Result(enum.IntEnum):
+    ERROR_P2P_SUCCESSFUL                         = 0x00000000 # unknown
+    TFCARD_VOLUME_OVERFLOW                       = 0xffffff7c # unknown
+    PARAM_NO_CHANGE                              = 0xffffff8c # unknown
+    NOT_FACE                                     = 0xffffff8d # unknown
+    DEV_BUSY                                     = 0xffffff8e # unknown
+    DEV_UPDATEING                                = 0xffffff8f # unknown
+    HUB_UPDATEING                                = 0xffffff90 # unknown
+    OPEN_FILE_FAIL                               = 0xffffff91 # unknown
+    INVALID_PARAM                                = 0xffffff92 # unknown
+    DEV_OFFLINE                                  = 0xffffff93 # unknown
+    WAIT_TIMEOUT                                 = 0xffffff94 # unknown
+    NVALID_PARAM_LEN                             = 0xffffff95 # unknown
+    NOT_FIND_DEV                                 = 0xffffff96 # unknown
+    WRITE_FLASH                                  = 0xffffff97 # unknown
+    INVALID_ACCOUNT                              = 0xffffff98 # unknown
+    INVALID_COMMAND                              = 0xffffff99 # unknown
+    MAX_HUB_CONNECT_NUM                          = 0xffffff9a # unknown
+    HAVE_CONNECT                                 = 0xffffff9b # unknown
+    NULL_POINT                                   = 0xffffff9c # unknown
+    ERROR_P2P_FAIL_TO_CREATE_THREAD              = 0xffffffea # unknown
+    ERROR_P2P_INVALID_APILICENSE                 = 0xffffffeb # unknown
+    ERROR_P2P_SESSION_CLOSED_INSUFFICIENT_MEMORY = 0xffffffec # unknown
+    ERROR_P2P_USER_CONNECT_BREAK                 = 0xffffffed # unknown
+    ERROR_P2P_UDP_PORT_BIND_FAILED               = 0xffffffee # unknown
+    ERROR_P2P_MAX_SESSION                        = 0xffffffef # unknown
+    ERROR_P2P_USER_LISTEN_BREAK                  = 0xfffffff0 # unknown
+    ERROR_P2P_REMOTE_SITE_BUFFER_FULL            = 0xfffffff1 # unknown
+    ERROR_P2P_SESSION_CLOSED_CALLED              = 0xfffffff2 # unknown
+    ERROR_P2P_SESSION_CLOSED_TIMEOUT             = 0xfffffff3 # unknown
+    ERROR_P2P_SESSION_CLOSED_REMOTE              = 0xfffffff4 # unknown
+    ERROR_P2P_INVALID_SESSION_HANDLE             = 0xfffffff5 # unknown
+    ERROR_P2P_NO_RELAY_SERVER_AVAILABLE          = 0xfffffff6 # unknown
+    ERROR_P2P_ID_OUT_OF_DATE                     = 0xfffffff7 # unknown
+    ERROR_P2P_INVALID_PREFIX                     = 0xfffffff8 # unknown
+    ERROR_P2P_FAIL_TO_RESOLVE_NAME               = 0xfffffff9 # unknown
+    ERROR_P2P_DEVICE_NOT_ONLINE                  = 0xfffffffa # unknown
+    ERROR_PPCS_INVALID_PARAMETER                 = 0xfffffffb # unknown
+    ERROR_P2P_INVALID_ID                         = 0xfffffffc # unknown
+    ERROR_P2P_TIME_OUT                           = 0xfffffffd # unknown
+    ERROR_P2P_ALREADY_INITIALIZED                = 0xfffffffe # unknown
+    ERROR_P2P_NOT_INITIALIZED                    = 0xffffffff # unknown
+
+    @classmethod
+    def parse(cls, p, typ=u32):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
+
+    def pack(self, typ=u32):
+        return typ.pack(self)
+
 
 @dataclass
 class Message:
