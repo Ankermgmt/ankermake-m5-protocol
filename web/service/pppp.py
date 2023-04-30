@@ -13,6 +13,8 @@ from libflagship.ppppapi import AnkerPPPPAsyncApi, PPPPState
 class PPPPService(Service):
 
     def api_command(self, commandType, **kwargs):
+        if not hasattr(self, "_api"):
+            raise ConnectionError("No pppp connection")
         cmd = {
             "commandType": commandType,
             **kwargs
