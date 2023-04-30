@@ -22,11 +22,13 @@ class VideoQueue(Service):
         self.pppp.api_command(P2PSubCmdType.CLOSE_LIVE)
 
     def api_light_state(self, light):
+        self.saved_light_state = light
         self.pppp.api_command(P2PSubCmdType.LIGHT_STATE_SWITCH, data={
             "open": light,
         })
 
     def api_video_mode(self, mode):
+        self.saved_video_mode = mode
         self.pppp.api_command(P2PSubCmdType.LIVE_MODE_SET, data={
             "mode": mode
         })
@@ -42,6 +44,10 @@ class VideoQueue(Service):
 
         self.notify(msg)
 
+    def worker_init(self):
+        self.saved_light_state = None
+        self.saved_video_mode = None
+
     def worker_start(self):
         self.pppp = app.svc.get("pppp")
 
@@ -50,6 +56,12 @@ class VideoQueue(Service):
         self.pppp.handlers.append(self._handler)
 
         self.api_start_live()
+
+        if self.saved_light_state is not None:
+            self.api_light_state(self.saved_light_state)
+
+        if self.saved_video_mode is not None:
+            self.api_video_mode(self.saved_video_mode)
 
     def worker_run(self, timeout):
         self.idle(timeout=timeout)
