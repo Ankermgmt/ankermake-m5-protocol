@@ -33,9 +33,8 @@ class RunState(Enum):
 
 class Service(Thread):
 
-    def __init__(self, idle_timeout=10):
+    def __init__(self):
         super().__init__()
-        self.timeout = timedelta(seconds=idle_timeout)
         self.running = True
         self.deadline = None
         self.state = RunState.Stopped
