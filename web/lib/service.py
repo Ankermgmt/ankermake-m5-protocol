@@ -82,6 +82,15 @@ class Service(Thread):
         self.wanted = False
         self._event.set()
 
+    def shutdown(self):
+        if self.state != RunState.Stopped:
+            self.stop()
+            self.await_stopped()
+
+        self.running = False
+        self._event.set()
+        return self.join()
+
     def idle(self, timeout=None):
         if self._event.wait(timeout=timeout):
             self._event.clear()
