@@ -4,7 +4,7 @@ import logging as log
 from queue import Empty
 from multiprocessing import Queue
 
-from ..lib.service import Service
+from ..lib.service import Service, ServiceRestartSignal
 from .. import app
 
 from libflagship.pppp import P2PSubCmdType, Xzyh
@@ -45,15 +45,18 @@ class VideoQueue(Service):
     def worker_start(self):
         self.pppp = app.svc.get("pppp")
 
+        self.api_id = id(self.pppp._api)
+
         self.pppp.handlers.append(self._handler)
 
         self.api_start_live()
 
     def worker_run(self, timeout):
         if not self.pppp.connected:
-            raise ConnectionError("No pppp connection")
+            raise ServiceRestartSignal("No pppp connection")
 
-        self.idle(timeout=timeout)
+        if id(self.pppp._api) != self.api_id:
+            raise ServiceRestartSignal("New pppp connection detected, restarting video feed")
 
     def worker_stop(self):
         self.api_stop_live()
