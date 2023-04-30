@@ -195,6 +195,14 @@ class Service(Thread):
 
             self.idle(timeout=0.1)
 
+    def await_stopped(self):
+        while True:
+            if self.state == RunState.Stopped:
+                log.debug(f"{self.name}: Stopped")
+                return True
+
+            self.idle(timeout=0.1)
+
 
 class ServiceManager:
 
