@@ -69,20 +69,11 @@ def ctrl(sock):
 
 
 @app.get("/video")
-def video2():
+def video_download():
 
     def generate():
-        queue = Queue()
-        app.videoq.add_target(queue)
-        try:
-            while True:
-                try:
-                    data = queue.get()
-                except EOFError:
-                    break
-                yield data
-        finally:
-            app.videoq.del_target(queue)
+        for msg in app.svc.stream("videoqueue"):
+            yield msg.data
 
     return Response(generate(), mimetype='video/mp4')
 
