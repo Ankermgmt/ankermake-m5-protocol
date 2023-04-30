@@ -59,7 +59,11 @@ class VideoQueue(Service):
             raise ServiceRestartSignal("New pppp connection detected, restarting video feed")
 
     def worker_stop(self):
-        self.api_stop_live()
+        try:
+            self.api_stop_live()
+        except ConnectionError:
+            pass
+
         self.pppp.handlers.remove(self._handler)
 
         app.svc.put("pppp")
