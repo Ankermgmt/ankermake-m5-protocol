@@ -17,7 +17,7 @@ class PPPPService(Service):
             "commandType": commandType,
             **kwargs
         }
-        return self.api.send_xzyh(
+        return self._api.send_xzyh(
             json.dumps(cmd).encode(),
             cmd=P2PCmdType.P2P_JSON_CMD
         )
@@ -45,14 +45,14 @@ class PPPPService(Service):
                 raise ConnectionRefusedError("Connection rejected by device")
 
         log.info("Established pppp connection")
-        self.api = api
+        self._api = api
 
     def worker_run(self, timeout):
-        msg = self.api.poll(timeout=timeout)
+        msg = self._api.poll(timeout=timeout)
         if not msg or msg.type != Type.DRW:
             return
 
-        ch = self.api.chans[msg.chan]
+        ch = self._api.chans[msg.chan]
 
         with ch.lock:
             data = ch.peek(16, timeout=0)
@@ -77,8 +77,8 @@ class PPPPService(Service):
                 raise ValueError(f"Unexpected data in stream: {data!r}")
 
     def worker_stop(self):
-        self.api.send(PktClose())
-        del self.api
+        self._api.send(PktClose())
+        del self._api
 
     @property
     def connected(self):
