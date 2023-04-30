@@ -108,7 +108,7 @@ class Service(Thread):
             self.worker_run(timeout=0.3)
         except ServiceRestartSignal:
             log.info(f"{self.name}: Service requested restart.")
-            self._holdoff.reset()
+            self._holdoff.reset(delay=1)
             self.state = RunState.Stopping
         except Exception:
             log.exception(f"{self.name}: Unexpected exception while running worker")
