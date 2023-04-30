@@ -122,6 +122,8 @@ class Service(Thread):
             self.state = RunState.Stopped
 
     def run(self):
+        self.worker_init()
+
         while self.running:
             if self.state == RunState.Starting:
                 if self._holdoff.passed:
@@ -157,6 +159,9 @@ class Service(Thread):
         if self.state == RunState.Running:
             self.worker_stop()
         log.debug(f"{self.name}: Thread exit")
+
+    def worker_init(self):
+        pass
 
     def worker_start(self):
         pass
