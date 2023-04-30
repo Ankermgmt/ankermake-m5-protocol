@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from ..lib.service import Service
 from .. import app
 
-from libflagship.pppp import P2PCmdType, PktLanSearch, PktClose, Duid, Type, Xzyh
+from libflagship.pppp import P2PCmdType, PktClose, Duid, Type, Xzyh, Aabb
 from libflagship.ppppapi import AnkerPPPPAsyncApi, PPPPState
 
 
@@ -47,6 +47,13 @@ class PPPPService(Service):
         log.info("Established pppp connection")
         self._api = api
 
+    def _recv_aabb(self, fd):
+        data = fd.read(12)
+        aabb = Aabb.parse(data)[0]
+        p = data + fd.read(aabb.len + 2)
+        aabb, data = Aabb.parse_with_crc(p)[:2]
+        return aabb, data
+
     def worker_run(self, timeout):
         msg = self._api.poll(timeout=timeout)
         if not msg or msg.type != Type.DRW:
@@ -72,7 +79,12 @@ class PPPPService(Service):
                 xzyh.data = data[16:]
                 self.notify((msg.chan, xzyh))
             elif data[:2] == b'\xAA\xBB':
-                ...
+                aabb, data = self._recv_aabb(ch)
+                if len(data) != 1:
+                    raise ValueError(f"Unexpected reply from aabb request: {data}")
+
+                aabb.data = data
+                self.notify((msg.chan, aabb))
             else:
                 raise ValueError(f"Unexpected data in stream: {data!r}")
 
