@@ -278,7 +278,7 @@ class AnkerPPPPBaseApi(Thread):
                 self.process(msg)
             except TimeoutError:
                 pass
-            except StopIteration:
+            except ConnectionResetError:
                 break
 
             for idx, ch in enumerate(self.chans):
@@ -297,7 +297,7 @@ class AnkerPPPPBaseApi(Thread):
 
         if msg.type == Type.CLOSE:
             log.error("CLOSE")
-            raise StopIteration
+            raise ConnectionResetError
 
         elif msg.type == Type.REPORT_SESSION_READY:
             pkt = PktSessionReady(
@@ -438,7 +438,7 @@ class AnkerPPPPAsyncApi(AnkerPPPPBaseApi):
             self.process(msg)
         except TimeoutError:
             pass
-        except StopIteration:
+        except ConnectionResetError:
             raise ConnectionRefusedError("Connection rejected by device")
 
         for idx, ch in enumerate(self.chans):
