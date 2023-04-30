@@ -3,7 +3,7 @@ import logging as log
 
 from datetime import datetime, timedelta
 
-from ..lib.service import Service
+from ..lib.service import Service, ServiceRestartSignal
 from .. import app
 
 from libflagship.pppp import P2PCmdType, PktClose, Duid, Type, Xzyh, Aabb
@@ -55,7 +55,11 @@ class PPPPService(Service):
         return aabb, data
 
     def worker_run(self, timeout):
-        msg = self._api.poll(timeout=timeout)
+        try:
+            msg = self._api.poll(timeout=timeout)
+        except ConnectionResetError:
+            raise ServiceRestartSignal()
+
         if not msg or msg.type != Type.DRW:
             return
 
