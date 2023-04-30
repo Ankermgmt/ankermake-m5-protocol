@@ -291,10 +291,7 @@ class ServiceManager:
         with self.borrow(name) as svc:
             queue = Queue()
 
-            def handler(data):
-                queue.put(data)
-
-            with svc.tap(handler):
+            with svc.tap(lambda data: queue.put(data)):
                 while True:
                     try:
                         yield queue.get()
