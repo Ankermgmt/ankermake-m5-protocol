@@ -47,8 +47,8 @@ def mqtt(sock):
 @sock.route("/ws/video")
 def video(sock):
 
-    for data in app.svc.stream("videoqueue"):
-        sock.send(data)
+    for msg in app.svc.stream("videoqueue"):
+        sock.send(msg.data)
 
 
 @sock.route("/ws/ctrl")

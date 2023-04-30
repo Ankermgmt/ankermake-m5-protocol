@@ -32,27 +32,7 @@ class VideoQueue(Service):
             "mode": mode
         })
 
-    def worker_start(self):
-        self.pppp = app.svc.get("pppp")
-        self._tap = Queue()
-
-        def handler(data):
-            self._tap.put(data)
-
-        self._handler = handler
-        self.pppp.handlers.append(handler)
-
-        self.api_start_live()
-
-    def worker_run(self, timeout):
-        try:
-            data = self._tap.get(timeout=timeout)
-        except (Empty, OSError):
-            return
-
-        if not data:
-            return
-
+    def _handler(self, data):
         chan, msg = data
 
         if chan != 1:
@@ -62,12 +42,23 @@ class VideoQueue(Service):
             return
 
         log.debug(f"Video data packet: {enhex(msg.data):32}...")
-        self.notify(msg.data)
+        self.notify(msg)
+
+    def worker_start(self):
+        self.pppp = app.svc.get("pppp")
+
+        self.pppp.handlers.append(self._handler)
+
+        self.api_start_live()
+
+    def worker_run(self, timeout):
+        if not self.pppp.connected:
+            raise ConnectionError("No pppp connection")
+
+        self.idle(timeout=timeout)
 
     def worker_stop(self):
         self.api_stop_live()
         self.pppp.handlers.remove(self._handler)
-        del self._handler
-        del self._tap
 
         app.svc.put("pppp")
