@@ -32,7 +32,7 @@ class Environment:
     def __init__(self):
         pass
 
-    def require_config(self, required=True):
+    def load_config(self, required=True):
         with self.config.open() as config:
             if not getattr(config, 'printers', False):
                 if not required:
@@ -89,7 +89,7 @@ def main(ctx, pppp_dump, verbose, quiet, insecure):
 @main.group("mqtt", help="Low-level mqtt api access")
 @pass_env
 def mqtt(env):
-    env.require_config()
+    env.load_config()
 
 
 @mqtt.command("monitor")
@@ -236,7 +236,7 @@ def pppp_print_file(env, file, no_act):
     executing the print job. NOTE: the printer only ever stores ONE uploaded
     file, so anytime a file is uploaded, the old one is deleted.
     """
-    env.require_config()
+    env.load_config()
     api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
 
     data = file.read()
@@ -269,7 +269,7 @@ def pppp_capture_video(env, file, max_size):
     The output is in h264 ES (Elementary Stream) format. It can be played with
     "ffplay" from the ffmpeg program suite.
     """
-    env.require_config()
+    env.load_config()
     api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
 
     cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
@@ -455,7 +455,7 @@ def config_show(env):
 @main.group("webserver", help="Built-in webserver support")
 @pass_env
 def webserver(env):
-    env.require_config(False)
+    env.load_config(False)
 
 
 @webserver.command("run", help="Run ankerctl webserver")

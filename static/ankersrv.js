@@ -33,8 +33,12 @@ $(function () {
         console.log('Socket Error');
     });
 
-
     var wsctrl = new WebSocket("ws://" + location.host + "/ws/ctrl");
+    wsctrl.addEventListener("open", (event) => {
+        // Set initial state of Light & Quality (Defaults to Off:Low)
+        wsctrl.send(JSON.stringify({"light": false}));
+        wsctrl.send(JSON.stringify({"quality": 0}));
+    });
 
     $('#light-on').on('click', function() {
         wsctrl.send(JSON.stringify({"light": true}));
@@ -53,6 +57,16 @@ $(function () {
 
     $('#quality-high').on('click', function() {
         wsctrl.send(JSON.stringify({"quality": 1}));
+        return false;
+    });
+    
+    $('#configData').on('click',function(){
+        navigator.clipboard.writeText($('#octoPrintHost').val());
+        return false;
+    });
+
+    $('#copyFilePath').on('click',function(){
+        navigator.clipboard.writeText($('#loginFilePath').val());
         return false;
     });
 
