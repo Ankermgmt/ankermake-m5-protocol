@@ -1,0 +1,21 @@
+.nav-link {
+    color: #88f387!important;
+}
+
+.nav-link.active, .btn-primary {
+    color: #000000!important;
+    background-color: #88f387!important;
+    border:#41a03f!important;
+}
+
+.nav-link:hover, .btn:hover {
+    color: #000000!important;
+    background-color: #adf3ac;
+    border-color: #41a03f; /*set the color you want here*/
+}
+
+pre, code {
+    color: #88f387;
+    background-color: #292929
+}
+
