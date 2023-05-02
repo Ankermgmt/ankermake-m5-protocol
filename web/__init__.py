@@ -1,34 +1,25 @@
-import os
-import re
 import json
 import tempfile
 import logging as log
 
 from secrets import token_urlsafe as token
-
-from flask import Flask, flash, request, redirect, url_for, render_template, Response, session
+from flask import Flask, request, render_template, Response, session, url_for
 from flask_sock import Sock
-from werkzeug.utils import secure_filename
-
-import libflagship.httpapi
-import libflagship.logincache
-
-from libflagship.pppp import P2PSubCmdType, FileTransfer
-from libflagship.ppppapi import FileUploadInfo, PPPPError
-
+from user_agents import parse as user_agent_parse
 
 from web.lib.service import ServiceManager
 
-from user_agents import parse
+import web.config
+import web.platform
+import web.util
+
+import web.service.pppp
+import web.service.video
+import web.service.mqtt
+import web.service.filetransfer
 
 import cli.util
 import cli.config
-
-
-def dict_match(dict, match):
-    for key in dict:
-        if re.match(rf"^{key}.*", match):
-            return key
 
 
 app = Flask(
@@ -37,6 +28,7 @@ app = Flask(
     static_folder="static",
     template_folder="static"
 )
+# secret_key is required for flash() to function
 app.secret_key = token(24)
 app.config.from_prefixed_env()
 app.svc = ServiceManager()
@@ -54,53 +46,64 @@ import web.service.filetransfer
 
 @app.before_first_request
 def startup():
-    if app.config["login"]:
-        app.svc.register("pppp", web.service.pppp.PPPPService())
-        app.svc.register("videoqueue", web.service.video.VideoQueue())
-        app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
-        app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
+    app.svc.register("pppp", web.service.pppp.PPPPService())
+    app.svc.register("videoqueue", web.service.video.VideoQueue())
+    app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
+    app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
+
+
+def shutdown():
+    app.svc.unregister("pppp")
+    app.svc.unregister("videoqueue")
+    app.svc.unregister("mqttqueue")
+    app.svc.unregister("filetransfer")
+    
+    
+def restart():
+    shutdown()
+    startup()
 
 
 @sock.route("/ws/mqtt")
 def mqtt(sock):
-
-    if app.config["login"]:
-        for data in app.svc.stream("mqttqueue"):
-            log.debug(f"MQTT message: {data}")
-            sock.send(json.dumps(data))
+    if not app.config["login"]:
+        return
+    for data in app.svc.stream("mqttqueue"):
+        log.debug(f"MQTT message: {data}")
+        sock.send(json.dumps(data))
 
 
 @sock.route("/ws/video")
 def video(sock):
-
-    if app.config["login"]:
-        for msg in app.svc.stream("videoqueue"):
-            sock.send(msg.data)
+    if not app.config["login"]:
+        return
+    for msg in app.svc.stream("videoqueue"):
+        sock.send(msg.data)
 
 
 @sock.route("/ws/ctrl")
 def ctrl(sock):
+    if not app.config["login"]:
+        return
+    while True:
+        msg = json.loads(sock.receive())
 
-    if app.config["login"]:
-        while True:
-            msg = json.loads(sock.receive())
+        if "light" in msg:
+            with app.svc.borrow("videoqueue") as vq:
+                vq.api_light_state(msg["light"])
 
-            if "light" in msg:
-                with app.svc.borrow("videoqueue") as vq:
-                    vq.api_light_state(msg["light"])
-
-            if "quality" in msg:
-                with app.svc.borrow("videoqueue") as vq:
-                    vq.api_video_mode(msg["quality"])
+        if "quality" in msg:
+            with app.svc.borrow("videoqueue") as vq:
+                vq.api_video_mode(msg["quality"])
 
 
 @app.get("/video")
 def video_download():
-
     def generate():
-        if app.config["login"]:
-            for msg in app.svc.stream("videoqueue"):
-                yield msg.data
+        if not app.config["login"]:
+            return
+        for msg in app.svc.stream("videoqueue"):
+            yield msg.data
 
     return Response(generate(), mimetype='video/mp4')
 
@@ -108,24 +111,22 @@ def video_download():
 @app.get("/")
 def app_root():
     config = app.config["config"]
-    user_agent = parse(request.headers.get('User-Agent'))
-    login_path = {
-        'Mac OS': '~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json',
-        'Windows': r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json',
-        'None': 'Unsupported OS, supply path to login.json',
-    }
-    useros = dict_match(login_path, user_agent.os.family)
+    with config.open() as cfg:
+        user_agent = user_agent_parse(request.headers.get('User-Agent'))
 
-    host = request.host.split(':')
-    requestPort = host[1] if len(host) > 1 else '80' # If there is no 2nd array entry, the request port is 80
-    return render_template(
-        "index.html",
-        requestPort=requestPort,
-        requestHost=host[0],
-        configure=app.config["login"],
-        loginFilePath=login_path[useros] if useros in login_path else login_path["None"],
-        ankerConfig=str(config_show()) if app.config["login"] else '<p>No printers found, please load your login config...</p>',
-    )
+        host = request.host.split(':')
+        request_port = host[1] if len(host) > 1 else '80' # If there is no 2nd array entry, the request port is 80
+        no_config = '<p>No printers found, please load your login config...</p>'
+        anker_config = str(web.config.config_show(cfg)) if app.config["login"] else no_config
+
+        return render_template(
+            "index.html",
+            request_port=request_port,
+            request_host=host[0],
+            configure=app.config["login"],
+            login_file_path=web.platform.login_path(web.platform.os_platform(user_agent.os.family)),
+            anker_config=anker_config
+        )
 
 
 @app.get("/api/version")
@@ -137,84 +138,19 @@ def app_api_version():
     }
 
 
-def allowed_file(filename, ALLOWED_EXTENSIONS):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def config_show():
-    config = app.config["config"]
-    with config.open() as cfg:
-        config_output = f'''<p>Account:</p><p>
-            user_id:    {cfg.account.user_id[:10]}...[REDACTED] <br/>
-            auth_token: {cfg.account.auth_token[:10]}...[REDACTED] <br/>
-            email:      {cfg.account.email} <br/>
-            region:     {cfg.account.region.upper()} </p
-        '''
-        config_output += '<p>Printers:</p><hr/>'
-        for p in cfg.printers:
-            config_output += f'''<p>
-                duid:      {p.p2p_duid} <br/>
-                sn:        {p.sn} <br/>
-                ip:        {p.ip_addr} <br/>
-                wifi_mac:  {cli.util.pretty_mac(p.wifi_mac)} <br/>
-                api_hosts: {', '.join(p.api_hosts)} <br/>
-                p2p_hosts: {', '.join(p.p2p_hosts)} <hr/></p>
-            '''
-        return config_output
-
-
-def config_import(loginFile):
-    file = open(loginFile, 'r')
-    config = app.config["config"]
-
-    # extract auth token
-    cache = libflagship.logincache.load(file.read())["data"]
-    auth_token = cache["auth_token"]
-
-    # extract account region
-    region = libflagship.logincache.guess_region(cache["ab_code"])
-
-    try:
-        newConfig = cli.config.load_config_from_api(auth_token, region, False)
-    except libflagship.httpapi.APIError as E:
-        flash(f"Config import failed: {E} (auth token might be expired: make sure Ankermake Slicer can connect, then try again", 'danger')
-        return redirect('/')
-    except Exception as E:
-        flash(f"Config import failed: {E}", 'danger')
-        return redirect('/')
-
-    try:
-        config.save("default", newConfig)
-    except Exception as E:
-        flash(f"Config import failed: {E}", 'danger')
-        return redirect('/')
-    flash("Configuration imported! Restarting...", 'success')
-    return redirect('/')
-
-
-@app.post('/api/config/upload')
-def app_api_config_upload():
-    ALLOWED_EXTENSIONS = set(['json'])
+@app.post('/api/ankerctl/config/upload')
+def app_api_ankerctl_config_upload():
     with tempfile.TemporaryDirectory(prefix='ankerctl_') as tmpdir:
-        config = app.config["config"]
-
-        if request.method == 'POST':
-            if 'loginFile' not in request.files:
-                flash('No file found', 'danger')
-                return redirect('/')
-            file = request.files['loginFile']
-            if file.filename == '':
-                flash('No file selected', 'danger')
-                return redirect('/')
-            if file and allowed_file(file.filename, ALLOWED_EXTENSIONS):
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(tmpdir, filename)
-                file.save(filepath)
-                config_import(filepath)
-                return redirect('/reload')
-            elif file and not allowed_file(file.filename, ALLOWED_EXTENSIONS):
-                flash(f'File must be of type: {str(ALLOWED_EXTENSIONS)}', 'warning')
-                return redirect('/')
+        if request.method != 'POST':
+            return web.util.flash_redirect()
+        if 'login_file' not in request.files:
+            return web.util.flash_redirect('No file found', 'danger')
+        file = request.files['login_file']
+        if file.filename == '':
+            return web.util.flash_redirect('No file uploaded', 'danger')
+        else:
+            web.config.config_import(file, app.config['config'])
+            return web.util.flash_redirect(path = '/reload')
 
 
 @app.post("/api/files/local")
@@ -238,13 +174,12 @@ def app_api_files_local():
 def reload_webserver():
     config = app.config["config"]
     with config.open() as cfg:
-        app.config["config"] = config
-        app.config["login"] = True if cfg else False
-        if cfg:
-            session['_flashes'].clear()
-            flash('Configuration loaded', 'success')
-            startup()
-            return redirect('/')
+        if not getattr(cfg, 'printers', False):
+            return web.util.flash_redirect('No printers found in config', 'warning')
+        app.config["login"] = True
+        session['_flashes'].clear()
+        restart()
+        return web.util.flash_redirect('Configuration Loaded', 'success')
 
 
 def webserver(config, host, port, **kwargs):
