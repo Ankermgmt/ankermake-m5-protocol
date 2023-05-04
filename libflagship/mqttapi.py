@@ -6,7 +6,6 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
-from libflagship.util import enhex
 from libflagship.mqtt import MqttMsg, MqttPktType
 
 
