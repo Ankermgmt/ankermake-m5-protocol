@@ -30,7 +30,6 @@ app.svc = ServiceManager()
 
 sock = Sock(app)
 
-<<<<<<< HEAD
 
 # autopep8: off
 import web.service.pppp
@@ -38,12 +37,6 @@ import web.service.video
 import web.service.mqtt
 import web.service.filetransfer
 # autopep8: on
-=======
-import web.service.pppp  # nopep8
-import web.service.video  # nopep8
-import web.service.mqtt  # nopep8
-import web.service.filetransfer  # nopep8
->>>>>>> 4c82ae5 (Updating front-end)
 
 
 @app.before_first_request
