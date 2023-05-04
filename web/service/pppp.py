@@ -4,6 +4,7 @@ import logging as log
 from datetime import datetime, timedelta
 
 from ..lib.service import Service, ServiceRestartSignal
+from .. import app
 
 from libflagship.pppp import P2PCmdType, PktClose, Duid, Type, Xzyh, Aabb
 from libflagship.ppppapi import AnkerPPPPAsyncApi, PPPPState
@@ -25,7 +26,6 @@ class PPPPService(Service):
         )
 
     def worker_start(self):
-        from web import app
         config = app.config["config"]
 
         deadline = datetime.now() + timedelta(seconds=2)
