@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
-sys.path.append("..")
+import sys             # nopep8
+sys.path.append("..")  # nopep8
 
 import libflagship.pppp as pppp
 
