@@ -24,10 +24,12 @@ app.svc = ServiceManager()
 sock = Sock(app)
 
 
+# autopep8: off
 import web.service.pppp
 import web.service.video
 import web.service.mqtt
 import web.service.filetransfer
+# autopep8: on
 
 
 @app.before_first_request
