@@ -38,16 +38,12 @@ def config_import(login_file, config):
     try:
         newConfig = cli.config.load_config_from_api(auth_token, region, False)
     except libflagship.httpapi.APIError as E:
-        message = f"Config import failed: {E} <br/> Auth token might be expired: make sure Ankermake Slicer can connect, then try again"
-        return web.util.flash_redirect(message, 'danger')
+        raise f"Config import failed: {E} <br/> Auth token might be expired: make sure Ankermake Slicer can connect, then try again"
     except Exception as E:
-        message = f"Config import failed: {E}"
-        return web.util.flash_redirect(message, 'danger')
+        raise f"Config import failed: {E}"
 
     try:
         config.save("default", newConfig)
     except Exception as E:
-        message = f"Config import failed: {E}"
-        return web.util.flash_redirect(message, 'danger')
-    message = "AnkerMake Login Configuration imported successfully! Reloading..."
-    return web.util.flash_redirect(message, 'success')
+        raise f"Config import failed: {E}"
+    return "AnkerMake Login Configuration imported successfully"

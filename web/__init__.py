@@ -13,11 +13,6 @@ import web.config
 import web.platform
 import web.util
 
-import web.service.pppp
-import web.service.video
-import web.service.mqtt
-import web.service.filetransfer
-
 import cli.util
 import cli.config
 
@@ -35,6 +30,7 @@ app.svc = ServiceManager()
 
 sock = Sock(app)
 
+<<<<<<< HEAD
 
 # autopep8: off
 import web.service.pppp
@@ -42,6 +38,12 @@ import web.service.video
 import web.service.mqtt
 import web.service.filetransfer
 # autopep8: on
+=======
+import web.service.pppp  # nopep8
+import web.service.video  # nopep8
+import web.service.mqtt  # nopep8
+import web.service.filetransfer  # nopep8
+>>>>>>> 4c82ae5 (Updating front-end)
 
 
 @app.before_first_request
@@ -49,7 +51,8 @@ def startup():
     app.svc.register("pppp", web.service.pppp.PPPPService())
     app.svc.register("videoqueue", web.service.video.VideoQueue())
     app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
-    app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
+    app.svc.register(
+        "filetransfer", web.service.filetransfer.FileTransferService())
 
 
 def shutdown():
@@ -57,8 +60,8 @@ def shutdown():
     app.svc.unregister("videoqueue")
     app.svc.unregister("mqttqueue")
     app.svc.unregister("filetransfer")
-    
-    
+
+
 def restart():
     shutdown()
     startup()
@@ -115,16 +118,19 @@ def app_root():
         user_agent = user_agent_parse(request.headers.get('User-Agent'))
 
         host = request.host.split(':')
-        request_port = host[1] if len(host) > 1 else '80' # If there is no 2nd array entry, the request port is 80
+        # If there is no 2nd array entry, the request port is 80
+        request_port = host[1] if len(host) > 1 else '80'
         no_config = '<p>No printers found, please load your login config...</p>'
-        anker_config = str(web.config.config_show(cfg)) if app.config["login"] else no_config
+        anker_config = str(web.config.config_show(
+            cfg)) if app.config["login"] else no_config
 
         return render_template(
             "index.html",
             request_port=request_port,
             request_host=host[0],
             configure=app.config["login"],
-            login_file_path=web.platform.login_path(web.platform.os_platform(user_agent.os.family)),
+            login_file_path=web.platform.login_path(
+                web.platform.os_platform(user_agent.os.family)),
             anker_config=anker_config
         )
 
@@ -138,19 +144,18 @@ def app_api_version():
     }
 
 
-@app.post('/api/ankerctl/config/upload')
-def app_api_ankerctl_config_upload():
-    with tempfile.TemporaryDirectory(prefix='ankerctl_') as tmpdir:
-        if request.method != 'POST':
-            return web.util.flash_redirect()
-        if 'login_file' not in request.files:
-            return web.util.flash_redirect('No file found', 'danger')
-        file = request.files['login_file']
-        if file.filename == '':
-            return web.util.flash_redirect('No file uploaded', 'danger')
-        else:
-            web.config.config_import(file, app.config['config'])
-            return web.util.flash_redirect(path = '/reload')
+@app.post('/api/web/config/upload')
+def app_api_web_config_upload():
+    if request.method != 'POST':
+        return web.util.flash_redirect()
+    if 'login_file' not in request.files:
+        return web.util.flash_redirect('No file found', 'danger')
+    file = request.files['login_file']
+    try:
+        response = web.config.config_import(file, app.config['config'])
+        web.util.flash_redirect(response, path='/reload')
+    except Exception as e:
+        web.util.flash_redirect(e, 'danger')
 
 
 @app.post("/api/files/local")
