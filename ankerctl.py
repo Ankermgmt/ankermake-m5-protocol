@@ -35,10 +35,9 @@ class Environment:
     def load_config(self, required=True):
         with self.config.open() as config:
             if not getattr(config, 'printers', False):
-                if not required:
-                    log.info("No printers found in config. Please upload configuration using web browser")
-                else:
-                    log.critical("No printers found in config. Please import configuration using 'config import'")
+                log.warning("No printers found in config. Please upload configuration using the webserver or 'ankerctl.py config import'")
+                if required:
+                    exit(1)
 
     def upgrade_config_if_needed(self):
         try:

@@ -1,21 +1,41 @@
-.nav-link {
-    color: #88f387!important;
+.nav-link,
+.btn-link {
+    color: #88f387;
+    text-decoration: none;
 }
 
-.nav-link.active, .btn-primary {
-    color: #000000!important;
-    background-color: #88f387!important;
-    border:#41a03f!important;
+.nav-link.active,
+.btn-primary {
+    color: #000000 !important;
+    background-color: #88f387 !important;
+    border: #41a03f;
 }
 
-.nav-link:hover, .btn:hover {
-    color: #000000!important;
+.nav-link:hover,
+.btn:hover {
+    color: #000000;
     background-color: #adf3ac;
     border-color: #41a03f; /*set the color you want here*/
 }
 
-pre, code {
-    color: #88f387;
-    background-color: #292929
+a.text-light {
+    text-decoration: none;
 }
 
+a.text-light:hover {
+    color: #88f387 !important;
+}
+
+pre,
+code {
+    color: #88f387;
+    background-color: #292929;
+}
+
+.form-label {
+    font-weight: bolder;
+}
+
+code#loginFilePath {
+    font-weight: lighter;
+}
