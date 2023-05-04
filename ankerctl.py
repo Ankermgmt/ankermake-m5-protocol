@@ -406,7 +406,8 @@ def config_import(env, fd):
     try:
         config = cli.config.load_config_from_api(auth_token, region, env.insecure)
     except libflagship.httpapi.APIError as E:
-        log.critical(f"Config import failed: {E} (auth token might be expired: make sure Ankermake Slicer can connect, then try again")
+        log.critical(f"Config import failed: {E} "
+                     "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
     except Exception as E:
         log.critical(f"Config import failed: {E}")
 
@@ -456,11 +457,13 @@ def webserver(env):
 app = Flask(__name__, template_folder='./static')
 # app.config['TEMPLATES_AUTO_RELOAD'] = True
 
+
 @app.get("/")
 def app_root():
     host = request.host.split(':')
     requestPort = host[1] if len(host) > 1 else '80' # If there is no 2nd array entry, the request port is 80
-    return render_template("index.html", requestPort = requestPort, requestHost = host[0])
+    return render_template("index.html", requestPort=requestPort, requestHost=host[0])
+
 
 @app.get("/api/version")
 def app_api_version():

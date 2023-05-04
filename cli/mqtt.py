@@ -1,4 +1,3 @@
-import json
 import click
 import logging as log
 
@@ -10,6 +9,7 @@ servertable = {
     "eu": "make-mqtt-eu.ankermake.com",
     "us": "make-mqtt.ankermake.com",
 }
+
 
 def mqtt_open(env):
     with env.config.open() as cfg:
@@ -27,6 +27,7 @@ def mqtt_open(env):
         )
         client.connect(server)
         return client
+
 
 def mqtt_command(client, msg):
     client.command(msg)
