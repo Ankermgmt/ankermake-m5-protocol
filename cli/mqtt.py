@@ -11,6 +11,7 @@ servertable = {
     "us": "make-mqtt.ankermake.com",
 }
 
+
 def mqtt_open(env):
     with env.config.open() as cfg:
         printer = cfg.printers[0]
@@ -27,6 +28,7 @@ def mqtt_open(env):
         )
         client.connect(server)
         return client
+
 
 def mqtt_command(client, msg):
     client.command(msg)

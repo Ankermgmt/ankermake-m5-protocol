@@ -3,6 +3,7 @@ import json
 from dataclasses import dataclass
 from libflagship.util import unhex, enhex
 
+
 class Serialize:
 
     @classmethod
@@ -29,6 +30,7 @@ class Serialize:
     def to_json(self):
         return json.dumps(self.to_dict())
 
+
 @dataclass
 class Printer(Serialize):
     sn: str
@@ -39,6 +41,7 @@ class Printer(Serialize):
     p2p_hosts: str
     p2p_duid: str
     p2p_key: str
+
 
 @dataclass
 class Account(Serialize):
@@ -54,6 +57,7 @@ class Account(Serialize):
     @property
     def mqtt_password(self):
         return self.email
+
 
 @dataclass
 class Config(Serialize):
