@@ -4,13 +4,15 @@ import hashlib
 import random
 from libflagship.util import enhex
 
-## old v1 "check code"
+
+# old v1 "check code"
 
 def calc_check_code(sn, mac):
     input = f"{sn}+{sn[-4:]}+{mac}"
     return hashlib.md5(input.encode()).hexdigest()
 
-## new v2 "security code"
+
+# new v2 "security code"
 
 def cal_hw_id_suffix(val):
     return sum((

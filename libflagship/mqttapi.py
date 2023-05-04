@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsg, MqttPktType
 
+
 class AnkerMQTTBaseClient:
 
     def __init__(self, printersn, mqtt, key, guid=None):
@@ -42,11 +43,9 @@ class AnkerMQTTBaseClient:
     def on_connect(self, client, userdata, flags):
         log.info("Connected to mqtt")
 
-
     # public api: override in subclass (if needed)
     def on_publish(self, client, userdata, result):
         pass
-
 
     # internal function
     def _on_message(self, client, userdata, msg):
@@ -66,7 +65,6 @@ class AnkerMQTTBaseClient:
     # public api: override in subclass (if needed)
     def on_message(self, client, userdata, msg, pkt, tail):
         pass
-
 
     @classmethod
     def login(cls, printersn, username, password, key, ca_certs="ankermake-mqtt.crt", verify=True):
