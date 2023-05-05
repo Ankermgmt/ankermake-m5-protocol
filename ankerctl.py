@@ -35,7 +35,8 @@ class Environment:
     def load_config(self, required=True):
         with self.config.open() as config:
             if not getattr(config, 'printers', False):
-                msg = "No printers found in config. Please upload configuration using the webserver or 'ankerctl.py config import'"
+                msg = "No printers found in config. Please upload configuration \
+                    using the webserver or 'ankerctl.py config import'"
                 if required:
                     log.critical(msg)
                 else:
@@ -57,7 +58,8 @@ pass_env = click.make_pass_decorator(Environment)
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
-@click.option("--pppp-dump", required=False, metavar="<file.log>", type=click.Path(), help="Enable logging of PPPP data to <file.log>")
+@click.option("--pppp-dump", required=False, metavar="<file.log>", type=click.Path(),
+              help="Enable logging of PPPP data to <file.log>")
 @click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
 @click.option("--verbose", "-v", count=True, help="Increase verbosity")
 @click.option("--quiet", "-q", count=True, help="Decrease verbosity")
@@ -115,7 +117,7 @@ def mqtt_monitor(env):
 
                 del obj["commandType"]
                 print(f"  [{cmdtype:4}] {name:20} {obj}")
-            except:
+            except Exception:
                 print(f"  {obj}")
 
 
@@ -203,7 +205,8 @@ def mqtt_gcode(env):
 
 
 @main.group("pppp", help="Low-level pppp api access")
-def pppp(): pass
+def pppp():
+    pass
 
 
 @pppp.command("lan-search")
@@ -261,7 +264,8 @@ def pppp_print_file(env, file, no_act):
 
 @pppp.command("capture-video")
 @click.argument("file", required=True, type=click.File("wb"), metavar="<output.h264>")
-@click.option("--max-size", "-m", required=True, type=cli.util.FileSizeType(), help="Stop capture at this size (kb, mb, gb, etc)")
+@click.option("--max-size", "-m", required=True, type=cli.util.FileSizeType(),
+              help="Stop capture at this size (kb, mb, gb, etc)")
 @pass_env
 def pppp_capture_video(env, file, max_size):
     """
@@ -294,7 +298,8 @@ def pppp_capture_video(env, file, max_size):
 
 
 @main.group("http", help="Low-level http api access")
-def http(): pass
+def http():
+    pass
 
 
 @http.command("calc-check-code")
@@ -331,7 +336,8 @@ def http_calc_sec_code(duid, mac):
 
 
 @main.group("config", help="View and update configuration")
-def config(): pass
+def config():
+    pass
 
 
 @config.command("decode")
