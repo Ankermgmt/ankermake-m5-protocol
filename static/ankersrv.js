@@ -83,6 +83,36 @@ $(function () {
      */
     var wsctrl = new WebSocket("ws://" + location.host + "/ws/ctrl");
 
+    const state = {
+        video: true,
+        light: false,
+        quality: false,
+    };
+
+    $("#video_control").on("click", () => {
+        console.debug(`Video Clicked while ${state["video"]}`);
+        const icon = document.getElementById("video_icon");
+        icon.classList.toggle("bi-pause-fill");
+        icon.classList.toggle("bi-play-fill");
+        state["video"] = !state["video"];
+    });
+
+    $("#light_control").on("click", () => {
+        console.debug(`Light Clicked while ${state["light"]}`);
+        const icon = document.getElementById("light_icon");
+        icon.classList.toggle("bi-lightbulb-off");
+        icon.classList.toggle("bi-lightbulb-fill");
+        state["light"] = !state["light"];
+    });
+
+    $("#quality_control").on("click", () => {
+        console.debug(`Quality Clicked while ${state["quality"]}`);
+        const icon = document.getElementById("quality_icon");
+        icon.classList.toggle("bi-badge-sd-fill");
+        icon.classList.toggle("bi-badge-hd-fill");
+        state["quality"] = !state["quality"];
+    });
+
     /**
      * On click of element with id "light-on", sends JSON data to wsctrl to turn light on
      */
