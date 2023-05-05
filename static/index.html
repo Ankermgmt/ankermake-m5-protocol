@@ -4,8 +4,14 @@
         <meta charset="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <title>ankerctl</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/css/bootstrap.min.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons-1.10.5/font/bootstrap-icons.min.css') }}" />
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/css/bootstrap.min.css') }}"
+        />
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='vendor/bootstrap-icons-1.10.5/font/bootstrap-icons.min.css') }}"
+        />
         <link rel="stylesheet" href="{{ url_for('static', filename='ankersrv.css') }}" />
     </head>
     <body>
@@ -66,15 +72,29 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
             <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
             {% if messages %} {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show d-flex align-items-center" data-timeout="7500" role="alert">
-                <button type="button" class="btn-close btn-sm btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div
+                class="alert alert-{{ category }} alert-dismissible fade show d-flex align-items-center"
+                data-timeout="7500"
+                role="alert"
+            >
+                <button
+                    type="button"
+                    class="btn-close btn-sm btn-close-white"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
                 {{ message }}
             </div>
             {% endfor %} {% endif %} {% endwith %}
         </div>
         <div class="tab-content my-3" id="ankerctlContent">
             {% if configure %}
-            <div class="tab-pane fade{% if configure %} show active{% endif %}" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div
+                class="tab-pane fade{% if configure %} show active{% endif %}"
+                id="home"
+                role="tabpanel"
+                aria-labelledby="home-tab"
+            >
                 <div class="container">
                     <div class="row text-body-emphasis display-3">
                         <div class="col-lg-8 px-3 rounded-3">
@@ -110,8 +130,12 @@
                             <ol class="list-group list-group-numbered">
                                 <li class="list-group-item">Go to "Printer settings" tab</li>
                                 <li class="list-group-item">Click "Gear"⚙️ (Add/Edit Physical Printer)</li>
-                                <li class="list-group-item">Fill in "Descriptive name for the printer" with whatever you like</li>
-                                <li class="list-group-item">Select your Ankermake printer instructions from the dropdown menu</li>
+                                <li class="list-group-item">
+                                    Fill in "Descriptive name for the printer" with whatever you like
+                                </li>
+                                <li class="list-group-item">
+                                    Select your Ankermake printer instructions from the dropdown menu
+                                </li>
                                 <li class="list-group-item">Under "Host Type" select "OctoPrint"</li>
                                 <li class="list-group-item">
                                     In "Hostname, IP or URL" fill in with:
@@ -130,11 +154,17 @@
                                 <li class="list-group-item">Click "Test" to validate input</li>
                                 <li class="list-group-item">Click "Ok" to close the window</li>
                                 <li class="list-group-item">Slice your file as normal</li>
-                                <li class="list-group-item">Click "G&#x3E;" button to start direct upload to the printer</li>
-                                <li class="list-group-item">Click "Upload and print" - the "Upload"-only is not supported</li>
+                                <li class="list-group-item">
+                                    Click "G&#x3E;" button to start direct upload to the printer
+                                </li>
+                                <li class="list-group-item">
+                                    Click "Upload and print" - the "Upload"-only is not supported
+                                </li>
                                 <li class="list-group-item">Enjoy printing with ankerctl 😉</li>
                             </ol>
-                            <br /><span class="fw-light">Hint: <kbd>Ctrl+Shift+G</kbd> will slice and open the upload to printer window</span>
+                            <br /><span class="fw-light"
+                                >Hint: <kbd>Ctrl+Shift+G</kbd> will slice and open the upload to printer window</span
+                            >
                         </div>
                         <div class="col-12 col-lg-12 text-center">
                             <img src="/static/img/setup/prusaslicer-1.png" class="img-thumbnail" alt="step 1" />
@@ -146,11 +176,20 @@
                 </div>
             </div>
             {% endif %}
-            <div class="tab-pane fade{% if not configure %} show active{% endif %}" id="setup" role="tabpanel" aria-labelledby="setup-tab">
+            <div
+                class="tab-pane fade{% if not configure %} show active{% endif %}"
+                id="setup"
+                role="tabpanel"
+                aria-labelledby="setup-tab"
+            >
                 <div class="container">
                     <div class="row">
                         <div class="col-md-5">
-                            <form action="{{ url_for('app_api_web_config_upload') }}" method="POST" enctype="multipart/form-data">
+                            <form
+                                action="{{ url_for('app_api_web_config_upload') }}"
+                                method="POST"
+                                enctype="multipart/form-data"
+                            >
                                 <div class="mb-3" id="config-upload-form">
                                     <label for="loginFile" class="form-label">Upload AnkerMake Login File</label>
                                     <div class="input-group w-auto">
@@ -178,7 +217,9 @@
                         <div class="col-md-7">
                             <span class="mr-auto pl-4">
                                 <label for="ankerctl-settings" class="form-label">AnkerMake M5 Config</label>
-                                <code id="ankerctl-settings"> {% autoescape false %} {{ anker_config }} {% endautoescape %} </code>
+                                <code id="ankerctl-settings">
+                                    {% autoescape false %} {{ anker_config }} {% endautoescape %}
+                                </code>
                             </span>
                         </div>
                     </div>
@@ -208,10 +249,13 @@
                     ><i class="bi-github"></i> View on GitHub</a
                 >
             </div>
-            <script type="text/javascript" src="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js')}}"></script>
-            <script type="text/javascript" src="{{ url_for('static', filename='vendor/cash.min.js') }}"></script>
-            <script type="text/javascript" src="{{ url_for('static', filename='vendor/jmuxer.min.js') }}"></script>
-            <script type="text/javascript" src="{{ url_for('static', filename='ankersrv.js') }}"></script>
         </footer>
+        <script
+            type="text/javascript"
+            src="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js')}}"
+        ></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='vendor/cash.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='vendor/jmuxer.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='ankersrv.js') }}"></script>
     </body>
 </html>

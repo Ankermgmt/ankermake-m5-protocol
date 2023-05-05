@@ -1,5 +1,6 @@
 import json
 import logging as log
+import traceback
 
 from secrets import token_urlsafe as token
 from flask import Flask, request, render_template, Response, session, url_for
@@ -139,12 +140,12 @@ def app_api_web_config_upload():
     try:
         web.config.config_import(file, app.config["config"])
         return web.util.flash_redirect("/reload", "AnkerMake Config Imported!", "success")
-    except web.config.ConfigAPIError as e:
-        log.error(e)
-        return web.util.flash_redirect("/", f"Error: {e}", "danger")
-    except Exception as e:
-        log.error(traceback.format_exc)
-        return web.util.flash_redirect("/", f"Unexpected Error occurred: {e}", "danger")
+    except web.config.ConfigImportError as err:
+        log.error(err)
+        return web.util.flash_redirect("/", f"Error: {err}", "danger")
+    except Exception as err:
+        log.error(traceback.format_exc, err)
+        return web.util.flash_redirect("/", f"Unexpected Error occurred: {err}", "danger")
 
 
 @app.post("/api/files/local")
