@@ -1,3 +1,26 @@
+"""
+This module is designed to implement a Flask web server for video streaming and downloading and other functionalities of AnkerMake M5. 
+It also implements various services, routes and functions including, '/ws/mqtt', '/ws/video', 'ws/ctrl', '/video', '/' and '/reload'
+
+Methods:
+    - startup(): Registers required services on server start
+    - shutdown(): Unregisters not required services on server shutdown
+    - restart(): Shuts down and starts up the server to apply new changes
+
+Routes:
+    - /ws/mqtt: Handles receiving and sending messages on the 'mqttqueue' stream service through websocket
+    - /ws/video: Handles receiving and sending messages on the 'videoqueue' stream service through websocket
+    - /ws/ctrl: Handles controlling of light and video quality through websocket
+    - /video: Handles the video streaming/downloading feature in the Flask app
+    - /: Renders the html template for the root route, which is the homepage of the Flask app
+    - /api/version: Returns the version details of api and server as dictionary
+    - /api/web/config/upload: Handles the uploading of configuration file to Flask server and returns a HTML redirect response
+    - /api/files/local: Handles the uploading of files to Flask server and returns a dictionary containing file details
+    - /reload: Reloads the Flask server and returns a HTML redirect response
+
+Functions:
+    - webserver(config, host, port, **kwargs): Starts the Flask webserver
+"""
 import json
 import logging as log
 import traceback
@@ -36,6 +59,9 @@ import web.service.filetransfer
 
 @app.before_first_request
 def startup():
+    """
+    Registers required services on server start
+    """
     app.svc.register("pppp", web.service.pppp.PPPPService())
     app.svc.register("videoqueue", web.service.video.VideoQueue())
     app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
@@ -43,6 +69,9 @@ def startup():
 
 
 def shutdown():
+    """
+    Unregisters not required services on server shutdown
+    """
     app.svc.unregister("pppp")
     app.svc.unregister("videoqueue")
     app.svc.unregister("mqttqueue")
@@ -50,12 +79,18 @@ def shutdown():
 
 
 def restart():
+    """
+    Shuts down and starts up the server to apply new changes
+    """
     shutdown()
     startup()
 
 
 @sock.route("/ws/mqtt")
 def mqtt(sock):
+    """
+    Handles receiving and sending messages on the 'mqttqueue' stream service through websocket
+    """
     if not app.config["login"]:
         return
     for data in app.svc.stream("mqttqueue"):
@@ -65,6 +100,9 @@ def mqtt(sock):
 
 @sock.route("/ws/video")
 def video(sock):
+    """
+    Handles receiving and sending messages on the 'videoqueue' stream service through websocket
+    """
     if not app.config["login"]:
         return
     for msg in app.svc.stream("videoqueue"):
@@ -73,6 +111,9 @@ def video(sock):
 
 @sock.route("/ws/ctrl")
 def ctrl(sock):
+    """
+    Handles controlling of light and video quality through websocket
+    """
     if not app.config["login"]:
         return
     while True:
@@ -89,6 +130,9 @@ def ctrl(sock):
 
 @app.get("/video")
 def video_download():
+    """
+    Handles the video streaming/downloading feature in the Flask app
+    """
     def generate():
         if not app.config["login"]:
             return
@@ -100,6 +144,9 @@ def video_download():
 
 @app.get("/")
 def app_root():
+    """
+    Renders the html template for the root route, which is the homepage of the Flask app
+    """
     config = app.config["config"]
     with config.open() as cfg:
         user_agent = user_agent_parse(request.headers.get("User-Agent"))
@@ -128,11 +175,23 @@ def app_root():
 
 @app.get("/api/version")
 def app_api_version():
+    """
+    Returns the version details of api and server as dictionary
+
+    Returns:
+        A dictionary containing version details of api and server
+    """
     return {"api": "0.1", "server": "1.9.0", "text": "OctoPrint 1.9.0"}
 
 
 @app.post("/api/web/config/upload")
 def app_api_web_config_upload():
+    """
+    Handles the uploading of configuration file to Flask server
+
+    Returns:
+        A HTML redirect response
+    """
     if request.method != "POST":
         return web.util.flash_redirect("/")
     if "login_file" not in request.files:
@@ -152,6 +211,12 @@ def app_api_web_config_upload():
 
 @app.post("/api/files/local")
 def app_api_files_local():
+    """
+    Handles the uploading of files to Flask server
+
+    Returns:
+        A dictionary containing file details
+    """
     user_name = request.headers.get("User-Agent", "ankerctl").split("/")[0]
 
     no_act = not cli.util.parse_http_bool(request.form["print"])
@@ -169,6 +234,12 @@ def app_api_files_local():
 
 @app.get("/reload")
 def reload_webserver():
+    """
+    Reloads the Flask server
+
+    Returns:
+        A HTML redirect response
+    """
     config = app.config["config"]
 
     with config.open() as cfg:
@@ -186,6 +257,18 @@ def reload_webserver():
 
 
 def webserver(config, host, port, **kwargs):
+    """
+    Starts the Flask webserver
+
+    Args:
+        - config: A configuration object containing configuration information
+        - host: A string containing host address to start the server
+        - port: An integer specifying the port number of server
+        - **kwargs: A dictionary containing additional configuration information
+
+    Returns:
+        - None
+    """
     with config.open() as cfg:
         app.config["config"] = config
         app.config["login"] = True if cfg else False
