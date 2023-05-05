@@ -103,24 +103,26 @@ def app_root():
     config = app.config["config"]
     with config.open() as cfg:
         user_agent = user_agent_parse(request.headers.get("User-Agent"))
+        user_os = web.platform.os_platform(user_agent.os.family)
 
         host = request.host.split(":")
         # If there is no 2nd array entry, the request port is 80
         request_port = host[1] if len(host) > 1 else "80"
-        no_config = "<p>No printers found, please load your login config...</p>"
-        anker_config = (
-            str(web.config.config_show(cfg)) if app.config["login"] else no_config
-        )
+        if app.config["login"]:
+            anker_config = str(web.config.config_show(cfg))
+            printer_serial = str(cfg.printers[0].sn)
+        else:
+            anker_config = "<p>No printers found, please load your login config...</p>"
+            printer_serial = None
 
         return render_template(
             "index.html",
             request_port=request_port,
             request_host=host[0],
             configure=app.config["login"],
-            login_file_path=web.platform.login_path(
-                web.platform.os_platform(user_agent.os.family)
-            ),
+            login_file_path=web.platform.login_path(user_os),
             anker_config=anker_config,
+            printer_serial=printer_serial
         )
 
 
