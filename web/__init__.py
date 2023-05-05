@@ -178,9 +178,9 @@ def reload_webserver():
         try:
             restart()
         except Exception as e:
-            return web.util.flash_redirect("/", f"Anerctl could not be reloaded: {e}", "danger")
+            return web.util.flash_redirect("/", f"Ankerctl could not be reloaded: {e}", "danger")
 
-        return web.util.flash_redirect("/", "Anerctl reloaded successfully", "success")
+        return web.util.flash_redirect("/", "Ankerctl reloaded successfully", "success")
 
 
 def webserver(config, host, port, **kwargs):
