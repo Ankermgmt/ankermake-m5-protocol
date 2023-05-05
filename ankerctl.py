@@ -5,7 +5,7 @@ import click
 import platform
 import logging as log
 from os import path
-from rich import print # you need python3
+from rich import print  # you need python3
 from tqdm import tqdm
 
 import cli.config
@@ -14,7 +14,7 @@ import cli.logfmt
 import cli.mqtt
 import cli.util
 import cli.pppp
-import cli.checkver # check python version
+import cli.checkver  # check python version
 
 import libflagship.httpapi
 import libflagship.logincache
@@ -35,9 +35,11 @@ class Environment:
     def load_config(self, required=True):
         with self.config.open() as config:
             if not getattr(config, 'printers', False):
-                log.warning("No printers found in config. Please upload configuration using the webserver or 'ankerctl.py config import'")
+                msg = "No printers found in config. Please upload configuration using the webserver or 'ankerctl.py config import'"
                 if required:
-                    exit(1)
+                    log.critical(msg)
+                else:
+                    log.warning(msg)
 
     def upgrade_config_if_needed(self):
         try:
