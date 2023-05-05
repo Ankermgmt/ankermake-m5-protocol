@@ -131,15 +131,20 @@ def app_api_version():
 @app.post("/api/web/config/upload")
 def app_api_web_config_upload():
     if request.method != "POST":
-        return web.util.flash_redirect()
+        return web.util.flash_redirect("/")
     if "login_file" not in request.files:
-        return web.util.flash_redirect("No file found", "danger")
+        return web.util.flash_redirect("/", "No file found", "danger")
     file = request.files["login_file"]
+
     try:
-        response = web.config.config_import(file, app.config["config"])
-        web.util.flash_redirect(response, path="/reload")
+        web.config.config_import(file, app.config["config"])
+        return web.util.flash_redirect("/reload", "AnkerMake Config Imported!", "success")
+    except web.config.ConfigAPIError as e:
+        log.error(e)
+        return web.util.flash_redirect("/", f"Error: {e}", "danger")
     except Exception as e:
-        web.util.flash_redirect(e, "danger")
+        log.error(traceback.format_exc)
+        return web.util.flash_redirect("/", f"Unexpected Error occurred: {e}", "danger")
 
 
 @app.post("/api/files/local")
@@ -162,13 +167,19 @@ def app_api_files_local():
 @app.get("/reload")
 def reload_webserver():
     config = app.config["config"]
+
     with config.open() as cfg:
         if not getattr(cfg, "printers", False):
-            return web.util.flash_redirect("No printers found in config", "warning")
+            return web.util.flash_redirect("/", "No printers found in config", "warning")
         app.config["login"] = True
         session["_flashes"].clear()
-        restart()
-        return web.util.flash_redirect("Configuration Loaded", "success")
+
+        try:
+            restart()
+        except Exception as e:
+            return web.util.flash_redirect("/", f"Anerctl could not be reloaded: {e}", "danger")
+
+        return web.util.flash_redirect("/", "Anerctl reloaded successfully", "success")
 
 
 def webserver(config, host, port, **kwargs):
