@@ -24,12 +24,15 @@ def pppp_open(config, timeout=None, dumpfile=None):
         deadline = datetime.now() + timedelta(seconds=timeout)
 
     with config.open() as cfg:
-        printer = cfg.printers[0]
+        if env.printer >= len(cfg.printers):
+            log.fatal(f"Printer number {env.printer} out of range, max printer number is {len(cfg.printers)-1} ")
+            return
+        printer = cfg.printers[env.printer]
 
         api = AnkerPPPPApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
         _pppp_dumpfile(api, dumpfile)
 
-        log.info("Trying connect over pppp")
+        log.info(f"Trying connect to printer {printer.p2p_duid} over pppp using ip {printer.ip_addr}")
         api.start()
 
         api.connect_lan_search()

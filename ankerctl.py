@@ -63,8 +63,9 @@ pass_env = click.make_pass_decorator(Environment)
 @click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
 @click.option("--verbose", "-v", count=True, help="Increase verbosity")
 @click.option("--quiet", "-q", count=True, help="Decrease verbosity")
+@click.option("--printer", "-p", type=int, default=0, help="Select printer number")
 @click.pass_context
-def main(ctx, pppp_dump, verbose, quiet, insecure):
+def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
     ctx.ensure_object(Environment)
     env = ctx.obj
 
@@ -90,6 +91,9 @@ def main(ctx, pppp_dump, verbose, quiet, insecure):
         log.warning('It is recommended to run without "-k/--insecure".')
 
     env.upgrade_config_if_needed()
+
+    env.printer = printer
+    log.debug(f"Using printer [{env.printer}]");
 
 
 @main.group("mqtt", help="Low-level mqtt api access")
@@ -418,7 +422,7 @@ def config_import(env, fd):
         config = cli.config.load_config_from_api(auth_token, region, env.insecure)
     except libflagship.httpapi.APIError as E:
         log.critical(f"Config import failed: {E} "
-                     "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
+                    "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
     except Exception as E:
         log.critical(f"Config import failed: {E}")
 
@@ -450,13 +454,15 @@ def config_show(env):
         print()
 
         log.info("Printers:")
-        for p in cfg.printers:
+        for i, p in enumerate(cfg.printers):
+            print(f"    printer:   {i}")
             print(f"    duid:      {p.p2p_duid}") # Printer Serial Number
             print(f"    sn:        {p.sn}")
             print(f"    ip:        {p.ip_addr}")
             print(f"    wifi_mac:  {cli.util.pretty_mac(p.wifi_mac)}")
             print(f"    api_hosts: {', '.join(p.api_hosts)}")
             print(f"    p2p_hosts: {', '.join(p.p2p_hosts)}")
+            print()
 
 
 @main.group("webserver", help="Built-in webserver support")
@@ -470,7 +476,7 @@ def webserver(env):
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
 @pass_env
 def webserver(env, host, port):
-    web.webserver(env.config, host, port, env.insecure, pppp_dump=env.pppp_dump)
+    web.webserver(env.config, env.printer_index, host, port, env.insecure, pppp_dump=env.pppp_dump)
 
 
 if __name__ == "__main__":
