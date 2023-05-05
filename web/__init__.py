@@ -1,5 +1,4 @@
 import json
-import tempfile
 import logging as log
 
 from secrets import token_urlsafe as token
@@ -17,12 +16,7 @@ import cli.util
 import cli.config
 
 
-app = Flask(
-    __name__,
-    root_path=".",
-    static_folder="static",
-    template_folder="static"
-)
+app = Flask(__name__, root_path=".", static_folder="static", template_folder="static")
 # secret_key is required for flash() to function
 app.secret_key = token(24)
 app.config.from_prefixed_env()
@@ -44,8 +38,7 @@ def startup():
     app.svc.register("pppp", web.service.pppp.PPPPService())
     app.svc.register("videoqueue", web.service.video.VideoQueue())
     app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
-    app.svc.register(
-        "filetransfer", web.service.filetransfer.FileTransferService())
+    app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
 
 
 def shutdown():
@@ -101,21 +94,22 @@ def video_download():
         for msg in app.svc.stream("videoqueue"):
             yield msg.data
 
-    return Response(generate(), mimetype='video/mp4')
+    return Response(generate(), mimetype="video/mp4")
 
 
 @app.get("/")
 def app_root():
     config = app.config["config"]
     with config.open() as cfg:
-        user_agent = user_agent_parse(request.headers.get('User-Agent'))
+        user_agent = user_agent_parse(request.headers.get("User-Agent"))
 
-        host = request.host.split(':')
+        host = request.host.split(":")
         # If there is no 2nd array entry, the request port is 80
-        request_port = host[1] if len(host) > 1 else '80'
-        no_config = '<p>No printers found, please load your login config...</p>'
-        anker_config = str(web.config.config_show(
-            cfg)) if app.config["login"] else no_config
+        request_port = host[1] if len(host) > 1 else "80"
+        no_config = "<p>No printers found, please load your login config...</p>"
+        anker_config = (
+            str(web.config.config_show(cfg)) if app.config["login"] else no_config
+        )
 
         return render_template(
             "index.html",
@@ -123,32 +117,29 @@ def app_root():
             request_host=host[0],
             configure=app.config["login"],
             login_file_path=web.platform.login_path(
-                web.platform.os_platform(user_agent.os.family)),
-            anker_config=anker_config
+                web.platform.os_platform(user_agent.os.family)
+            ),
+            anker_config=anker_config,
         )
 
 
 @app.get("/api/version")
 def app_api_version():
-    return {
-        "api": "0.1",
-        "server": "1.9.0",
-        "text": "OctoPrint 1.9.0"
-    }
+    return {"api": "0.1", "server": "1.9.0", "text": "OctoPrint 1.9.0"}
 
 
-@app.post('/api/web/config/upload')
+@app.post("/api/web/config/upload")
 def app_api_web_config_upload():
-    if request.method != 'POST':
+    if request.method != "POST":
         return web.util.flash_redirect()
-    if 'login_file' not in request.files:
-        return web.util.flash_redirect('No file found', 'danger')
-    file = request.files['login_file']
+    if "login_file" not in request.files:
+        return web.util.flash_redirect("No file found", "danger")
+    file = request.files["login_file"]
     try:
-        response = web.config.config_import(file, app.config['config'])
-        web.util.flash_redirect(response, path='/reload')
+        response = web.config.config_import(file, app.config["config"])
+        web.util.flash_redirect(response, path="/reload")
     except Exception as e:
-        web.util.flash_redirect(e, 'danger')
+        web.util.flash_redirect(e, "danger")
 
 
 @app.post("/api/files/local")
@@ -172,12 +163,12 @@ def app_api_files_local():
 def reload_webserver():
     config = app.config["config"]
     with config.open() as cfg:
-        if not getattr(cfg, 'printers', False):
-            return web.util.flash_redirect('No printers found in config', 'warning')
+        if not getattr(cfg, "printers", False):
+            return web.util.flash_redirect("No printers found in config", "warning")
         app.config["login"] = True
-        session['_flashes'].clear()
+        session["_flashes"].clear()
         restart()
-        return web.util.flash_redirect('Configuration Loaded', 'success')
+        return web.util.flash_redirect("Configuration Loaded", "success")
 
 
 def webserver(config, host, port, **kwargs):
