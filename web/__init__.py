@@ -1,6 +1,6 @@
 """
-This module is designed to implement a Flask web server for video streaming and downloading and other functionalities of AnkerMake M5. 
-It also implements various services, routes and functions including, '/ws/mqtt', '/ws/video', 'ws/ctrl', '/video', '/' and '/reload'
+This module is designed to implement a Flask web server for video streaming and handling other functionalities of AnkerMake M5.
+It also implements various services, routes and functions including.
 
 Methods:
     - startup(): Registers required services on server start
@@ -20,6 +20,10 @@ Routes:
 
 Functions:
     - webserver(config, host, port, **kwargs): Starts the Flask webserver
+    
+Services:
+    - util: Houses utility services for use in the web module
+    - config: Handles configuration manipulation for ankerctl
 """
 import json
 import logging as log
