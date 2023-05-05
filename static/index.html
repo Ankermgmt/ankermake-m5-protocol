@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
-        <title>ankerctl</title>
+        <title>ankerctl{% if printer_serial %} - {{ printer_serial }}{% endif %}</title>
         <link
             rel="stylesheet"
             href="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/css/bootstrap.min.css') }}"
@@ -18,6 +18,9 @@
         <header class="container my-3">
             <div class="p-3 text-center bg-body-tertiary rounded-3">
                 <h1 class="text-body-emphasis display-6">ankerctl</h1>
+                {%if printer_serial %}
+                <h4>{{ printer_serial }}</h4>
+                {% endif %}
             </div>
         </header>
         <div class="container navigation">
