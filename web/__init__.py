@@ -20,7 +20,7 @@ Routes:
 
 Functions:
     - webserver(config, host, port, **kwargs): Starts the Flask webserver
-    
+
 Services:
     - util: Houses utility services for use in the web module
     - config: Handles configuration manipulation for ankerctl
