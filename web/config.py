@@ -5,7 +5,7 @@ import cli.util
 import cli.config
 
 
-class ConfigAPIError(Exception):
+class ConfigImportError(Exception):
     """Raised when there is an error with the config api"""
 
 
@@ -40,13 +40,13 @@ def config_import(login_file, config):
     try:
         new_config = cli.config.load_config_from_api(auth_token, region, False)
     except libflagship.httpapi.APIError as err:
-        raise ConfigAPIError(
+        raise ConfigImportError(
             f"Config import failed: {err}. Auth token might be expired: make sure Ankermake Slicer can connect, then try again")
     except Exception as err:
-        raise ConfigAPIError(f"Config import failed: {err}")
+        raise ConfigImportError(f"Config import failed: {err}")
 
     try:
         config.save("default", new_config)
     except Exception as E:
-        raise ConfigAPIError(f"Config import failed: {E}")
+        raise ConfigImportError(f"Config import failed: {E}")
     return new_config

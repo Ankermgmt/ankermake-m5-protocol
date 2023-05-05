@@ -1,15 +1,21 @@
 $(function () {
+    /**
+     * Copies provided text to the OS clipboard
+     * @param {string} text
+     */
     function updateClipboard(text) {
         navigator.clipboard.writeText(text);
         console.log(`Copied ${text} to clipboard`);
     }
 
     $("#configData").on("click", function () {
-        updateClipboard($("#octoPrintHost").val());
+        const value = $("#octoPrintHost").text();
+        updateClipboard(value);
     });
 
     $("#copyFilePath").on("click", function () {
-        updateClipboard($("#loginFilePath").val());
+        const value = $("#loginFilePath").text();
+        updateClipboard(value);
     });
 
     let alert_list = document.querySelectorAll(".alert");
