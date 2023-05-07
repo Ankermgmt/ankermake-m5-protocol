@@ -4,7 +4,7 @@ import json
 import click
 import platform
 import logging as log
-from os import path
+from os import path, environ
 from rich import print  # you need python3
 from tqdm import tqdm
 
@@ -63,12 +63,11 @@ pass_env = click.make_pass_decorator(Environment)
 @click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
 @click.option("--verbose", "-v", count=True, help="Increase verbosity")
 @click.option("--quiet", "-q", count=True, help="Decrease verbosity")
-@click.option("--printer", "-p", type=int, default=0, help="Select printer number")
+@click.option("--printer", "-p", type=int, default=environ.get('PRINTER_INDEX') or 0, help="Select printer number")
 @click.pass_context
 def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
     ctx.ensure_object(Environment)
     env = ctx.obj
-
     levels = {
         -3: log.CRITICAL,
         -2: log.ERROR,
@@ -83,6 +82,7 @@ def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
 
     cli.logfmt.setup_logging(levels[env.level])
 
+    log.info({printer})
     if insecure:
         import urllib3
         urllib3.disable_warnings()
