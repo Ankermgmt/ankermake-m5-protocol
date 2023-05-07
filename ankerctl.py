@@ -82,7 +82,6 @@ def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
 
     cli.logfmt.setup_logging(levels[env.level])
 
-    log.info({printer})
     if insecure:
         import urllib3
         urllib3.disable_warnings()
