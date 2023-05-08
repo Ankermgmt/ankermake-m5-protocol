@@ -188,34 +188,53 @@
                 <div class="container">
                     <div class="row">
                         <div class="col-md-5">
-                            <form
-                                action="{{ url_for('app_api_web_config_upload') }}"
-                                method="POST"
-                                enctype="multipart/form-data"
-                            >
-                                <div class="mb-3" id="config-upload-form">
-                                    <label for="loginFile" class="form-label">Upload AnkerMake Login File</label>
-                                    <div class="input-group w-auto">
-                                        <input class="form-control" type="file" id="loginFile" name="login_file" />
-                                        <button class="btn btn-primary submit" type="submit" id="upload">
-                                            <i class="bi bi-cloud-arrow-up-fill"></i>&nbsp;Upload
-                                        </button>
+                            <div class="row">
+                                <form
+                                    action="{{ url_for('app_api_web_config_upload') }}"
+                                    method="POST"
+                                    enctype="multipart/form-data"
+                                >
+                                    <div class="mb-3" id="config-upload-form">
+                                        <label for="loginFile" class="form-label">Upload AnkerMake Login File</label>
+                                        <div class="input-group w-auto">
+                                            <input class="form-control" type="file" id="loginFile" name="login_file" />
+                                            <button class="btn btn-secondary submit" type="submit" id="upload">
+                                                <i class="bi bi-cloud-arrow-up-fill"></i>&nbsp;Upload
+                                            </button>
+                                        </div>
+                                        <span class="form-label"
+                                            >Location: <code id="loginFilePath">{{ login_file_path }}</code>&nbsp;
+                                            <button
+                                                class="btn btn-secondary btn-sm"
+                                                type="button"
+                                                id="copyFilePath"
+                                                data-toggle="tooltip"
+                                                data-placement="button"
+                                                title="Copy to Clipboard"
+                                            >
+                                                <span class="bi bi-clipboard-plus"></span>
+                                            </button>
+                                        </span>
                                     </div>
-                                    <span class="form-label"
-                                        >Location: <code id="loginFilePath">{{ login_file_path }}</code>&nbsp;
-                                        <button
-                                            class="btn btn-secondary btn-sm"
-                                            type="button"
-                                            id="copyFilePath"
-                                            data-toggle="tooltip"
-                                            data-placement="button"
-                                            title="Copy to Clipboard"
-                                        >
-                                            <span class="bi bi-clipboard-plus"></span>
-                                        </button>
-                                    </span>
+                                </form>
+                            </div>
+                            <div class="row">
+                                <div class="mb-3" id="reload-ankerctl">
+                                    <label for="reload" class="form-label">Reload Ankerctl Services</label><br />
+                                    <p>
+                                        If you are experiencing issues with printing or viewing the video feed reloading
+                                        the Ankerctl services will often resolve these issues.
+                                    </p>
+                                    <a
+                                        href="{{ url_for('reload_webserver') }}"
+                                        class="btn btn-secondary submit"
+                                        id="reload"
+                                        role="button"
+                                    >
+                                        <i class="bi bi-bootstrap-reboot"></i>&nbsp;Reload Services
+                                    </a>
                                 </div>
-                            </form>
+                            </div>
                         </div>
                         <div class="col-md-7">
                             <span class="mr-auto pl-4">
