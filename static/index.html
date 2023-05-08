@@ -195,7 +195,9 @@
                                     enctype="multipart/form-data"
                                 >
                                     <div class="mb-3" id="config-upload-form">
-                                        <label for="loginFile" class="form-label">Upload AnkerMake Login File</label>
+                                        <label for="loginFile" class="form-label"
+                                            ><h4>Upload AnkerMake Login File</h4></label
+                                        >
                                         <div class="input-group w-auto">
                                             <input class="form-control" type="file" id="loginFile" name="login_file" />
                                             <button class="btn btn-secondary submit" type="submit" id="upload">
@@ -220,7 +222,8 @@
                             </div>
                             <div class="row">
                                 <div class="mb-3" id="reload-ankerctl">
-                                    <label for="reload" class="form-label">Reload Ankerctl Services</label><br />
+                                    <label for="reload" class="form-label"><h4>Reload Ankerctl Services</h4></label
+                                    ><br />
                                     <p>
                                         If you are experiencing issues with printing or viewing the video feed reloading
                                         the Ankerctl services will often resolve these issues.
@@ -238,7 +241,7 @@
                         </div>
                         <div class="col-md-7">
                             <span class="mr-auto pl-4">
-                                <label for="ankerctl-settings" class="form-label">AnkerMake M5 Config</label>
+                                <label for="ankerctl-settings" class="form-label"><h4>AnkerMake M5 Config</h4></label>
                                 <code id="ankerctl-settings">
                                     {% autoescape false %} {{ anker_config }} {% endautoescape %}
                                 </code>
