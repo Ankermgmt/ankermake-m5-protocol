@@ -14,9 +14,9 @@ class Holdoff:
         self.deadline = None
 
     def reset(self, delay=None):
-        if delay:
-            delay = timedelta(seconds=delay)
         self.deadline = datetime.now()
+        if delay:
+            self.deadline += timedelta(seconds=delay)
 
     @property
     def passed(self):
