@@ -221,6 +221,9 @@ class ServiceManager:
     def __iter__(self):
         return iter(self.svcs)
 
+    def __contains__(self, name):
+        return name in self.svcs
+
     def atexit(self):
         log.debug("ServiceManager: Shutting down threads..")
         self.dump()
@@ -248,14 +251,14 @@ class ServiceManager:
             log.debug(f"  [{ref:>4}] {name:20} running={svc.running} state={svc.state} wanted={svc.wanted}")
 
     def register(self, name: str, svc: Service):
-        if name in self.svcs:
+        if name in self:
             raise KeyError(f"Trying to register {name!r} as {svc} while already taken by {self.svcs[name]}")
 
         self.svcs[name] = svc
         self.refs[name] = 0
 
     def unregister(self, name: str):
-        if name not in self.svcs:
+        if name not in self:
             raise KeyError(f"Trying to unregister unknown service {name!r}")
 
         if self.refs[name]:
@@ -265,7 +268,7 @@ class ServiceManager:
         del self.refs[name]
 
     def get(self, name: str, ready=True) -> Service:
-        if name not in self.svcs:
+        if name not in self:
             raise KeyError(f"Requested unknown service {name!r}")
 
         svc = self.svcs[name]
@@ -282,7 +285,7 @@ class ServiceManager:
         return svc
 
     def put(self, name: str):
-        if name not in self.svcs:
+        if name not in self:
             raise KeyError(f"Requested unknown service {name!r}")
 
         svc = self.svcs[name]
