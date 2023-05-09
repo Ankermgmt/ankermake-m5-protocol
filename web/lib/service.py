@@ -218,6 +218,9 @@ class ServiceManager:
         self.refs = {}
         atexit.register(self.atexit)
 
+    def __iter__(self):
+        return iter(self.svcs)
+
     def atexit(self):
         log.debug("ServiceManager: Shutting down threads..")
         self.dump()
