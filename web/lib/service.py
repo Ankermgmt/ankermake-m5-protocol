@@ -74,6 +74,15 @@ class Service(Thread):
         self.wanted = False
         self._event.set()
 
+    def restart(self):
+        log.info(f"{self.name}: Requesting restart")
+        wanted = self.wanted
+        self.stop()
+        self.await_stopped()
+        if wanted:
+            self.start()
+            self.await_ready()
+
     def shutdown(self):
         if self.state != RunState.Stopped:
             self.stop()
