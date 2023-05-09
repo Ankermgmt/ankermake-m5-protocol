@@ -255,6 +255,9 @@ class ServiceManager:
         if name not in self.svcs:
             raise KeyError(f"Trying to unregister unknown service {name!r}")
 
+        if self.refs[name]:
+            raise ServiceError(f"Trying to unregister service {name!r} with {self.refs[name]} reference(s)")
+
         del self.svcs[name]
         del self.refs[name]
 
