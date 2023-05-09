@@ -4,13 +4,18 @@ import string
 import hashlib
 import logging as log
 
+from enum import Enum
 from multiprocessing import Pipe
 from datetime import datetime, timedelta
-from threading import Thread, Event
+from threading import Thread, Event, Lock
 from socket import AF_INET
 from dataclasses import dataclass
 
-from libflagship.pppp import *
+from libflagship.cyclic import CyclicU16
+from libflagship.pppp import Type, \
+    PktDrw, PktDrwAck, PktClose, PktSessionReady, PktAliveAck, PktDevLgnAckCrc, \
+    PktHelloAck, PktP2pRdyAck, PktP2pRdy, PktLanSearch, \
+    Host, Message, Xzyh, Aabb, FileTransferReply
 
 PPPP_LAN_PORT = 32108
 PPPP_WAN_PORT = 32100
@@ -76,11 +81,27 @@ class Wire:
         self.buf = []
         self.rx, self.tx = Pipe(False)
 
-    def read(self, size):
+    def peek(self, size, timeout=None):
+        # Zero timeout on self.rx.poll() means "wait forever", but we want it to
+        # mean "no wait", so we emulate that by setting it to 1us.
+        if timeout == 0.0:
+            timeout = 0.000001
+
+        if timeout is not None:
+            deadline = datetime.now() + timedelta(seconds=timeout)
+
         while len(self.buf) < size:
+            if timeout and not self.rx.poll(timeout=(deadline - datetime.now()).total_seconds()):
+                return None
             self.buf.extend(self.rx.recv())
-        res, self.buf = self.buf[:size], self.buf[size:]
-        return bytes(res)
+
+        return bytes(self.buf[:size])
+
+    def read(self, size, timeout=None):
+        res = self.peek(size, timeout)
+        if res:
+            self.buf = self.buf[size:]
+        return res
 
     def write(self, data):
         self.tx.send(data)
@@ -88,20 +109,22 @@ class Wire:
 
 class Channel:
 
-    def __init__(self, index, max_in_flight=64):
+    def __init__(self, index, max_in_flight=64, max_age_warn=128):
         self.index = index
         self.rxqueue = {}
         self.txqueue = []
         self.backlog = []
-        self.rx_ctr = 0
-        self.tx_ctr = 0
-        self.tx_ack = 0
+        self.rx_ctr = CyclicU16(0)
+        self.tx_ctr = CyclicU16(0)
+        self.tx_ack = CyclicU16(0)
         self.rx = Wire()
         self.tx = Wire()
         self.timeout = timedelta(seconds=0.5)
         self.acks = set()
         self.event = Event()
         self.max_in_flight = max_in_flight
+        self.max_age_warn = max_age_warn
+        self.lock = Lock()
 
     def rx_ack(self, acks):
         # remove all ACKed packets from transmission queue
@@ -120,7 +143,7 @@ class Channel:
     def rx_drw(self, index, data):
         # drop any packets we have already recieved
         if self.rx_ctr > index:
-            if self.rx_ctr - index > 100:
+            if self.max_age_warn and (self.rx_ctr - index > self.max_age_warn):
                 log.warn(f"Dropping old packet: index {index} while expecting {self.rx_ctr}.")
             return
 
@@ -129,8 +152,9 @@ class Channel:
 
         # recombine data from queue
         while self.rx_ctr in self.rxqueue:
+            data = self.rxqueue[self.rx_ctr]
             del self.rxqueue[self.rx_ctr]
-            self.rx_ctr = (self.rx_ctr + 1) & 0xFFFF
+            self.rx_ctr += 1
             self.rx.write(data)
 
     def poll(self):
@@ -161,8 +185,11 @@ class Channel:
         self.event.wait()
         self.event.clear()
 
-    def read(self, nbytes):
-        return self.rx.read(nbytes)
+    def peek(self, nbytes, timeout=None):
+        return self.rx.peek(nbytes, timeout)
+
+    def read(self, nbytes, timeout=None):
+        return self.rx.read(nbytes, timeout)
 
     def write(self, payload, block=True):
         pdata = payload[:]
@@ -175,7 +202,7 @@ class Channel:
             # schedule transmission in 1kb chunks
             data, pdata = pdata[:1024], pdata[1024:]
             self.backlog.append((deadline, self.tx_ctr, data))
-            self.tx_ctr = (self.tx_ctr + 1) & 0xFFFF
+            self.tx_ctr += 1
 
         tx_ctr_done = self.tx_ctr
 
@@ -190,7 +217,14 @@ class Channel:
         return (tx_ctr_start, tx_ctr_done)
 
 
-class AnkerPPPPApi(Thread):
+class PPPPState(Enum):
+    Idle         = 1
+    Connecting   = 2
+    Connected    = 3
+    Disconnected = 4
+
+
+class AnkerPPPPBaseApi(Thread):
 
     def __init__(self, sock, duid, addr=None):
         super().__init__()
@@ -198,12 +232,12 @@ class AnkerPPPPApi(Thread):
         self.duid = duid
         self.addr = addr
 
-        self.new = True
-        self.rdy = False
+        self.state = PPPPState.Idle
         self.chans = [Channel(n) for n in range(8)]
 
         self.running = True
         self.stopped = Event()
+        self.dumper = None
 
     @classmethod
     def open(cls, duid, host, port):
@@ -225,6 +259,13 @@ class AnkerPPPPApi(Thread):
         addr = ("255.255.255.255", PPPP_LAN_PORT)
         return cls(sock, duid=None, addr=addr)
 
+    def connect_lan_search(self):
+        self.state = PPPPState.Connecting
+        self.send(PktLanSearch())
+
+    def set_dumper(self, dumper):
+        self.dumper = dumper
+
     def stop(self):
         self.running = False
         self.stopped.wait()
@@ -237,7 +278,7 @@ class AnkerPPPPApi(Thread):
                 self.process(msg)
             except TimeoutError:
                 pass
-            except StopIteration:
+            except ConnectionResetError:
                 break
 
             for idx, ch in enumerate(self.chans):
@@ -256,7 +297,7 @@ class AnkerPPPPApi(Thread):
 
         if msg.type == Type.CLOSE:
             log.error("CLOSE")
-            raise StopIteration
+            raise ConnectionResetError
 
         elif msg.type == Type.REPORT_SESSION_READY:
             pkt = PktSessionReady(
@@ -294,26 +335,34 @@ class AnkerPPPPApi(Thread):
 
         elif msg.type == Type.P2P_RDY:
             self.send(PktP2pRdyAck(duid=self.duid, host=self.host))
-
-            self.new = False
-            self.rdy = True
+            self.state = PPPPState.Connected
 
         elif msg.type == Type.PUNCH_PKT:
-            if self.new:
+            if self.state == PPPPState.Connecting:
                 self.send(PktClose())
                 self.send(PktP2pRdy(self.duid))
 
     def recv(self, timeout=None):
+        if self.state in {PPPPState.Idle, PPPPState.Disconnected}:
+            raise ConnectionError(f"Tried to recv packet in state {self.state}")
+
         self.sock.settimeout(timeout)
         data, self.addr = self.sock.recvfrom(4096)
+        if self.dumper:
+            self.dumper.rx(data, self.addr)
         msg = Message.parse(data)[0]
-        log.debug(f"RX <--  {msg}")
+        log.debug(f"RX <--  {str(msg)[:128]}")
         return msg
 
     def send(self, pkt, addr=None):
+        if self.state in {PPPPState.Idle, PPPPState.Disconnected}:
+            raise ConnectionError(f"Tried to send packet in state {self.state}")
+
         resp = pkt.pack()
+        if self.dumper:
+            self.dumper.tx(resp, self.addr)
         msg = Message.parse(resp)[0]
-        log.debug(f"TX  --> {msg}")
+        log.debug(f"TX  --> {str(msg)[:128]}")
         self.sock.sendto(resp, addr or self.addr)
 
     def send_xzyh(self, data, cmd, chan=0, unk0=0, unk1=0, sign_code=0, unk3=0, dev_type=0, block=True):
@@ -341,12 +390,25 @@ class AnkerPPPPApi(Thread):
 
         return self.chans[chan].write(aabb.pack_with_crc(data), block=block)
 
-    def recv_xzyh(self, chan=1):
+
+class AnkerPPPPApi(AnkerPPPPBaseApi):
+
+    def recv_xzyh(self, chan=1, timeout=None):
         fd = self.chans[chan]
 
-        xzyh = Xzyh.parse(fd.read(16))[0]
-        xzyh.data = fd.read(xzyh.len)
-        return xzyh
+        with fd.lock:
+            hdr = fd.peek(16, timeout=timeout)
+            if not hdr:
+                return None
+
+            xzyh = Xzyh.parse(hdr)[0]
+
+            data = fd.read(xzyh.len + 16, timeout=timeout)
+            if not data:
+                return None
+
+            xzyh.data = data[16:]
+            return xzyh
 
     def recv_aabb(self, chan=1):
         fd = self.chans[chan]
@@ -371,3 +433,20 @@ class AnkerPPPPApi(Thread):
     def aabb_request(self, data, frametype, pos=0, chan=1, check=True):
         self.send_aabb(data=data, frametype=frametype, chan=chan, pos=pos)
         return self.recv_aabb_reply(chan, check)
+
+
+class AnkerPPPPAsyncApi(AnkerPPPPBaseApi):
+
+    def poll(self, timeout=None):
+        msg = None
+        try:
+            msg = self.recv(timeout=timeout)
+            self.process(msg)
+        except TimeoutError:
+            pass
+
+        for idx, ch in enumerate(self.chans):
+            for pkt in ch.poll():
+                self.send(pkt)
+
+        return msg

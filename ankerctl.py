@@ -2,12 +2,11 @@
 
 import json
 import click
-import logging
 import platform
+import logging as log
 from os import path
 from rich import print # you need python3
 from tqdm import tqdm
-from flask import Flask, request, render_template
 
 import cli.config
 import cli.model
@@ -24,7 +23,9 @@ import libflagship.seccode
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
 from libflagship.pppp import PktLanSearch, P2PCmdType, P2PSubCmdType, FileTransfer
-from libflagship.ppppapi import AnkerPPPPApi, FileUploadInfo, PPPPError
+from libflagship.ppppapi import FileUploadInfo, PPPPError
+
+import web
 
 
 class Environment:
@@ -52,28 +53,28 @@ pass_env = click.make_pass_decorator(Environment)
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.option("--pppp-dump", required=False, metavar="<file.log>", type=click.Path(), help="Enable logging of PPPP data to <file.log>")
 @click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
 @click.option("--verbose", "-v", count=True, help="Increase verbosity")
 @click.option("--quiet", "-q", count=True, help="Decrease verbosity")
 @click.pass_context
-def main(ctx, verbose, quiet, insecure):
+def main(ctx, pppp_dump, verbose, quiet, insecure):
     ctx.ensure_object(Environment)
     env = ctx.obj
 
     levels = {
-        -3: logging.CRITICAL,
-        -2: logging.ERROR,
-        -1: logging.WARNING,
-        0: logging.INFO,
-        1: logging.DEBUG,
+        -3: log.CRITICAL,
+        -2: log.ERROR,
+        -1: log.WARNING,
+        0: log.INFO,
+        1: log.DEBUG,
     }
     env.config   = cli.config.configmgr()
     env.insecure = insecure
     env.level = max(-3, min(verbose - quiet, 1))
-    env.log = cli.logfmt.setup_logging(levels[env.level])
+    env.pppp_dump = pppp_dump
 
-    global log
-    log = env.log
+    cli.logfmt.setup_logging(levels[env.level])
 
     if insecure:
         import urllib3
@@ -95,7 +96,7 @@ def mqtt_monitor(env):
     Connect to mqtt broker, and show low-level events in realtime.
     """
 
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.insecure)
 
     for msg, body in client.fetchloop():
         log.info(f"TOPIC [{msg.topic}]")
@@ -144,7 +145,7 @@ def mqtt_send(env, command_type, args, force):
             log.fatal("Sending DEVICE_NAME_SET without devName=<name> will crash printer (override with --force)")
             return
 
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.insecure)
     cli.mqtt.mqtt_command(client, cmd)
 
 
@@ -156,7 +157,7 @@ def mqtt_rename_printer(env, newname):
     Set a new nickname for your printer
     """
 
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.insecure)
 
     cmd = {
         "commandType": MqttMsgType.ZZ_MQTT_CMD_DEVICE_NAME_SET,
@@ -175,7 +176,7 @@ def mqtt_gcode(env):
 
     Press Ctrl-C to exit. (or Ctrl-D to close connection, except on Windows)
     """
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.insecure)
 
     while True:
         gcode = click.prompt("gcode", prompt_suffix="> ")
@@ -209,7 +210,7 @@ def pppp_lan_search(env):
 
     Works by broadcasting a LAN_SEARCH packet, and waiting for a reply.
     """
-    api = AnkerPPPPApi.open_broadcast()
+    api = cli.pppp.pppp_open_broadcast(dumpfile=env.pppp_dump)
     try:
         api.send(PktLanSearch())
         resp = api.recv(timeout=1.0)
@@ -233,7 +234,7 @@ def pppp_print_file(env, file, no_act):
     file, so anytime a file is uploaded, the old one is deleted.
     """
     env.require_config()
-    api = cli.pppp.pppp_open(env)
+    api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
 
     data = file.read()
     fui = FileUploadInfo.from_file(file.name, user_name="ankerctl", user_id="-", machine_id="-")
@@ -266,7 +267,7 @@ def pppp_capture_video(env, file, max_size):
     "ffplay" from the ffmpeg program suite.
     """
     env.require_config()
-    api = cli.pppp.pppp_open(env)
+    api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
 
     cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
     api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
@@ -454,68 +455,13 @@ def webserver(env):
     env.require_config()
 
 
-app = Flask(__name__, template_folder='./static')
-# app.config['TEMPLATES_AUTO_RELOAD'] = True
-
-
-@app.get("/")
-def app_root():
-    host = request.host.split(':')
-    requestPort = host[1] if len(host) > 1 else '80' # If there is no 2nd array entry, the request port is 80
-    return render_template("index.html", requestPort=requestPort, requestHost=host[0])
-
-
-@app.get("/api/version")
-def app_api_version():
-    return {
-        "api": "0.1",
-        "server": "1.9.0",
-        "text": "OctoPrint 1.9.0"
-    }
-
-
-@app.post("/api/files/local")
-def app_api_files_local():
-    env = app.config["env"]
-
-    user_name = request.headers.get("User-Agent", "ankerctl").split("/")[0]
-
-    no_act = not cli.util.parse_http_bool(request.form["print"])
-
-    if no_act:
-        cli.util.http_abort(409, "Upload-only not supported by Ankermake M5")
-
-    fd = request.files["file"]
-
-    api = cli.pppp.pppp_open(env)
-
-    data = fd.read()
-    fui = FileUploadInfo.from_data(data, fd.filename, user_name=user_name, user_id="-", machine_id="-")
-    log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")
-    try:
-        cli.pppp.pppp_send_file(api, fui, data)
-        log.info("File upload complete. Requesting print start of job.")
-        api.aabb_request(b"", frametype=FileTransfer.END)
-    except PPPPError as E:
-        log.error(f"Could not send print job: {E}")
-    else:
-        log.info("Successfully sent print job")
-    finally:
-        api.stop()
-
-    return {}
-
-
 @webserver.command("run", help="Run ankerctl webserver")
 @click.option("--host", default='127.0.0.1', envvar="FLASK_HOST", help="Network interface to bind to")
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
 @pass_env
 def webserver(env, host, port):
     env.require_config()
-    app.config["env"] = env
-    app.config["port"] = port
-    app.config["host"] = host
-    app.run(host=host,port=port)
+    web.webserver(env.config, host, port, pppp_dump=env.pppp_dump)
 
 
 if __name__ == "__main__":

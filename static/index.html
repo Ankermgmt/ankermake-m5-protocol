@@ -13,6 +13,23 @@
                 <p class="lead">Congratulations on running ankerctl</p>
             </div>
         </div>
+        <div class="container">
+            <div class="row text-body-emphasis display-3">
+                <div class="col-lg-8 px-3 rounded-3">
+                    <video class="w-100 rounded-3" playsinline autoplay muted id="player"></video>
+                </div>
+                <div class="col-lg-4 px-3 rounded-3">
+                    <div class="row">
+                        <div class="col-6 px-3"><button class="w-100 btn btn-primary" id="light-on">💡 Light on</button></div>
+                        <div class="col-6 px-3"><button class="w-100 btn btn-secondary" id="light-off">💡 Light off</button></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 px-3"><button class="w-100 btn btn-primary" id="quality-low">💾 Quality: low</button></div>
+                        <div class="col-6 px-3"><button class="w-100 btn btn-secondary" id="quality-high">📀 Quality: high</button></div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="container mb-4">
             <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xxl-2 g-3 p-2">
                 <div class="col-12 col-lg-12">
@@ -44,13 +61,7 @@
         </div>
         <script src="/static/vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js"></script>
         <script src="/static/vendor/cash.min.js"></script>
-        <script>
-         $(function () {
-             $('#configData').on('click',function(){
-                 navigator.clipboard.writeText("{{ requestHost }}:{{ requestPort }}");
-                 return false;
-             })
-         });
-        </script>
+        <script type="text/javascript" src="/static/vendor/jmuxer.min.js"></script>
+        <script type="text/javascript" src="/static/ankersrv.js"></script>
     </body>
 </html>
