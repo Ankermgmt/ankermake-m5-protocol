@@ -18,8 +18,7 @@ $(function () {
      */
     $("#reload").on("click", function () {
         content = $("#reload").data("message");
-        $("#popupModalBody").val(content);
-        $("#popupModal").modal("show");
+        $("#popupModalBody").text(content);
     });
 
     /**
@@ -36,16 +35,6 @@ $(function () {
     $("#copyFilePath").on("click", function () {
         const value = $("#loginFilePath").text();
         updateClipboard(value);
-    });
-
-    /**
-     * On click of element that has data-target="modal", displays a popup modal with a message
-     */
-    $("#modal").on("show.bs.modal", function (event) {
-        var button = $(event.relatedTarget);
-        var content = button.data("message");
-        var modal = $(this);
-        modal.find(".modal-body").val(content);
     });
 
     /**
