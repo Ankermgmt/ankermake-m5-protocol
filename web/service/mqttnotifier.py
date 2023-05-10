@@ -1,11 +1,12 @@
 import time
 import logging as log
-from threading import Thread
+
 from datetime import datetime
 
-from libflagship.mqtt import MqttMsgType
-
+from ..lib.service import Service
 from .. import rpcutil, app
+
+from libflagship.mqtt import MqttMsgType
 
 
 def mqtt_to_jsonrpc_req(data):
@@ -40,24 +41,25 @@ def mqtt_to_jsonrpc_req(data):
     return rpcutil.make_jsonrpc_req("notify_status_update", update)
 
 
-class MqttNotifier(Thread):
+class MqttNotifierService(Service):
 
-    def run(self):
-        log.info("Waiting for mqttq service..")
-        while not hasattr(app, "mqttq"):
-            time.sleep(0.1)
+    def _handler(self, data):
+        upd = mqtt_to_jsonrpc_req(data)
+        if not upd:
+            return
 
-        log.info("Found mqttq service")
-        with app.mqttq.tap() as queue:
-            while True:
-                try:
-                    data = queue.get()
-                except EOFError:
-                    break
+        for ws in app.websockets:
+            ws.send(upd)
 
-                upd = mqtt_to_jsonrpc_req(data)
-                if not upd:
-                    continue
+    def worker_start(self):
+        self.mqtt = app.svc.get("mqttqueue")
 
-                for ws in app.websockets:
-                    ws.send(upd)
+        self.mqtt.handlers.append(self._handler)
+
+    def worker_run(self, timeout):
+        self.idle(timeout=timeout)
+
+    def worker_stop(self):
+        self.mqtt.handlers.remove(self._handler)
+
+        app.svc.put("mqttqueue")
