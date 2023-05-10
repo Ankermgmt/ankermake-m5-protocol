@@ -1,5 +1,10 @@
 $(function () {
     /**
+     * Updates the Copywrite year on document ready
+     */
+    $("#copyYear").text(new Date().getFullYear());
+
+    /**
      * Copies provided text to the OS clipboard
      * @param {string} text
      */
@@ -7,6 +12,15 @@ $(function () {
         navigator.clipboard.writeText(text);
         console.log(`Copied ${text} to clipboard`);
     }
+
+    /**
+     * Function to show modal when clicking reload services button
+     */
+    $("#reload").on("click", function () {
+        content = $("#reload").data("message");
+        $("#popupModalBody").val(content);
+        $("#popupModal").modal("show");
+    });
 
     /**
      * On click of element with id "configData", updates clipboard with text in element with id "octoPrintHost"
@@ -22,6 +36,16 @@ $(function () {
     $("#copyFilePath").on("click", function () {
         const value = $("#loginFilePath").text();
         updateClipboard(value);
+    });
+
+    /**
+     * On click of element that has data-target="modal", displays a popup modal with a message
+     */
+    $("#modal").on("show.bs.modal", function (event) {
+        var button = $(event.relatedTarget);
+        var content = button.data("message");
+        var modal = $(this);
+        modal.find(".modal-body").val(content);
     });
 
     /**

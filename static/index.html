@@ -15,6 +15,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='ankersrv.css') }}" />
     </head>
     <body>
+        <!-- Header -->
         <header class="container my-3">
             <div class="p-3 text-center bg-body-tertiary rounded-3">
                 <h1 class="text-body-emphasis display-6">ankerctl</h1>
@@ -23,6 +24,7 @@
                 {% endif %}
             </div>
         </header>
+        <!-- Navigation Menu -->
         <div class="container navigation">
             <ul class="nav nav-pills mb-3" id="tab" role="tablist">
                 {% if configure %}
@@ -71,6 +73,27 @@
                 </li>
             </ul>
         </div>
+        <!-- Modal -->
+        <div
+            class="modal fade"
+            id="popupModal"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="popupModal"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="popupModal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div id="popupModalBody" class="modal-body"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Message Center -->
         <div class="container text-center" id="messages">
             {% with messages = get_flashed_messages(with_categories=true) %}
             <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
@@ -90,8 +113,10 @@
             </div>
             {% endfor %} {% endif %} {% endwith %}
         </div>
+        <!-- Content Area -->
         <div class="tab-content my-3" id="ankerctlContent">
             {% if configure %}
+            <!-- Home Tab -->
             <div
                 class="tab-pane fade{% if configure %} show active{% endif %}"
                 id="home"
@@ -125,6 +150,7 @@
                     </div>
                 </div>
             </div>
+            <!-- Instructions Tab -->
             <div class="tab-pane fade" id="instructions" role="tabpanel" aria-labelledby="instructions-tab">
                 <div class="container mb-4">
                     <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xxl-2 g-3 p-2">
@@ -179,6 +205,7 @@
                 </div>
             </div>
             {% endif %}
+            <!-- Setup Tab -->
             <div
                 class="tab-pane fade{% if not configure %} show active{% endif %}"
                 id="setup"
@@ -233,6 +260,9 @@
                                         class="btn btn-secondary submit"
                                         id="reload"
                                         role="button"
+                                        data-toggle="modal"
+                                        data-target="#popupModal"
+                                        data-message="Ankerctl is restarting..."
                                     >
                                         <i class="bi bi-bootstrap-reboot"></i>&nbsp;Reload Services
                                     </a>
@@ -251,13 +281,12 @@
                 </div>
             </div>
         </div>
+        <!-- Footer -->
         <footer class="container my-3 text-center bg-body-tertiary rounded-3 text-center text-lg-start">
             <div class="p-1 text-center">
                 &copy;
-                <script>
-                    document.write(new Date().getFullYear());
-                </script>
-                Copyright:
+                <span id="copyYear">...</span>
+                Copyright -
                 <a
                     class="text-light"
                     href="https://github.com/Ankermgmt/ankermake-m5-protocol"
