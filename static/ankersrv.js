@@ -123,7 +123,7 @@ $(function () {
         if (data.commandType == 1001) {
             // Returns Print Details
             $("#print-details").attr("style", "display: block;");
-            $("#print-name").attr("value", truncStr(data.name, 32));
+            $("#print-name").attr("value", data.name);
             $("#time-elapsed").attr("value", getTime(data.totalTime));
             $("#time-remain").attr("value", getTime(data.time));
         } else if (data.commandType == 1003) {
