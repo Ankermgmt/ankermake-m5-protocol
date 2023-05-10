@@ -5,7 +5,6 @@ from queue import Empty
 from multiprocessing import Queue
 
 from ..lib.service import Service, ServiceRestartSignal
-from .. import app
 
 from libflagship.pppp import P2PSubCmdType, Xzyh
 
@@ -49,6 +48,7 @@ class VideoQueue(Service):
         self.saved_video_mode = None
 
     def worker_start(self):
+        from web import app
         self.pppp = app.svc.get("pppp")
 
         self.api_id = id(self.pppp._api)
@@ -73,6 +73,7 @@ class VideoQueue(Service):
             raise ServiceRestartSignal("New pppp connection detected, restarting video feed")
 
     def worker_stop(self):
+        from web import app
         try:
             self.api_stop_live()
         except ConnectionError:

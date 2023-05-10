@@ -14,9 +14,9 @@ class Holdoff:
         self.deadline = None
 
     def reset(self, delay=None):
-        if delay:
-            delay = timedelta(seconds=delay)
         self.deadline = datetime.now()
+        if delay:
+            self.deadline += timedelta(seconds=delay)
 
     @property
     def passed(self):
@@ -73,6 +73,15 @@ class Service(Thread):
         log.info(f"{self.name}: Requesting stop")
         self.wanted = False
         self._event.set()
+
+    def restart(self):
+        log.info(f"{self.name}: Requesting restart")
+        wanted = self.wanted
+        self.stop()
+        self.await_stopped()
+        if wanted:
+            self.start()
+            self.await_ready()
 
     def shutdown(self):
         if self.state != RunState.Stopped:
@@ -218,6 +227,12 @@ class ServiceManager:
         self.refs = {}
         atexit.register(self.atexit)
 
+    def __iter__(self):
+        return iter(self.svcs)
+
+    def __contains__(self, name):
+        return name in self.svcs
+
     def atexit(self):
         log.debug("ServiceManager: Shutting down threads..")
         self.dump()
@@ -245,21 +260,24 @@ class ServiceManager:
             log.debug(f"  [{ref:>4}] {name:20} running={svc.running} state={svc.state} wanted={svc.wanted}")
 
     def register(self, name: str, svc: Service):
-        if name in self.svcs:
+        if name in self:
             raise KeyError(f"Trying to register {name!r} as {svc} while already taken by {self.svcs[name]}")
 
         self.svcs[name] = svc
         self.refs[name] = 0
 
     def unregister(self, name: str):
-        if name not in self.svcs:
+        if name not in self:
             raise KeyError(f"Trying to unregister unknown service {name!r}")
+
+        if self.refs[name]:
+            raise ServiceError(f"Trying to unregister service {name!r} with {self.refs[name]} reference(s)")
 
         del self.svcs[name]
         del self.refs[name]
 
     def get(self, name: str, ready=True) -> Service:
-        if name not in self.svcs:
+        if name not in self:
             raise KeyError(f"Requested unknown service {name!r}")
 
         svc = self.svcs[name]
@@ -276,7 +294,7 @@ class ServiceManager:
         return svc
 
     def put(self, name: str):
-        if name not in self.svcs:
+        if name not in self:
             raise KeyError(f"Requested unknown service {name!r}")
 
         svc = self.svcs[name]

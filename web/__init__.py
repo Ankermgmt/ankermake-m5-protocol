@@ -29,7 +29,7 @@ Services:
 """
 import json
 import logging as log
-import traceback
+import time
 
 from secrets import token_urlsafe as token
 from flask import Flask, flash, request, render_template, Response, session, url_for
@@ -74,22 +74,17 @@ def startup():
     app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
 
 
-def shutdown():
-    """
-    Unregisters not required services on server shutdown
-    """
-    app.svc.unregister("pppp")
-    app.svc.unregister("videoqueue")
-    app.svc.unregister("mqttqueue")
-    app.svc.unregister("filetransfer")
-
-
 def restart():
     """
-    Shuts down and starts up the server to apply new changes
+    Restarts the registered services to apply new changes
     """
-    shutdown()
-    startup()
+    try:
+        for name in app.svc:
+            app.svc.svcs[name].restart()
+            time.sleep(2)
+    except Exception as err:
+        log.exception(err)
+        return Exception(err)
 
 
 @sock.route("/ws/mqtt")
@@ -257,8 +252,8 @@ def reload_webserver():
 
         try:
             restart()
-        except Exception as e:
-            return web.util.flash_redirect("/", f"Ankerctl could not be reloaded: {e}", "danger")
+        except Exception as err:
+            return web.util.flash_redirect("/", f"Ankerctl could not be reloaded: {err}", "danger")
 
         return web.util.flash_redirect("/", "Ankerctl reloaded successfully", "success")
 
