@@ -1,13 +1,11 @@
 {
-  "extends": [
-    "development"
-  ],
-  "hints": {
-    "axe/aria": [
-      "default",
-      {
-        "aria-valid-attr-value": "off"
-      }
-    ]
-  }
+    "extends": ["development"],
+    "hints": {
+        "axe/aria": [
+            "default",
+            {
+                "aria-valid-attr-value": "off"
+            }
+        ]
+    }
 }
