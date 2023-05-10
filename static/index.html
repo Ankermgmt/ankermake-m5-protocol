@@ -120,6 +120,7 @@
             >
                 <div class="container">
                     <div class="row text-body-emphasis display-3">
+                        <!-- Video Container -->
                         <div class="col-lg-8 px-3 rounded-3">
                             <video
                                 class="w-100 rounded-3"
@@ -131,21 +132,118 @@
                             ></video>
                             <div id="overlay" class="col-md-12 px-3 rounded-3"></div>
                         </div>
+                        <!-- Printer Info Container -->
                         <div class="col-lg-4 px-3 rounded-3">
+                            <!-- Controls Container -->
                             <div class="row">
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-primary" id="light-on">💡 Light on</button>
-                                </div>
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-secondary" id="light-off">💡 Light off</button>
+                                <div class="col-12">
+                                    <div class="row">
+                                        <div class="col-6 px-3">
+                                            <button class="w-100 btn btn-primary" id="light-on">💡 Light on</button>
+                                        </div>
+                                        <div class="col-6 px-3">
+                                            <button class="w-100 btn btn-secondary" id="light-off">💡 Light off</button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6 px-3">
+                                            <button class="w-100 btn btn-primary" id="quality-low">
+                                                💾 Quality: low
+                                            </button>
+                                        </div>
+                                        <div class="col-6 px-3">
+                                            <button class="w-100 btn btn-secondary" id="quality-high">
+                                                📀 Quality: high
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-primary" id="quality-low">💾 Quality: low</button>
-                                </div>
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-secondary" id="quality-high">📀 Quality: high</button>
+                            <!-- Status Container -->
+                            <div class="row mt-3 print-status">
+                                <div class="col-12">
+                                    <div class="row">
+                                        <div class="col-lg-12 px-3 rounded-3">
+                                            <div class="row mt-3">
+                                                <h4>Temperature</h4>
+                                            </div>
+                                            <div class="row mt-2">
+                                                <div class="col-3 px-3 text-right"><em>Nozzle</em></div>
+                                                <div class="col-9 px-3 text-center">
+                                                    <span id="noz_temp">0</span>°C/<span id="noz_target">0</span>°C
+                                                </div>
+                                            </div>
+                                            <div class="row mt-2">
+                                                <div class="col-3 px-3 text-right"><em>Bed</em></div>
+                                                <div class="col-9 px-3 text-center">
+                                                    <span id="bed_temp">0</span>°C/<span id="bed_target">0</span>°C
+                                                </div>
+                                            </div>
+                                            <div id="print_active" style="display: none">
+                                                <div class="row mt-3">
+                                                    <h4>Print Progress</h4>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-2 px-3 text-right"><em>Name</em></div>
+                                                    <div class="col-10 px-3 text-center">
+                                                        <span id="print_name">Nothing is printing</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-3 px-3 text-right"><em>Elapsed</em></div>
+                                                    <div class="col-9 px-3 text-center">
+                                                        <span id="time_elapsed">00:00:00</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-3 px-3 text-right"><em>Remaining</em></div>
+                                                    <div class="col-9 px-3 text-center">
+                                                        <span id="time_remain">00:00:00</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-3 px-3 text-right"><em>Filament</em></div>
+                                                    <div class="col-9 px-3 text-center">
+                                                        <span id="filament">0</span>g
+                                                    </div>
+                                                </div>
+                                                <div class="row px-2 mt-3">
+                                                    <div class="col-12 px-2">
+                                                        <div class="progress position-relative">
+                                                            <div
+                                                                class="progress-bar progress-bar-striped progress-bar-animated"
+                                                                role="progressbar"
+                                                                id="progressbar"
+                                                                title="progressbar"
+                                                                aria-valuenow="0"
+                                                                aria-valuemin="0"
+                                                                aria-valuemax="100"
+                                                                style="width: 0%"
+                                                            >
+                                                                <span
+                                                                    id="progress"
+                                                                    class="justify-content-center d-flex position-absolute w-100"
+                                                                    >0%</span
+                                                                >
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-3 px-3 text-right"><em>Layer</em></div>
+                                                    <div class="col-9 px-3 text-center">
+                                                        <span id="print_layer">0</span>/<span id="total_layer">0</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-3 px-3 text-right"><em>Speed</em></div>
+                                                    <div class="col-9 px-3 text-center">
+                                                        <span id="print_speed">0</span>mm/s
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
