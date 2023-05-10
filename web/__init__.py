@@ -194,20 +194,21 @@ def app_api_ankerctl_config_upload():
         A HTML redirect response
     """
     if request.method != "POST":
-        return web.util.flash_redirect("/")
+        return web.util.flash_redirect(url_for('app_root'))
     if "login_file" not in request.files:
-        return web.util.flash_redirect("/", "No file found", "danger")
+        return web.util.flash_redirect(url_for('app_root'), "No file found", "danger")
     file = request.files["login_file"]
 
     try:
         web.config.config_import(file, app.config["config"])
-        return web.util.flash_redirect("/reload", "AnkerMake Config Imported!", "success")
+        return web.util.flash_redirect(url_for('app_api_ankerctl_server_reload'),
+                                       "AnkerMake Config Imported!", "success")
     except web.config.ConfigImportError as err:
         log.exception(f"Config import failed: {err}")
-        return web.util.flash_redirect("/", f"Error: {err}", "danger")
+        return web.util.flash_redirect(url_for('app_root'), f"Error: {err}", "danger")
     except Exception as err:
         log.exception(f"Config import failed: {err}")
-        return web.util.flash_redirect("/", f"Unexpected Error occurred: {err}", "danger")
+        return web.util.flash_redirect(url_for('app_root'), f"Unexpected Error occurred: {err}", "danger")
 
 
 @app.get("/api/ankerctl/server/reload")
@@ -222,7 +223,7 @@ def app_api_ankerctl_server_reload():
 
     with config.open() as cfg:
         if not getattr(cfg, "printers", False):
-            return web.util.flash_redirect("/", "No printers found in config", "warning")
+            return web.util.flash_redirect(url_for('app_root'), "No printers found in config", "warning")
         app.config["login"] = True
         if "_flashes" in session:
             session["_flashes"].clear()
@@ -230,9 +231,9 @@ def app_api_ankerctl_server_reload():
         try:
             restart()
         except Exception as err:
-            return web.util.flash_redirect("/", f"Ankerctl could not be reloaded: {err}", "danger")
+            return web.util.flash_redirect(url_for('app_root'), f"Ankerctl could not be reloaded: {err}", "danger")
 
-        return web.util.flash_redirect("/", "Ankerctl reloaded successfully", "success")
+        return web.util.flash_redirect(url_for('app_root'), "Ankerctl reloaded successfully", "success")
 
 
 @app.post("/api/files/local")
@@ -243,7 +244,7 @@ def app_api_files_local():
     Returns:
         A dictionary containing file details
     """
-    user_name = request.headers.get("User-Agent", "ankerctl").split("/")[0]
+    user_name = request.headers.get("User-Agent", "ankerctl").split(url_for('app_root'))[0]
 
     no_act = not cli.util.parse_http_bool(request.form["print"])
 
