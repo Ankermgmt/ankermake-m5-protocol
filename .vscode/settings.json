@@ -1,0 +1,12 @@
+{
+    "files.insertFinalNewline": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8",
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "modifications"
+    },
+    "python.linting.pycodestyleEnabled": true,
+    "python.linting.pycodestyleArgs": ["--config", ".pep8"],
+    "python.formatting.autopep8Args": ["--config", ".pep8"],
+    "python.formatting.provider": "autopep8"
+}
