@@ -205,8 +205,7 @@ def mqtt_gcode(env):
 
 
 @main.group("pppp", help="Low-level pppp api access")
-def pppp():
-    pass
+def pppp(): pass
 
 
 @pppp.command("lan-search")
@@ -298,8 +297,7 @@ def pppp_capture_video(env, file, max_size):
 
 
 @main.group("http", help="Low-level http api access")
-def http():
-    pass
+def http(): pass
 
 
 @http.command("calc-check-code")
@@ -336,8 +334,7 @@ def http_calc_sec_code(duid, mac):
 
 
 @main.group("config", help="View and update configuration")
-def config():
-    pass
+def config(): pass
 
 
 @config.command("decode")
