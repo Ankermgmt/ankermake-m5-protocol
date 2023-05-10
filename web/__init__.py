@@ -185,8 +185,8 @@ def app_api_version():
     return {"api": "0.1", "server": "1.9.0", "text": "OctoPrint 1.9.0"}
 
 
-@app.post("/api/web/config/upload")
-def app_api_web_config_upload():
+@app.post("/api/ankerctl/config/upload")
+def app_api_ankerctl_config_upload():
     """
     Handles the uploading of configuration file to Flask server
 
@@ -210,31 +210,8 @@ def app_api_web_config_upload():
         return web.util.flash_redirect("/", f"Unexpected Error occurred: {err}", "danger")
 
 
-@app.post("/api/files/local")
-def app_api_files_local():
-    """
-    Handles the uploading of files to Flask server
-
-    Returns:
-        A dictionary containing file details
-    """
-    user_name = request.headers.get("User-Agent", "ankerctl").split("/")[0]
-
-    no_act = not cli.util.parse_http_bool(request.form["print"])
-
-    if no_act:
-        cli.util.http_abort(409, "Upload-only not supported by Ankermake M5")
-
-    fd = request.files["file"]
-
-    with app.svc.borrow("filetransfer") as ft:
-        ft.send_file(fd, user_name)
-
-    return {}
-
-
-@app.get("/reload")
-def reload_webserver():
+@app.get("/api/ankerctl/server/reload")
+def app_api_ankerctl_server_reload():
     """
     Reloads the Flask server
 
@@ -256,6 +233,29 @@ def reload_webserver():
             return web.util.flash_redirect("/", f"Ankerctl could not be reloaded: {err}", "danger")
 
         return web.util.flash_redirect("/", "Ankerctl reloaded successfully", "success")
+
+
+@app.post("/api/files/local")
+def app_api_files_local():
+    """
+    Handles the uploading of files to Flask server
+
+    Returns:
+        A dictionary containing file details
+    """
+    user_name = request.headers.get("User-Agent", "ankerctl").split("/")[0]
+
+    no_act = not cli.util.parse_http_bool(request.form["print"])
+
+    if no_act:
+        cli.util.http_abort(409, "Upload-only not supported by Ankermake M5")
+
+    fd = request.files["file"]
+
+    with app.svc.borrow("filetransfer") as ft:
+        ft.send_file(fd, user_name)
+
+    return {}
 
 
 def webserver(config, host, port, **kwargs):
