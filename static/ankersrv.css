@@ -45,5 +45,24 @@ code#loginFilePath {
 }
 
 .progress {
-    height: 30px;
+    height: 40px;
+}
+
+.icon {
+    background-size: cover;
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+}
+
+.icon-hotend {
+    background-color: #fff;
+    -webkit-mask-image: url(../static/img/hotend-icon.svg);
+    mask-image: url(../static/img/hotend-icon.svg);
+}
+
+.icon-bed {
+    background-color: #fff;
+    -webkit-mask-image: url(../static/img/bed-icon.svg);
+    mask-image: url(../static/img/bed-icon.svg);
 }

@@ -168,47 +168,120 @@
                                                 <h4>Temperature</h4>
                                             </div>
                                             <div class="row mt-2">
-                                                <div class="col-3 px-3 text-right"><em>Nozzle</em></div>
-                                                <div class="col-9 px-3 text-center">
-                                                    <span id="noz_temp">0</span>°C/<span id="noz_target">0</span>°C
+                                                <div class="col-6">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <div class="input-group-text" id="nozzleGroup">
+                                                                <i class="icon-hotend icon"></i>&nbsp;
+                                                            </div>
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            id="nozzle-temp"
+                                                            name="nozzle-temp"
+                                                            class="form-control"
+                                                            value="0°C"
+                                                            title="Nozzle Temperature"
+                                                            aria-label="Nozzle Temperature"
+                                                            aria-describedby="nozzleGroup"
+                                                            disabled
+                                                            readonly
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <div class="input-group-text" id="bedGroup">
+                                                                <i class="icon-bed icon"></i>&nbsp;
+                                                            </div>
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            id="bed-temp"
+                                                            name="bed-temp"
+                                                            class="form-control"
+                                                            value="0°C"
+                                                            title="Bed Temperature"
+                                                            aria-label="Bed Temperature"
+                                                            aria-describedby="bedGroup"
+                                                            disabled
+                                                            readonly
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="row mt-2">
-                                                <div class="col-3 px-3 text-right"><em>Bed</em></div>
-                                                <div class="col-9 px-3 text-center">
-                                                    <span id="bed_temp">0</span>°C/<span id="bed_target">0</span>°C
-                                                </div>
-                                            </div>
-                                            <div id="print_active" style="display: none">
+                                            <div id="print-details" style="display: none">
                                                 <div class="row mt-3">
                                                     <h4>Print Progress</h4>
                                                 </div>
                                                 <div class="row mt-2">
-                                                    <div class="col-2 px-3 text-right"><em>Name</em></div>
-                                                    <div class="col-10 px-3 text-center">
-                                                        <span id="print_name">Nothing is printing</span>
+                                                    <div class="col-12">
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <div class="input-group-text" id="printName">Name</div>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                id="print-name"
+                                                                name="print-name"
+                                                                class="form-control"
+                                                                value="None"
+                                                                title="Print Name"
+                                                                aria-label="Print Name"
+                                                                aria-describedby="printName"
+                                                                disabled
+                                                                readonly
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="row mt-2">
-                                                    <div class="col-3 px-3 text-right"><em>Elapsed</em></div>
-                                                    <div class="col-9 px-3 text-center">
-                                                        <span id="time_elapsed">00:00:00</span>
+                                                    <div class="col-6">
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <div class="input-group-text" id="timeElapsed">
+                                                                    Elapsed
+                                                                </div>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                id="time-elapsed"
+                                                                name="time-elapsed"
+                                                                class="form-control"
+                                                                value="00:00:00"
+                                                                title="Time Elapsed"
+                                                                aria-label="Time Elapsed"
+                                                                aria-describedby="timeElapsed"
+                                                                disabled
+                                                                readonly
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <div class="input-group-text" id="timeRemain">
+                                                                    Remain
+                                                                </div>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                id="time-remain"
+                                                                name="time-remain"
+                                                                class="form-control"
+                                                                value="00:00:00"
+                                                                title="Time Remaining"
+                                                                aria-label="Time Remaining"
+                                                                aria-describedby="timeRemain"
+                                                                disabled
+                                                                readonly
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="row mt-2">
-                                                    <div class="col-3 px-3 text-right"><em>Remaining</em></div>
-                                                    <div class="col-9 px-3 text-center">
-                                                        <span id="time_remain">00:00:00</span>
-                                                    </div>
-                                                </div>
-                                                <div class="row mt-2">
-                                                    <div class="col-3 px-3 text-right"><em>Filament</em></div>
-                                                    <div class="col-9 px-3 text-center">
-                                                        <span id="filament">0</span>g
-                                                    </div>
-                                                </div>
-                                                <div class="row px-2 mt-3">
-                                                    <div class="col-12 px-2">
+                                                    <div class="col-12">
                                                         <div class="progress position-relative">
                                                             <div
                                                                 class="progress-bar progress-bar-striped progress-bar-animated"
@@ -230,15 +303,47 @@
                                                     </div>
                                                 </div>
                                                 <div class="row mt-2">
-                                                    <div class="col-3 px-3 text-right"><em>Layer</em></div>
-                                                    <div class="col-9 px-3 text-center">
-                                                        <span id="print_layer">0</span>/<span id="total_layer">0</span>
+                                                    <div class="col-6">
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <div class="input-group-text" id="printLayer">
+                                                                    Layer
+                                                                </div>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                id="print-layer"
+                                                                name="print-layer"
+                                                                class="form-control"
+                                                                value="0/0"
+                                                                title="Print Layers"
+                                                                aria-label="Print Layers"
+                                                                aria-describedby="printLayer"
+                                                                disabled
+                                                                readonly
+                                                            />
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div class="row mt-2">
-                                                    <div class="col-3 px-3 text-right"><em>Speed</em></div>
-                                                    <div class="col-9 px-3 text-center">
-                                                        <span id="print_speed">0</span>mm/s
+                                                    <div class="col-6">
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <div class="input-group-text" id="printSpeed">
+                                                                    Speed
+                                                                </div>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                id="print-speed"
+                                                                name="print-speed"
+                                                                class="form-control"
+                                                                value="0mm/s"
+                                                                title="Print Speed"
+                                                                aria-label="Print Speed"
+                                                                aria-describedby="printSpeed"
+                                                                disabled
+                                                                readonly
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

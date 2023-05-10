@@ -109,7 +109,6 @@ $(function () {
         const diameter = 1.75;
         const density = 1.24;
         const adjustedLength = length / 100;
-        console.log(adjustedLength);
         const volume = Math.PI * (diameter / 2) ** 2 * adjustedLength;
         const weight = (volume * density).toFixed(2);
         return weight;
@@ -123,32 +122,35 @@ $(function () {
         const data = JSON.parse(ev.data);
         if (data.commandType == 1001) {
             // Returns Print Details
-            $("#print_active").attr("style", "display: block;");
-            $("#print_name").text(truncStr(data.name, 32));
-            $("#time_elapsed").text(getTime(data.totalTime));
-            $("#time_remain").text(getTime(data.time));
-            $("#filament").text(getWeight(data.filamentUsed));
+            $("#print-details").attr("style", "display: block;");
+            $("#print-name").attr("value", truncStr(data.name, 32));
+            $("#time-elapsed").attr("value", getTime(data.totalTime));
+            $("#time-remain").attr("value", getTime(data.time));
         } else if (data.commandType == 1003) {
             // Returns Nozzle Temp
-            $("#noz_temp").text(getTemp(data.currentTemp));
-            $("#noz_target").text(getTemp(data.targetTemp));
+            const current = getTemp(data.currentTemp);
+            const target = getTemp(data.targetTemp);
+            const temp = `${current}/${target}°C`;
+            $("#nozzle-temp").attr("value", temp);
         } else if (data.commandType == 1004) {
             // Returns Bed Temp
-            $("#bed_temp").text(getTemp(data.currentTemp));
-            $("#bed_target").text(getTemp(data.targetTemp));
+            const current = getTemp(data.currentTemp);
+            const target = getTemp(data.targetTemp);
+            const temp = `${current}/${target}°C`;
+            $("#bed-temp").attr("value", temp);
+        } else if (data.commandType == 1006) {
+            // Returns Print Speed
+            $("#print-speed").attr("value", `${data.value}mm/s`);
         } else if (data.commandType == 1052) {
             // Returns Layer Info
-            $("#print_layer").text(data.real_print_layer);
-            $("#total_layer").text(data.total_layer);
+            const layer = `${data.real_print_layer}/${data.total_layer}`;
+            $("#print-layer").attr("value", layer);
             const printPercent = getPercentage(data.real_print_layer, data.total_layer);
             $("#progressbar").attr("aria-valuenow", printPercent);
             $("#progressbar").attr("style", `width: ${printPercent}%`);
             $("#progress").text(`${printPercent}%`);
-        } else if (data.commandType == 1006) {
-            // Returns Print Speed
-            $("#print_speed").text(data.value);
         }
-        console.log(data);
+        console.log({ data });
     });
 
     /**
