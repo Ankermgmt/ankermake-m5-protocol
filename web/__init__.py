@@ -1,5 +1,6 @@
 """
-This module is designed to implement a Flask web server for video streaming and handling other functionalities of AnkerMake M5.
+This module is designed to implement a Flask web server for video
+streaming and handling other functionalities of AnkerMake M5.
 It also implements various services, routes and functions including.
 
 Methods:
@@ -14,7 +15,8 @@ Routes:
     - /video: Handles the video streaming/downloading feature in the Flask app
     - /: Renders the html template for the root route, which is the homepage of the Flask app
     - /api/version: Returns the version details of api and server as dictionary
-    - /api/web/config/upload: Handles the uploading of configuration file to Flask server and returns a HTML redirect response
+    - /api/web/config/upload: Handles the uploading of configuration file \
+        to Flask server and returns a HTML redirect response
     - /api/files/local: Handles the uploading of files to Flask server and returns a dictionary containing file details
     - /reload: Reloads the Flask server and returns a HTML redirect response
 
@@ -30,7 +32,7 @@ import logging as log
 import traceback
 
 from secrets import token_urlsafe as token
-from flask import Flask, request, render_template, Response, session, url_for
+from flask import Flask, flash, request, render_template, Response, session, url_for
 from flask_sock import Sock
 from user_agents import parse as user_agent_parse
 
@@ -206,10 +208,10 @@ def app_api_web_config_upload():
         web.config.config_import(file, app.config["config"])
         return web.util.flash_redirect("/reload", "AnkerMake Config Imported!", "success")
     except web.config.ConfigImportError as err:
-        log.error(err)
+        log.exception(f"Config import failed: {err}")
         return web.util.flash_redirect("/", f"Error: {err}", "danger")
     except Exception as err:
-        log.error(traceback.format_exc, err)
+        log.exception(f"Config import failed: {err}")
         return web.util.flash_redirect("/", f"Unexpected Error occurred: {err}", "danger")
 
 
@@ -250,7 +252,8 @@ def reload_webserver():
         if not getattr(cfg, "printers", False):
             return web.util.flash_redirect("/", "No printers found in config", "warning")
         app.config["login"] = True
-        session["_flashes"].clear()
+        if "_flashes" in session:
+            session["_flashes"].clear()
 
         try:
             restart()
