@@ -217,7 +217,7 @@
                         <div class="col-md-5">
                             <div class="row">
                                 <form
-                                    action="{{ url_for('app_api_web_config_upload') }}"
+                                    action="{{ url_for('app_api_ankerctl_config_upload') }}"
                                     method="POST"
                                     enctype="multipart/form-data"
                                 >
@@ -256,7 +256,7 @@
                                         the Ankerctl services will often resolve these issues.
                                     </p>
                                     <a
-                                        href="{{ url_for('reload_webserver') }}"
+                                        href="{{ url_for('app_api_ankerctl_server_reload') }}"
                                         class="btn btn-secondary submit"
                                         id="reload"
                                         role="button"
