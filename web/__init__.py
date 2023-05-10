@@ -77,13 +77,11 @@ def restart():
     """
     Restarts the registered services to apply new changes
     """
-    try:
-        for name in app.svc:
-            app.svc.svcs[name].restart()
-            time.sleep(2)
-    except Exception as err:
-        log.exception(err)
-        return Exception(err)
+    for name in app.svc:
+        app.svc.svcs[name].restart()
+
+    for name in app.svc:
+        app.svc.svcs[name].await_ready()
 
 
 @sock.route("/ws/mqtt")
@@ -230,6 +228,7 @@ def app_api_ankerctl_server_reload():
         try:
             restart()
         except Exception as err:
+            log.exception(err)
             return web.util.flash_redirect(url_for('app_root'), f"Ankerctl could not be reloaded: {err}", "danger")
 
         return web.util.flash_redirect(url_for('app_root'), "Ankerctl reloaded successfully", "success")
