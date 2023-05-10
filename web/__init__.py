@@ -5,7 +5,6 @@ It also implements various services, routes and functions including.
 
 Methods:
     - startup(): Registers required services on server start
-    - shutdown(): Unregisters not required services on server shutdown
     - restart(): Shuts down and starts up the server to apply new changes
 
 Routes:
@@ -15,10 +14,10 @@ Routes:
     - /video: Handles the video streaming/downloading feature in the Flask app
     - /: Renders the html template for the root route, which is the homepage of the Flask app
     - /api/version: Returns the version details of api and server as dictionary
-    - /api/web/config/upload: Handles the uploading of configuration file \
+    - /api/ankerctl/config/upload: Handles the uploading of configuration file \
         to Flask server and returns a HTML redirect response
+    - /api/ankerctl/server/reload: Reloads the Flask server and returns a HTML redirect response
     - /api/files/local: Handles the uploading of files to Flask server and returns a dictionary containing file details
-    - /reload: Reloads the Flask server and returns a HTML redirect response
 
 Functions:
     - webserver(config, host, port, **kwargs): Starts the Flask webserver
