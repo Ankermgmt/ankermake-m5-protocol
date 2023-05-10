@@ -28,7 +28,7 @@
         <div class="container navigation">
             <ul class="nav nav-pills mb-3" id="tab" role="tablist">
                 {% if configure %}
-                <li class="nav-item" role="presentation">
+                <li class="nav-item mx-1" role="presentation">
                     <button
                         class="nav-link{% if configure %} active{% endif %}"
                         id="home-tab"
@@ -42,7 +42,7 @@
                         <i class="bi bi-house"></i>&nbsp;Home
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
+                <li class="nav-item mx-1" role="presentation">
                     <button
                         class="nav-link"
                         id="instructions-tab"
@@ -57,7 +57,7 @@
                     </button>
                 </li>
                 {% endif %}
-                <li class="nav-item" role="presentation">
+                <li class="nav-item mx-1" role="presentation">
                     <button
                         class="nav-link{% if not configure %} active{% endif %}"
                         id="setup-tab"
@@ -126,7 +126,14 @@
                 <div class="container">
                     <div class="row text-body-emphasis display-3">
                         <div class="col-lg-8 px-3 rounded-3">
-                            <video class="w-100 rounded-3" playsinline autoplay muted id="player"></video>
+                            <video
+                                class="w-100 rounded-3"
+                                playsinline
+                                autoplay
+                                muted
+                                id="player"
+                                poster="{{ url_for('static', filename='img/loading.jpg') }}"
+                            ></video>
                             <div id="overlay" class="col-md-12 px-3 rounded-3"></div>
                         </div>
                         <div class="col-lg-4 px-3 rounded-3">
@@ -282,8 +289,8 @@
             </div>
         </div>
         <!-- Footer -->
-        <footer class="container my-3 text-center bg-body-tertiary rounded-3 text-center text-lg-start">
-            <div class="p-1 text-center">
+        <footer class="container my-3">
+            <div class="p-3 text-center bg-body-tertiary rounded-3">
                 &copy;
                 <span id="copyYear">...</span>
                 Copyright -
