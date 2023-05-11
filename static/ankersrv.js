@@ -150,7 +150,7 @@ $(function () {
             const layer = `${data.real_print_layer}/${data.total_layer}`;
             $("#print-layer").attr("value", layer);
         }
-        console.log({ data });
+        console.log(data);
     });
 
     /**

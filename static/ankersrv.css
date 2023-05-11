@@ -51,8 +51,9 @@ code#loginFilePath {
 .icon {
     background-size: cover;
     display: inline-block;
-    height: 20px;
-    width: 20px;
+    position: fixed;
+    height: 25px;
+    width: 25px;
 }
 
 .icon-hotend {
@@ -65,4 +66,14 @@ code#loginFilePath {
     background-color: #fff;
     -webkit-mask-image: url(../static/img/bed-icon.svg);
     mask-image: url(../static/img/bed-icon.svg);
+}
+
+.print-info-label {
+    width: 75px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.print-temp-label {
+    width: 50px;
 }
