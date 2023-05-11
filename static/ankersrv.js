@@ -65,8 +65,8 @@ $(function () {
      * @param {number} total
      * @returns {number} percentage
      */
-    function getPercentage(layer, total) {
-        return Math.round((layer / total) * 100);
+    function getPercentage(progress) {
+        return Math.round(((progress / 100) * 100) / 100);
     }
 
     /**
@@ -126,6 +126,10 @@ $(function () {
             $("#print-name").attr("value", data.name);
             $("#time-elapsed").attr("value", getTime(data.totalTime));
             $("#time-remain").attr("value", getTime(data.time));
+            const progress = getPercentage(data.progress);
+            $("#progressbar").attr("aria-valuenow", progress);
+            $("#progressbar").attr("style", `width: ${progress}%`);
+            $("#progress").text(`${progress}%`);
         } else if (data.commandType == 1003) {
             // Returns Nozzle Temp
             const current = getTemp(data.currentTemp);
@@ -145,10 +149,6 @@ $(function () {
             // Returns Layer Info
             const layer = `${data.real_print_layer}/${data.total_layer}`;
             $("#print-layer").attr("value", layer);
-            const printPercent = getPercentage(data.real_print_layer, data.total_layer);
-            $("#progressbar").attr("aria-valuenow", printPercent);
-            $("#progressbar").attr("style", `width: ${printPercent}%`);
-            $("#progress").text(`${printPercent}%`);
         }
         console.log({ data });
     });
