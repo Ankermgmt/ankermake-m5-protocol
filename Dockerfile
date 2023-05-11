@@ -21,6 +21,7 @@ RUN mkdir -p /root/.config/
 
 # Copy the script and libraries
 COPY ankerctl.py /app/
+COPY web /app/web/
 COPY static /app/static/
 COPY libflagship /app/libflagship/
 COPY cli /app/cli/

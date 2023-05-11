@@ -10,3 +10,4 @@ crcmod==1.7
 tqdm==4.65.0
 flask==2.2.5
 flask-sock==0.6.0
+user-agents==2.2.0

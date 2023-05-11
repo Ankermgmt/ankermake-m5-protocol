@@ -5,7 +5,7 @@ import click
 import platform
 import logging as log
 from os import path
-from rich import print # you need python3
+from rich import print  # you need python3
 from tqdm import tqdm
 
 import cli.config
@@ -14,7 +14,7 @@ import cli.logfmt
 import cli.mqtt
 import cli.util
 import cli.pppp
-import cli.checkver # check python version
+import cli.checkver  # check python version
 
 import libflagship.httpapi
 import libflagship.logincache
@@ -32,10 +32,15 @@ class Environment:
     def __init__(self):
         pass
 
-    def require_config(self):
+    def load_config(self, required=True):
         with self.config.open() as config:
             if not getattr(config, 'printers', False):
-                log.critical("No printers found in config. Please import configuration using 'config import'")
+                msg = "No printers found in config. Please upload configuration \
+                    using the webserver or 'ankerctl.py config import'"
+                if required:
+                    log.critical(msg)
+                else:
+                    log.warning(msg)
 
     def upgrade_config_if_needed(self):
         try:
@@ -53,7 +58,8 @@ pass_env = click.make_pass_decorator(Environment)
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
-@click.option("--pppp-dump", required=False, metavar="<file.log>", type=click.Path(), help="Enable logging of PPPP data to <file.log>")
+@click.option("--pppp-dump", required=False, metavar="<file.log>", type=click.Path(),
+              help="Enable logging of PPPP data to <file.log>")
 @click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
 @click.option("--verbose", "-v", count=True, help="Increase verbosity")
 @click.option("--quiet", "-q", count=True, help="Decrease verbosity")
@@ -86,7 +92,7 @@ def main(ctx, pppp_dump, verbose, quiet, insecure):
 @main.group("mqtt", help="Low-level mqtt api access")
 @pass_env
 def mqtt(env):
-    env.require_config()
+    env.load_config()
 
 
 @mqtt.command("monitor")
@@ -111,7 +117,7 @@ def mqtt_monitor(env):
 
                 del obj["commandType"]
                 print(f"  [{cmdtype:4}] {name:20} {obj}")
-            except:
+            except Exception:
                 print(f"  {obj}")
 
 
@@ -233,7 +239,7 @@ def pppp_print_file(env, file, no_act):
     executing the print job. NOTE: the printer only ever stores ONE uploaded
     file, so anytime a file is uploaded, the old one is deleted.
     """
-    env.require_config()
+    env.load_config()
     api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
 
     data = file.read()
@@ -257,7 +263,8 @@ def pppp_print_file(env, file, no_act):
 
 @pppp.command("capture-video")
 @click.argument("file", required=True, type=click.File("wb"), metavar="<output.h264>")
-@click.option("--max-size", "-m", required=True, type=cli.util.FileSizeType(), help="Stop capture at this size (kb, mb, gb, etc)")
+@click.option("--max-size", "-m", required=True, type=cli.util.FileSizeType(),
+              help="Stop capture at this size (kb, mb, gb, etc)")
 @pass_env
 def pppp_capture_video(env, file, max_size):
     """
@@ -266,7 +273,7 @@ def pppp_capture_video(env, file, max_size):
     The output is in h264 ES (Elementary Stream) format. It can be played with
     "ffplay" from the ffmpeg program suite.
     """
-    env.require_config()
+    env.load_config()
     api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
 
     cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
@@ -452,7 +459,7 @@ def config_show(env):
 @main.group("webserver", help="Built-in webserver support")
 @pass_env
 def webserver(env):
-    env.require_config()
+    env.load_config(False)
 
 
 @webserver.command("run", help="Run ankerctl webserver")
@@ -460,7 +467,6 @@ def webserver(env):
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
 @pass_env
 def webserver(env, host, port):
-    env.require_config()
     web.webserver(env.config, host, port, pppp_dump=env.pppp_dump)
 
 
