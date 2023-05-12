@@ -26,6 +26,7 @@ Services:
     - util: Houses utility services for use in the web module
     - config: Handles configuration manipulation for ankerctl
 """
+import os
 import json
 import logging as log
 
@@ -33,6 +34,8 @@ from secrets import token_urlsafe as token
 from flask import Flask, flash, request, render_template, Response, session, url_for
 from flask_sock import Sock
 from user_agents import parse as user_agent_parse
+
+from config import ROOT_DIR
 
 from web.lib.service import ServiceManager
 
@@ -44,7 +47,7 @@ import cli.util
 import cli.config
 
 
-app = Flask(__name__, root_path=".", static_folder="static", template_folder="static")
+app = Flask(__name__, root_path=ROOT_DIR, static_folder="static", template_folder="static")
 # secret_key is required for flash() to function
 app.secret_key = token(24)
 app.config.from_prefixed_env()

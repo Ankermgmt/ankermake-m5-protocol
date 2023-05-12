@@ -2,6 +2,7 @@ import os
 import click
 import logging as log
 
+from config import ROOT_DIR
 import cli.util
 
 from libflagship.mqttapi import AnkerMQTTBaseClient
@@ -13,7 +14,7 @@ servertable = {
 
 
 def mqtt_open(config, insecure):
-    cert_path = os.path.abspath("./ssl/ankermake-mqtt.crt")
+    cert_path = os.path.join(ROOT_DIR, "ssl/ankermake-mqtt.crt")
     
     with config.open() as cfg:
         printer = cfg.printers[0]
