@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 import paho.mqtt
 import logging as log
+import os
 import ssl
 import json
 import uuid
@@ -65,8 +66,9 @@ class AnkerMQTTBaseClient:
     def on_message(self, client, userdata, msg, pkt, tail):
         pass
 
+    cert_path = os.path.abspath("../ssl/ankermake-mqtt.crt")
     @classmethod
-    def login(cls, printersn, username, password, key, ca_certs="ankermake-mqtt.crt", verify=True):
+    def login(cls, printersn, username, password, key, ca_certs=cert_path, verify=True):
         client = mqtt.Client()
 
         if verify:

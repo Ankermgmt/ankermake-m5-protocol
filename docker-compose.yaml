@@ -1,4 +1,4 @@
-version: '3.9.1'
+version: "3.9.1"
 
 # You must manually run `ankerctl config import` atleast once
 # docker run \
@@ -6,21 +6,22 @@ version: '3.9.1'
 # -v "$HOME/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json:/tmp/login.json" \
 # ankerctl config import /tmp/login.json
 services:
-  ankerctl:
-    image: ankerctl/ankerctl:latest
-    container_name: ankerctl
-    restart: unless-stopped
-    build: .
-    environment:
-      - FLASK_PORT=4470
-      - FLASK_HOST=0.0.0.0
-    volumes:
-      - ankerctl_vol:/root/.config/ankerctl
-    ports:
-      - 127.0.0.1:4470:4470
-    entrypoint: "/app/ankerctl.py"
-    command: ["webserver", "run"]
+    ankerctl:
+        image: ankerctl/ankerctl:latest
+        container_name: ankerctl
+        restart: unless-stopped
+        build: .
+        environment:
+            - FLASK_PORT=4470
+            - FLASK_HOST=0.0.0.0
+        volumes:
+            - ankerctl_vol:/root/.config/ankerctl
+        ports:
+            - 127.0.0.1:4470:4470
+        working_dir: /app
+        entrypoint: "/app/ankerctl.py"
+        command: ["webserver", "run"]
 
 volumes:
-  ankerctl_vol:
-    external: true
+    ankerctl_vol:
+        external: true
