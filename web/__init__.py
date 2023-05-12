@@ -28,7 +28,6 @@ Services:
 """
 import json
 import logging as log
-import time
 
 from secrets import token_urlsafe as token
 from flask import Flask, flash, request, render_template, Response, session, url_for

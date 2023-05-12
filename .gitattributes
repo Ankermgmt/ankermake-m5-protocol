@@ -7,4 +7,4 @@
 *.md    text
 *.txt   text
 *.tpl   text
-*.py    text diff=python
+*.py    text diff=python eol=lf
