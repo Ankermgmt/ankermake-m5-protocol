@@ -13,7 +13,7 @@ servertable = {
 
 
 def mqtt_open(config, insecure):
-    cert_path = os.path.abspath("../ssl/ankermake-mqtt.crt")
+    cert_path = os.path.abspath("./ssl/ankermake-mqtt.crt")
     
     with config.open() as cfg:
         printer = cfg.printers[0]

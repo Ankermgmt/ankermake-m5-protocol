@@ -2,12 +2,17 @@ import paho.mqtt.client as mqtt
 import paho.mqtt
 import logging as log
 import os
+import inspect
 import ssl
 import json
 import uuid
 from datetime import datetime, timedelta
 
 from libflagship.mqtt import MqttMsg, MqttPktType
+
+
+# Construct the absolute path to the certificate file relative to the project root
+cert_path = os.path.abspath("./ssl/ankermake-mqtt.crt")
 
 
 class AnkerMQTTBaseClient:
@@ -66,18 +71,16 @@ class AnkerMQTTBaseClient:
     def on_message(self, client, userdata, msg, pkt, tail):
         pass
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    cert_path = os.path.abspath(os.path.join(script_dir, "../ssl/ankermake-mqtt.crt"))
-
     @classmethod
     def login(cls, printersn, username, password, key, ca_certs=cert_path, verify=True):
         client = mqtt.Client()
+        log.warning(ca_certs)
 
         if verify:
-            client.tls_set(ca_certs)
+            client.tls_set(ca_certs=ca_certs)
         else:
             log.warning('Not verifying certificates is insecure')
-            client.tls_set(ca_certs, cert_reqs=ssl.CERT_NONE)
+            client.tls_set(ca_certs=ca_certs, cert_reqs=ssl.CERT_NONE)
             client.tls_insecure_set(True)
 
         client.username_pw_set(username, password)
