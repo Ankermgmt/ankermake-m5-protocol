@@ -27,7 +27,7 @@ def mqtt_open(config, insecure):
             acct.mqtt_password,
             printer.mqtt_key,
             ca_certs=cert_path,
-            verify=not insecure,
+            verify=insecure,
         )
         client.connect(server)
         return client
