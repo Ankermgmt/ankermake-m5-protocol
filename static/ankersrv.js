@@ -18,7 +18,8 @@ $(function () {
      */
     $("#reload").on("click", function () {
         content = $("#reload").data("message");
-        $("#popupModalBody").text(content);
+        $("#popupModalBody").val(content);
+        $("#popupModal").modal("show");
     });
 
     /**
@@ -38,6 +39,19 @@ $(function () {
     });
 
     /**
+<<<<<<< HEAD
+=======
+     * On click of element that has data-target="modal", displays a popup modal with a message
+     */
+    $("#modal").on("show.bs.modal", function (event) {
+        var button = $(event.relatedTarget);
+        var content = button.data("message");
+        var modal = $(this);
+        modal.find(".modal-body").val(content);
+    });
+
+    /**
+>>>>>>> 33282e4431ee009c7c6223a400cf345e9e9dc5a0
      * Initializes bootstrap alerts and sets a timeout for when they should automatically close
      */
     let alert_list = document.querySelectorAll(".alert");
