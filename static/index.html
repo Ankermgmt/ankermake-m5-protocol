@@ -15,6 +15,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='ankersrv.css') }}" />
     </head>
     <body>
+        <!-- Header -->
         <div class="container">
             <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
                 <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
@@ -93,6 +94,22 @@
                 </ul>
             </header>
         </div>
+        <!-- Modal -->
+        <div
+            class="modal fade"
+            id="popupModal"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="popupModal"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content d-flex align-items-center">
+                    <div id="popupModalBody" class="modal-body"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Message Center -->
         <div class="container text-center" id="messages">
             {% with messages = get_flashed_messages(with_categories=true) %}
             <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
@@ -112,8 +129,10 @@
             </div>
             {% endfor %} {% endif %} {% endwith %}
         </div>
+        <!-- Content Area -->
         <div class="tab-content my-3" id="ankerctlContent">
             {% if configure %}
+            <!-- Home Tab -->
             <div
                 class="tab-pane fade{% if configure %} show active{% endif %}"
                 id="home"
@@ -121,13 +140,22 @@
                 aria-labelledby="home-tab"
             >
                 <div class="container">
-                    <div class="row text-body-emphasis">
-                        <div class="col-lg-8 px-3 rounded-3 display-3">
-                            <video class="w-100 rounded-3" playsinline autoplay muted id="player"></video>
+                    <div class="row text-body-emphasis display-3">
+                        <!-- Video Container -->
+                        <div class="col-lg-8 px-3 rounded-3">
+                            <video
+                                class="w-100 rounded-3"
+                                playsinline
+                                autoplay
+                                muted
+                                id="player"
+                                poster="{{ url_for('static', filename='img/load-screen.svg') }}"
+                            ></video>
                             <div id="overlay" class="col-md-12 px-3 rounded-3"></div>
                         </div>
                         <!-- Printer Info Container -->
                         <div class="col-lg-4 px-3 rounded-3">
+                            <!-- Controls Container -->
                             <div class="row mb-3">
                                 {%if printer_serial %}
                                 <div class="container" id="connection">
@@ -174,10 +202,220 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- Status Container -->
+                            <div class="row mt-3 print-status">
+                                <div class="col-12">
+                                    <div class="row">
+                                        <div class="col-lg-12 px-3 rounded-3">
+                                            <div class="row mt-3">
+                                                <h4>Temperature</h4>
+                                            </div>
+                                            <div class="row mt-2">
+                                                <div class="col-6">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend print-temp-label">
+                                                            <div class="input-group-text mx-auto" id="nozzleGroup">
+                                                                &nbsp;<i class="icon-hotend icon"></i>
+                                                            </div>
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            id="nozzle-temp"
+                                                            name="nozzle-temp"
+                                                            class="form-control"
+                                                            value="0°C"
+                                                            title="Nozzle Temperature"
+                                                            aria-label="Nozzle Temperature"
+                                                            aria-describedby="nozzleGroup"
+                                                            disabled
+                                                            readonly
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend print-temp-label">
+                                                            <div class="input-group-text mx-auto" id="bedGroup">
+                                                                &nbsp;<i class="icon-bed icon"></i>
+                                                            </div>
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            id="bed-temp"
+                                                            name="bed-temp"
+                                                            class="form-control"
+                                                            value="0°C"
+                                                            title="Bed Temperature"
+                                                            aria-label="Bed Temperature"
+                                                            aria-describedby="bedGroup"
+                                                            disabled
+                                                            readonly
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="print-details" style="display: none">
+                                                <div class="row mt-3">
+                                                    <h4>Print Progress</h4>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-12">
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <div
+                                                                    class="input-group-text print-info-label"
+                                                                    id="printName"
+                                                                >
+                                                                    Name
+                                                                </div>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                id="print-name"
+                                                                name="print-name"
+                                                                class="form-control"
+                                                                value="None"
+                                                                title="Print Name"
+                                                                aria-label="Print Name"
+                                                                aria-describedby="printName"
+                                                                disabled
+                                                                readonly
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-6">
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <div
+                                                                    class="input-group-text print-info-label"
+                                                                    id="timeElapsed"
+                                                                >
+                                                                    Elapsed
+                                                                </div>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                id="time-elapsed"
+                                                                name="time-elapsed"
+                                                                class="form-control"
+                                                                value="00:00:00"
+                                                                title="Time Elapsed"
+                                                                aria-label="Time Elapsed"
+                                                                aria-describedby="timeElapsed"
+                                                                disabled
+                                                                readonly
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <div
+                                                                    class="input-group-text print-info-label"
+                                                                    id="timeRemain"
+                                                                >
+                                                                    Remain
+                                                                </div>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                id="time-remain"
+                                                                name="time-remain"
+                                                                class="form-control"
+                                                                value="00:00:00"
+                                                                title="Time Remaining"
+                                                                aria-label="Time Remaining"
+                                                                aria-describedby="timeRemain"
+                                                                disabled
+                                                                readonly
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-12">
+                                                        <div class="progress position-relative">
+                                                            <div
+                                                                class="progress-bar progress-bar-striped progress-bar-animated"
+                                                                role="progressbar"
+                                                                id="progressbar"
+                                                                title="progressbar"
+                                                                aria-valuenow="0"
+                                                                aria-valuemin="0"
+                                                                aria-valuemax="100"
+                                                                style="width: 0%"
+                                                            >
+                                                                <span
+                                                                    id="progress"
+                                                                    class="justify-content-center d-flex position-absolute w-100"
+                                                                    >0%</span
+                                                                >
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-2">
+                                                    <div class="col-6">
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <div
+                                                                    class="input-group-text print-info-label"
+                                                                    id="printLayer"
+                                                                >
+                                                                    Layer
+                                                                </div>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                id="print-layer"
+                                                                name="print-layer"
+                                                                class="form-control"
+                                                                value="0/0"
+                                                                title="Print Layers"
+                                                                aria-label="Print Layers"
+                                                                aria-describedby="printLayer"
+                                                                disabled
+                                                                readonly
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <div
+                                                                    class="input-group-text print-info-label"
+                                                                    id="printSpeed"
+                                                                >
+                                                                    Speed
+                                                                </div>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                id="print-speed"
+                                                                name="print-speed"
+                                                                class="form-control"
+                                                                value="0mm/s"
+                                                                title="Print Speed"
+                                                                aria-label="Print Speed"
+                                                                aria-describedby="printSpeed"
+                                                                disabled
+                                                                readonly
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <!-- Instructions Tab -->
             <div class="tab-pane fade" id="instructions" role="tabpanel" aria-labelledby="instructions-tab">
                 <div class="container mb-4">
                     <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xxl-2 g-3 p-2">
@@ -232,6 +470,7 @@
                 </div>
             </div>
             {% endif %}
+            <!-- Setup Tab -->
             <div
                 class="tab-pane fade{% if not configure %} show active{% endif %}"
                 id="setup"
@@ -286,8 +525,11 @@
                                         class="btn btn-secondary submit"
                                         id="reload"
                                         role="button"
+                                        data-message="Ankerctl is restarting..."
                                     >
-                                        <i class="bi bi-bootstrap-reboot"></i>&nbsp;Reload Services
+                                        <span data-bs-toggle="modal" data-bs-target="#popupModal">
+                                            <i class="bi bi-bootstrap-reboot"></i>&nbsp;Reload Services
+                                        </span>
                                     </a>
                                 </div>
                             </div>
@@ -304,13 +546,12 @@
                 </div>
             </div>
         </div>
-        <footer class="container my-3 text-center bg-body-tertiary rounded-3 text-center text-lg-start">
-            <div class="p-1 text-center">
+        <!-- Footer -->
+        <footer class="container my-3">
+            <div class="p-3 text-center bg-body-tertiary rounded-3">
                 &copy;
-                <script>
-                    document.write(new Date().getFullYear());
-                </script>
-                Copyright:
+                <span id="copyYear">...</span>
+                Copyright -
                 <a
                     class="text-light"
                     href="https://github.com/Ankermgmt/ankermake-m5-protocol"
