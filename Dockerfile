@@ -23,6 +23,7 @@ RUN mkdir -p /root/.config/
 COPY ankerctl.py /app/
 COPY web /app/web/
 COPY static /app/static/
+COPY web /app/web/
 COPY libflagship /app/libflagship/
 COPY cli /app/cli/
 
@@ -30,4 +31,3 @@ COPY cli /app/cli/
 COPY --from=build-env /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
 ENTRYPOINT ["/app/ankerctl.py"]
-CMD ["webserver", "run"]
