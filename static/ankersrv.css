@@ -22,7 +22,7 @@ a.text-light {
   text-decoration: none;
 }
 
-a.text-light:hover {
+a.text-light:hover, .icon-green {
   color: #88f387 !important;
 }
 
