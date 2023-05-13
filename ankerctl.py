@@ -111,6 +111,7 @@ def mqtt_monitor(env):
         for obj in body:
             try:
                 cmdtype = obj["commandType"]
+                log.debug(MqttMsgType(cmdtype))
                 name = MqttMsgType(cmdtype).name
                 if name.startswith("ZZ_MQTT_CMD_"):
                     name = name[len("ZZ_MQTT_CMD_"):].lower()
@@ -118,7 +119,7 @@ def mqtt_monitor(env):
                 del obj["commandType"]
                 print(f"  [{cmdtype:4}] {name:20} {obj}")
             except Exception:
-                print(f"  {obj}")
+                log.exception(f"  {obj}")
 
 
 @mqtt.command("send")
