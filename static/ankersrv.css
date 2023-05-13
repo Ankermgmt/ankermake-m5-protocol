@@ -22,8 +22,8 @@ a.text-light {
     text-decoration: none;
 }
 
-a.text-light:hover {
-    color: #88f387 !important;
+a.text-light:hover, .icon-green {
+  color: #88f387 !important;
 }
 
 pre,
