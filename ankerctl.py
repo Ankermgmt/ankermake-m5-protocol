@@ -5,6 +5,7 @@ import click
 import platform
 import logging as log
 from os import path, environ
+from datetime import datetime
 from rich import print  # you need python3
 from tqdm import tqdm
 
@@ -446,17 +447,24 @@ def config_show(env):
             return
 
         log.info("Account:")
-        print(f"    user_id:    {cfg.account.user_id[:20]}...<REDACTED>")
-        print(f"    auth_token: {cfg.account.auth_token[:20]}...<REDACTED>")
+        print(f"    user_id:    {cfg.account.user_id[:10]}...<REDACTED>")
+        print(f"    auth_token: {cfg.account.auth_token[:10]}...<REDACTED>")
         print(f"    email:      {cfg.account.email}")
         print(f"    region:     {cfg.account.region.upper()}")
         print()
 
         log.info("Printers:")
+        # Sort the list of printers by printer.id
+        cfg.printers.sort(key=lambda p: p.id)
         for i, p in enumerate(cfg.printers):
+            create_time = datetime.fromtimestamp(p.create_time)
             print(f"    printer:   {i}")
+            print(f"    id:        {p.id}")
+            print(f"    name:      {p.name}")
             print(f"    duid:      {p.p2p_duid}") # Printer Serial Number
             print(f"    sn:        {p.sn}")
+            print(f"    model:     {p.model}")
+            print(f"    created:   {create_time}")
             print(f"    ip:        {p.ip_addr}")
             print(f"    wifi_mac:  {cli.util.pretty_mac(p.wifi_mac)}")
             print(f"    api_hosts: {', '.join(p.api_hosts)}")

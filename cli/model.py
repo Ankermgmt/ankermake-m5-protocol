@@ -32,7 +32,11 @@ class Serialize:
 
 @dataclass
 class Printer(Serialize):
+    id: str
     sn: str
+    name: str
+    model: str
+    create_time: int
     wifi_mac: str
     ip_addr: str
     mqtt_key: bytes
@@ -61,4 +65,4 @@ class Account(Serialize):
 @dataclass
 class Config(Serialize):
     account: Account
-    printers: [Printer]
+    printers: list[Printer]
