@@ -111,7 +111,6 @@ def mqtt_monitor(env):
         for obj in body:
             try:
                 cmdtype = obj["commandType"]
-                log.debug(MqttMsgType(cmdtype))
                 name = MqttMsgType(cmdtype).name
                 if name.startswith("ZZ_MQTT_CMD_"):
                     name = name[len("ZZ_MQTT_CMD_"):].lower()
