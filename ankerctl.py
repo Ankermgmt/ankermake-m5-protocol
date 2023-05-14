@@ -92,8 +92,8 @@ def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
 
     env.upgrade_config_if_needed()
 
-    env.printer = printer
-    log.debug(f"Using printer [{env.printer}]");
+    env.printer_index = printer
+    log.debug(f"Using printer [{env.printer_index}]")
 
 
 @main.group("mqtt", help="Low-level mqtt api access")

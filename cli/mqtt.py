@@ -20,7 +20,7 @@ def mqtt_open(config, printer_index, insecure):
         printer = cfg.printers[printer_index]
         acct = cfg.account
         server = servertable[acct.region]
-        log.info(f"Connecting printer {printer.p2p_duid} through {server}")
+        log.info(f"Connecting printer {printer.name} ({printer.p2p_duid}) through {server}")
         client = AnkerMQTTBaseClient.login(
             printer.sn,
             acct.mqtt_username,
