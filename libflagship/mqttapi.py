@@ -77,8 +77,10 @@ class AnkerMQTTBaseClient:
         if verify:
             client.tls_set(ca_certs=ca_certs)
         else:
-            log.warning('Not verifying certificates is insecure')
-            client.tls_set(ca_certs=ca_certs, cert_reqs=ssl.CERT_NONE)
+            log.warning('[Not Verifying Certificate]')
+            log.warning('This is insecure and should not be used in production environments.')
+            log.warning('It is recommended to run without "-k/--insecure".')
+            client.tls_set(ca_certs=None, cert_reqs=ssl.CERT_NONE)
             client.tls_insecure_set(True)
 
         client.username_pw_set(username, password)
