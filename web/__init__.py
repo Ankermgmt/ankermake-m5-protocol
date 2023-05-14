@@ -259,7 +259,7 @@ def app_api_files_local():
     return {}
 
 
-def webserver(config, host, port, **kwargs):
+def webserver(config, host, port, insecure=False, **kwargs):
     """
     Starts the Flask webserver
 
@@ -277,5 +277,6 @@ def webserver(config, host, port, **kwargs):
         app.config["login"] = True if cfg else False
         app.config["port"] = port
         app.config["host"] = host
+        app.config["insecure"] = insecure
         app.config.update(kwargs)
         app.run(host=host, port=port)

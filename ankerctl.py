@@ -119,7 +119,7 @@ def mqtt_monitor(env):
                 del obj["commandType"]
                 print(f"  [{cmdtype:4}] {name:20} {obj}")
             except Exception:
-                log.exception(f"  {obj}")
+                print(f"  {obj}")
 
 
 @mqtt.command("send")
@@ -468,7 +468,7 @@ def webserver(env):
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
 @pass_env
 def webserver(env, host, port):
-    web.webserver(env.config, host, port, pppp_dump=env.pppp_dump)
+    web.webserver(env.config, host, port, env.insecure, pppp_dump=env.pppp_dump)
 
 
 if __name__ == "__main__":
