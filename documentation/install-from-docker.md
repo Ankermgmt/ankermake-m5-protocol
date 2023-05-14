@@ -56,6 +56,15 @@
 
 3. Download the latest version of ankerctl from the GitHub releases page and extract the contents wherever you would like to run the program from.
 
+4. The next steps will take place in your preferred choice of Terminal.
+
+   4a. Navigate to the ankerctl directory (i.e.: cd \Users\username\Downloads\ankerctl if you unzipped it in your Downloads folder)
+   4b. Run the following command to build the docker container(s) and volume(s) needed by ankerctl.
+
+      `docker compose build`
+      
+5. Upon completion of the build, you can view within the Docker Desktop that it is in fact running by going to the Containers section of Docker Desktop and see "ankerctl" running. You may have to click the arrow next to the container name to view "ankerctl". You can also click on "4470:4470" on that screen if you would like to launch your browser to the webserver page. 
+
 ## Linux (UNDER CONSTRUCTION)
 
 1. Install the [AnkerMake slicer](https://www.ankermake.com/software). Make sure you open it and login via the “Account” dropdown in the top toolbar.
