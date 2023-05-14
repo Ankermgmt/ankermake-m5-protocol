@@ -45,7 +45,16 @@
 
 1. Install the [AnkerMake slicer](https://www.ankermake.com/software). Make sure you open it and login via the “Account” dropdown in the top toolbar.
    	**NOTE:** The slicer app does not need to be open for the rest of these steps.
-2. 
+
+2. Install Docker Desktop that matches your CPU by following [this guide](https://docs.docker.com/desktop/install/mac-install/) (supplemental steps are provided below).
+
+    It is strongly recommended that if your are using a Mac with Apple Silicon to install Rosetta 2. It is no longer a requirement since Docker 4.3.0 however for the best experience it should be installed. The easiest way to install it is via your preferred choice of Terminal and running this command:
+      
+      `softwareupdate --install-rosetta`
+  
+     - [ ] **[<u>Install Docker Desktop</u>]** Download and install Docker Desktop using the linked docker docs guide. Once the install process is complete, open Docker Desktop and accept the EULA. You can close Docker Desktop for the remaining steps.
+
+3. Download the latest version of ankerctl from the GitHub releases page and extract the contents wherever you would like to run the program from.
 
 ## Linux (UNDER CONSTRUCTION)
 
