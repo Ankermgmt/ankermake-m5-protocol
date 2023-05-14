@@ -39,7 +39,7 @@
 
 5. Run the following command to build the docker container(s) and volume(s) needed by ankerctl.
 
-   `docker compose build`
+   `docker compose up`
 
 ## MacOS (UNDER CONSTRUCTION)
 
@@ -58,10 +58,10 @@
 
 4. The next steps will take place in your preferred choice of Terminal.
 
-   4a. Navigate to the ankerctl directory (i.e.: cd \Users\username\Downloads\ankerctl if you unzipped it in your Downloads folder)
+   4a. Navigate to the ankerctl directory (i.e.: cd $HOME/Downloads or cd ~/Downloads if you unzipped it in your Downloads folder)
    4b. Run the following command to build the docker container(s) and volume(s) needed by ankerctl.
 
-      `docker compose build`
+      `docker compose up`
       
 5. Upon completion of the build, you can view within the Docker Desktop that it is in fact running by going to the Containers section of Docker Desktop and see "ankerctl" running. You may have to click the arrow next to the container name to view "ankerctl". You can also click on "4470:4470" on that screen if you would like to launch your browser to the webserver page. 
 
