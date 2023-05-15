@@ -54,28 +54,28 @@ code#loginFilePath {
 }
 
 .icon-hotend:before {
-    content: url(../static/img/icon-hotend.svg);
+    content: url(img/icon-hotend.svg);
     display: block;
     height: 18px;
     width: 18px;
 }
 
 .icon-bed:before {
-    content: url(../static/img/icon-bed.svg);
+    content: url(img/icon-bed.svg);
     display: block;
     height: 18px;
     width: 18px;
 }
 
 .icon-time-passed:before {
-    content: url(../static/img/icon-time-passed.svg);
+    content: url(img/icon-time-passed.svg);
     display: block;
     height: 18px;
     width: 18px;
 }
 
 .icon-time-remaining:before {
-    content: url(../static/img/icon-time-remaining.svg);
+    content: url(img/icon-time-remaining.svg);
     display: block;
     height: 18px;
     width: 18px;
