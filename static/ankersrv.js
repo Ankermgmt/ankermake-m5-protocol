@@ -71,17 +71,18 @@ $(function () {
 
     /**
      * Convert time in seconds to hours, minutes, and seconds format
-     * @param {number} seconds
+     * @param {number} totalseconds
      * @returns {string} Formatted time string
      */
-    function getTime(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const remainingSeconds = seconds % 60;
+    function getTime(totalseconds) {
+        const hours = Math.floor(totalseconds / 3600);
+        const minutes = Math.floor((totalseconds % 3600) / 60);
+        const seconds = (totalseconds % 60);
 
-        const timeString = `${hours.toString().padStart(2, "0")}:${minutes
-            .toString()
-            .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+        const timeString =
+              `${hours.toString().padStart(2, "0")}:` +
+              `${minutes.toString().padStart(2, "0")}:` +
+              `${seconds.toString().padStart(2, "0")}`;
 
         return timeString;
     }
