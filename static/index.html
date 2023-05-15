@@ -159,7 +159,7 @@
                             <div class="row mb-3">
                                 {%if printer_serial %}
                                 <div class="container" id="connection">
-                                    <div class="p-3 border rounded-3 fs-6 bg-body-tertiary">
+                                    <div class="p-3 border rounded-3 fs-6 bg-body-secondary">
                                         Connected to: <strong>{{ printer_serial }}</strong>
                                         <i class="bi-check-lg icon-green"></i>
                                     </div>
@@ -167,32 +167,34 @@
                                 {% endif %}
                             </div>
                             <div class="row">
-                                <div class="container" id="controls">
-                                    <div class="card">
-                                        <div class="card-header">Light Control</div>
+                                <div class="container" id="base-controls">
+                                    <div class="card mb-3">
+                                        <div class="card-header h5">Light Control</div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-6 px-3">
+                                                <div class="col-6">
                                                     <button class="w-100 btn btn-secondary" id="light-on">
                                                         <i class="bi-lightbulb"></i> Light on
                                                     </button>
                                                 </div>
-                                                <div class="col-6 px-3">
+                                                <div class="col-6">
                                                     <button class="w-100 btn btn-secondary" id="light-off">
                                                         <i class="bi-lightbulb-off"></i> Light off
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="card-header">Video Quality</div>
+                                    </div>
+                                    <div class="card mb-3">
+                                        <div class="card-header h5">Video Quality</div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <div class="col-6 px-3">
+                                                <div class="col-6">
                                                     <button class="w-100 btn btn-secondary" id="quality-low">
                                                         <i class="bi-badge-sd"></i> SD Quality
                                                     </button>
                                                 </div>
-                                                <div class="col-6 px-3">
+                                                <div class="col-6">
                                                     <button class="w-100 btn btn-secondary" id="quality-high">
                                                         <i class="bi-badge-hd"></i> HD Quality
                                                     </button>
@@ -203,14 +205,12 @@
                                 </div>
                             </div>
                             <!-- Status Container -->
-                            <div class="row mt-3 print-status">
-                                <div class="col-12">
-                                    <div class="row">
-                                        <div class="col-lg-12 px-3 rounded-3">
-                                            <div class="row mt-3">
-                                                <h4>Temperature</h4>
-                                            </div>
-                                            <div class="row mt-2">
+                            <div class="row">
+                                <div class="container" id="controls">
+                                    <div class="card mb-3">
+                                        <div class="card-header h5">Temperature</div>
+                                        <div class="card-body">
+                                            <div class="row">
                                                 <div class="col-6">
                                                     <div class="input-group">
                                                         <div class="input-group-prepend print-temp-label">
@@ -254,7 +254,17 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div id="print-details" style="display: none">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Status Container -->
+                            <div class="row mt-3 print-status">
+                                <div class="col-12">
+                                    <div class="row">
+                                        <div class="col-lg-12 px-3 rounded-3">
+                                            <div id="print-details">
+                                                <!--  style="display: none" -->
                                                 <div class="row mt-3">
                                                     <h4>Print Progress</h4>
                                                 </div>

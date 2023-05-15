@@ -41,7 +41,7 @@
             </path>
         </g>
         <g transform="matrix(1,0,0,1,374,0)">
-            <path d="M42.3,39.6C48,35.3 56.2,36.5 60.4,42.3C64.7,48 63.5,56.2 57.7,60.4L61.8,65.9C70.6,59.4 72.4,46.9 65.9,38.2C59.4,29.4 46.9,27.6 38.2,34.1L42.3,39.6Z" style="fill:rgb(212,0,0);fill-rule:nonzero;">
+            <path d="M42.3,39.6C48,35.3 56.2,36.5 60.4,42.3C64.7,48 63.5,56.2 57.7,60.4L61.8,65.9C70.6,59.4 72.4,46.9 65.9,38.2C59.4,29.4 46.9,27.6 38.2,34.1L42.3,39.6Z" style="fill:white;fill-rule:nonzero;">
                 <animateTransform 
                     attributeName="transform" 
                     attributeType="XML" 
@@ -53,12 +53,12 @@
             </path>
         </g>
         <g transform="matrix(1,0,0,1,374,0)">
-            <path d="M82,35.7C74.1,18 53.4,10.1 35.7,18C18,25.9 10.1,46.6 18,64.3L25.6,60.9C19.6,47.4 25.6,31.6 39.1,25.6C52.6,19.6 68.4,25.6 74.4,39.1L82,35.7Z" style="fill:white;fill-rule:nonzero;">
+            <path d="M82,35.7C74.1,18 53.4,10.1 35.7,18C18,25.9 10.1,46.6 18,64.3L25.6,60.9C19.6,47.4 25.6,31.6 39.1,25.6C52.6,19.6 68.4,25.6 74.4,39.1L82,35.7Z" style="fill:rgb(212,0,0);fill-rule:nonzero;">
                 <animateTransform 
                     attributeName="transform" 
                     attributeType="XML" 
                     type="rotate"
-                    dur="2s" 
+                    dur="1.5s" 
                     from="0 50 50"
                     to="360 50 50" 
                     repeatCount="indefinite" />
