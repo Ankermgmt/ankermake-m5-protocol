@@ -41,7 +41,7 @@
 
    `docker compose up`
 
-## MacOS (UNDER CONSTRUCTION)
+## MacOS
 
 1. Install the [AnkerMake slicer](https://www.ankermake.com/software). Make sure you open it and login via the “Account” dropdown in the top toolbar.
    	**NOTE:** The slicer app does not need to be open for the rest of these steps.
