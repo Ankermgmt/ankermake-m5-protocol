@@ -109,7 +109,7 @@ def mqtt_monitor(env):
     Connect to mqtt broker, and show low-level events in realtime.
     """
 
-    client = cli.mqtt.mqtt_open(env.config, env.insecure)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
 
     for msg, body in client.fetchloop():
         log.info(f"TOPIC [{msg.topic}]")
@@ -158,7 +158,7 @@ def mqtt_send(env, command_type, args, force):
             log.fatal("Sending DEVICE_NAME_SET without devName=<name> will crash printer (override with --force)")
             return
 
-    client = cli.mqtt.mqtt_open(env.config, env.insecure)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
     cli.mqtt.mqtt_command(client, cmd)
 
 
@@ -170,7 +170,7 @@ def mqtt_rename_printer(env, newname):
     Set a new nickname for your printer
     """
 
-    client = cli.mqtt.mqtt_open(env.config, env.insecure)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
 
     cmd = {
         "commandType": MqttMsgType.ZZ_MQTT_CMD_DEVICE_NAME_SET,
@@ -247,7 +247,7 @@ def pppp_print_file(env, file, no_act):
     file, so anytime a file is uploaded, the old one is deleted.
     """
     env.load_config()
-    api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
+    api = cli.pppp.pppp_open(env.config, env.printer_index, dumpfile=env.pppp_dump)
 
     data = file.read()
     fui = FileUploadInfo.from_file(file.name, user_name="ankerctl", user_id="-", machine_id="-")
@@ -281,7 +281,7 @@ def pppp_capture_video(env, file, max_size):
     "ffplay" from the ffmpeg program suite.
     """
     env.load_config()
-    api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
+    api = cli.pppp.pppp_open(env.config, env.printer_index, dumpfile=env.pppp_dump)
 
     cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
     api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
