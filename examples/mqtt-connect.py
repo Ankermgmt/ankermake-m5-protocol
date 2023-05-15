@@ -122,7 +122,7 @@ def main():
 
     # get up and running
     try:
-        client = AnkerMQTTClient.login(printer_sn, mqtt_username, mqtt_password, mqtt_key, verify=args.insecure)
+        client = AnkerMQTTClient.login(printer_sn, mqtt_username, mqtt_password, mqtt_key, verify=not args.insecure)
         client.connect(server=servertable[args.region])
         client.loop()
     except Exception as E:
