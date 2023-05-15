@@ -22,7 +22,8 @@ a.text-light {
     text-decoration: none;
 }
 
-a.text-light:hover {
+a.text-light:hover,
+.icon-green {
     color: #88f387 !important;
 }
 
@@ -49,31 +50,33 @@ code#loginFilePath {
 }
 
 .icon {
-    background-size: cover;
-    display: inline-block;
-    position: fixed;
-    height: 25px;
-    width: 25px;
+    margin: 3px;
 }
 
-.icon-hotend {
-    background-color: #fff;
-    -webkit-mask-image: url(../static/img/hotend-icon.svg);
-    mask-image: url(../static/img/hotend-icon.svg);
+.icon-hotend:before {
+    content: url(../static/img/icon-hotend.svg);
+    display: block;
+    height: 18px;
+    width: 18px;
 }
 
-.icon-bed {
-    background-color: #fff;
-    -webkit-mask-image: url(../static/img/bed-icon.svg);
-    mask-image: url(../static/img/bed-icon.svg);
+.icon-bed:before {
+    content: url(../static/img/icon-bed.svg);
+    display: block;
+    height: 18px;
+    width: 18px;
 }
 
-.print-info-label {
-    width: 75px;
-    padding-left: 5px;
-    padding-right: 5px;
+.icon-time-passed:before {
+    content: url(../static/img/icon-time-passed.svg);
+    display: block;
+    height: 18px;
+    width: 18px;
 }
 
-.print-temp-label {
-    width: 50px;
+.icon-time-remaining:before {
+    content: url(../static/img/icon-time-remaining.svg);
+    display: block;
+    height: 18px;
+    width: 18px;
 }
