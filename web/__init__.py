@@ -26,7 +26,6 @@ Services:
     - util: Houses utility services for use in the web module
     - config: Handles configuration manipulation for ankerctl
 """
-import os
 import json
 import logging as log
 

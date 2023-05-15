@@ -1,22 +1,11 @@
-""" This module provides utilities for interacting with AnkerMake printers via MQTT protocol. \
-    It imports necessary modules, defines constants, and implements class AnkerMQTTBaseClient \
-    which handles MQTT communication and message parsing.
-
-Classes:
-
-AnkerMQTTBaseClient: Handles MQTT communication with AnkerMake printers, parsing incoming messages and executing commands.
-
-Constants:
-
-ROOT_DIR: The root directory, loaded from the config module. cert_path: The path to the SSL certificates. """
+import paho.mqtt.client as mqtt
+import paho.mqtt
 from os import path
 import logging as log
 import ssl
 import json
 import uuid
 from datetime import datetime, timedelta
-import paho.mqtt.client as mqtt
-import paho.mqtt
 
 from config import ROOT_DIR
 from libflagship.mqtt import MqttMsg, MqttPktType
