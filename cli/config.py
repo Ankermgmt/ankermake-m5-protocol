@@ -108,9 +108,8 @@ def load_config_from_api(auth_token, region, insecure):
 
     # populate config object with printer list
     # Sort the list of printers by printer.id
-    printers.sort(key=lambda p: p.station_id)
+    printers.sort(key=lambda p: p["station_id"])
     for pr in printers:
-        print(pr)
         station_sn = pr["station_sn"]
         config.printers.append(Printer(
             id=pr["station_id"],

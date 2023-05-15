@@ -25,8 +25,7 @@ def pppp_open(config, printer_index, timeout=None, dumpfile=None):
 
     with config.open() as cfg:
         if printer_index >= len(cfg.printers):
-            log.fatal(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
-            return
+            log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
         printer = cfg.printers[printer_index]
 
         api = AnkerPPPPApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
