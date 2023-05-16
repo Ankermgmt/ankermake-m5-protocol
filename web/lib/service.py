@@ -339,12 +339,12 @@ class ServiceManager:
             self.put(name)
 
     def stream(self, name: str):
-        with self.borrow(name) as svc:
-            queue = Queue()
+        try:
+            with self.borrow(name) as svc:
+                queue = Queue()
 
-            with svc.tap(lambda data: queue.put(data)):
-                while svc.state == RunState.Running:
-                    try:
+                with svc.tap(lambda data: queue.put(data)):
+                    while svc.state == RunState.Running:
                         yield queue.get()
-                    except (EOFError, OSError, ServiceStoppedError):
-                        break
+        except (EOFError, OSError, ServiceStoppedError):
+            return
