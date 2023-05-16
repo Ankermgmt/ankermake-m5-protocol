@@ -218,6 +218,10 @@ class Service(Thread):
 
     def await_stopped(self):
         while True:
+            if self.wanted:
+                log.warning(f"{self.name}: Service started while waiting for it to stop")
+                return False
+
             if self.state == RunState.Stopped:
                 log.debug(f"{self.name}: Stopped")
                 return True
