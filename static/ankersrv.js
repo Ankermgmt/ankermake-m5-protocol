@@ -70,48 +70,21 @@ $(function () {
     }
 
     /**
-     * Truncate a string to a specific length
-     * @param {string} str
-     * @param {number} maxLength
-     * @returns {string} Truncated string
-     */
-    function truncStr(str, maxLength) {
-        if (str.length > maxLength) {
-            return str.slice(0, maxLength) + "...";
-        } else {
-            return str;
-        }
-    }
-
-    /**
      * Convert time in seconds to hours, minutes, and seconds format
-     * @param {number} seconds
+     * @param {number} totalseconds
      * @returns {string} Formatted time string
      */
-    function getTime(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const remainingSeconds = seconds % 60;
+    function getTime(totalseconds) {
+        const hours = Math.floor(totalseconds / 3600);
+        const minutes = Math.floor((totalseconds % 3600) / 60);
+        const seconds = (totalseconds % 60);
 
-        const timeString = `${hours.toString().padStart(2, "0")}:${minutes
-            .toString()
-            .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+        const timeString =
+              `${hours.toString().padStart(2, "0")}:` +
+              `${minutes.toString().padStart(2, "0")}:` +
+              `${seconds.toString().padStart(2, "0")}`;
 
         return timeString;
-    }
-
-    /**
-     * Get the filament weight based on its length
-     * @param {number} length
-     * @returns {number} Weight
-     */
-    function getWeight(length) {
-        const diameter = 1.75;
-        const density = 1.24;
-        const adjustedLength = length / 100;
-        const volume = Math.PI * (diameter / 2) ** 2 * adjustedLength;
-        const weight = (volume * density).toFixed(2);
-        return weight;
     }
 
     /**

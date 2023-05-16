@@ -35,8 +35,8 @@ class Environment:
     def load_config(self, required=True):
         with self.config.open() as config:
             if not getattr(config, 'printers', False):
-                msg = "No printers found in config. Please upload configuration \
-                    using the webserver or 'ankerctl.py config import'"
+                msg = "No printers found in config. Please upload configuration " \
+                    "using the webserver or 'ankerctl.py config import'"
                 if required:
                     log.critical(msg)
                 else:

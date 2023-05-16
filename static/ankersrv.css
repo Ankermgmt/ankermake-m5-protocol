@@ -4,14 +4,13 @@
     text-decoration: none;
 }
 
-.nav-link.active,
-.btn-primary {
-    color: #000000 !important;
-    background-color: #88f387 !important;
+.nav-pills .nav-link.active {
+    color: #000000;
+    background-color: #88f387;
     border: #41a03f;
 }
 
-.nav-link:hover,
+.nav-pills .nav-link:hover,
 .btn:hover {
     color: #000000;
     background-color: #adf3ac;
@@ -50,33 +49,29 @@ code#loginFilePath {
 }
 
 .icon {
-    margin: 3px;
+    display: block;
+    height: 18px;
+    width: 18px;
 }
 
 .icon-hotend:before {
-    content: url(../static/img/icon-hotend.svg);
-    display: block;
-    height: 18px;
-    width: 18px;
+    content: url(img/icon-hotend.svg);
 }
 
 .icon-bed:before {
-    content: url(../static/img/icon-bed.svg);
-    display: block;
-    height: 18px;
-    width: 18px;
+    content: url(img/icon-bed.svg);
 }
 
 .icon-time-passed:before {
-    content: url(../static/img/icon-time-passed.svg);
-    display: block;
-    height: 18px;
-    width: 18px;
+    content: url(img/icon-time-passed.svg);
 }
 
 .icon-time-remaining:before {
-    content: url(../static/img/icon-time-remaining.svg);
-    display: block;
-    height: 18px;
-    width: 18px;
+    content: url(img/icon-time-remaining.svg);
+}
+
+/* Bootstrap overrides */
+
+.img-thumbnail {
+    border: 0 none;
 }

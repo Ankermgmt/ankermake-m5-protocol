@@ -17,7 +17,7 @@
     <body>
         <!-- Header -->
         <div class="container">
-            <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+            <header class="d-flex flex-wrap justify-content-center py-3 mb-3 border-bottom">
                 <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
                     <svg
                         class="bi me-2"
@@ -130,7 +130,7 @@
             {% endfor %} {% endif %} {% endwith %}
         </div>
         <!-- Content Area -->
-        <div class="tab-content my-3" id="ankerctlContent">
+        <div class="tab-content" id="ankerctlContent">
             {% if configure %}
 
             <!-- Home Tab -->
@@ -145,7 +145,7 @@
                         <div class="col-lg-8">
                             {%if printer_serial %}
                             <div class="row mb-3">
-                                <div class="container px-3 rounded-3" id="connection">
+                                <div class="container rounded-3" id="connection">
                                     <div class="p-3 rounded-3 fs-6 bg-body-tertiary">
                                         Connected to: <strong>{{ printer_serial }}</strong>
                                         <i class="bi-check-lg icon-green"></i>
@@ -157,7 +157,7 @@
                             <div class="row text-body-emphasis display-3">
                                 <div class="rounded-3">
                                     <video
-                                        class="w-100 rounded-3"
+                                        class="w-100 rounded-3 bg-body-tertiary"
                                         playsinline
                                         autoplay
                                         muted
@@ -448,7 +448,9 @@
                                             ><h4>Upload AnkerMake Login File</h4></label
                                         >
                                         <div class="input-group w-auto">
-                                            <input class="form-control" type="file" id="loginFile" name="login_file" />
+                                            <input class="form-control" type="file" id="loginFile" name="login_file"
+                                                   required aria-required="true"
+                                            />
                                             <button class="btn btn-secondary submit" type="submit" id="upload">
                                                 <i class="bi bi-cloud-arrow-up-fill"></i>&nbsp;Upload
                                             </button>
@@ -471,8 +473,9 @@
                             </div>
                             <div class="row">
                                 <div class="mb-3" id="reload-ankerctl">
-                                    <label for="reload" class="form-label"><h4>Reload Ankerctl Services</h4></label
-                                    ><br />
+                                    <label for="reload" class="form-label">
+                                        <h4>Reload Ankerctl Services</h4>
+                                    </label>
                                     <p>
                                         If you are experiencing issues with printing or viewing the video feed reloading
                                         the Ankerctl services will often resolve these issues.
@@ -504,7 +507,7 @@
             </div>
         </div>
         <!-- Footer -->
-        <footer class="container my-3">
+        <footer class="container">
             <div class="p-3 text-center bg-body-tertiary rounded-3">
                 &copy;
                 <span id="copyYear">...</span>
