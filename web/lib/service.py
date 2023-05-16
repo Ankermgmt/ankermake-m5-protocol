@@ -98,7 +98,7 @@ class Service(Thread):
 
     def _attempt_start(self):
         try:
-            log.debug(f"{self.name} worker start")
+            log.debug(f"{self.name} worker starting..")
             self.worker_start()
         except Exception as E:
             if self.wanted:
