@@ -50,33 +50,23 @@ code#loginFilePath {
 }
 
 .icon {
-    margin: 3px;
+    display: block;
+    height: 18px;
+    width: 18px;
 }
 
 .icon-hotend:before {
     content: url(img/icon-hotend.svg);
-    display: block;
-    height: 18px;
-    width: 18px;
 }
 
 .icon-bed:before {
     content: url(img/icon-bed.svg);
-    display: block;
-    height: 18px;
-    width: 18px;
 }
 
 .icon-time-passed:before {
     content: url(img/icon-time-passed.svg);
-    display: block;
-    height: 18px;
-    width: 18px;
 }
 
 .icon-time-remaining:before {
     content: url(img/icon-time-remaining.svg);
-    display: block;
-    height: 18px;
-    width: 18px;
 }
