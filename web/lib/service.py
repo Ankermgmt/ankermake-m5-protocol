@@ -276,6 +276,24 @@ class ServiceManager:
         del self.svcs[name]
         del self.refs[name]
 
+    def restart_all(self):
+        wanted = {}
+
+        for name, svc in self.svcs.items():
+            wanted[name] = svc.wanted
+            svc.stop()
+            svc.await_stopped()
+
+        for name, svc in self.svcs.items():
+            if wanted[name]:
+                svc.start()
+                try:
+                    svc.await_ready()
+                except ServiceStoppedError:
+                    # ignore service stopped error, since restart_all() is a
+                    # best-effort function.
+                    pass
+
     def get(self, name: str, ready=True) -> Service:
         if name not in self:
             raise KeyError(f"Requested unknown service {name!r}")
