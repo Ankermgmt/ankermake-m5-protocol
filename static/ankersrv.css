@@ -44,7 +44,7 @@ code#loginFilePath {
     font-size: medium;
 }
 
-.progress {
+#progress {
     height: 40px;
 }
 
