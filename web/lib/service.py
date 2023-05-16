@@ -114,7 +114,7 @@ class Service(Thread):
 
     def _attempt_run(self):
         try:
-            self.worker_run(timeout=0.3)
+            self.worker_run(timeout=0.1)
         except ServiceRestartSignal:
             log.info(f"{self.name}: Service requested restart.")
             self._holdoff.reset(delay=1)
