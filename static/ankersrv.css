@@ -69,3 +69,9 @@ code#loginFilePath {
 .icon-time-remaining:before {
     content: url(img/icon-time-remaining.svg);
 }
+
+/* Bootstrap overrides */
+
+.img-thumbnail {
+    border: 0 none;
+}
