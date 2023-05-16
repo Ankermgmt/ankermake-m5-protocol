@@ -5,7 +5,6 @@ It also implements various services, routes and functions including.
 
 Methods:
     - startup(): Registers required services on server start
-    - restart(): Shuts down and starts up the server to apply new changes
 
 Routes:
     - /ws/mqtt: Handles receiving and sending messages on the 'mqttqueue' stream service through websocket
@@ -72,14 +71,6 @@ def startup():
     app.svc.register("videoqueue", web.service.video.VideoQueue())
     app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
     app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
-
-
-def restart():
-    """
-    Restarts the registered services to apply new changes
-    """
-    for name in app.svc:
-        app.svc.svcs[name].restart()
 
 
 @sock.route("/ws/mqtt")
@@ -224,7 +215,7 @@ def app_api_ankerctl_server_reload():
             session["_flashes"].clear()
 
         try:
-            restart()
+            app.svc.restart_all()
         except Exception as err:
             log.exception(err)
             return web.util.flash_redirect(url_for('app_root'), f"Ankerctl could not be reloaded: {err}", "danger")
