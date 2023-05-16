@@ -291,6 +291,8 @@ class ServiceManager:
         for name, svc in self.svcs.items():
             wanted[name] = svc.wanted
             svc.stop()
+
+        for name, svc in self.svcs.items():
             svc.await_stopped()
 
         for name, svc in self.svcs.items():
