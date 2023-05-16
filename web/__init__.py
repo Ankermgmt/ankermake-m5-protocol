@@ -215,7 +215,7 @@ def app_api_ankerctl_server_reload():
             session["_flashes"].clear()
 
         try:
-            app.svc.restart_all()
+            app.svc.restart_all(await_ready=False)
         except Exception as err:
             log.exception(err)
             return web.util.flash_redirect(url_for('app_root'), f"Ankerctl could not be reloaded: {err}", "danger")
