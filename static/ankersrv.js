@@ -14,11 +14,12 @@ $(function () {
     }
 
     /**
-     * Show modal when clicking reload services button
+     * Redirect page when modal dialog is shown
      */
-    $("#reload").on("click", function () {
-        content = $("#reload").data("message");
-        $("#popupModalBody").text(content);
+    var popupModal = document.getElementById("popupModal");
+
+    popupModal.addEventListener("shown.bs.modal", function (e) {
+        window.location.href = $("#reload").data("href");
     });
 
     /**
