@@ -313,6 +313,7 @@ class ServiceManager:
                     svc.await_ready()
                 except ServiceError:
                     self.put(name)
+                    raise
 
         return svc
 
