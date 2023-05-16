@@ -48,7 +48,11 @@ class AnkerMQTTBaseClient:
 
     # internal function
     def _on_message(self, client, userdata, msg):
-        pkt, tail = MqttMsg.parse(msg.payload, key=self._key)
+        try:
+            pkt, tail = MqttMsg.parse(msg.payload, key=self._key)
+        except Exception as E:
+            log.error(f"Failed to decode mqtt message: {E}")
+            return
 
         data = json.loads(pkt.data)
         if isinstance(data, list):
