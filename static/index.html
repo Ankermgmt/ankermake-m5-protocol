@@ -393,7 +393,8 @@
                                 <li class="list-group-item">Under "Host Type" select "OctoPrint"</li>
                                 <li class="list-group-item">
                                     In "Hostname, IP or URL" fill in with:
-                                    <kbd id="octoPrintHost">{{ request_host }}:{{ request_port }}</kbd>&nbsp;<button
+                                    <kbd id="octoPrintHost">{{ request_host }}:{{ request_port }}</kbd>
+                                    <button
                                         class="btn btn-secondary btn-sm"
                                         type="button"
                                         id="configData"
@@ -447,9 +448,9 @@
                                     enctype="multipart/form-data"
                                 >
                                     <div class="mb-3" id="config-upload-form">
-                                        <label for="loginFile" class="form-label"
-                                            ><h4>Upload AnkerMake Login File</h4></label
-                                        >
+                                        <label for="loginFile" class="form-label">
+                                            <h4>Upload AnkerMake Login File</h4>
+                                        </label>
                                         <div class="input-group w-auto">
                                             <input
                                                 class="form-control"
@@ -463,8 +464,8 @@
                                                 <i class="bi bi-cloud-arrow-up-fill px-1"></i>Upload
                                             </button>
                                         </div>
-                                        <span class="form-label"
-                                            >Location: <code id="loginFilePath">{{ login_file_path }}</code>&nbsp;
+                                        <span class="form-label">
+                                            Location: <code id="loginFilePath">{{ login_file_path }}</code>
                                             <button
                                                 class="btn btn-secondary btn-sm"
                                                 type="button"
@@ -520,8 +521,11 @@
                     alt="ankerctl"
                     rel="noopener noreferrer nofollow"
                     target="_blank"
-                    >ankerctl</a
-                ><br /><a
+                >
+                    ankerctl
+                </a>
+                <br />
+                <a
                     href="https://github.com/Ankermgmt/ankermake-m5-protocol"
                     class="btn btn-link btn-sm"
                     alt="View on GitHub"
