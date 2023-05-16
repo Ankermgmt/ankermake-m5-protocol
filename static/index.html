@@ -16,62 +16,83 @@
     </head>
     <body>
         <!-- Header -->
-        <header class="container my-3">
-            <div class="p-3 text-center bg-body-tertiary rounded-3">
-                <h1 class="text-body-emphasis display-6">ankerctl</h1>
-                {%if printer_serial %}
-                <h4>{{ printer_serial }}</h4>
-                {% endif %}
-            </div>
-        </header>
-        <!-- Navigation Menu -->
-        <div class="container navigation">
-            <ul class="nav nav-pills mb-3" id="tab" role="tablist">
-                {% if configure %}
-                <li class="nav-item mx-1" role="presentation">
-                    <button
-                        class="nav-link{% if configure %} active{% endif %}"
-                        id="home-tab"
-                        data-bs-toggle="pill"
-                        data-bs-target="#home"
-                        type="button"
-                        role="tab"
-                        aria-controls="home"
-                        aria-selected="{% if configure %}true{% else %}false{% endif %}"
+        <div class="container">
+            <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+                <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+                    <svg
+                        class="bi me-2"
+                        width="100%"
+                        height="40px"
+                        viewBox="0 0 46 47"
+                        version="1.1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        xmlns:xlink="http://www.w3.org/1999/xlink"
+                        xml:space="preserve"
+                        style="fill-rule: evenodd; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2"
                     >
-                        <i class="bi bi-house"></i>&nbsp;Home
-                    </button>
-                </li>
-                <li class="nav-item mx-1" role="presentation">
-                    <button
-                        class="nav-link"
-                        id="instructions-tab"
-                        data-bs-toggle="pill"
-                        data-bs-target="#instructions"
-                        type="button"
-                        role="tab"
-                        aria-controls="instructions"
-                        aria-selected="false"
-                    >
-                        <i class="bi bi-list-check"></i>&nbsp;Instructions
-                    </button>
-                </li>
-                {% endif %}
-                <li class="nav-item mx-1" role="presentation">
-                    <button
-                        class="nav-link{% if not configure %} active{% endif %}"
-                        id="setup-tab"
-                        data-bs-toggle="pill"
-                        data-bs-target="#setup"
-                        type="button"
-                        role="tab"
-                        aria-controls="setup"
-                        aria-selected="{% if not configure %}true{% else %}false{% endif %}"
-                    >
-                        <i class="bi bi-gear-fill"></i>&nbsp;Setup
-                    </button>
-                </li>
-            </ul>
+                        <g>
+                            <path
+                                id="path1042"
+                                d="M22.621,46.99l-22.621,0l0,-4.488l8.497,-8.487c7.37,-7.361 8.552,-8.458 8.906,-8.264c0.225,0.123 1.868,1.698 3.651,3.499c2.764,2.792 3.21,3.335 3.021,3.678c-0.122,0.221 -0.917,1.088 -1.767,1.926c-0.85,0.839 -1.545,1.576 -1.545,1.639c-0,0.064 5.286,0.089 11.747,0.058c6.461,-0.032 11.969,-0.004 12.24,0.059l0.491,0.116l0,10.264l-22.62,0Zm10.382,-36.718c-6.732,0 -12.24,0.076 -12.24,0.17c0,0.094 0.738,0.902 1.639,1.798c0.958,0.951 1.64,1.811 1.64,2.068c-0,0.598 -6.286,6.892 -6.883,6.892c-0.289,0 -3.324,-2.883 -8.8,-8.361l-8.359,-8.361l0,-4.478l45.242,0l-0,10.272l-12.239,0Z"
+                                style="fill: #d40000; fill-rule: nonzero"
+                            />
+                            <path
+                                id="path1036"
+                                d="M19.502,23.431l7.021,-7.021l7.022,7.021l-7.022,7.022l-7.021,-7.022Z"
+                                style="fill: #d40000; fill-rule: nonzero"
+                            />
+                        </g>
+                    </svg>
+
+                    <span class="text-body-emphasis display-6">ankerctl</span>
+                </a>
+                <ul class="nav nav-pills" id="tab" role="tablist">
+                    {% if configure %}
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link{% if configure %} active{% endif %}"
+                            id="home-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#home"
+                            type="button"
+                            role="tab"
+                            aria-controls="home"
+                            aria-selected="{% if configure %}true{% else %}false{% endif %}"
+                        >
+                            <i class="bi bi-house"></i>&nbsp;Home
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link"
+                            id="instructions-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#instructions"
+                            type="button"
+                            role="tab"
+                            aria-controls="instructions"
+                            aria-selected="false"
+                        >
+                            <i class="bi bi-list-check"></i>&nbsp;Instructions
+                        </button>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link{% if not configure %} active{% endif %}"
+                            id="setup-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#setup"
+                            type="button"
+                            role="tab"
+                            aria-controls="setup"
+                            aria-selected="{% if not configure %}true{% else %}false{% endif %}"
+                        >
+                            <i class="bi bi-gear-fill"></i>&nbsp;Setup
+                        </button>
+                    </li>
+                </ul>
+            </header>
         </div>
         <!-- Modal -->
         <div
@@ -111,6 +132,7 @@
         <!-- Content Area -->
         <div class="tab-content my-3" id="ankerctlContent">
             {% if configure %}
+
             <!-- Home Tab -->
             <div
                 class="tab-pane fade{% if configure %} show active{% endif %}"
@@ -119,33 +141,231 @@
                 aria-labelledby="home-tab"
             >
                 <div class="container">
-                    <div class="row text-body-emphasis display-3">
-                        <div class="col-lg-8 px-3 rounded-3">
-                            <video
-                                class="w-100 rounded-3"
-                                playsinline
-                                autoplay
-                                muted
-                                id="player"
-                                poster="{{ url_for('static', filename='img/loading.jpg') }}"
-                            ></video>
-                            <div id="overlay" class="col-md-12 px-3 rounded-3"></div>
-                        </div>
-                        <div class="col-lg-4 px-3 rounded-3">
-                            <div class="row">
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-primary" id="light-on">💡 Light on</button>
-                                </div>
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-secondary" id="light-off">💡 Light off</button>
+                    <div class="row align-items-start">
+                        <div class="col-lg-8">
+                            {%if printer_serial %}
+                            <div class="row mb-3">
+                                <div class="container px-3 rounded-3" id="connection">
+                                    <div class="p-3 rounded-3 fs-6 bg-body-tertiary">
+                                        Connected to: <strong>{{ printer_serial }}</strong>
+                                        <i class="bi-check-lg icon-green"></i>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-primary" id="quality-low">💾 Quality: low</button>
+                            {% endif %}
+                            <!-- Video Container -->
+                            <div class="row text-body-emphasis display-3">
+                                <div class="rounded-3">
+                                    <video
+                                        class="w-100 rounded-3"
+                                        playsinline
+                                        autoplay
+                                        muted
+                                        id="player"
+                                        poster="{{ url_for('static', filename='img/load-screen.svg') }}"
+                                    ></video>
+                                    <div id="overlay" class="col-md-12 px-3 rounded-3"></div>
                                 </div>
-                                <div class="col-6 px-3">
-                                    <button class="w-100 btn btn-secondary" id="quality-high">📀 Quality: high</button>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header h6">Light Control</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <button class="w-100 btn btn-secondary" id="light-on">
+                                                <i class="bi-lightbulb"></i> Light on
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button class="w-100 btn btn-secondary" id="light-off">
+                                                <i class="bi-lightbulb-off"></i> Light off
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-header h6">Video Quality</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <button class="w-100 btn btn-secondary" id="quality-low">
+                                                <i class="bi-badge-sd"></i> SD Quality
+                                            </button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button class="w-100 btn btn-secondary" id="quality-high">
+                                                <i class="bi-badge-hd"></i> HD Quality
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-header h6">Temperature</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="input-group">
+                                                <div class="input-group-text mx-auto" id="bedGroup">
+                                                    <i class="icon icon-hotend" alt="hotend temperature"></i>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    id="nozzle-temp"
+                                                    name="nozzle-temp"
+                                                    class="form-control"
+                                                    value="0°C"
+                                                    title="Nozzle Temperature"
+                                                    aria-label="Nozzle Temperature"
+                                                    aria-describedby="nozzleGroup"
+                                                    disabled
+                                                    readonly
+                                                />
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="input-group">
+                                                <div class="input-group-text mx-auto" id="bedGroup">
+                                                    <i class="icon icon-bed"></i>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    id="bed-temp"
+                                                    name="bed-temp"
+                                                    class="form-control"
+                                                    value="0°C"
+                                                    title="Bed Temperature"
+                                                    aria-label="Bed Temperature"
+                                                    aria-describedby="bedGroup"
+                                                    disabled
+                                                    readonly
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="print-details" style="display: none">
+                                    <div class="card-header h6">Print Progress</div>
+                                    <div class="card-body">
+                                        <div class="col-12">
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-text print-info-label" id="printName">Name</div>
+                                                <input
+                                                    type="text"
+                                                    id="print-name"
+                                                    name="print-name"
+                                                    class="form-control"
+                                                    value="None"
+                                                    title="Print Name"
+                                                    aria-label="Print Name"
+                                                    aria-describedby="printName"
+                                                    disabled
+                                                    readonly
+                                                />
+                                            </div>
+                                            <div class="row mb-3">
+                                                <div class="col-6">
+                                                    <div class="input-group">
+                                                        <div class="input-group-text print-info-label" id="timeElapsed">
+                                                            <i class="icon icon-time-passed"></i>
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            id="time-elapsed"
+                                                            name="time-elapsed"
+                                                            class="form-control"
+                                                            value="00:00:00"
+                                                            title="Time Elapsed"
+                                                            aria-label="Time Elapsed"
+                                                            aria-describedby="timeElapsed"
+                                                            disabled
+                                                            readonly
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="input-group">
+                                                        <div class="input-group-text print-info-label" id="timeRemain">
+                                                            <i class="icon icon-time-remaining"></i>
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            id="time-remain"
+                                                            name="time-remain"
+                                                            class="form-control"
+                                                            value="00:00:00"
+                                                            title="Time Remaining"
+                                                            aria-label="Time Remaining"
+                                                            aria-describedby="timeRemain"
+                                                            disabled
+                                                            readonly
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-3">
+                                                <div class="col-12">
+                                                    <div class="progress position-relative">
+                                                        <div
+                                                            class="progress-bar progress-bar-striped progress-bar-animated"
+                                                            role="progressbar"
+                                                            id="progressbar"
+                                                            title="progressbar"
+                                                            aria-valuenow="0"
+                                                            aria-valuemin="0"
+                                                            aria-valuemax="100"
+                                                            style="width: 0%"
+                                                        >
+                                                            <span
+                                                                id="progress"
+                                                                class="justify-content-center d-flex position-absolute w-100"
+                                                                >0%</span
+                                                            >
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <div class="input-group">
+                                                        <div class="input-group-text print-info-label" id="printLayer">
+                                                            Layer
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            id="print-layer"
+                                                            name="print-layer"
+                                                            class="form-control"
+                                                            value="0/0"
+                                                            title="Print Layers"
+                                                            aria-label="Print Layers"
+                                                            aria-describedby="printLayer"
+                                                            disabled
+                                                            readonly
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="input-group">
+                                                        <div class="input-group-text print-info-label" id="printSpeed">
+                                                            Speed
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            id="print-speed"
+                                                            name="print-speed"
+                                                            class="form-control"
+                                                            value="0mm/s"
+                                                            title="Print Speed"
+                                                            aria-label="Print Speed"
+                                                            aria-describedby="printSpeed"
+                                                            disabled
+                                                            readonly
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -199,9 +419,9 @@
                         </div>
                         <div class="col-12 col-lg-12 text-center">
                             <img src="/static/img/setup/prusaslicer-1.png" class="img-thumbnail" alt="step 1" />
-                            <img src="/static/img/setup/prusaslicer-2.png" class="img-thumbnail mt-2" alt="step 2" />
-                            <img src="/static/img/setup/prusaslicer-3.png" class="img-thumbnail mt-2" alt="step 3" />
-                            <img src="/static/img/setup/prusaslicer-4.png" class="img-thumbnail mt-2" alt="step 4" />
+                            <img src="/static/img/setup/prusaslicer-2.png" class="img-thumbnail" alt="step 2" />
+                            <img src="/static/img/setup/prusaslicer-3.png" class="img-thumbnail" alt="step 3" />
+                            <img src="/static/img/setup/prusaslicer-4.png" class="img-thumbnail" alt="step 4" />
                         </div>
                     </div>
                 </div>
@@ -306,12 +526,12 @@
                 >
             </div>
         </footer>
-        <script type="text/javascript" src="{{ url_for('static', filename='vendor/cash.min.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='vendor/jmuxer.min.js') }}"></script>
         <script
             type="text/javascript"
             src="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js')}}"
         ></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='vendor/cash.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='vendor/jmuxer.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='ankersrv.js') }}"></script>
     </body>
 </html>
