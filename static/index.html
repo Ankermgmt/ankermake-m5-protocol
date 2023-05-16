@@ -95,20 +95,23 @@
             </header>
         </div>
         <!-- Modal -->
-        <div
-            class="modal fade"
-            id="popupModal"
-            tabindex="-1"
-            role="dialog"
-            aria-labelledby="popupModal"
-            aria-hidden="true"
-        >
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content d-flex align-items-center">
-                    <div id="popupModalBody" class="modal-body"></div>
+        <div class="modal fade" id="popupModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <p>Restarting ankerctl...</p>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated w-100"
+                                 role="progressbar"
+                                 aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                 style="width: 100%">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
         <!-- Message Center -->
         <div class="container text-center" id="messages">
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -485,17 +488,11 @@
                                         If you are experiencing issues with printing or viewing the video feed reloading
                                         the Ankerctl services will often resolve these issues.
                                     </p>
-                                    <a
-                                        href="{{ url_for('app_api_ankerctl_server_reload') }}"
-                                        class="btn btn-secondary submit"
-                                        id="reload"
-                                        role="button"
-                                        data-message="Ankerctl is restarting..."
-                                    >
-                                        <span data-bs-toggle="modal" data-bs-target="#popupModal">
-                                            <i class="bi bi-bootstrap-reboot"></i>&nbsp;Reload Services
-                                        </span>
-                                    </a>
+                                    <button id="reload" type="button" class="btn btn-danger"
+                                            data-bs-toggle="modal" data-bs-target="#popupModal"
+                                            data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
+                                        <i class="bi bi-bootstrap-reboot px-1"></i>Reload Services
+                                    </button>
                                 </div>
                             </div>
                         </div>
