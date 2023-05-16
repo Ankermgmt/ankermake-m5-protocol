@@ -75,8 +75,8 @@ class VideoQueue(Service):
     def worker_stop(self):
         try:
             self.api_stop_live()
-        except ConnectionError:
-            pass
+        except Exception as E:
+            log.warning(f"{self.name}: Failed to send stop command ({E})")
 
         self.pppp.handlers.remove(self._handler)
 
