@@ -1,6 +1,5 @@
 import click
 import logging as log
-from os import path
 
 from config import ROOT_DIR
 import cli.util
@@ -14,7 +13,6 @@ servertable = {
 
 
 def mqtt_open(config, insecure):
-    cert_path = path.join(ROOT_DIR, "ssl/ankermake-mqtt.crt")
 
     with config.open() as cfg:
         printer = cfg.printers[0]
@@ -26,7 +24,7 @@ def mqtt_open(config, insecure):
             acct.mqtt_username,
             acct.mqtt_password,
             printer.mqtt_key,
-            ca_certs=cert_path,
+            ca_certs=ROOT_DIR / "ssl/ankermake-mqtt.crt",
             verify=not insecure,
         )
         client.connect(server)

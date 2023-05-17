@@ -1,17 +1,12 @@
 import paho.mqtt.client as mqtt
 import paho.mqtt
-from os import path
 import logging as log
 import ssl
 import json
 import uuid
 from datetime import datetime, timedelta
 
-from config import ROOT_DIR
 from libflagship.mqtt import MqttMsg, MqttPktType
-
-
-cert_path = path.join(ROOT_DIR, "ssl/ankermake-mqtt.crt")
 
 
 class AnkerMQTTBaseClient:
@@ -75,18 +70,11 @@ class AnkerMQTTBaseClient:
         pass
 
     @classmethod
-    def login(cls, printersn, username, password, key, ca_certs=cert_path, verify=True):
+    def login(cls, printersn, username, password, key, ca_certs=None, verify=True):
         client = mqtt.Client()
-
-        if verify:
-            client.tls_set(ca_certs=ca_certs)
-        else:
-            log.warning('[Not Verifying Certificate]')
-            log.warning('This is insecure and should not be used in production environments.')
-            log.warning('It is recommended to run without "-k/--insecure".')
-            client.tls_set(ca_certs=None, cert_reqs=ssl.CERT_NONE)
-            client.tls_insecure_set(True)
-
+        cert_reqs = ssl.CERT_NONE if not verify else ssl.VERIFY_DEFAULT
+        client.tls_set(ca_certs=ca_certs, cert_reqs=cert_reqs)
+        client.tls_insecure_set(not verify)
         client.username_pw_set(username, password)
 
         return cls(printersn, client, key)

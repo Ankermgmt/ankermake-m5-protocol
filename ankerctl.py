@@ -85,6 +85,9 @@ def main(ctx, pppp_dump, verbose, quiet, insecure):
     if insecure:
         import urllib3
         urllib3.disable_warnings()
+        log.warning('[Not Verifying Certificates]')
+        log.warning('This is insecure and should not be used in production environments.')
+        log.warning('It is recommended to run without "-k/--insecure".')
 
     env.upgrade_config_if_needed()
 
