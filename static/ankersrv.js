@@ -78,12 +78,12 @@ $(function () {
     function getTime(totalseconds) {
         const hours = Math.floor(totalseconds / 3600);
         const minutes = Math.floor((totalseconds % 3600) / 60);
-        const seconds = (totalseconds % 60);
+        const seconds = totalseconds % 60;
 
         const timeString =
-              `${hours.toString().padStart(2, "0")}:` +
-              `${minutes.toString().padStart(2, "0")}:` +
-              `${seconds.toString().padStart(2, "0")}`;
+            `${hours.toString().padStart(2, "0")}:` +
+            `${minutes.toString().padStart(2, "0")}:` +
+            `${seconds.toString().padStart(2, "0")}`;
 
         return timeString;
     }
