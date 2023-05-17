@@ -183,7 +183,7 @@ Example usage (no peristent storage)
 ```bash
 docker run \
   -v "$HOME/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json:/tmp/login.json" \
-  ankerctl config decode /tmp/login.json
+  ankerctl/ankerctl config decode /tmp/login.json
 ```
 
 Example usage (with peristent storage)
@@ -195,13 +195,13 @@ docker volume create ankerctl_vol
 docker run \
   -v ankerctl_vol:/root/.config/ankerctl \
   -v "$HOME/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json:/tmp/login.json" \
-  ankerctl config import /tmp/login.json
+  ankerctl/ankerctl config import /tmp/login.json
 
 # Now that there is a /root/.config/ankerctl/default.json file that persists in the docker volume
 # we can run ankerctl without having to specify the login.json file
 docker run \
   -v ankerctl_vol:/root/.config/ankerctl \
-  ankerctl config show
+  ankerctl/ankerctl config show
 ```
 
 
