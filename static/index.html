@@ -266,127 +266,127 @@
                                     <div class="card-header h6">Print Progress</div>
                                     <div class="card-body">
                                         <div class="row mb-3 g-3">
-                                        <div class="col-12">
-                                            <div class="input-group">
-                                                <div class="input-group-text print-info-label" id="printName">Name</div>
-                                                <input
-                                                    type="text"
-                                                    id="print-name"
-                                                    name="print-name"
-                                                    class="form-control"
-                                                    value="None"
-                                                    title="Print Name"
-                                                    aria-label="Print Name"
-                                                    aria-describedby="printName"
-                                                    disabled
-                                                    readonly
-                                                />
-                                            </div>
-                                        </div>
-                                        </div>
-                                            <div class="row mb-3 g-3">
-                                                <div class="col-6">
-                                                    <div class="input-group">
-                                                        <div class="input-group-text print-info-label" id="timeElapsed">
-                                                            <i class="icon icon-time-passed"></i>
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            id="time-elapsed"
-                                                            name="time-elapsed"
-                                                            class="form-control text-center"
-                                                            value="00:00:00"
-                                                            title="Time Elapsed"
-                                                            aria-label="Time Elapsed"
-                                                            aria-describedby="timeElapsed"
-                                                            disabled
-                                                            readonly
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="input-group">
-                                                        <div class="input-group-text print-info-label" id="timeRemain">
-                                                            <i class="icon icon-time-remaining"></i>
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            id="time-remain"
-                                                            name="time-remain"
-                                                            class="form-control text-center"
-                                                            value="00:00:00"
-                                                            title="Time Remaining"
-                                                            aria-label="Time Remaining"
-                                                            aria-describedby="timeRemain"
-                                                            disabled
-                                                            readonly
-                                                        />
-                                                    </div>
+                                            <div class="col-12">
+                                                <div class="input-group">
+                                                    <div class="input-group-text print-info-label" id="printName">Name</div>
+                                                    <input
+                                                        type="text"
+                                                        id="print-name"
+                                                        name="print-name"
+                                                        class="form-control"
+                                                        value="None"
+                                                        title="Print Name"
+                                                        aria-label="Print Name"
+                                                        aria-describedby="printName"
+                                                        disabled
+                                                        readonly
+                                                    />
                                                 </div>
                                             </div>
-                                            <div class="row mb-3 g-3">
-                                                <div class="col-12">
-                                                    <div class="progress position-relative" id="printProgress">
-                                                        <div
-                                                            class="progress-bar progress-bar-striped progress-bar-animated"
-                                                            role="progressbar"
-                                                            id="progressbar"
-                                                            title="Progress Bar"
-                                                            aria-valuenow="0"
-                                                            aria-valuemin="0"
-                                                            aria-valuemax="100"
-                                                            style="width: 0%"
+                                        </div>
+                                        <div class="row mb-3 g-3">
+                                            <div class="col-6">
+                                                <div class="input-group">
+                                                    <div class="input-group-text print-info-label" id="timeElapsed">
+                                                        <i class="icon icon-time-passed"></i>
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        id="time-elapsed"
+                                                        name="time-elapsed"
+                                                        class="form-control text-center"
+                                                        value="00:00:00"
+                                                        title="Time Elapsed"
+                                                        aria-label="Time Elapsed"
+                                                        aria-describedby="timeElapsed"
+                                                        disabled
+                                                        readonly
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="input-group">
+                                                    <div class="input-group-text print-info-label" id="timeRemain">
+                                                        <i class="icon icon-time-remaining"></i>
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        id="time-remain"
+                                                        name="time-remain"
+                                                        class="form-control text-center"
+                                                        value="00:00:00"
+                                                        title="Time Remaining"
+                                                        aria-label="Time Remaining"
+                                                        aria-describedby="timeRemain"
+                                                        disabled
+                                                        readonly
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3 g-3">
+                                            <div class="col-12">
+                                                <div class="progress position-relative" id="printProgress">
+                                                    <div
+                                                        class="progress-bar progress-bar-striped progress-bar-animated"
+                                                        role="progressbar"
+                                                        id="progressbar"
+                                                        title="Progress Bar"
+                                                        aria-valuenow="0"
+                                                        aria-valuemin="0"
+                                                        aria-valuemax="100"
+                                                        style="width: 0%"
+                                                    >
+                                                        <span
+                                                            id="progress"
+                                                            class="position-absolute w-100"
                                                         >
-                                                            <span
-                                                                id="progress"
-                                                                class="position-absolute w-100"
-                                                            >
-                                                                0%
-                                                            </span>
-                                                        </div>
+                                                            0%
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="row g-3">
-                                                <div class="col-6">
-                                                    <div class="input-group">
-                                                        <div class="input-group-text print-info-label" id="printLayer">
-                                                            <i class="bi bi-layers-half"></i>
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            id="print-layer"
-                                                            name="print-layer"
-                                                            class="form-control text-center"
-                                                            value="0/0"
-                                                            title="Print Layers"
-                                                            aria-label="Print Layers"
-                                                            aria-describedby="printLayer"
-                                                            disabled
-                                                            readonly
-                                                        />
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <div class="input-group">
+                                                    <div class="input-group-text print-info-label" id="printLayer">
+                                                        <i class="bi bi-layers-half"></i>
                                                     </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="input-group">
-                                                        <div class="input-group-text print-info-label" id="printSpeed">
-                                                            <i class="bi bi-speedometer"></i>
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            id="print-speed"
-                                                            name="print-speed"
-                                                            class="form-control text-center small"
-                                                            value="0mm/s"
-                                                            title="Print Speed"
-                                                            aria-label="Print Speed"
-                                                            aria-describedby="printSpeed"
-                                                            disabled
-                                                            readonly
-                                                        />
-                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        id="print-layer"
+                                                        name="print-layer"
+                                                        class="form-control text-center"
+                                                        value="0/0"
+                                                        title="Print Layers"
+                                                        aria-label="Print Layers"
+                                                        aria-describedby="printLayer"
+                                                        disabled
+                                                        readonly
+                                                    />
                                                 </div>
                                             </div>
+                                            <div class="col-6">
+                                                <div class="input-group">
+                                                    <div class="input-group-text print-info-label" id="printSpeed">
+                                                        <i class="bi bi-speedometer"></i>
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        id="print-speed"
+                                                        name="print-speed"
+                                                        class="form-control text-center small"
+                                                        value="0mm/s"
+                                                        title="Print Speed"
+                                                        aria-label="Print Speed"
+                                                        aria-describedby="printSpeed"
+                                                        disabled
+                                                        readonly
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
