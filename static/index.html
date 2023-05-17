@@ -513,12 +513,8 @@
                             </div>
                         </div>
                         <div class="col-md-7">
-                            <span class="mr-auto pl-4">
-                                <label for="ankerctl-settings" class="form-label"><h4>AnkerMake M5 Config</h4></label>
-                                <code id="ankerctl-settings">
-                                    {% autoescape false %} {{ anker_config }} {% endautoescape %}
-                                </code>
-                            </span>
+                            <h4>AnkerMake M5 Config</h4>
+                            <pre class="p-3" id="ankerctl-settings">{{ anker_config }}</pre>
                         </div>
                     </div>
                 </div>
