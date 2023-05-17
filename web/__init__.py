@@ -146,7 +146,7 @@ def app_root():
             anker_config = str(web.config.config_show(cfg))
             printer_serial = str(cfg.printers[0].sn)
         else:
-            anker_config = "<p>No printers found, please load your login config...</p>"
+            anker_config = "No printers found, please load your login config..."
             printer_serial = None
 
         return render_template(
