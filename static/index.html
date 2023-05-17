@@ -546,12 +546,10 @@
                 </a>
             </div>
         </footer>
-        <script
-            type="text/javascript"
-            src="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js')}}"
-        ></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='vendor/cash.min.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='vendor/jmuxer.min.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='ankersrv.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js')}}">
+        </script>
+        <script src="{{ url_for('static', filename='vendor/cash.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendor/jmuxer.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='ankersrv.js') }}"></script>
     </body>
 </html>
