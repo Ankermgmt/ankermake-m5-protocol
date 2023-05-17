@@ -32,10 +32,6 @@ code {
     background-color: #292929;
 }
 
-.form-label {
-    font-weight: bolder;
-}
-
 code#loginFilePath {
     font-weight: lighter;
 }
