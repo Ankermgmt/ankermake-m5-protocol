@@ -455,7 +455,6 @@ def config_show(env):
 
         log.info("Printers:")
         # Sort the list of printers by printer.id
-        cfg.printers.sort(key=lambda p: p.id)
         for i, p in enumerate(cfg.printers):
             create_time = datetime.fromtimestamp(p.create_time)
             print(f"    printer:   {i}")

@@ -15,6 +15,7 @@ Functions:
 Returns:
 - config_output: A formatted string containing the configuration information.
 """
+from datetime import datetime
 
 import libflagship.httpapi
 import libflagship.logincache
@@ -46,10 +47,17 @@ def config_show(config: object):
         region:     {config.account.region.upper()} </p
     """
     config_output += "<p>Printers:</p><hr/>"
-    for printer in config.printers:
+    for i, printer in enumerate(config.printers):
+        create_time = datetime.fromtimestamp(printer.create_time)
         config_output += f"""<p>
+        
+            printer:   {i} <br/>
+            id:        {printer.id} <br/>
+            name:      {printer.name} <br/>
             duid:      {printer.p2p_duid} <br/>
             sn:        {printer.sn} <br/>
+            model:     {printer.model} <br/>
+            created:   {create_time} <br/>
             ip:        {printer.ip_addr} <br/>
             wifi_mac:  {cli.util.pretty_mac(printer.wifi_mac)} <br/>
             api_hosts: {', '.join(printer.api_hosts)} <br/>
