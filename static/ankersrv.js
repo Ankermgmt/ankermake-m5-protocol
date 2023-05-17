@@ -131,7 +131,7 @@ $(function () {
             $("#print-speed").attr("value", `${data.value}mm/s ${X}`);
         } else if (data.commandType == 1052) {
             // Returns Layer Info
-            const layer = `${data.real_print_layer}/${data.total_layer}`;
+            const layer = `${data.real_print_layer} / ${data.total_layer}`;
             $("#print-layer").attr("value", layer);
         } else {
             console.log(data);
