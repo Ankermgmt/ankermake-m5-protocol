@@ -98,15 +98,20 @@ class Service(Thread):
 
     def _attempt_start(self):
         try:
-            log.debug(f"{self.name} worker start")
+            log.debug(f"{self.name} worker starting..")
             self.worker_start()
         except Exception as E:
             if self.wanted:
-                if not isinstance(E, TimeoutError):
+                if isinstance(E, TimeoutError):
+                    pass
+                elif isinstance(E, ServiceStoppedError):
+                    log.error(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
+                else:
                     log.exception(f"{self.name}: Failed to start worker: {E}. Retrying in 1 second.")
                 self._holdoff.reset(delay=1)
             else:
-                log.error(f"{self.name}: Failed to start worker: {E}. Shutting down service.")
+                if not isinstance(E, (TimeoutError, ServiceStoppedError)):
+                    log.error(f"{self.name}: Failed to start worker: {E}. Shutting down service.")
                 self.state = RunState.Stopped
         else:
             log.info(f"{self.name}: Worker started")
@@ -114,7 +119,7 @@ class Service(Thread):
 
     def _attempt_run(self):
         try:
-            self.worker_run(timeout=0.3)
+            self.worker_run(timeout=0.1)
         except ServiceRestartSignal:
             log.info(f"{self.name}: Service requested restart.")
             self._holdoff.reset(delay=1)
@@ -213,6 +218,10 @@ class Service(Thread):
 
     def await_stopped(self):
         while True:
+            if self.wanted:
+                log.warning(f"{self.name}: Service started while waiting for it to stop")
+                return False
+
             if self.state == RunState.Stopped:
                 log.debug(f"{self.name}: Stopped")
                 return True
@@ -276,6 +285,32 @@ class ServiceManager:
         del self.svcs[name]
         del self.refs[name]
 
+    def restart_all(self, await_ready=True):
+        wanted = {}
+
+        for name, svc in self.svcs.items():
+            wanted[name] = svc.wanted
+            svc.stop()
+
+        for name, svc in self.svcs.items():
+            svc.await_stopped()
+
+        for name, svc in self.svcs.items():
+            if not wanted[name]:
+                continue
+
+            svc.start()
+
+            if not await_ready:
+                continue
+
+            try:
+                svc.await_ready()
+            except ServiceStoppedError:
+                # ignore service stopped error, since restart_all() is a
+                # best-effort function.
+                pass
+
     def get(self, name: str, ready=True) -> Service:
         if name not in self:
             raise KeyError(f"Requested unknown service {name!r}")
@@ -290,6 +325,7 @@ class ServiceManager:
                     svc.await_ready()
                 except ServiceError:
                     self.put(name)
+                    raise
 
         return svc
 
@@ -315,12 +351,12 @@ class ServiceManager:
             self.put(name)
 
     def stream(self, name: str):
-        with self.borrow(name) as svc:
-            queue = Queue()
+        try:
+            with self.borrow(name) as svc:
+                queue = Queue()
 
-            with svc.tap(lambda data: queue.put(data)):
-                while svc.state == RunState.Running:
-                    try:
+                with svc.tap(lambda data: queue.put(data)):
+                    while svc.state == RunState.Running:
                         yield queue.get()
-                    except (EOFError, OSError, ServiceStoppedError):
-                        break
+        except (EOFError, OSError, ServiceStoppedError):
+            return
