@@ -106,9 +106,9 @@ $(function () {
         if (data.commandType == 1001) {
             // Returns Print Details
             $("#print-details").attr("style", "display: block;");
-            $("#print-name").attr("value", data.name);
-            $("#time-elapsed").attr("value", getTime(data.totalTime));
-            $("#time-remain").attr("value", getTime(data.time));
+            $("#print-name").text(data.name);
+            $("#time-elapsed").text(getTime(data.totalTime));
+            $("#time-remain").text(getTime(data.time));
             const progress = getPercentage(data.progress);
             $("#progressbar").attr("aria-valuenow", progress);
             $("#progressbar").attr("style", `width: ${progress}%`);
@@ -117,22 +117,22 @@ $(function () {
             // Returns Nozzle Temp
             const current = getTemp(data.currentTemp);
             const target = getTemp(data.targetTemp);
-            $("#nozzle-temp").attr("value", `${current}°C`);
+            $("#nozzle-temp").text(`${current}°C`);
             $("#set-nozzle-temp").attr("value", `${target}°C`);
         } else if (data.commandType == 1004) {
             // Returns Bed Temp
             const current = getTemp(data.currentTemp);
             const target = getTemp(data.targetTemp);
-            $("#bed-temp").attr("value", `${current}°C`);
+            $("#bed-temp").text(`${current}°C`);
             $("#set-bed-temp").attr("value", `${target}°C`);
         } else if (data.commandType == 1006) {
             // Returns Print Speed
             const X = getSpeedFactor(data.value);
-            $("#print-speed").attr("value", `${data.value}mm/s ${X}`);
+            $("#print-speed").text(`${data.value}mm/s ${X}`);
         } else if (data.commandType == 1052) {
             // Returns Layer Info
             const layer = `${data.real_print_layer} / ${data.total_layer}`;
-            $("#print-layer").attr("value", layer);
+            $("#print-layer").text(layer);
         } else {
             console.log(data);
         }
