@@ -81,9 +81,6 @@ def restart():
     for name in app.svc:
         app.svc.svcs[name].restart()
 
-    for name in app.svc:
-        app.svc.svcs[name].await_ready()
-
 
 @sock.route("/ws/mqtt")
 def mqtt(sock):
