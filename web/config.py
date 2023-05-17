@@ -39,22 +39,27 @@ def config_show(config: object):
     Returns:
     - config_output: A formatted string containing the configuration information.
     """
-    config_output = f"""<p>Account:</p><p>
-        user_id:    {config.account.user_id[:10]}...[REDACTED] <br/>
-        auth_token: {config.account.auth_token[:10]}...[REDACTED] <br/>
-        email:      {config.account.email} <br/>
-        region:     {config.account.region.upper()} </p
-    """
-    config_output += "<p>Printers:</p><hr/>"
+    config_output = f"""Account:
+  user_id:    {config.account.user_id[:10]}...[REDACTED]
+  auth_token: {config.account.auth_token[:10]}...[REDACTED]
+  email:      {config.account.email}
+  region:     {config.account.region.upper()}
+
+"""
+    config_output += "Printers:\n"
     for printer in config.printers:
-        config_output += f"""<p>
-            duid:      {printer.p2p_duid} <br/>
-            sn:        {printer.sn} <br/>
-            ip:        {printer.ip_addr} <br/>
-            wifi_mac:  {cli.util.pretty_mac(printer.wifi_mac)} <br/>
-            api_hosts: {', '.join(printer.api_hosts)} <br/>
-            p2p_hosts: {', '.join(printer.p2p_hosts)} <hr/></p>
-        """
+        config_output += f"""\
+  duid:      {printer.p2p_duid}
+  sn:        {printer.sn}
+  ip:        {printer.ip_addr}
+  wifi_mac:  {cli.util.pretty_mac(printer.wifi_mac)}
+"""
+        config_output += "  api_hosts:\n"
+        for host in printer.api_hosts:
+            config_output += f"     - {host}\n"
+        config_output += "  p2p_hosts:\n"
+        for host in printer.p2p_hosts:
+            config_output += f"     - {host}\n"
     return config_output
 
 
