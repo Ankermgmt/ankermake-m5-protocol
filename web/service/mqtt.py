@@ -11,7 +11,7 @@ import cli.mqtt
 class MqttQueue(Service):
 
     def worker_start(self):
-        self.client = cli.mqtt.mqtt_open(app.config["config"], True)
+        self.client = cli.mqtt.mqtt_open(app.config["config"], app.config["insecure"])
 
     def worker_run(self, timeout):
         for msg, body in self.client.fetch(timeout=timeout):

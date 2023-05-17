@@ -85,6 +85,9 @@ def main(ctx, pppp_dump, verbose, quiet, insecure):
     if insecure:
         import urllib3
         urllib3.disable_warnings()
+        log.warning('[Not Verifying Certificates]')
+        log.warning('This is insecure and should not be used in production environments.')
+        log.warning('It is recommended to run without "-k/--insecure".')
 
     env.upgrade_config_if_needed()
 
@@ -467,7 +470,7 @@ def webserver(env):
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
 @pass_env
 def webserver(env, host, port):
-    web.webserver(env.config, host, port, pppp_dump=env.pppp_dump)
+    web.webserver(env.config, host, port, env.insecure, pppp_dump=env.pppp_dump)
 
 
 if __name__ == "__main__":
