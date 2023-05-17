@@ -147,29 +147,21 @@
                     <div class="row align-items-start">
                         <div class="col-lg-8">
                             {%if printer %}
-                            <div class="row mb-3">
-                                <div class="container rounded-3" id="connection">
-                                    <div class="p-3 rounded-3 fs-6 bg-body-tertiary">
-                                        Connected to: <strong>{{ printer.name }} ({{ printer.sn }})</strong>
-                                        <i class="bi-check-lg icon-green"></i>
-                                    </div>
-                                </div>
+                            <div class="p-3 mb-3 rounded-3 fs-6 bg-body-tertiary">
+                                Connected to: <strong>{{ printer.name }} ({{ printer.sn }})</strong>
+                                <i class="bi-check-lg icon-green"></i>
                             </div>
                             {% endif %}
                             <!-- Video Container -->
-                            <div class="row text-body-emphasis display-3">
-                                <div class="rounded-3">
-                                    <video
-                                        class="w-100 rounded-3 bg-body-tertiary"
-                                        playsinline
-                                        autoplay
-                                        muted
-                                        id="player"
-                                        poster="{{ url_for('static', filename='img/load-screen.svg') }}"
-                                    ></video>
-                                    <div id="overlay" class="col-md-12 px-3 rounded-3"></div>
-                                </div>
-                            </div>
+                            <video
+                                class="w-100 d-block rounded-3 bg-body-tertiary"
+                                playsinline
+                                autoplay
+                                muted
+                                id="player"
+                                poster="{{ url_for('static', filename='img/load-screen.svg') }}"
+                            >
+                            </video>
                         </div>
                         <div class="col-lg-4">
                             <div class="card">
