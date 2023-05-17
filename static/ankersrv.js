@@ -89,6 +89,15 @@ $(function () {
     }
 
     /**
+     * Calculates the AnkerMake M5 Speed ratio ("X-factor")
+     * @param {number} speed - The speed value in mm/s
+     * @return {number} The speed factor in units of "X" (50mm/s)
+     */
+    function getSpeedFactor(speed) {
+        return `X${speed / 50}`;
+    }
+
+    /**
      * Opens a websocket connection and outputs any incoming message data to console
      */
     socket = new WebSocket("ws://" + location.host + "/ws/mqtt");
@@ -108,23 +117,25 @@ $(function () {
             // Returns Nozzle Temp
             const current = getTemp(data.currentTemp);
             const target = getTemp(data.targetTemp);
-            const temp = `${current}/${target}°C`;
-            $("#nozzle-temp").attr("value", temp);
+            $("#nozzle-temp").attr("value", `${current}°C`);
+            $("#set-nozzle-temp").attr("value", `${target}°C`);
         } else if (data.commandType == 1004) {
             // Returns Bed Temp
             const current = getTemp(data.currentTemp);
             const target = getTemp(data.targetTemp);
-            const temp = `${current}/${target}°C`;
-            $("#bed-temp").attr("value", temp);
+            $("#bed-temp").attr("value", `${current}°C`);
+            $("#set-bed-temp").attr("value", `${target}°C`);
         } else if (data.commandType == 1006) {
             // Returns Print Speed
-            $("#print-speed").attr("value", `${data.value}mm/s`);
+            const X = getSpeedFactor(data.value);
+            $("#print-speed").attr("value", `${data.value}mm/s ${X}`);
         } else if (data.commandType == 1052) {
             // Returns Layer Info
             const layer = `${data.real_print_layer}/${data.total_layer}`;
             $("#print-layer").attr("value", layer);
+        } else {
+            console.log(data);
         }
-        console.log(data);
     });
 
     /**
