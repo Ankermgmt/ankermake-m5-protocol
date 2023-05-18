@@ -5,3 +5,20 @@
 {% macro static_css(url) -%}
 <link rel="stylesheet" href="{{ url_for('static', filename=url) }}" />
 {%- endmacro %}
+
+{% macro menu_button(id, target, active=False) %}
+  <li class="nav-item" role="presentation">
+    <button
+      class="nav-link{% if active %} active{% endif %}"
+      id="{{id}}"
+      data-bs-toggle="pill"
+      data-bs-target="#{{target}}"
+      type="button"
+      role="tab"
+      aria-controls="home"
+      aria-selected="{% if active %}true{% else %}false{% endif %}"
+      >
+      {{ caller() }}
+    </button>
+  </li>
+{% endmacro %}

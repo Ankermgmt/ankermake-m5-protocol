@@ -15,6 +15,10 @@
         <div class="container">
             <header class="d-flex py-3 mb-3 border-bottom">
                 {% include "header.html" %}
+                <ul class="nav nav-pills" id="tab" role="tablist">
+                    {% block menu %}
+                    {% endblock %}
+                </ul>
             </header>
         </div>
 

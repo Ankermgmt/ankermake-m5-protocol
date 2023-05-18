@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macro.html" as macro %}
 
 {% block title -%}
 ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
@@ -11,4 +12,22 @@ ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
   {% endif %}
 
   {% include "tabs/setup.html" %}
+{% endblock %}
+
+{% block menu %}
+  {% if configure %}
+
+    {% call macro.menu_button(id="home-tab", target="home", active=configure) %}
+      <i class="bi bi-house px-1"></i>Home
+    {% endcall %}
+
+    {% call macro.menu_button(id="instructions-tab", target="instructions") %}
+      <i class="bi bi-list-check px-1"></i>Instructions
+    {% endcall %}
+
+  {% endif %}
+
+  {% call macro.menu_button(id="setup-tab", target="setup", active=not configure) %}
+    <i class="bi bi-gear-fill px-1"></i>Setup
+  {% endcall %}
 {% endblock %}
