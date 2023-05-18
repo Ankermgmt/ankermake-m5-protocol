@@ -21,17 +21,27 @@
 .btn {
     --bs-btn-hover-color: #000000;
     --bs-btn-hover-bg: var(--agreen3);
+    --bs-btn-hover-border-color: var(--agreen1);
 
     --bs-btn-active-color: #000000;
     --bs-btn-active-bg: var(--agreen3);
 }
 
+.btn-primary {
+    --bs-btn-bg: var(--agreen2);
+    --bs-btn-color: #000000;
+    --bs-btn-border-color: var(--agreen1);
+    --bs-btn-active-border-color: var(--agreen1);
+}
+
 .btn-danger {
+    --bs-btn-color: white;
     --bs-btn-bg: var(--ared1);
     --bs-btn-active-color: white;
     --bs-btn-active-bg: var(--ared2);
     --bs-btn-hover-bg: var(--ared2);
     --bs-btn-border-color: var(--ared1);
+    --bs-btn-hover-border-color: var(--ared1);
 }
 
 .progress-bar {
