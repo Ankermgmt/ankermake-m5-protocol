@@ -1,9 +1,9 @@
 import click
 import logging as log
 
-from config import ROOT_DIR
 import cli.util
 
+from libflagship import ROOT_DIR
 from libflagship.mqttapi import AnkerMQTTBaseClient
 
 servertable = {

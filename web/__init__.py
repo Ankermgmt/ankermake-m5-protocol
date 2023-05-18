@@ -33,7 +33,7 @@ from flask import Flask, flash, request, render_template, Response, session, url
 from flask_sock import Sock
 from user_agents import parse as user_agent_parse
 
-from config import ROOT_DIR
+from libflagship import ROOT_DIR
 
 from web.lib.service import ServiceManager
 
