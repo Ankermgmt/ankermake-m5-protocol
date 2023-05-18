@@ -1,33 +1,39 @@
 /* Color scheme */
 
+:root {
+    --agreen1: #41a03f;
+    --agreen2: #88f387;
+    --agreen3: #adf3ac;
+}
+
 .nav-pills {
-    --bs-nav-link-color: #88f387;
+    --bs-nav-link-color: var(--agreen2);
 
     --bs-nav-pills-link-active-color: #000000;
-    --bs-nav-pills-link-active-bg: #88f387;
+    --bs-nav-pills-link-active-bg: var(--agreen2);
 
     --bs-nav-link-hover-color: #000000;
-    --bs-nav-link-hover-bg: #adf3ac;
+    --bs-nav-link-hover-bg: var(--agreen3);
 }
 
 .btn {
     --bs-btn-hover-color: #000000;
-    --bs-btn-hover-bg: #adf3ac;
+    --bs-btn-hover-bg: var(--agreen3);
 
     --bs-btn-active-color: #000000;
-    --bs-btn-active-bg: #adf3ac;
+    --bs-btn-active-bg: var(--agreen3);
 }
 
 .progress-bar {
-    --bs-progress-bar-bg: #41a03f;
+    --bs-progress-bar-bg: var(--agreen1);
 }
 
 footer .btn {
-    --bs-btn-color: #88f387;
+    --bs-btn-color: var(--agreen2);
 }
 
 .icon-green {
-    color: #88f387;
+    color: var(--agreen2);
 }
 
 footer a {
@@ -37,7 +43,7 @@ footer a {
 
 pre,
 code {
-    color: #88f387;
+    color: var(--agreen2);
     background-color: #292929;
 }
 
