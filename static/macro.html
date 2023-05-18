@@ -9,7 +9,7 @@
 {% macro menu_button(id, target, active=False) %}
     <li class="nav-item" role="presentation">
         <button
-            class="nav-link{% if active %} active{% endif %}"
+            class="btn btn-outline-primary nav-link{% if active %} active{% endif %}"
             id="{{id}}"
             data-bs-toggle="pill"
             data-bs-target="#{{target}}"

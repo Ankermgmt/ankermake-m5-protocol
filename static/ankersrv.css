@@ -1,25 +1,38 @@
-.nav-link,
-.btn-link {
-    color: #88f387;
-    text-decoration: none;
+/* Color scheme */
+
+.nav-pills {
+    --bs-nav-link-color: #88f387;
+
+    --bs-nav-pills-link-active-color: #000000;
+    --bs-nav-pills-link-active-bg: #88f387;
+
+    --bs-nav-link-hover-color: #000000;
+    --bs-nav-link-hover-bg: #adf3ac;
 }
 
-.nav-pills .nav-link.active {
-    color: #000000;
-    background-color: #88f387;
-    border: #41a03f;
+.btn {
+    --bs-btn-hover-color: #000000;
+    --bs-btn-hover-bg: #adf3ac;
+
+    --bs-btn-active-color: #000000;
+    --bs-btn-active-bg: #adf3ac;
 }
 
-.nav-pills .nav-link:hover,
-.btn:hover {
-    color: #000000;
-    background-color: #adf3ac;
-    border-color: #41a03f;
+.progress-bar {
+    --bs-progress-bar-bg: #41a03f;
 }
 
-a.text-light:hover,
+footer .btn {
+    --bs-btn-color: #88f387;
+}
+
 .icon-green {
-    color: #88f387 !important;
+    color: #88f387;
+}
+
+footer a {
+    --bs-link-hover-color-rgb: 255, 255, 255;
+    --bs-link-color-rgb: 136, 243, 135;
 }
 
 pre,
@@ -27,6 +40,8 @@ code {
     color: #88f387;
     background-color: #292929;
 }
+
+/* Layout */
 
 #printProgress {
     height: 40px;
