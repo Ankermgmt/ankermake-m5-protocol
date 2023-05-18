@@ -17,10 +17,6 @@
     border-color: #41a03f;
 }
 
-a.text-light {
-    text-decoration: none;
-}
-
 a.text-light:hover,
 .icon-green {
     color: #88f387 !important;
@@ -30,14 +26,6 @@ pre,
 code {
     color: #88f387;
     background-color: #292929;
-}
-
-code#loginFilePath {
-    font-weight: lighter;
-}
-
-.print-status {
-    font-size: medium;
 }
 
 #printProgress {
