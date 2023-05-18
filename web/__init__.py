@@ -144,9 +144,9 @@ def app_root():
         request_port = host[1] if len(host) > 1 else "80"
         if app.config["login"]:
             anker_config = str(web.config.config_show(cfg))
-            printer = web.util.get_printer(app.config["config"], app.config["printer_index"])
+            printer = cfg.printers[app.config["printer_index"]]
         else:
-            anker_config = "<p>No printers found, please load your login config...</p>"
+            anker_config = "No printers found, please load your login config..."
             printer = None
 
         return render_template(

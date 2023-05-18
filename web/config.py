@@ -48,7 +48,6 @@ def config_show(config: object):
     """
     config_output += "<p>Printers:</p><hr/>"
     for i, printer in enumerate(config.printers):
-        create_time = datetime.fromtimestamp(printer.create_time)
         config_output += f"""<p>
         
             printer:   {i} <br/>
@@ -57,7 +56,8 @@ def config_show(config: object):
             duid:      {printer.p2p_duid} <br/>
             sn:        {printer.sn} <br/>
             model:     {printer.model} <br/>
-            created:   {create_time} <br/>
+            created:   {printer.create_time} <br/>
+            updated:   {printer.update_time} <br/>
             ip:        {printer.ip_addr} <br/>
             wifi_mac:  {cli.util.pretty_mac(printer.wifi_mac)} <br/>
             api_hosts: {', '.join(printer.api_hosts)} <br/>

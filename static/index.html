@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
-        <title>ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}</title>
+        <title>ankerctl{% if printer %} - {{ printer.name | e }} ({{ printer.sn }}){% endif %}</title>
         <link
             rel="stylesheet"
             href="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/css/bootstrap.min.css') }}"
@@ -147,7 +147,7 @@
                             <div class="row mb-3">
                                 <div class="container rounded-3" id="connection">
                                     <div class="p-3 rounded-3 fs-6 bg-body-tertiary">
-                                        Connected to: <strong>{{ printer.name }} ({{ printer.sn }})</strong>
+                                        Connected to: <strong>{{ printer.name | e }} ({{ printer.sn }})</strong>
                                         <i class="bi-check-lg icon-green"></i>
                                     </div>
                                 </div>

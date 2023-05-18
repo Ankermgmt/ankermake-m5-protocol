@@ -456,14 +456,14 @@ def config_show(env):
         log.info("Printers:")
         # Sort the list of printers by printer.id
         for i, p in enumerate(cfg.printers):
-            create_time = datetime.fromtimestamp(p.create_time)
             print(f"    printer:   {i}")
             print(f"    id:        {p.id}")
             print(f"    name:      {p.name}")
             print(f"    duid:      {p.p2p_duid}") # Printer Serial Number
             print(f"    sn:        {p.sn}")
             print(f"    model:     {p.model}")
-            print(f"    created:   {create_time}")
+            print(f"    created:   {p.create_time}")
+            print(f"    updated:   {p.update_time}")
             print(f"    ip:        {p.ip_addr}")
             print(f"    wifi_mac:  {cli.util.pretty_mac(p.wifi_mac)}")
             print(f"    api_hosts: {', '.join(p.api_hosts)}")

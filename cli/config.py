@@ -1,6 +1,7 @@
 import logging as log
 import contextlib
 import json
+from datetime import datetime
 
 from pathlib import Path
 from platformdirs import PlatformDirs
@@ -117,6 +118,7 @@ def load_config_from_api(auth_token, region, insecure):
             name=pr["station_name"],
             model=pr["station_model"],
             create_time=pr["create_time"],
+            update_time=pr["update_time"],
             mqtt_key=unhex(pr["secret_key"]),
             wifi_mac=pr["wifi_mac"],
             ip_addr=pr["ip_addr"],

@@ -26,30 +26,3 @@ def flash_redirect(path: str, message: str | None = None, category="info"):
         flash(message, category)
 
     return redirect(path)
-
-
-def get_printer(config, index=0):
-    """
-    Open configuration object, extract and sanitize printer information, then return it.
-
-    Parameters:
-    config (object): An object containing application configuration.
-    index (int, optional): Index of the printer in the configuration. Default is 0.
-
-    Returns:
-    dict: Dictionary containing sanitized printer information.
-
-    The function logs warnings if the provided index is out of range and defaults it to 0. 
-    It removes 'mqtt_key' and 'p2p_key' from the printer information before returning.
-    """
-    with config.open() as cfg:
-        printers = cfg.printers
-        if index >= len(printers):
-            log.warning(f"Printer number {index} out of range, max printer number is {len(printers)-1}")
-            log.warning(f"Defaulting index to 0")
-            index = 0
-
-        printer_dict = asdict(printers[index])
-        printer_dict.pop("mqtt_key", None)
-        printer_dict.pop("p2p_key", None)
-        return printer_dict
