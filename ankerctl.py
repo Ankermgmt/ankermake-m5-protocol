@@ -5,7 +5,6 @@ import click
 import platform
 import logging as log
 from os import path, environ
-from datetime import datetime
 from rich import print  # you need python3
 from tqdm import tqdm
 
