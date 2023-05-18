@@ -5,6 +5,7 @@
         <meta charset="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <title>{% block title %}{% endblock title %}</title>
+        <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}">
         {{ macro.static_css("vendor/bootstrap-5.3.0-alpha3-dist/css/bootstrap.min.css") }}
         {{ macro.static_css("vendor/bootstrap-icons-1.10.5/font/bootstrap-icons.min.css") }}
         {{ macro.static_css("ankersrv.css") }}
