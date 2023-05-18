@@ -4,6 +4,8 @@
     --agreen1: #41a03f;
     --agreen2: #88f387;
     --agreen3: #adf3ac;
+    --ared1: #a00000;
+    --ared2: #d40000;
 }
 
 .nav-pills {
@@ -22,6 +24,14 @@
 
     --bs-btn-active-color: #000000;
     --bs-btn-active-bg: var(--agreen3);
+}
+
+.btn-danger {
+    --bs-btn-bg: var(--ared1);
+    --bs-btn-active-color: white;
+    --bs-btn-active-bg: var(--ared2);
+    --bs-btn-hover-bg: var(--ared2);
+    --bs-btn-border-color: var(--ared1);
 }
 
 .progress-bar {
