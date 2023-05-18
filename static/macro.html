@@ -1,0 +1,7 @@
+{% macro static_script(url) -%}
+<script src="{{ url_for('static', filename=url) }}"></script>
+{%- endmacro %}
+
+{% macro static_css(url) -%}
+<link rel="stylesheet" href="{{ url_for('static', filename=url) }}" />
+{%- endmacro %}
