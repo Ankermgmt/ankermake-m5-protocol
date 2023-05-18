@@ -15,10 +15,12 @@
         <!-- Header -->
         <div class="bg-dark bg-gradient mb-3">
             <header class="container d-flex align-items-center py-2">
-                {% include "header.html" %}
+                <a href="/" class="d-flex me-md-auto text-decoration-none">
+                    <img src="{{ url_for('static', filename='img/logo.svg') }}" class="me-2" alt="logo">
+                    <h3 class="text-body-emphasis align-self-baseline">ankerctl</h3>
+                </a>
                 <ul class="nav nav-pills align-items-baseline" id="tab" role="tablist">
-                    {% block menu %}
-                    {% endblock %}
+                    {% block menu %}{% endblock %}
                 </ul>
             </header>
         </div>
