@@ -105,7 +105,7 @@ $(function () {
         const data = JSON.parse(ev.data);
         if (data.commandType == 1001) {
             // Returns Print Details
-            $("#print-details").attr("style", "display: block;");
+            $("#print-details").removeClass("d-none");
             $("#print-name").text(data.name);
             $("#time-elapsed").text(getTime(data.totalTime));
             $("#time-remain").text(getTime(data.time));
