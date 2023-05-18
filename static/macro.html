@@ -1,32 +1,31 @@
 {% macro static_script(url) -%}
-<script src="{{ url_for('static', filename=url) }}"></script>
+    <script src="{{ url_for('static', filename=url) }}"></script>
 {%- endmacro %}
 
 {% macro static_css(url) -%}
-<link rel="stylesheet" href="{{ url_for('static', filename=url) }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename=url) }}" />
 {%- endmacro %}
 
 {% macro menu_button(id, target, active=False) %}
-  <li class="nav-item" role="presentation">
-    <button
-      class="nav-link{% if active %} active{% endif %}"
-      id="{{id}}"
-      data-bs-toggle="pill"
-      data-bs-target="#{{target}}"
-      type="button"
-      role="tab"
-      aria-controls="home"
-      aria-selected="{% if active %}true{% else %}false{% endif %}"
-      >
-      {{ caller() }}
-    </button>
-  </li>
+    <li class="nav-item" role="presentation">
+        <button
+            class="nav-link{% if active %} active{% endif %}"
+            id="{{id}}"
+            data-bs-toggle="pill"
+            data-bs-target="#{{target}}"
+            type="button"
+            role="tab"
+            aria-controls="home"
+            aria-selected="{% if active %}true{% else %}false{% endif %}">
+            {{ caller() }}
+        </button>
+    </li>
 {% endmacro %}
 
 {% macro bi_icon(icon, text="", class="") -%}
-{% if text %}
-  <i class="bi-{{icon}} px-1 {{class}}"></i>{{text}}
-{% else %}
-  <i class="bi-{{icon}} {{class}}"></i>
-{% endif %}
+    {% if text %}
+        <i class="bi-{{icon}} px-1 {{class}}"></i>{{text}}
+    {% else %}
+        <i class="bi-{{icon}} {{class}}"></i>
+    {% endif %}
 {%- endmacro %}

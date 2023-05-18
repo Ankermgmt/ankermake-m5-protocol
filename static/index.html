@@ -2,32 +2,30 @@
 {% import "macro.html" as macro %}
 
 {% block title -%}
-ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
+    ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
 {%- endblock %}
 
 {% block contents %}
-  {% if configure %}
-    {% include "tabs/home.html" %}
-    {% include "tabs/instructions.html" %}
-  {% endif %}
+    {% if configure %}
+        {% include "tabs/home.html" %}
+        {% include "tabs/instructions.html" %}
+    {% endif %}
 
-  {% include "tabs/setup.html" %}
+    {% include "tabs/setup.html" %}
 {% endblock %}
 
 {% block menu %}
-  {% if configure %}
+    {% if configure %}
+        {% call macro.menu_button(id="home-tab", target="home", active=configure) %}
+            {{ macro.bi_icon("house", "Home") }}
+        {% endcall %}
 
-    {% call macro.menu_button(id="home-tab", target="home", active=configure) %}
-      {{ macro.bi_icon("house", "Home") }}
+        {% call macro.menu_button(id="instructions-tab", target="instructions") %}
+            {{ macro.bi_icon("list-check", "Instructions") }}
+        {% endcall %}
+    {% endif %}
+
+    {% call macro.menu_button(id="setup-tab", target="setup", active=not configure) %}
+        {{ macro.bi_icon("gear-fill", "Setup") }}
     {% endcall %}
-
-    {% call macro.menu_button(id="instructions-tab", target="instructions") %}
-      {{ macro.bi_icon("list-check", "Instructions") }}
-    {% endcall %}
-
-  {% endif %}
-
-  {% call macro.menu_button(id="setup-tab", target="setup", active=not configure) %}
-    {{ macro.bi_icon("gear-fill", "Setup") }}
-  {% endcall %}
 {% endblock %}
