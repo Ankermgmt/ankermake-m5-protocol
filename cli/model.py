@@ -23,6 +23,8 @@ class Serialize:
             res[k] = getattr(self, k)
             if v.type == bytes:
                 res[k] = enhex(res[k])
+            elif v.type == datetime:
+                res[k] = res[k].timestamp()
         return res
 
     @classmethod
