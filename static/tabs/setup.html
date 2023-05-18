@@ -27,7 +27,7 @@
                                     aria-required="true"
                                 />
                                 <button class="btn btn-secondary submit" type="submit" id="upload">
-                                    <i class="bi bi-cloud-arrow-up-fill px-1"></i>Upload
+                                    {{ macro.bi_icon("cloud-arrow-up-fill", "Upload") }}
                                 </button>
                             </div>
                             <div class="mt-2">
@@ -40,7 +40,7 @@
                                     data-placement="button"
                                     title="Copy to Clipboard"
                                 >
-                                    <i class="bi bi-clipboard-plus"></i>
+                                    {{ macro.bi_icon("clipboard-plus") }}
                                 </button>
                             </div>
                         </div>
@@ -56,7 +56,7 @@
                         <button id="reload" type="button" class="btn btn-danger"
                                 data-bs-toggle="modal" data-bs-target="#popupModal"
                                 data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
-                            <i class="bi bi-bootstrap-reboot px-1"></i>Reload Services
+                            {{ macro.bi_icon("bootstrap-reboot", "Reload Services") }}
                         </button>
                     </div>
                 </div>

@@ -22,3 +22,11 @@
     </button>
   </li>
 {% endmacro %}
+
+{% macro bi_icon(icon, text="", class="") -%}
+{% if text %}
+  <i class="bi-{{icon}} px-1 {{class}}"></i>{{text}}
+{% else %}
+  <i class="bi-{{icon}} {{class}}"></i>
+{% endif %}
+{%- endmacro %}

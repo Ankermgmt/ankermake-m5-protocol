@@ -10,7 +10,7 @@
                 {% if printer %}
                 <div class="p-3 mb-3 rounded-3 fs-6 bg-body-tertiary">
                     Connected to: <strong>{{ printer.name }} ({{ printer.sn }})</strong>
-                    <i class="bi-check-lg icon-green"></i>
+                    {{ macro.bi_icon("check-lg", class="icon-green") }}
                 </div>
                 {% endif %}
                 <!-- Video Container -->
@@ -31,12 +31,12 @@
                         <div class="row g-3">
                             <div class="col-6">
                                 <button class="w-100 btn btn-secondary" id="light-on">
-                                    <i class="bi-lightbulb mx-1"></i>Light on
+                                    {{ macro.bi_icon("lightbulb", "Light on") }}
                                 </button>
                             </div>
                             <div class="col-6">
                                 <button class="w-100 btn btn-secondary" id="light-off">
-                                    <i class="bi-lightbulb-off mx-1"></i>Light off
+                                    {{ macro.bi_icon("lightbulb-off", "Light off") }}
                                 </button>
                             </div>
                         </div>
@@ -46,12 +46,12 @@
                         <div class="row g-3">
                             <div class="col-6">
                                 <button class="w-100 btn btn-secondary" id="quality-low">
-                                    <i class="bi-badge-sd mx-1"></i>SD Quality
+                                    {{ macro.bi_icon("badge-sd", "SD Quality") }}
                                 </button>
                             </div>
                             <div class="col-6">
                                 <button class="w-100 btn btn-secondary" id="quality-high">
-                                    <i class="bi-badge-hd mx-1"></i>HD Quality
+                                    {{ macro.bi_icon("badge-hd", "HD Quality") }}
                                 </button>
                             </div>
                         </div>
@@ -189,7 +189,7 @@
                                 <div class="col-6">
                                     <div class="input-group">
                                         <div class="input-group-text print-info-label" id="printLayer">
-                                            <i class="bi bi-layers-half"></i>
+                                            {{ macro.bi_icon("layers-half") }}
                                         </div>
                                         <span
                                             id="print-layer"
@@ -204,7 +204,7 @@
                                 <div class="col-6">
                                     <div class="input-group">
                                         <div class="input-group-text print-info-label" id="printSpeed">
-                                            <i class="bi bi-speedometer"></i>
+                                            {{ macro.bi_icon("speedometer") }}
                                         </div>
                                         <span
                                             id="print-speed"

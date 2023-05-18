@@ -18,16 +18,16 @@ ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
   {% if configure %}
 
     {% call macro.menu_button(id="home-tab", target="home", active=configure) %}
-      <i class="bi bi-house px-1"></i>Home
+      {{ macro.bi_icon("house", "Home") }}
     {% endcall %}
 
     {% call macro.menu_button(id="instructions-tab", target="instructions") %}
-      <i class="bi bi-list-check px-1"></i>Instructions
+      {{ macro.bi_icon("list-check", "Instructions") }}
     {% endcall %}
 
   {% endif %}
 
   {% call macro.menu_button(id="setup-tab", target="setup", active=not configure) %}
-    <i class="bi bi-gear-fill px-1"></i>Setup
+    {{ macro.bi_icon("gear-fill", "Setup") }}
   {% endcall %}
 {% endblock %}
