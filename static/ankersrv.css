@@ -45,7 +45,12 @@
 }
 
 .progress-bar {
+    --bs-progress-bar-color: white;
     --bs-progress-bar-bg: var(--agreen2);
+}
+
+#progress {
+    text-shadow: 0 0 7px black, 0 0 7px black;
 }
 
 footer .btn {
