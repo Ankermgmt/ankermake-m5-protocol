@@ -251,7 +251,7 @@ $(function () {
             this.jmuxer.destroy();
 
             /* Clear video source (to show loading animation) */
-            $("#player").removeAttr("src");
+            $("#player").attr("src", "");
         },
     });
 
