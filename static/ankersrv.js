@@ -41,14 +41,11 @@ $(function () {
     /**
      * Initializes bootstrap alerts and sets a timeout for when they should automatically close
      */
-    let alert_list = document.querySelectorAll(".alert");
-    alert_list.forEach(function (alert) {
-        new bootstrap.Alert(alert);
-
-        let alert_timeout = alert.getAttribute("data-timeout");
+    $(".alert").each(function (i, alert) {
+        var bsalert = new bootstrap.Alert(alert);
         setTimeout(() => {
-            bootstrap.Alert.getInstance(alert).close();
-        }, +alert_timeout);
+            bsalert.close();
+        }, +alert.getAttribute("data-timeout"));
     });
 
     /**
