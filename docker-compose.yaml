@@ -18,19 +18,22 @@ services:
             # - "$HOME/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json:/tmp/login.json" #TODO: Change to linux path
         command: sh -c "cp /tmp/login.json /root/.config/ankerctl/login.json || true"
     ankerctl_import:
+        # image: ghcr.io/ankermgmt/ankermake-m5-protocol:latest
         image: ankerctl/ankerctl:latest
         container_name: ankerctl_import
         restart: "no"
+        build: .
         volumes:
             - ankerctl_vol:/root/.config/ankerctl
-            - "$HOME/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json:/tmp/login.json"
+            # - "$HOME/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json:/tmp/login.json"
         entrypoint: "/app/ankerctl.py"
-        command: ["config", "import", "/tmp/login.json"]
+        command: ["config", "import", "/root/.config/ankerctl/login.json"]
         depends_on:
             - ankerctl_seed_mac
             - ankerctl_seed_linux
         
     ankerctl:
+        # image: ghcr.io/ankermgmt/ankermake-m5-protocol:latest
         image: ankerctl/ankerctl:latest
         container_name: ankerctl
         restart: unless-stopped
@@ -52,4 +55,4 @@ services:
 
 volumes:
   ankerctl_vol:
-    driver: internal
+    external: false
