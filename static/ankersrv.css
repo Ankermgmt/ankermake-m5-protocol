@@ -32,10 +32,6 @@ code {
     background-color: #292929;
 }
 
-.form-label {
-    font-weight: bolder;
-}
-
 code#loginFilePath {
     font-weight: lighter;
 }
@@ -44,7 +40,7 @@ code#loginFilePath {
     font-size: medium;
 }
 
-.progress {
+#printProgress {
     height: 40px;
 }
 
@@ -74,4 +70,5 @@ code#loginFilePath {
 
 .img-thumbnail {
     border: 0 none;
+    padding: 0;
 }

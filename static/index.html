@@ -59,7 +59,7 @@
                             aria-controls="home"
                             aria-selected="{% if configure %}true{% else %}false{% endif %}"
                         >
-                            <i class="bi bi-house"></i>&nbsp;Home
+                            <i class="bi bi-house px-1"></i>Home
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
@@ -73,7 +73,7 @@
                             aria-controls="instructions"
                             aria-selected="false"
                         >
-                            <i class="bi bi-list-check"></i>&nbsp;Instructions
+                            <i class="bi bi-list-check px-1"></i>Instructions
                         </button>
                     </li>
                     {% endif %}
@@ -88,27 +88,30 @@
                             aria-controls="setup"
                             aria-selected="{% if not configure %}true{% else %}false{% endif %}"
                         >
-                            <i class="bi bi-gear-fill"></i>&nbsp;Setup
+                            <i class="bi bi-gear-fill px-1"></i>Setup
                         </button>
                     </li>
                 </ul>
             </header>
         </div>
         <!-- Modal -->
-        <div
-            class="modal fade"
-            id="popupModal"
-            tabindex="-1"
-            role="dialog"
-            aria-labelledby="popupModal"
-            aria-hidden="true"
-        >
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content d-flex align-items-center">
-                    <div id="popupModalBody" class="modal-body"></div>
+        <div class="modal fade" id="popupModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <p>Restarting ankerctl...</p>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated w-100"
+                                 role="progressbar"
+                                 aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                 style="width: 100%">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
         <!-- Message Center -->
         <div class="container text-center" id="messages">
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -141,81 +144,81 @@
                 aria-labelledby="home-tab"
             >
                 <div class="container">
-                    <div class="row align-items-start">
+                    <div class="row align-items-start g-3">
                         <div class="col-lg-8">
                             {%if printer %}
-                            <div class="row mb-3">
-                                <div class="container rounded-3" id="connection">
-                                    <div class="p-3 rounded-3 fs-6 bg-body-tertiary">
-                                        Connected to: <strong>{{ printer.name }} ({{ printer.sn }})</strong>
-                                        <i class="bi-check-lg icon-green"></i>
-                                    </div>
-                                </div>
+                            <div class="p-3 mb-3 rounded-3 fs-6 bg-body-tertiary">
+                                Connected to: <strong>{{ printer.name }} ({{ printer.sn }})</strong>
+                                <i class="bi-check-lg icon-green"></i>
                             </div>
                             {% endif %}
                             <!-- Video Container -->
-                            <div class="row text-body-emphasis display-3">
-                                <div class="rounded-3">
-                                    <video
-                                        class="w-100 rounded-3 bg-body-tertiary"
-                                        playsinline
-                                        autoplay
-                                        muted
-                                        id="player"
-                                        poster="{{ url_for('static', filename='img/load-screen.svg') }}"
-                                    ></video>
-                                    <div id="overlay" class="col-md-12 px-3 rounded-3"></div>
-                                </div>
-                            </div>
+                            <video
+                                class="w-100 d-block rounded-3 bg-body-tertiary"
+                                playsinline
+                                autoplay
+                                muted
+                                id="player"
+                                poster="{{ url_for('static', filename='img/load-screen.svg') }}"
+                            >
+                            </video>
                         </div>
                         <div class="col-lg-4">
                             <div class="card">
                                 <div class="card-header h6">Light Control</div>
                                 <div class="card-body">
-                                    <div class="row">
+                                    <div class="row g-3">
                                         <div class="col-6">
                                             <button class="w-100 btn btn-secondary" id="light-on">
-                                                <i class="bi-lightbulb"></i> Light on
+                                                <i class="bi-lightbulb mx-1"></i>Light on
                                             </button>
                                         </div>
                                         <div class="col-6">
                                             <button class="w-100 btn btn-secondary" id="light-off">
-                                                <i class="bi-lightbulb-off"></i> Light off
+                                                <i class="bi-lightbulb-off mx-1"></i>Light off
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-header h6">Video Quality</div>
                                 <div class="card-body">
-                                    <div class="row">
+                                    <div class="row g-3">
                                         <div class="col-6">
                                             <button class="w-100 btn btn-secondary" id="quality-low">
-                                                <i class="bi-badge-sd"></i> SD Quality
+                                                <i class="bi-badge-sd mx-1"></i>SD Quality
                                             </button>
                                         </div>
                                         <div class="col-6">
                                             <button class="w-100 btn btn-secondary" id="quality-high">
-                                                <i class="bi-badge-hd"></i> HD Quality
+                                                <i class="bi-badge-hd mx-1"></i>HD Quality
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-header h6">Temperature</div>
                                 <div class="card-body">
-                                    <div class="row">
+                                    <div class="row g-3">
                                         <div class="col-6">
                                             <div class="input-group">
-                                                <div class="input-group-text mx-auto" id="bedGroup">
-                                                    <i class="icon icon-hotend" alt="hotend temperature"></i>
+                                                <div class="input-group-text mx-auto" id="nozzleGroup">
+                                                    <i class="icon icon-hotend"></i>
                                                 </div>
+                                                <span
+                                                    id="nozzle-temp"
+                                                    class="form-control text-center"
+                                                    title="Current Nozzle Temperature"
+                                                    aria-describedby="nozzleGroup"
+                                                >
+                                                    0°C
+                                                </span>
                                                 <input
                                                     type="text"
-                                                    id="nozzle-temp"
-                                                    name="nozzle-temp"
-                                                    class="form-control"
+                                                    id="set-nozzle-temp"
+                                                    name="set-nozzle-temp"
+                                                    class="form-control text-center"
                                                     value="0°C"
-                                                    title="Nozzle Temperature"
-                                                    aria-label="Nozzle Temperature"
+                                                    title="Target Nozzle Temperature"
+                                                    aria-label="Target Nozzle Temperature"
                                                     aria-describedby="nozzleGroup"
                                                     disabled
                                                     readonly
@@ -227,14 +230,22 @@
                                                 <div class="input-group-text mx-auto" id="bedGroup">
                                                     <i class="icon icon-bed"></i>
                                                 </div>
+                                                <span
+                                                    id="bed-temp"
+                                                    class="form-control text-center"
+                                                    title="Current Bed Temperature"
+                                                    aria-describedby="bedGroup"
+                                                >
+                                                    0°C
+                                                </span>
                                                 <input
                                                     type="text"
-                                                    id="bed-temp"
-                                                    name="bed-temp"
-                                                    class="form-control"
+                                                    id="set-bed-temp"
+                                                    name="set-bed-temp"
+                                                    class="form-control text-center"
                                                     value="0°C"
-                                                    title="Bed Temperature"
-                                                    aria-label="Bed Temperature"
+                                                    title="Target Bed Temperature"
+                                                    aria-label="Target Bed Temperature"
                                                     aria-describedby="bedGroup"
                                                     disabled
                                                     readonly
@@ -246,122 +257,102 @@
                                 <div id="print-details" style="display: none">
                                     <div class="card-header h6">Print Progress</div>
                                     <div class="card-body">
-                                        <div class="col-12">
-                                            <div class="input-group mb-3">
-                                                <div class="input-group-text print-info-label" id="printName">Name</div>
-                                                <input
-                                                    type="text"
-                                                    id="print-name"
-                                                    name="print-name"
-                                                    class="form-control"
-                                                    value="None"
-                                                    title="Print Name"
-                                                    aria-label="Print Name"
-                                                    aria-describedby="printName"
-                                                    disabled
-                                                    readonly
-                                                />
-                                            </div>
-                                            <div class="row mb-3">
-                                                <div class="col-6">
-                                                    <div class="input-group">
-                                                        <div class="input-group-text print-info-label" id="timeElapsed">
-                                                            <i class="icon icon-time-passed"></i>
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            id="time-elapsed"
-                                                            name="time-elapsed"
-                                                            class="form-control"
-                                                            value="00:00:00"
-                                                            title="Time Elapsed"
-                                                            aria-label="Time Elapsed"
-                                                            aria-describedby="timeElapsed"
-                                                            disabled
-                                                            readonly
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="input-group">
-                                                        <div class="input-group-text print-info-label" id="timeRemain">
-                                                            <i class="icon icon-time-remaining"></i>
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            id="time-remain"
-                                                            name="time-remain"
-                                                            class="form-control"
-                                                            value="00:00:00"
-                                                            title="Time Remaining"
-                                                            aria-label="Time Remaining"
-                                                            aria-describedby="timeRemain"
-                                                            disabled
-                                                            readonly
-                                                        />
-                                                    </div>
+                                        <div class="row mb-3 g-3">
+                                            <div class="col-12">
+                                                <div class="input-group">
+                                                    <div class="input-group-text print-info-label" id="printName">Name</div>
+                                                    <span
+                                                        id="print-name"
+                                                        class="form-control"
+                                                        title="Print Name"
+                                                        aria-describedby="printName"
+                                                    >
+                                                        None
+                                                    </span>
                                                 </div>
                                             </div>
-                                            <div class="row mb-3">
-                                                <div class="col-12">
-                                                    <div class="progress position-relative">
-                                                        <div
-                                                            class="progress-bar progress-bar-striped progress-bar-animated"
-                                                            role="progressbar"
-                                                            id="progressbar"
-                                                            title="progressbar"
-                                                            aria-valuenow="0"
-                                                            aria-valuemin="0"
-                                                            aria-valuemax="100"
-                                                            style="width: 0%"
-                                                        >
-                                                            <span
-                                                                id="progress"
-                                                                class="justify-content-center d-flex position-absolute w-100"
-                                                                >0%</span
-                                                            >
-                                                        </div>
+                                        </div>
+                                        <div class="row mb-3 g-3">
+                                            <div class="col-6">
+                                                <div class="input-group">
+                                                    <div class="input-group-text print-info-label" id="timeElapsed">
+                                                        <i class="icon icon-time-passed"></i>
+                                                    </div>
+                                                    <span
+                                                        id="time-elapsed"
+                                                        class="form-control text-center"
+                                                        title="Time Elapsed"
+                                                        aria-describedby="timeElapsed"
+                                                    >
+                                                        00:00:00
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="input-group">
+                                                    <div class="input-group-text print-info-label" id="timeRemain">
+                                                        <i class="icon icon-time-remaining"></i>
+                                                    </div>
+                                                    <span
+                                                        id="time-remain"
+                                                        class="form-control text-center"
+                                                        title="Time Remaining"
+                                                        aria-describedby="timeRemain"
+                                                    >
+                                                        00:00:00
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3 g-3">
+                                            <div class="col-12">
+                                                <div class="progress position-relative" id="printProgress">
+                                                    <div
+                                                        class="progress-bar progress-bar-striped progress-bar-animated"
+                                                        role="progressbar"
+                                                        id="progressbar"
+                                                        title="Progress Bar"
+                                                        aria-valuenow="0"
+                                                        aria-valuemin="0"
+                                                        aria-valuemax="100"
+                                                        style="width: 0%"
+                                                    >
+                                                        <span id="progress" class="position-absolute w-100">
+                                                            0%
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="row">
-                                                <div class="col-6">
-                                                    <div class="input-group">
-                                                        <div class="input-group-text print-info-label" id="printLayer">
-                                                            Layer
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            id="print-layer"
-                                                            name="print-layer"
-                                                            class="form-control"
-                                                            value="0/0"
-                                                            title="Print Layers"
-                                                            aria-label="Print Layers"
-                                                            aria-describedby="printLayer"
-                                                            disabled
-                                                            readonly
-                                                        />
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <div class="input-group">
+                                                    <div class="input-group-text print-info-label" id="printLayer">
+                                                        <i class="bi bi-layers-half"></i>
                                                     </div>
+                                                    <span
+                                                        id="print-layer"
+                                                        class="form-control text-center"
+                                                        title="Print Layers"
+                                                        aria-describedby="printLayer"
+                                                    >
+                                                        0/0
+                                                    </span>
                                                 </div>
-                                                <div class="col-6">
-                                                    <div class="input-group">
-                                                        <div class="input-group-text print-info-label" id="printSpeed">
-                                                            Speed
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            id="print-speed"
-                                                            name="print-speed"
-                                                            class="form-control"
-                                                            value="0mm/s"
-                                                            title="Print Speed"
-                                                            aria-label="Print Speed"
-                                                            aria-describedby="printSpeed"
-                                                            disabled
-                                                            readonly
-                                                        />
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="input-group">
+                                                    <div class="input-group-text print-info-label" id="printSpeed">
+                                                        <i class="bi bi-speedometer"></i>
                                                     </div>
+                                                    <span
+                                                        id="print-speed"
+                                                        class="form-control text-center small"
+                                                        title="Print Speed"
+                                                        aria-describedby="printSpeed"
+                                                    >
+                                                        0mm/s
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -375,10 +366,10 @@
             <!-- Instructions Tab -->
             <div class="tab-pane fade" id="instructions" role="tabpanel" aria-labelledby="instructions-tab">
                 <div class="container mb-4">
-                    <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xxl-2 g-3 p-2">
+                    <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xxl-2 g-3">
                         <div class="col-12 col-lg-12">
-                            <h2 class="display-6 fs-2 mb-2">Connecting PrusaSlicer/SuperSlicer</h2>
-                            <ol class="list-group list-group-numbered">
+                            <h2>Connecting PrusaSlicer/SuperSlicer</h2>
+                            <ol class="list-group list-group-numbered mb-3">
                                 <li class="list-group-item">Go to "Printer settings" tab</li>
                                 <li class="list-group-item">Click "Gear"⚙️ (Add/Edit Physical Printer)</li>
                                 <li class="list-group-item">
@@ -390,7 +381,8 @@
                                 <li class="list-group-item">Under "Host Type" select "OctoPrint"</li>
                                 <li class="list-group-item">
                                     In "Hostname, IP or URL" fill in with:
-                                    <kbd id="octoPrintHost">{{ request_host }}:{{ request_port }}</kbd>&nbsp;<button
+                                    <kbd id="octoPrintHost">{{ request_host }}:{{ request_port }}</kbd>
+                                    <button
                                         class="btn btn-secondary btn-sm"
                                         type="button"
                                         id="configData"
@@ -398,7 +390,7 @@
                                         data-placement="button"
                                         title="Copy to Clipboard"
                                     >
-                                        <span class="bi bi-clipboard-plus"></span>
+                                        <i class="bi bi-clipboard-plus px-1"></i>
                                     </button>
                                 </li>
                                 <li class="list-group-item">Leave "API Key / Password" blank</li>
@@ -413,15 +405,15 @@
                                 </li>
                                 <li class="list-group-item">Enjoy printing with ankerctl 😉</li>
                             </ol>
-                            <br /><span class="fw-light"
-                                >Hint: <kbd>Ctrl+Shift+G</kbd> will slice and open the upload to printer window</span
-                            >
+                            <span class="fw-light">
+                                Hint: <kbd>Ctrl+Shift+G</kbd> will slice and open the upload to printer window
+                            </span>
                         </div>
                         <div class="col-12 col-lg-12 text-center">
-                            <img src="/static/img/setup/prusaslicer-1.png" class="img-thumbnail" alt="step 1" />
-                            <img src="/static/img/setup/prusaslicer-2.png" class="img-thumbnail" alt="step 2" />
-                            <img src="/static/img/setup/prusaslicer-3.png" class="img-thumbnail" alt="step 3" />
-                            <img src="/static/img/setup/prusaslicer-4.png" class="img-thumbnail" alt="step 4" />
+                            <img src="/static/img/setup/prusaslicer-1.png" class="img-thumbnail mt-2" alt="step 1" />
+                            <img src="/static/img/setup/prusaslicer-2.png" class="img-thumbnail mt-2" alt="step 2" />
+                            <img src="/static/img/setup/prusaslicer-3.png" class="img-thumbnail mt-2" alt="step 3" />
+                            <img src="/static/img/setup/prusaslicer-4.png" class="img-thumbnail mt-2" alt="step 4" />
                         </div>
                     </div>
                 </div>
@@ -436,7 +428,7 @@
             >
                 <div class="container">
                     <div class="row">
-                        <div class="col-md-5">
+                        <div class="col-md-6">
                             <div class="row">
                                 <form
                                     action="{{ url_for('app_api_ankerctl_config_upload') }}"
@@ -444,9 +436,9 @@
                                     enctype="multipart/form-data"
                                 >
                                     <div class="mb-3" id="config-upload-form">
-                                        <label for="loginFile" class="form-label"
-                                            ><h4>Upload AnkerMake Login File</h4></label
-                                        >
+                                        <label for="loginFile" class="fs-4">
+                                            Upload AnkerMake Login File
+                                        </label>
                                         <div class="input-group w-auto">
                                             <input
                                                 class="form-control"
@@ -457,11 +449,11 @@
                                                 aria-required="true"
                                             />
                                             <button class="btn btn-secondary submit" type="submit" id="upload">
-                                                <i class="bi bi-cloud-arrow-up-fill"></i>&nbsp;Upload
+                                                <i class="bi bi-cloud-arrow-up-fill px-1"></i>Upload
                                             </button>
                                         </div>
-                                        <span class="form-label"
-                                            >Location: <code id="loginFilePath">{{ login_file_path }}</code>&nbsp;
+                                        <div class="mt-2">
+                                            Location: <code id="loginFilePath">{{ login_file_path }}</code>
                                             <button
                                                 class="btn btn-secondary btn-sm"
                                                 type="button"
@@ -470,42 +462,30 @@
                                                 data-placement="button"
                                                 title="Copy to Clipboard"
                                             >
-                                                <span class="bi bi-clipboard-plus"></span>
+                                                <i class="bi bi-clipboard-plus"></i>
                                             </button>
-                                        </span>
+                                        </div>
                                     </div>
                                 </form>
                             </div>
                             <div class="row">
                                 <div class="mb-3" id="reload-ankerctl">
-                                    <label for="reload" class="form-label">
-                                        <h4>Reload Ankerctl Services</h4>
-                                    </label>
+                                    <h4>Reload Ankerctl Services</h4>
                                     <p>
                                         If you are experiencing issues with printing or viewing the video feed reloading
                                         the Ankerctl services will often resolve these issues.
                                     </p>
-                                    <a
-                                        href="{{ url_for('app_api_ankerctl_server_reload') }}"
-                                        class="btn btn-secondary submit"
-                                        id="reload"
-                                        role="button"
-                                        data-message="Ankerctl is restarting..."
-                                    >
-                                        <span data-bs-toggle="modal" data-bs-target="#popupModal">
-                                            <i class="bi bi-bootstrap-reboot"></i>&nbsp;Reload Services
-                                        </span>
-                                    </a>
+                                    <button id="reload" type="button" class="btn btn-danger"
+                                            data-bs-toggle="modal" data-bs-target="#popupModal"
+                                            data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
+                                        <i class="bi bi-bootstrap-reboot px-1"></i>Reload Services
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-7">
-                            <span class="mr-auto pl-4">
-                                <label for="ankerctl-settings" class="form-label"><h4>AnkerMake M5 Config</h4></label>
-                                <code id="ankerctl-settings">
-                                    {% autoescape false %} {{ anker_config }} {% endautoescape %}
-                                </code>
-                            </span>
+                        <div class="col-md-6">
+                            <h4>AnkerMake M5 Config</h4>
+                            <pre class="p-3" id="ankerctl-settings">{{ anker_config }}</pre>
                         </div>
                     </div>
                 </div>
@@ -513,33 +493,31 @@
         </div>
         <!-- Footer -->
         <footer class="container">
-            <div class="p-3 text-center bg-body-tertiary rounded-3">
-                &copy;
-                <span id="copyYear">...</span>
-                Copyright -
+            <div class="my-3 p-3 text-center bg-body-tertiary rounded-3">
+                Copyright &copy;<span id="copyYear">...</span>
                 <a
                     class="text-light"
                     href="https://github.com/Ankermgmt/ankermake-m5-protocol"
-                    alt="ankerctl"
                     rel="noopener noreferrer nofollow"
                     target="_blank"
-                    >ankerctl</a
-                ><br /><a
+                >
+                    ankerctl
+                </a>
+                <br />
+                <a
                     href="https://github.com/Ankermgmt/ankermake-m5-protocol"
                     class="btn btn-link btn-sm"
-                    alt="View on GitHub"
                     rel="noopener noreferrer nofollow"
                     target="_blank"
-                    ><i class="bi-github"></i> View on GitHub</a
                 >
+                    <i class="bi-github px-1"></i>View on GitHub
+                </a>
             </div>
         </footer>
-        <script
-            type="text/javascript"
-            src="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js')}}"
-        ></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='vendor/cash.min.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='vendor/jmuxer.min.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='ankersrv.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js')}}">
+        </script>
+        <script src="{{ url_for('static', filename='vendor/cash.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='vendor/jmuxer.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='ankersrv.js') }}"></script>
     </body>
 </html>

@@ -14,11 +14,12 @@ $(function () {
     }
 
     /**
-     * Show modal when clicking reload services button
+     * Redirect page when modal dialog is shown
      */
-    $("#reload").on("click", function () {
-        content = $("#reload").data("message");
-        $("#popupModalBody").text(content);
+    var popupModal = document.getElementById("popupModal");
+
+    popupModal.addEventListener("shown.bs.modal", function (e) {
+        window.location.href = $("#reload").data("href");
     });
 
     /**
@@ -77,14 +78,23 @@ $(function () {
     function getTime(totalseconds) {
         const hours = Math.floor(totalseconds / 3600);
         const minutes = Math.floor((totalseconds % 3600) / 60);
-        const seconds = (totalseconds % 60);
+        const seconds = totalseconds % 60;
 
         const timeString =
-              `${hours.toString().padStart(2, "0")}:` +
-              `${minutes.toString().padStart(2, "0")}:` +
-              `${seconds.toString().padStart(2, "0")}`;
+            `${hours.toString().padStart(2, "0")}:` +
+            `${minutes.toString().padStart(2, "0")}:` +
+            `${seconds.toString().padStart(2, "0")}`;
 
         return timeString;
+    }
+
+    /**
+     * Calculates the AnkerMake M5 Speed ratio ("X-factor")
+     * @param {number} speed - The speed value in mm/s
+     * @return {number} The speed factor in units of "X" (50mm/s)
+     */
+    function getSpeedFactor(speed) {
+        return `X${speed / 50}`;
     }
 
     /**
@@ -96,9 +106,9 @@ $(function () {
         if (data.commandType == 1001) {
             // Returns Print Details
             $("#print-details").attr("style", "display: block;");
-            $("#print-name").attr("value", data.name);
-            $("#time-elapsed").attr("value", getTime(data.totalTime));
-            $("#time-remain").attr("value", getTime(data.time));
+            $("#print-name").text(data.name);
+            $("#time-elapsed").text(getTime(data.totalTime));
+            $("#time-remain").text(getTime(data.time));
             const progress = getPercentage(data.progress);
             $("#progressbar").attr("aria-valuenow", progress);
             $("#progressbar").attr("style", `width: ${progress}%`);
@@ -107,23 +117,25 @@ $(function () {
             // Returns Nozzle Temp
             const current = getTemp(data.currentTemp);
             const target = getTemp(data.targetTemp);
-            const temp = `${current}/${target}°C`;
-            $("#nozzle-temp").attr("value", temp);
+            $("#nozzle-temp").text(`${current}°C`);
+            $("#set-nozzle-temp").attr("value", `${target}°C`);
         } else if (data.commandType == 1004) {
             // Returns Bed Temp
             const current = getTemp(data.currentTemp);
             const target = getTemp(data.targetTemp);
-            const temp = `${current}/${target}°C`;
-            $("#bed-temp").attr("value", temp);
+            $("#bed-temp").text(`${current}°C`);
+            $("#set-bed-temp").attr("value", `${target}°C`);
         } else if (data.commandType == 1006) {
             // Returns Print Speed
-            $("#print-speed").attr("value", `${data.value}mm/s`);
+            const X = getSpeedFactor(data.value);
+            $("#print-speed").text(`${data.value}mm/s ${X}`);
         } else if (data.commandType == 1052) {
             // Returns Layer Info
-            const layer = `${data.real_print_layer}/${data.total_layer}`;
-            $("#print-layer").attr("value", layer);
+            const layer = `${data.real_print_layer} / ${data.total_layer}`;
+            $("#print-layer").text(layer);
+        } else {
+            console.log(data);
         }
-        console.log(data);
     });
 
     /**
