@@ -100,75 +100,113 @@ $(function () {
     /**
      * Opens a websocket connection and outputs any incoming message data to console
      */
-    socket = new WebSocket("ws://" + location.host + "/ws/mqtt");
-    socket.addEventListener("message", (ev) => {
-        const data = JSON.parse(ev.data);
-        if (data.commandType == 1001) {
-            // Returns Print Details
-            $("#print-name").text(data.name);
-            $("#time-elapsed").text(getTime(data.totalTime));
-            $("#time-remain").text(getTime(data.time));
-            const progress = getPercentage(data.progress);
-            $("#progressbar").attr("aria-valuenow", progress);
-            $("#progressbar").attr("style", `width: ${progress}%`);
-            $("#progress").text(`${progress}%`);
-        } else if (data.commandType == 1003) {
-            // Returns Nozzle Temp
-            const current = getTemp(data.currentTemp);
-            const target = getTemp(data.targetTemp);
-            $("#nozzle-temp").text(`${current}°C`);
-            $("#set-nozzle-temp").attr("value", `${target}°C`);
-        } else if (data.commandType == 1004) {
-            // Returns Bed Temp
-            const current = getTemp(data.currentTemp);
-            const target = getTemp(data.targetTemp);
-            $("#bed-temp").text(`${current}°C`);
-            $("#set-bed-temp").attr("value", `${target}°C`);
-        } else if (data.commandType == 1006) {
-            // Returns Print Speed
-            const X = getSpeedFactor(data.value);
-            $("#print-speed").text(`${data.value}mm/s ${X}`);
-        } else if (data.commandType == 1052) {
-            // Returns Layer Info
-            const layer = `${data.real_print_layer} / ${data.total_layer}`;
-            $("#print-layer").text(layer);
-        } else {
-            console.log(data);
-        }
-    });
+    function connect_mqtt_ws() {
+        ws = new WebSocket("ws://" + location.host + "/ws/mqtt");
+
+        ws.addEventListener("message", (ev) => {
+            const data = JSON.parse(ev.data);
+            if (data.commandType == 1001) {
+                // Returns Print Details
+                $("#print-name").text(data.name);
+                $("#time-elapsed").text(getTime(data.totalTime));
+                $("#time-remain").text(getTime(data.time));
+                const progress = getPercentage(data.progress);
+                $("#progressbar").attr("aria-valuenow", progress);
+                $("#progressbar").attr("style", `width: ${progress}%`);
+                $("#progress").text(`${progress}%`);
+            } else if (data.commandType == 1003) {
+                // Returns Nozzle Temp
+                const current = getTemp(data.currentTemp);
+                const target = getTemp(data.targetTemp);
+                $("#nozzle-temp").text(`${current}°C`);
+                $("#set-nozzle-temp").attr("value", `${target}°C`);
+            } else if (data.commandType == 1004) {
+                // Returns Bed Temp
+                const current = getTemp(data.currentTemp);
+                const target = getTemp(data.targetTemp);
+                $("#bed-temp").text(`${current}°C`);
+                $("#set-bed-temp").attr("value", `${target}°C`);
+            } else if (data.commandType == 1006) {
+                // Returns Print Speed
+                const X = getSpeedFactor(data.value);
+                $("#print-speed").text(`${data.value}mm/s ${X}`);
+            } else if (data.commandType == 1052) {
+                // Returns Layer Info
+                const layer = `${data.real_print_layer} / ${data.total_layer}`;
+                $("#print-layer").text(layer);
+            } else {
+                console.log(data);
+            }
+        });
+
+        ws.addEventListener("close", function (e) {
+            console.log("MQTT socket close");
+            $("#print-name").text("");
+            $("#time-elapsed").text("00:00:00");
+            $("#time-remain").text("00:00:00");
+            $("#progressbar").attr("aria-valuenow", 0);
+            $("#progressbar").attr("style", "width: 0%");
+            $("#progress").text("0%");
+            $("#nozzle-temp").text("0°C");
+            $("#set-nozzle-temp").attr("value", "0°C");
+            $("#bed-temp").text("$0°C");
+            $("#set-bed-temp").attr("value", "0°C");
+            $("#print-speed").text("0mm/s");
+            $("#print-layer").text("0 / 0");
+            setTimeout(() => connect_mqtt_ws(), 1000);
+        });
+
+        ws.addEventListener("error", function (e) {
+            console.log("MQTT socket error");
+            ws.close();
+        });
+    };
+
+    connect_mqtt_ws();
 
     /**
      * Initializing a new instance of JMuxer for video playback
      */
-    var jmuxer;
-    jmuxer = new JMuxer({
-        node: "player",
-        mode: "video",
-        flushingTime: 0,
-        fps: 15,
-        // debug: true,
-        onReady: function (data) {
-            console.log(data);
-        },
-        onError: function (data) {
-            console.log(data);
-        },
-    });
-
-    /**
-     * Opens a websocket connection for video streaming and feeds the data to the JMuxer instance
-     */
-    var ws = new WebSocket("ws://" + location.host + "/ws/video");
-    ws.binaryType = "arraybuffer";
-    ws.addEventListener("message", function (event) {
-        jmuxer.feed({
-            video: new Uint8Array(event.data),
+    function connect_video_ws() {
+        var jmuxer;
+        jmuxer = new JMuxer({
+            node: "player",
+            mode: "video",
+            flushingTime: 0,
+            fps: 15,
+            // debug: true,
+            onReady: function (data) {
+                console.log(data);
+            },
+            onError: function (data) {
+                console.log(data);
+            },
         });
-    });
 
-    ws.addEventListener("error", function (e) {
-        console.log("Socket Error");
-    });
+        /**
+         * Opens a websocket connection for video streaming and feeds the data to the JMuxer instance
+         */
+        var ws = new WebSocket("ws://" + location.host + "/ws/video");
+        ws.binaryType = "arraybuffer";
+        ws.addEventListener("message", function (event) {
+            jmuxer.feed({
+                video: new Uint8Array(event.data),
+            });
+        });
+
+        ws.addEventListener("close", function (e) {
+            console.log("Video socket close");
+            jmuxer.destroy();
+            setTimeout(() => connect_video_ws(), 1000);
+        });
+
+        ws.addEventListener("error", function (e) {
+            console.log("Video socket error");
+            ws.close();
+        });
+    };
+
+    connect_video_ws();
 
     /**
      * Opens a websocket connection for controlling video and sends JSON data based on button clicks
