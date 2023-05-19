@@ -12,13 +12,15 @@ servertable = {
 }
 
 
-def mqtt_open(config, insecure):
+def mqtt_open(config, printer_index, insecure):
 
     with config.open() as cfg:
-        printer = cfg.printers[0]
+        if printer_index >= len(cfg.printers):
+            log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
+        printer = cfg.printers[printer_index]
         acct = cfg.account
         server = servertable[acct.region]
-        log.info(f"Connecting to {server}")
+        log.info(f"Connecting printer {printer.name} ({printer.p2p_duid}) through {server}")
         client = AnkerMQTTBaseClient.login(
             printer.sn,
             acct.mqtt_username,

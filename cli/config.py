@@ -1,6 +1,7 @@
 import logging as log
 import contextlib
 import json
+from datetime import datetime
 
 from pathlib import Path
 from platformdirs import PlatformDirs
@@ -107,10 +108,17 @@ def load_config_from_api(auth_token, region, insecure):
     dsks = {dsk["station_sn"]: dsk for dsk in appapi.equipment_get_dsk_keys(station_sns=sns)["dsk_keys"]}
 
     # populate config object with printer list
+    # Sort the list of printers by printer.id
+    printers.sort(key=lambda p: p["station_id"])
     for pr in printers:
         station_sn = pr["station_sn"]
         config.printers.append(Printer(
+            id=pr["station_id"],
             sn=station_sn,
+            name=pr["station_name"],
+            model=pr["station_model"],
+            create_time=datetime.fromtimestamp(pr["create_time"]),
+            update_time=datetime.fromtimestamp(pr["update_time"]),
             mqtt_key=unhex(pr["secret_key"]),
             wifi_mac=pr["wifi_mac"],
             ip_addr=pr["ip_addr"],

@@ -31,12 +31,12 @@ class PPPPService(Service):
         deadline = datetime.now() + timedelta(seconds=2)
 
         with config.open() as cfg:
-            printer = cfg.printers[0]
+            printer = cfg.printers[app.config["printer_index"]]
 
         api = AnkerPPPPAsyncApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
         # _pppp_dumpfile(api, dumpfile)
 
-        log.info("Trying connect over pppp")
+        log.info(f"Trying connect to printer {printer.name} ({printer.p2p_duid}) over pppp using ip {printer.ip_addr}")
 
         api.connect_lan_search()
 

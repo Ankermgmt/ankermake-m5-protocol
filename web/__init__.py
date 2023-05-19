@@ -144,10 +144,10 @@ def app_root():
         request_port = host[1] if len(host) > 1 else "80"
         if app.config["login"]:
             anker_config = str(web.config.config_show(cfg))
-            printer_serial = str(cfg.printers[0].sn)
+            printer = cfg.printers[app.config["printer_index"]]
         else:
-            anker_config = "<p>No printers found, please load your login config...</p>"
-            printer_serial = None
+            anker_config = "No printers found, please load your login config..."
+            printer = None
 
         return render_template(
             "index.html",
@@ -156,7 +156,7 @@ def app_root():
             configure=app.config["login"],
             login_file_path=web.platform.login_path(user_os),
             anker_config=anker_config,
-            printer_serial=printer_serial
+            printer=printer
         )
 
 
@@ -246,7 +246,7 @@ def app_api_files_local():
     return {}
 
 
-def webserver(config, host, port, insecure=False, **kwargs):
+def webserver(config, printer_index, host, port, insecure=False, **kwargs):
     """
     Starts the Flask webserver
 
@@ -260,8 +260,11 @@ def webserver(config, host, port, insecure=False, **kwargs):
         - None
     """
     with config.open() as cfg:
+        if printer_index >= len(cfg.printers):
+            log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
         app.config["config"] = config
         app.config["login"] = True if cfg else False
+        app.config["printer_index"] = printer_index
         app.config["port"] = port
         app.config["host"] = host
         app.config["insecure"] = insecure

@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from dataclasses import dataclass
 from libflagship.util import unhex, enhex
 
@@ -12,6 +13,8 @@ class Serialize:
             res[k] = data[k]
             if v.type == bytes:
                 res[k] = unhex(res[k])
+            elif v.type == datetime:
+                res[k] = datetime.fromtimestamp(res[k])
         return cls(**res)
 
     def to_dict(self):
@@ -20,6 +23,8 @@ class Serialize:
             res[k] = getattr(self, k)
             if v.type == bytes:
                 res[k] = enhex(res[k])
+            elif v.type == datetime:
+                res[k] = res[k].timestamp()
         return res
 
     @classmethod
@@ -32,7 +37,12 @@ class Serialize:
 
 @dataclass
 class Printer(Serialize):
+    id: str
     sn: str
+    name: str
+    model: str
+    create_time: datetime
+    update_time: datetime
     wifi_mac: str
     ip_addr: str
     mqtt_key: bytes
@@ -61,4 +71,4 @@ class Account(Serialize):
 @dataclass
 class Config(Serialize):
     account: Account
-    printers: [Printer]
+    printers: list[Printer]

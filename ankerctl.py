@@ -4,7 +4,7 @@ import json
 import click
 import platform
 import logging as log
-from os import path
+from os import path, environ
 from rich import print  # you need python3
 from tqdm import tqdm
 
@@ -63,11 +63,11 @@ pass_env = click.make_pass_decorator(Environment)
 @click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
 @click.option("--verbose", "-v", count=True, help="Increase verbosity")
 @click.option("--quiet", "-q", count=True, help="Decrease verbosity")
+@click.option("--printer", "-p", type=int, default=environ.get('PRINTER_INDEX') or 0, help="Select printer number")
 @click.pass_context
-def main(ctx, pppp_dump, verbose, quiet, insecure):
+def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
     ctx.ensure_object(Environment)
     env = ctx.obj
-
     levels = {
         -3: log.CRITICAL,
         -2: log.ERROR,
@@ -91,6 +91,9 @@ def main(ctx, pppp_dump, verbose, quiet, insecure):
 
     env.upgrade_config_if_needed()
 
+    env.printer_index = printer
+    log.debug(f"Using printer [{env.printer_index}]")
+
 
 @main.group("mqtt", help="Low-level mqtt api access")
 @pass_env
@@ -105,7 +108,7 @@ def mqtt_monitor(env):
     Connect to mqtt broker, and show low-level events in realtime.
     """
 
-    client = cli.mqtt.mqtt_open(env.config, env.insecure)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
 
     for msg, body in client.fetchloop():
         log.info(f"TOPIC [{msg.topic}]")
@@ -154,7 +157,7 @@ def mqtt_send(env, command_type, args, force):
             log.fatal("Sending DEVICE_NAME_SET without devName=<name> will crash printer (override with --force)")
             return
 
-    client = cli.mqtt.mqtt_open(env.config, env.insecure)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
     cli.mqtt.mqtt_command(client, cmd)
 
 
@@ -166,7 +169,7 @@ def mqtt_rename_printer(env, newname):
     Set a new nickname for your printer
     """
 
-    client = cli.mqtt.mqtt_open(env.config, env.insecure)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
 
     cmd = {
         "commandType": MqttMsgType.ZZ_MQTT_CMD_DEVICE_NAME_SET,
@@ -243,7 +246,7 @@ def pppp_print_file(env, file, no_act):
     file, so anytime a file is uploaded, the old one is deleted.
     """
     env.load_config()
-    api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
+    api = cli.pppp.pppp_open(env.config, env.printer_index, dumpfile=env.pppp_dump)
 
     data = file.read()
     fui = FileUploadInfo.from_file(file.name, user_name="ankerctl", user_id="-", machine_id="-")
@@ -277,7 +280,7 @@ def pppp_capture_video(env, file, max_size):
     "ffplay" from the ffmpeg program suite.
     """
     env.load_config()
-    api = cli.pppp.pppp_open(env.config, dumpfile=env.pppp_dump)
+    api = cli.pppp.pppp_open(env.config, env.printer_index, dumpfile=env.pppp_dump)
 
     cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
     api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
@@ -418,7 +421,7 @@ def config_import(env, fd):
         config = cli.config.load_config_from_api(auth_token, region, env.insecure)
     except libflagship.httpapi.APIError as E:
         log.critical(f"Config import failed: {E} "
-                     "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
+                    "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
     except Exception as E:
         log.critical(f"Config import failed: {E}")
 
@@ -443,20 +446,28 @@ def config_show(env):
             return
 
         log.info("Account:")
-        print(f"    user_id:    {cfg.account.user_id[:20]}...<REDACTED>")
-        print(f"    auth_token: {cfg.account.auth_token[:20]}...<REDACTED>")
+        print(f"    user_id:    {cfg.account.user_id[:10]}...<REDACTED>")
+        print(f"    auth_token: {cfg.account.auth_token[:10]}...<REDACTED>")
         print(f"    email:      {cfg.account.email}")
         print(f"    region:     {cfg.account.region.upper()}")
         print()
 
         log.info("Printers:")
-        for p in cfg.printers:
+        # Sort the list of printers by printer.id
+        for i, p in enumerate(cfg.printers):
+            print(f"    printer:   {i}")
+            print(f"    id:        {p.id}")
+            print(f"    name:      {p.name}")
             print(f"    duid:      {p.p2p_duid}") # Printer Serial Number
             print(f"    sn:        {p.sn}")
+            print(f"    model:     {p.model}")
+            print(f"    created:   {p.create_time}")
+            print(f"    updated:   {p.update_time}")
             print(f"    ip:        {p.ip_addr}")
             print(f"    wifi_mac:  {cli.util.pretty_mac(p.wifi_mac)}")
             print(f"    api_hosts: {', '.join(p.api_hosts)}")
             print(f"    p2p_hosts: {', '.join(p.p2p_hosts)}")
+            print()
 
 
 @main.group("webserver", help="Built-in webserver support")
@@ -470,7 +481,7 @@ def webserver(env):
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
 @pass_env
 def webserver(env, host, port):
-    web.webserver(env.config, host, port, env.insecure, pppp_dump=env.pppp_dump)
+    web.webserver(env.config, env.printer_index, host, port, env.insecure, pppp_dump=env.pppp_dump)
 
 
 if __name__ == "__main__":
