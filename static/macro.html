@@ -29,3 +29,16 @@
         <i class="bi-{{icon}} {{class}}"></i>
     {%- endif -%}
 {%- endmacro -%}
+
+{% macro clipboard_button(src) %}
+    <button
+        class="btn btn-secondary btn-sm"
+        type="button"
+        data-toggle="tooltip"
+        data-placement="button"
+        data-clipboard-src="{{src}}"
+        title="Copy to Clipboard"
+        >
+        {{ bi_icon("clipboard-plus") }}
+    </button>
+{% endmacro %}
