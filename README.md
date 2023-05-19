@@ -22,9 +22,9 @@ The `ankerctl` program uses [`libflagship`](documentation/libflagship.md), a lib
 
  - Stream camera image/video to your computer.
 
-### Upcoming and Planned Features
-
  - Easily monitor print status.
+
+### Upcoming and Planned Features
 
  - Integration into other software. Home Assistant? Cura plugin?
 
@@ -59,12 +59,12 @@ Follow the instructions for a [docker install](./documentation/install-from-dock
 1. Import your AnkerMake account data by opening a terminal window in the folder you placed ankerctl in and running the following command:
 
    ```sh
-   ankerctl.py config import [OPTIONS] path/to/login.json 
+   ./ankerctl.py config import [OPTIONS] path/to/login.json 
    ```
 
    When run without filename on Windows and MacOS, the default location of `login.json` will be tried if no filename is specified. Otherwise, you can specify the file path for `login.json`. Example for Linux:
    ```sh
-   ankerctl.py config import ~/.wine/drive_c/users/username/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json
+   ./ankerctl.py config import ~/.wine/drive_c/users/username/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json
    ```
    MacOS
    ```sh
@@ -109,7 +109,7 @@ Follow the instructions for a [docker install](./documentation/install-from-dock
 
 Some examples:
 
-```
+```sh
 # attempt to detect printers on local network
 ./ankerctl.py pppp lan-search
 
