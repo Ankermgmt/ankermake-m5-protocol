@@ -62,17 +62,6 @@ import web.service.filetransfer
 # autopep8: on
 
 
-@app.before_first_request
-def startup():
-    """
-    Registers required services on server start
-    """
-    app.svc.register("pppp", web.service.pppp.PPPPService())
-    app.svc.register("videoqueue", web.service.video.VideoQueue())
-    app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
-    app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
-
-
 @sock.route("/ws/mqtt")
 def mqtt(sock):
     """
@@ -269,4 +258,8 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.config["host"] = host
         app.config["insecure"] = insecure
         app.config.update(kwargs)
+        app.svc.register("pppp", web.service.pppp.PPPPService())
+        app.svc.register("videoqueue", web.service.video.VideoQueue())
+        app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
+        app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
         app.run(host=host, port=port)
