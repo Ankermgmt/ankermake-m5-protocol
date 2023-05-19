@@ -115,105 +115,103 @@
                             </div>
                         </div>
                     </div>
-                    <div id="print-details">
-                        <div class="card-header fs-6">Print Progress</div>
-                        <div class="card-body">
-                            <div class="row mb-3 g-3">
-                                <div class="col-12">
-                                    <div class="input-group">
-                                        <div class="input-group-text print-info-label" id="printName">Name</div>
-                                        <span
-                                            id="print-name"
-                                            class="form-control"
-                                            title="Print Name"
-                                            aria-describedby="printName"
-                                        >
+                    <div class="card-header fs-6">Print Progress</div>
+                    <div class="card-body">
+                        <div class="row mb-3 g-3">
+                            <div class="col-12">
+                                <div class="input-group">
+                                    <div class="input-group-text print-info-label" id="printName">Name</div>
+                                    <span
+                                        id="print-name"
+                                        class="form-control"
+                                        title="Print Name"
+                                        aria-describedby="printName"
+                                    >
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3 g-3">
+                            <div class="col-6">
+                                <div class="input-group">
+                                    <div class="input-group-text print-info-label" id="timeElapsed">
+                                        <i class="icon icon-time-passed"></i>
+                                    </div>
+                                    <span
+                                        id="time-elapsed"
+                                        class="form-control text-center"
+                                        title="Time Elapsed"
+                                        aria-describedby="timeElapsed"
+                                    >
+                                        00:00:00
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="input-group">
+                                    <div class="input-group-text print-info-label" id="timeRemain">
+                                        <i class="icon icon-time-remaining"></i>
+                                    </div>
+                                    <span
+                                        id="time-remain"
+                                        class="form-control text-center"
+                                        title="Time Remaining"
+                                        aria-describedby="timeRemain"
+                                    >
+                                        00:00:00
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3 g-3">
+                            <div class="col-12">
+                                <div class="progress position-relative" id="printProgress">
+                                    <div
+                                        class="progress-bar progress-bar-striped progress-bar-animated"
+                                        role="progressbar"
+                                        id="progressbar"
+                                        title="Progress Bar"
+                                        aria-valuenow="0"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100"
+                                        style="width: 0%"
+                                    >
+                                        <span id="progress" class="position-absolute w-100">
+                                            0%
                                         </span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row mb-3 g-3">
-                                <div class="col-6">
-                                    <div class="input-group">
-                                        <div class="input-group-text print-info-label" id="timeElapsed">
-                                            <i class="icon icon-time-passed"></i>
-                                        </div>
-                                        <span
-                                            id="time-elapsed"
-                                            class="form-control text-center"
-                                            title="Time Elapsed"
-                                            aria-describedby="timeElapsed"
-                                        >
-                                            00:00:00
-                                        </span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <div class="input-group-text print-info-label" id="printLayer">
+                                        {{ macro.bi_icon("layers-half") }}
                                     </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="input-group">
-                                        <div class="input-group-text print-info-label" id="timeRemain">
-                                            <i class="icon icon-time-remaining"></i>
-                                        </div>
-                                        <span
-                                            id="time-remain"
-                                            class="form-control text-center"
-                                            title="Time Remaining"
-                                            aria-describedby="timeRemain"
-                                        >
-                                            00:00:00
-                                        </span>
-                                    </div>
+                                    <span
+                                        id="print-layer"
+                                        class="form-control text-center"
+                                        title="Print Layers"
+                                        aria-describedby="printLayer"
+                                    >
+                                        0/0
+                                    </span>
                                 </div>
                             </div>
-                            <div class="row mb-3 g-3">
-                                <div class="col-12">
-                                    <div class="progress position-relative" id="printProgress">
-                                        <div
-                                            class="progress-bar progress-bar-striped progress-bar-animated"
-                                            role="progressbar"
-                                            id="progressbar"
-                                            title="Progress Bar"
-                                            aria-valuenow="0"
-                                            aria-valuemin="0"
-                                            aria-valuemax="100"
-                                            style="width: 0%"
-                                        >
-                                            <span id="progress" class="position-absolute w-100">
-                                                0%
-                                            </span>
-                                        </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <div class="input-group-text print-info-label" id="printSpeed">
+                                        {{ macro.bi_icon("speedometer") }}
                                     </div>
-                                </div>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="input-group">
-                                        <div class="input-group-text print-info-label" id="printLayer">
-                                            {{ macro.bi_icon("layers-half") }}
-                                        </div>
-                                        <span
-                                            id="print-layer"
-                                            class="form-control text-center"
-                                            title="Print Layers"
-                                            aria-describedby="printLayer"
-                                        >
-                                            0/0
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="input-group">
-                                        <div class="input-group-text print-info-label" id="printSpeed">
-                                            {{ macro.bi_icon("speedometer") }}
-                                        </div>
-                                        <span
-                                            id="print-speed"
-                                            class="form-control text-center small"
-                                            title="Print Speed"
-                                            aria-describedby="printSpeed"
-                                        >
-                                            0mm/s
-                                        </span>
-                                    </div>
+                                    <span
+                                        id="print-speed"
+                                        class="form-control text-center small"
+                                        title="Print Speed"
+                                        aria-describedby="printSpeed"
+                                    >
+                                        0mm/s
+                                    </span>
                                 </div>
                             </div>
                         </div>
