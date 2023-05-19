@@ -7,12 +7,6 @@
     <div class="container">
         <div class="row align-items-start g-3">
             <div class="col-lg-8">
-                {% if printer %}
-                <div class="p-3 mb-3 rounded-3 fs-6 bg-body-tertiary">
-                    Connected to: <strong>{{ printer.name }} ({{ printer.sn }})</strong>
-                    {{ macro.bi_icon("check-lg", class="icon-green") }}
-                </div>
-                {% endif %}
                 <!-- Video Container -->
                 <video
                     class="w-100 d-block rounded-3 bg-body-tertiary"
@@ -26,6 +20,15 @@
             </div>
             <div class="col-lg-4">
                 <div class="card">
+                    {% if printer %}
+                    <div class="card-header">
+                        Connection
+                    </div>
+                    <div class="card-body fw-bold">
+                        {{ printer.name }} ({{ printer.sn }})
+                        {{ macro.bi_icon("check-lg", class="icon-green") }}
+                    </div>
+                    {% endif %}
                     <div class="card-header fs-6">Light Control</div>
                     <div class="card-body">
                         <div class="row g-3">
