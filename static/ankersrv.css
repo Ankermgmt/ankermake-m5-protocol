@@ -45,7 +45,7 @@
 }
 
 .progress-bar {
-    --bs-progress-bar-bg: var(--agreen1);
+    --bs-progress-bar-bg: var(--agreen2);
 }
 
 footer .btn {
