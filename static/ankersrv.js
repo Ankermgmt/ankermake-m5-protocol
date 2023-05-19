@@ -5,15 +5,6 @@ $(function () {
     $("#copyYear").text(new Date().getFullYear());
 
     /**
-     * Copies provided text to the OS clipboard
-     * @param {string} text
-     */
-    function updateClipboard(text) {
-        navigator.clipboard.writeText(text);
-        console.log(`Copied ${text} to clipboard`);
-    }
-
-    /**
      * Redirect page when modal dialog is shown
      */
     var popupModal = document.getElementById("popupModal");
@@ -23,19 +14,15 @@ $(function () {
     });
 
     /**
-     * On click of element with id "configData", updates clipboard with text in element with id "octoPrintHost"
+     * On click of an element with attribute "data-clipboard-src", updates clipboard with text from that element
      */
-    $("#configData").on("click", function () {
-        const value = $("#octoPrintHost").text();
-        updateClipboard(value);
-    });
-
-    /**
-     * On click of element with id "copyFilePath", updates clipboard with text in element with id "loginFilePath"
-     */
-    $("#copyFilePath").on("click", function () {
-        const value = $("#loginFilePath").text();
-        updateClipboard(value);
+    $("[data-clipboard-src]").each(function(i, elm) {
+        $(elm).on("click", function () {
+            const src = $(elm).attr("data-clipboard-src");
+            const value = $(src).text();
+            navigator.clipboard.writeText(value);
+            console.log(`Copied ${value} to clipboard`);
+        });
     });
 
     /**
