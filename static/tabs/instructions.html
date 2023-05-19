@@ -5,7 +5,8 @@
                 <h2>Connecting PrusaSlicer/SuperSlicer</h2>
                 <ol class="list-group list-group-numbered mb-3">
                     <li class="list-group-item">Go to "Printer settings" tab</li>
-                    <li class="list-group-item">Click "Gear"⚙️ (Add/Edit Physical Printer)</li>
+                    <li class="list-group-item">Click the "Gear" icon {{ macro.bi_icon("gear-fill") }}
+                        (Add/Edit Physical Printer)</li>
                     <li class="list-group-item">Fill in "Descriptive name for the printer" with whatever you like</li>
                     <li class="list-group-item">Select your Ankermake printer instructions from the dropdown menu</li>
                     <li class="list-group-item">Under "Host Type" select "OctoPrint"</li>
@@ -26,8 +27,10 @@
                     <li class="list-group-item">Click "Test" to validate input</li>
                     <li class="list-group-item">Click "Ok" to close the window</li>
                     <li class="list-group-item">Slice your file as normal</li>
-                    <li class="list-group-item">Click "G&#x3E;" button to start direct upload to the printer</li>
+                    <li class="list-group-item">Click "G{{- macro.bi_icon("caret-right-fill") -}}" button to start
+                        direct upload to the printer</li>
                     <li class="list-group-item">Click "Upload and print" - the "Upload"-only is not supported</li>
+
                     <li class="list-group-item">Enjoy printing with ankerctl 😉</li>
                 </ol>
                 <span class="fw-light">
