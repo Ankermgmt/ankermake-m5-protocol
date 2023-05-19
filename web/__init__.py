@@ -56,6 +56,7 @@ sock = Sock(app)
 
 # autopep8: off
 import web.service.pppp
+import web.service.ctrl
 import web.service.video
 import web.service.mqtt
 import web.service.filetransfer
@@ -299,6 +300,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.config.update(kwargs)
         app.svc.register("pppp", web.service.pppp.PPPPService())
         app.svc.register("videoqueue", web.service.video.VideoQueue())
+        app.svc.register("ctrl", web.service.ctrl.VideoControl())
         app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
         app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
         app.run(host=host, port=port)
