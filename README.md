@@ -52,7 +52,7 @@ Follow the instructions for a [docker install](./documentation/install-from-dock
    ./ankerctl.py webserver run
    ```
 
-2. Navigate to [http://localhost:4470](http://localhost:4470) in your browser of choice on the same computer the webserver is running on. You’ll be prompted to upload your `login.json` file and the given the default path it should be found in Windows. Once the `login.json` has been uploaded, the page will refresh and the web interface is usable. To access it from other devices (must be on the same network), replace “localhost” with the IP address of the computer running the web server.
+2. Navigate to [http://localhost:4470](http://localhost:4470) in your browser of choice on the same computer the webserver is running on. You’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. Once the `login.json` has been uploaded, the page will refresh and the web interface is usable. To access it from other devices (must be on the same network), replace “localhost” with the IP address of the computer running the web server.
 
 ### CLI Utilities (Python Scripts)
 
