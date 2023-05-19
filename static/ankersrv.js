@@ -151,15 +151,17 @@ $(function () {
         }
     }
 
+    /**
+     * Auto web sockets
+     */
     sockets = {};
 
-    /**
-     * Opens a websocket connection and outputs any incoming message data to console
-     */
-    function connect_mqtt_ws() {
-        var ws = sockets.mqtt = new WebSocket("ws://" + location.host + "/ws/mqtt");
+    sockets.mqtt = new AutoWebSocket({
+        name: "mqtt socket",
+        url: `ws://${location.host}/ws/mqtt`,
+        badge: "#badge-mqtt",
 
-        ws.addEventListener("message", (ev) => {
+        message: function (ev) {
             const data = JSON.parse(ev.data);
             if (data.commandType == 1001) {
                 // Returns Print Details
@@ -191,18 +193,11 @@ $(function () {
                 const layer = `${data.real_print_layer} / ${data.total_layer}`;
                 $("#print-layer").text(layer);
             } else {
-                console.log(data);
+                console.log("Unhandled mqtt message:", data);
             }
-        });
+        },
 
-        ws.addEventListener("open", (ev) => {
-            $("#badge-mqtt").removeClass("text-bg-danger").addClass("text-bg-success");
-        });
-
-        ws.addEventListener("close", function (e) {
-            console.log("MQTT socket close");
-            $("#badge-mqtt").removeClass("text-bg-success").addClass("text-bg-danger");
-
+        close: function () {
             $("#print-name").text("");
             $("#time-elapsed").text("00:00:00");
             $("#time-remain").text("00:00:00");
@@ -215,90 +210,59 @@ $(function () {
             $("#set-bed-temp").attr("value", "0°C");
             $("#print-speed").text("0mm/s");
             $("#print-layer").text("0 / 0");
-            setTimeout(() => connect_mqtt_ws(), 1000);
-        });
-
-        ws.addEventListener("error", function (e) {
-            console.log("MQTT socket error");
-            ws.close();
-        });
-    };
+        },
+    });
 
     /**
      * Initializing a new instance of JMuxer for video playback
      */
-    function connect_video_ws() {
-        var jmuxer;
-        jmuxer = new JMuxer({
-            node: "player",
-            mode: "video",
-            flushingTime: 0,
-            fps: 15,
-            // debug: true,
-            onReady: function (data) {
-                console.log(data);
-            },
-            onError: function (data) {
-                console.log(data);
-            },
-        });
+    sockets.video = new AutoWebSocket({
+        name: "Video socket",
+        url: `ws://${location.host}/ws/video`,
+        badge: "#badge-pppp",
+        binary: true,
 
-        /**
-         * Opens a websocket connection for video streaming and feeds the data to the JMuxer instance
-         */
-        var ws = sockets.pppp = new WebSocket("ws://" + location.host + "/ws/video");
+        open: function () {
+            this.jmuxer = new JMuxer({
+                node: "player",
+                mode: "video",
+                flushingTime: 0,
+                fps: 15,
+                // debug: true,
+                onReady: function (data) {
+                    console.log(data);
+                },
+                onError: function (data) {
+                    console.log(data);
+                },
+            });
+        },
 
-        ws.binaryType = "arraybuffer";
-        ws.addEventListener("message", function (event) {
-            jmuxer.feed({
+        message: function(event) {
+            this.jmuxer.feed({
                 video: new Uint8Array(event.data),
             });
-        });
+        },
 
-        ws.addEventListener("open", function (e) {
-            $("#badge-pppp").removeClass("text-bg-danger").addClass("text-bg-success");
-        });
+        close: function() {
+            this.jmuxer.destroy();
 
-        ws.addEventListener("close", function (e) {
-            $("#badge-pppp").removeClass("text-bg-success").addClass("text-bg-danger");
-            console.log("Video socket close");
-            jmuxer.destroy();
-            setTimeout(() => connect_video_ws(), 1000);
-        });
+            /* Clear video source (to show loading animation) */
+            $("#player").removeAttr("src");
+        },
+    });
 
-        ws.addEventListener("error", function (e) {
-            console.log("Video socket error");
-            ws.close();
-        });
-    };
-
-    function connect_ctrl_ws() {
-        /**
-         * Opens a websocket connection for controlling video and sends JSON data based on button clicks
-         */
-        var ws = sockets.ctrl = new WebSocket("ws://" + location.host + "/ws/ctrl");
-
-        ws.addEventListener("open", function (e) {
-            $("#badge-ctrl").removeClass("text-bg-danger").addClass("text-bg-success");
-        });
-
-        ws.addEventListener("close", function (e) {
-            $("#badge-ctrl").removeClass("text-bg-success").addClass("text-bg-danger");
-            console.log("Control socket close");
-            setTimeout(() => connect_ctrl_ws(), 1000);
-        });
-
-        ws.addEventListener("close", function (e) {
-            console.log("Control socket error");
-            ws.close();
-        });
-    };
+    sockets.ctrl = new AutoWebSocket({
+        name: "Control socket",
+        url: `ws://${location.host}/ws/ctrl`,
+        badge: "#badge-ctrl",
+    });
 
     /**
      * On click of element with id "light-on", sends JSON data to wsctrl to turn light on
      */
     $("#light-on").on("click", function () {
-        sockets.ctrl.send(JSON.stringify({ light: true }));
+        sockets.ctrl.ws.send(JSON.stringify({ light: true }));
         return false;
     });
 
@@ -306,7 +270,7 @@ $(function () {
      * On click of element with id "light-off", sends JSON data to wsctrl to turn light off
      */
     $("#light-off").on("click", function () {
-        sockets.ctrl.send(JSON.stringify({ light: false }));
+        sockets.ctrl.ws.send(JSON.stringify({ light: false }));
         return false;
     });
 
@@ -314,7 +278,7 @@ $(function () {
      * On click of element with id "quality-low", sends JSON data to wsctrl to set video quality to low
      */
     $("#quality-low").on("click", function () {
-        sockets.ctrl.send(JSON.stringify({ quality: 0 }));
+        sockets.ctrl.ws.send(JSON.stringify({ quality: 0 }));
         return false;
     });
 
@@ -322,11 +286,8 @@ $(function () {
      * On click of element with id "quality-high", sends JSON data to wsctrl to set video quality to high
      */
     $("#quality-high").on("click", function () {
-        sockets.ctrl.send(JSON.stringify({ quality: 1 }));
+        sockets.ctrl.ws.send(JSON.stringify({ quality: 1 }));
         return false;
     });
 
-    connect_mqtt_ws();
-    connect_video_ws();
-    connect_ctrl_ws();
 });
