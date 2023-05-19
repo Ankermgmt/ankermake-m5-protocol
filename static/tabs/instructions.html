@@ -12,17 +12,7 @@
                     <li class="list-group-item">Under "Host Type" select "OctoPrint"</li>
                     <li class="list-group-item">In "Hostname, IP or URL" fill in with:
                         <kbd id="octoPrintHost">{{ request_host }}:{{ request_port }}</kbd>
-                        <button
-                            class="btn btn-secondary btn-sm"
-                            type="button"
-                            id="configData"
-                            data-toggle="tooltip"
-                            data-placement="button"
-                            data-clipboard-src="#octoPrintHost"
-                            title="Copy to Clipboard"
-                        >
-                            {{ macro.bi_icon("clipboard-plus") }}
-                        </button>
+                        {{ macro.clipboard_button("#octoPrintHost") }}
                     </li>
                     <li class="list-group-item">Leave "API Key / Password" blank</li>
                     <li class="list-group-item">Click "Test" to validate input</li>

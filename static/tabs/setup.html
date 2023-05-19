@@ -35,17 +35,7 @@
 
                         <div class="card-footer mt-2">
                             Location: <code id="loginFilePath" class="fw-lighter">{{ login_file_path }}</code>
-                            <button
-                                class="btn btn-secondary btn-sm"
-                                type="button"
-                                id="copyFilePath"
-                                data-toggle="tooltip"
-                                data-placement="button"
-                                data-clipboard-src="#loginFilePath"
-                                title="Copy to Clipboard"
-                            >
-                                {{ macro.bi_icon("clipboard-plus") }}
-                            </button>
+                            {{ macro.clipboard_button("#loginFilePath") }}
                         </div>
                     </div>
                 </form>
