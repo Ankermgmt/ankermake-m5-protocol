@@ -97,16 +97,18 @@ def ctrl(sock):
     # send a response on connect, to let the client know the connection is ready
     sock.send(json.dumps({"ankerctl": 1}))
 
-    while True:
-        msg = json.loads(sock.receive())
+    with app.svc.borrow("ctrl") as ctrl:
+        with ctrl.tap(lambda data: sock.send(json.dumps(data))):
+            while True:
+                msg = json.loads(sock.receive())
 
-        if "light" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_light_state(msg["light"])
+                if "light" in msg:
+                    with app.svc.borrow("videoqueue") as vq:
+                        vq.api_light_state(msg["light"])
 
-        if "quality" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_video_mode(msg["quality"])
+                if "quality" in msg:
+                    with app.svc.borrow("videoqueue") as vq:
+                        vq.api_video_mode(msg["quality"])
 
 
 @app.get("/video")
