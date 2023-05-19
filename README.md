@@ -63,9 +63,16 @@ Follow the instructions for a [docker install](./documentation/install-from-dock
    ```
 
    When run without filename on Windows and MacOS, the default location of `login.json` will be tried if no filename is specified. Otherwise, you can specify the file path for `login.json`. Example for Linux:
-
    ```sh
    ankerctl.py config import ~/.wine/drive_c/users/username/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json
+   ```
+   MacOS
+   ```sh
+   ./ankerctl.py config import $HOME/Library/Application\ Support/AnkerMake/AnkerMake_64bit_fp/login.json
+   ```
+   Windows
+   ```sh
+   python3 ankerctl.py config import %APPDATA%\AnkerMake\AnkerMake_64bit_fp\login.json
    ```
 
    Type `ankerctl.py config import -h` for more details on the import options. Support for logging in with username and password is not yet supported. To learn more about the method used to extract the login information and add printers, see the [MQTT Overview](./documentation/mqtt-overview.md) and [Example Files](./documentation/example-file-usage) documentation.
@@ -120,6 +127,9 @@ Some examples:
 
 # capture 4mb of video from camera
 ./ankerctl.py pppp capture-video -m 4mb output.h264
+
+# select printer to use when you have multiple
+./ankerctl.py -p <index> #index starts at 0 and goes up to the number of printers you have
 ```
 
 ### Printing Directly from PrusaSlicer
