@@ -238,13 +238,13 @@ $(function () {
             });
         },
 
-        message: function(event) {
+        message: function (event) {
             this.jmuxer.feed({
                 video: new Uint8Array(event.data),
             });
         },
 
-        close: function() {
+        close: function () {
             if (!this.jmuxer)
                 return;
 
