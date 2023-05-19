@@ -357,6 +357,31 @@ $(function () {
         name: "Control socket",
         url: `ws://${location.host}/ws/ctrl`,
         badge: "#badge-ctrl",
+
+        message: function (event) {
+            const data = JSON.parse(event.data);
+            if (data.wifi) {
+                let badge = $("#badge-wifi");
+                badge.removeClass("text-bg-danger text-bg-warning text-bg-success");
+                var icon, level;
+                if (data.wifi < 40) {
+                    icon = "reception-4";
+                    level = "success";
+                } else if (data.wifi < 50) {
+                    icon = "reception-3";
+                    level = "success";
+                } else if (data.wifi < 60) {
+                    icon = "reception-2";
+                    level = "warning";
+                } else {
+                    icon = "reception-1";
+                    level = "error";
+                }
+                badge
+                    .html(`Wifi ${data.wifi} <i class="bi-${icon}"></i>`)
+                    .addClass(`text-bg-${level}`);
+            }
+        },
     });
 
     /* Only connect websockets if #player element exists in DOM (i.e., if we
