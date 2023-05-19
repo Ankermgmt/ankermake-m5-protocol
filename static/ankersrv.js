@@ -81,6 +81,76 @@ $(function () {
         return `X${speed / 50}`;
     }
 
+    /**
+     * AutoWebSocket class
+     *
+     * This class wraps a WebSocket, and makes it automatically reconnect if the
+     * connection is lost.
+     */
+    class AutoWebSocket {
+        constructor({
+            name,
+            url,
+            badge=null,
+            open=null,
+            close=null,
+            error=null,
+            message=null,
+            binary=false,
+            reconnect=1000,
+            autoconnect=true
+        }) {
+            this.name = name;
+            this.url = url;
+            this.badge = badge;
+            this.reconnect = reconnect;
+            this.open = open;
+            this.close = close;
+            this.error = error;
+            this.message = message;
+            this.binary = binary;
+            this.ws = null;
+            if (autoconnect)
+                this.connect();
+        }
+
+        _open() {
+            $(this.badge).removeClass("text-bg-danger").addClass("text-bg-success");
+            if (this.open)
+                this.open(this.ws);
+        }
+
+        _close() {
+            $(this.badge).removeClass("text-bg-success").addClass("text-bg-danger");
+            console.log(`${this.name} close`);
+            setTimeout(() => this.connect(), this.reconnect);
+            if (this.close)
+                this.close(this.ws);
+        }
+
+        _error() {
+            console.log(`${this.name} error`);
+            this.ws.close();
+            if (this.error)
+                this.error(this.ws);
+        }
+
+        _message(event) {
+            if (this.message)
+                this.message(event);
+        }
+
+        connect() {
+            var ws = this.ws = new WebSocket(this.url);
+            if (this.binary)
+                ws.binaryType = "arraybuffer";
+            ws.addEventListener("open", this._open.bind(this));
+            ws.addEventListener("close", this._close.bind(this));
+            ws.addEventListener("error", this._error.bind(this));
+            ws.addEventListener("message", this._message.bind(this));
+        }
+    }
+
     sockets = {};
 
     /**
