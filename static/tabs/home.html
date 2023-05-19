@@ -25,8 +25,13 @@
                         Connection
                     </div>
                     <div class="card-body fw-bold">
-                        {{ printer.name }} ({{ printer.sn }})
-                        {{ macro.bi_icon("check-lg", class="icon-green") }}
+                        <div>
+                            {{ printer.name }} ({{ printer.sn }})
+                            {{ macro.bi_icon("check-lg", class="icon-green") }}
+                        </div>
+                        <span id="badge-mqtt" class="badge">MQTT</span>
+                        <span id="badge-pppp" class="badge">PPPP</span>
+                        <span id="badge-ctrl" class="badge">CTRL</span>
                     </div>
                     {% endif %}
                     <div class="card-header fs-6">Video Controls</div>
