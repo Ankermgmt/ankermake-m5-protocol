@@ -1,0 +1,83 @@
+<div
+    class="tab-pane fade{% if not configure %} show active{% endif %}"
+    id="setup"
+    role="tabpanel"
+    aria-labelledby="setup-tab"
+>
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <form
+                    action="{{ url_for('app_api_ankerctl_config_upload') }}"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    class="mb-3"
+                    id="config-upload-form"
+                >
+                    <div class="card">
+                        <div class="card-header fs-4">
+                            Upload AnkerMake Login File
+                        </div>
+
+                        <div class="card-body input-group">
+                            <input
+                                class="form-control"
+                                type="file"
+                                id="loginFile"
+                                name="login_file"
+                                required
+                                aria-required="true"
+                            />
+                            <button class="btn btn-secondary submit" type="submit" id="upload">
+                                {{ macro.bi_icon("cloud-arrow-up-fill", "Upload") }}
+                            </button>
+                        </div>
+
+                        <div class="card-footer mt-2">
+                            Location: <code id="loginFilePath" class="fw-lighter">{{ login_file_path }}</code>
+                            <button
+                                class="btn btn-secondary btn-sm"
+                                type="button"
+                                id="copyFilePath"
+                                data-toggle="tooltip"
+                                data-placement="button"
+                                title="Copy to Clipboard"
+                            >
+                                {{ macro.bi_icon("clipboard-plus") }}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="card">
+                    <div class="card">
+                        <div class="card-header fs-4">
+                            Reload Ankerctl Services
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                If you are experiencing issues with printing or viewing the video feed reloading
+                                the Ankerctl services will often resolve these issues.
+                            </p>
+                            <button id="reload" type="button" class="btn btn-danger"
+                                    data-bs-toggle="modal" data-bs-target="#popupModal"
+                                    data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
+                                {{ macro.bi_icon("bootstrap-reboot", "Reload Services") }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header fs-4">
+                        AnkerMake M5 Config
+                    </div>
+                    <div class="card-body p-0">
+                        <pre class="p-3 m-0" id="ankerctl-settings">{{ anker_config }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

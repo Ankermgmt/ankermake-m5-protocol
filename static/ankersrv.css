@@ -1,44 +1,78 @@
-.nav-link,
-.btn-link {
-    color: #88f387;
-    text-decoration: none;
+/* Color scheme */
+
+:root {
+    --agreen1: #41a03f;
+    --agreen2: #88f387;
+    --agreen3: #adf3ac;
+    --ared1: #a00000;
+    --ared2: #d40000;
 }
 
-.nav-pills .nav-link.active {
-    color: #000000;
-    background-color: #88f387;
-    border: #41a03f;
+.nav-pills {
+    --bs-nav-link-color: var(--agreen2);
+
+    --bs-nav-pills-link-active-color: #000000;
+    --bs-nav-pills-link-active-bg: var(--agreen2);
+
+    --bs-nav-link-hover-color: #000000;
+    --bs-nav-link-hover-bg: var(--agreen3);
 }
 
-.nav-pills .nav-link:hover,
-.btn:hover {
-    color: #000000;
-    background-color: #adf3ac;
-    border-color: #41a03f;
+.btn {
+    --bs-btn-hover-color: #000000;
+    --bs-btn-hover-bg: var(--agreen3);
+    --bs-btn-hover-border-color: var(--agreen1);
+
+    --bs-btn-active-color: #000000;
+    --bs-btn-active-bg: var(--agreen3);
 }
 
-a.text-light {
-    text-decoration: none;
+.btn-primary {
+    --bs-btn-bg: var(--agreen2);
+    --bs-btn-color: #000000;
+    --bs-btn-border-color: var(--agreen1);
+    --bs-btn-active-border-color: var(--agreen1);
 }
 
-a.text-light:hover,
+.btn-danger {
+    --bs-btn-color: white;
+    --bs-btn-bg: var(--ared1);
+    --bs-btn-active-color: white;
+    --bs-btn-active-bg: var(--ared2);
+    --bs-btn-hover-bg: var(--ared2);
+    --bs-btn-border-color: var(--ared1);
+    --bs-btn-hover-border-color: var(--ared1);
+}
+
+.progress-bar {
+    --bs-progress-bar-color: white;
+    --bs-progress-bar-bg: var(--agreen2);
+}
+
+#progress {
+    text-shadow: 0 0 7px black, 0 0 7px black;
+}
+
+footer .btn {
+    --bs-btn-color: var(--agreen2);
+}
+
 .icon-green {
-    color: #88f387 !important;
+    color: var(--agreen2);
+}
+
+footer a {
+    --bs-link-hover-color-rgb: 255, 255, 255;
+    --bs-link-color-rgb: 136, 243, 135;
 }
 
 pre,
 code {
-    color: #88f387;
+    color: var(--agreen2);
     background-color: #292929;
 }
 
-code#loginFilePath {
-    font-weight: lighter;
-}
-
-.print-status {
-    font-size: medium;
-}
+/* Layout */
 
 #printProgress {
     height: 40px;

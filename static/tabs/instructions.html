@@ -1,0 +1,48 @@
+<div class="tab-pane fade" id="instructions" role="tabpanel" aria-labelledby="instructions-tab">
+    <div class="container mb-4">
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <h1 class="fs-3">Connecting PrusaSlicer/SuperSlicer</h1>
+                <ol class="list-group list-group-numbered mb-3">
+                    <li class="list-group-item">Go to "Printer settings" tab</li>
+                    <li class="list-group-item">Click the "Gear" icon {{ macro.bi_icon("gear-fill") }}
+                        (Add/Edit Physical Printer)</li>
+                    <li class="list-group-item">Fill in "Descriptive name for the printer" with whatever you like</li>
+                    <li class="list-group-item">Select your Ankermake printer instructions from the dropdown menu</li>
+                    <li class="list-group-item">Under "Host Type" select "OctoPrint"</li>
+                    <li class="list-group-item">In "Hostname, IP or URL" fill in with:
+                        <kbd id="octoPrintHost">{{ request_host }}:{{ request_port }}</kbd>
+                        <button
+                            class="btn btn-secondary btn-sm"
+                            type="button"
+                            id="configData"
+                            data-toggle="tooltip"
+                            data-placement="button"
+                            title="Copy to Clipboard"
+                        >
+                            {{ macro.bi_icon("clipboard-plus") }}
+                        </button>
+                    </li>
+                    <li class="list-group-item">Leave "API Key / Password" blank</li>
+                    <li class="list-group-item">Click "Test" to validate input</li>
+                    <li class="list-group-item">Click "Ok" to close the window</li>
+                    <li class="list-group-item">Slice your file as normal</li>
+                    <li class="list-group-item">Click "G{{- macro.bi_icon("caret-right-fill") -}}" button to start
+                        direct upload to the printer</li>
+                    <li class="list-group-item">Click "Upload and print" - the "Upload"-only is not supported</li>
+
+                    <li class="list-group-item">Enjoy printing with ankerctl 😉</li>
+                </ol>
+                <span class="fw-light">
+                    Hint: <kbd>Ctrl+Shift+G</kbd> will slice and open the upload to printer window
+                </span>
+            </div>
+            <div class="col-lg-6 text-center">
+                <img src="/static/img/setup/prusaslicer-1.png" class="img-thumbnail mt-2" alt="step 1" />
+                <img src="/static/img/setup/prusaslicer-2.png" class="img-thumbnail mt-2" alt="step 2" />
+                <img src="/static/img/setup/prusaslicer-3.png" class="img-thumbnail mt-2" alt="step 3" />
+                <img src="/static/img/setup/prusaslicer-4.png" class="img-thumbnail mt-2" alt="step 4" />
+            </div>
+        </div>
+    </div>
+</div>
