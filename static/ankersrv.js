@@ -245,6 +245,9 @@ $(function () {
         },
 
         close: function() {
+            if (!this.jmuxer)
+                return;
+
             this.jmuxer.destroy();
 
             /* Clear video source (to show loading animation) */
