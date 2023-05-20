@@ -1,4 +1,30 @@
 services:
+    ankerctl_import:
+        image: ankerctl/ankerctl:latest
+        container_name: ankerctl_import
+        restart: "no"
+        build: .
+        volumes:
+            - ankerctl_vol:/root/.config/ankerctl
+            - "${LOCALAPPDATA:-/tmp}:/tmp/appdata"
+            - "${HOME:-/tmp}:/tmp/home"
+        entrypoint: ["sh", "-c", "
+        for root in /tmp/appdata /tmp/home; do
+            for prefix in \"Library/Application Support\" \".wine/drive_c/users/${USER}/AppData/Local\"; do
+                for suffix in AnkerMake/AnkerMake_64bit_fp/login.json Ankermake/AnkerMake_64bit_fp/login.json; do
+                    name=\"$$root/$$prefix/$$suffix\";
+                    if [ -f \"$${name}\" ]; then
+                        echo \"** Importing $${name} credentials **\";
+                        /app/ankerctl.py config import \"$${name}\";
+                        exit $$?;
+                    else
+                        echo \"** No $${name} credentials detected **\";
+                    fi
+                done
+            done
+        done
+        "]
+
     ankerctl:
         image: ghcr.io/ankermgmt/ankermake-m5-protocol:latest
         container_name: ankerctl
@@ -15,6 +41,8 @@ services:
             - FLASK_PORT=4470
         volumes:
             - ankerctl_vol:/root/.config/ankerctl
+        depends_on:
+            - ankerctl_import
 
 volumes:
     ankerctl_vol:
