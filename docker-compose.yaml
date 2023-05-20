@@ -35,6 +35,8 @@ services:
         # printer, since it is an asymmetrical udp protocol.
         network_mode: host
 
+        stop_signal: SIGINT
+
         # bind to localhost by default
         environment:
             - FLASK_HOST=127.0.0.1
