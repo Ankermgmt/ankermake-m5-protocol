@@ -16,14 +16,20 @@ $(function () {
     /**
      * On click of an element with attribute "data-clipboard-src", updates clipboard with text from that element
      */
-    $("[data-clipboard-src]").each(function(i, elm) {
-        $(elm).on("click", function () {
-            const src = $(elm).attr("data-clipboard-src");
-            const value = $(src).text();
-            navigator.clipboard.writeText(value);
-            console.log(`Copied ${value} to clipboard`);
+    if (navigator.clipboard) {
+        /* Clipboard support present: link clipboard icons to source object */
+        $("[data-clipboard-src]").each(function(i, elm) {
+            $(elm).on("click", function () {
+                const src = $(elm).attr("data-clipboard-src");
+                const value = $(src).text();
+                navigator.clipboard.writeText(value);
+                console.log(`Copied ${value} to clipboard`);
+            });
         });
-    });
+    } else {
+        /* Clipboard support missing: remove clipboard icons to minimize confusion */
+        $("[data-clipboard-src]").remove();
+    };
 
     /**
      * Initializes bootstrap alerts and sets a timeout for when they should automatically close
