@@ -17,7 +17,6 @@ from libflagship.pppp import Type, \
     PktHelloAck, PktP2pRdyAck, PktP2pRdy, PktLanSearch, \
     Host, Message, Xzyh, Aabb, FileTransferReply
 
-
 PPPP_LAN_PORT = 32108
 PPPP_WAN_PORT = 32100
 
