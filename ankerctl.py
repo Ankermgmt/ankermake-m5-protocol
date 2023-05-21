@@ -23,7 +23,7 @@ import libflagship.seccode
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
 from libflagship.pppp import PktLanSearch, P2PCmdType, P2PSubCmdType, FileTransfer
-from libflagship.ppppapi import FileUploadInfo, PPPPError, PPPPState
+from libflagship.ppppapi import FileUploadInfo, PPPPError
 
 import web
 
@@ -224,7 +224,6 @@ def pppp_lan_search(env):
     """
     api = cli.pppp.pppp_open_broadcast(dumpfile=env.pppp_dump)
     try:
-        api.state = PPPPState.Connecting
         api.send(PktLanSearch())
         resp = api.recv(timeout=1.0)
     except TimeoutError:
