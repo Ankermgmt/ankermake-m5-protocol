@@ -89,7 +89,8 @@ def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
         log.warning('This is insecure and should not be used in production environments.')
         log.warning('It is recommended to run without "-k/--insecure".')
 
-    env.upgrade_config_if_needed()
+    if ctx.invoked_subcommand not in {"http", "config"}:
+        env.upgrade_config_if_needed()
 
     env.printer_index = printer
     log.debug(f"Using printer [{env.printer_index}]")
@@ -340,7 +341,13 @@ def http_calc_sec_code(duid, mac):
 
 
 @main.group("config", help="View and update configuration")
-def config(): pass
+@click.pass_context
+def config(ctx):
+    if ctx.invoked_subcommand in {"import", "decode"}:
+        return
+
+    env = ctx.obj
+    env.upgrade_config_if_needed()
 
 
 @config.command("decode")
