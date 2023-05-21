@@ -249,7 +249,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         - None
     """
     with config.open() as cfg:
-        if printer_index >= len(cfg.printers):
+        if hasattr(cfg, "printers") and printer_index >= len(cfg.printers):
             log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
         app.config["config"] = config
         app.config["login"] = True if cfg else False
