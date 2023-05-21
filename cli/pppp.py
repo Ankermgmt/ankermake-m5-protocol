@@ -48,6 +48,7 @@ def pppp_open(config, printer_index, timeout=None, dumpfile=None):
 
 def pppp_open_broadcast(dumpfile=None):
     api = AnkerPPPPApi.open_broadcast()
+    api.state = PPPPState.Connected
     _pppp_dumpfile(api, dumpfile)
     return api
 

@@ -58,6 +58,7 @@ class Service(Thread):
         self._event = Event()
         self.handlers = []
         self._holdoff = Holdoff()
+        self.daemon = True
         super().start()
 
     @property
