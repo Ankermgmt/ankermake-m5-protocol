@@ -215,7 +215,7 @@ class Service(Thread):
                 log.debug(f"{self.name}: Ready")
                 return True
 
-            self.idle(timeout=0.1)
+            self.idle(timeout=0.4)
 
     def await_stopped(self):
         while True:
@@ -227,7 +227,7 @@ class Service(Thread):
                 log.debug(f"{self.name}: Stopped")
                 return True
 
-            self.idle(timeout=0.1)
+            self.idle(timeout=0.4)
 
 
 class ServiceManager:
