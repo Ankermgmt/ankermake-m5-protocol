@@ -3,7 +3,7 @@ import logging as log
 
 from datetime import datetime, timedelta
 
-from ..lib.service import Service, ServiceRestartSignal
+from ..lib.service import Service, ServiceRestartSignal, ServiceStoppedError
 from .. import app
 
 from libflagship.pppp import P2PCmdType, PktClose, Duid, Type, Xzyh, Aabb
@@ -31,6 +31,8 @@ class PPPPService(Service):
         deadline = datetime.now() + timedelta(seconds=2)
 
         with config.open() as cfg:
+            if not cfg:
+                raise ServiceStoppedError("No config available")
             printer = cfg.printers[app.config["printer_index"]]
 
         api = AnkerPPPPAsyncApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
