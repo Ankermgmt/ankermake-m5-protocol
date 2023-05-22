@@ -128,7 +128,7 @@ def app_root():
         user_agent = user_agent_parse(request.headers.get("User-Agent"))
         user_os = web.platform.os_platform(user_agent.os.family)
 
-        if app.config["login"]:
+        if cfg:
             anker_config = str(web.config.config_show(cfg))
             printer = cfg.printers[app.config["printer_index"]]
         else:
@@ -200,9 +200,9 @@ def app_api_ankerctl_server_reload():
     config = app.config["config"]
 
     with config.open() as cfg:
-        if not getattr(cfg, "printers", False):
+        app.config["login"] = bool(cfg)
+        if not cfg:
             return web.util.flash_redirect(url_for('app_root'), "No printers found in config", "warning")
-        app.config["login"] = True
         if "_flashes" in session:
             session["_flashes"].clear()
 
@@ -265,10 +265,10 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         - None
     """
     with config.open() as cfg:
-        if hasattr(cfg, "printers") and printer_index >= len(cfg.printers):
+        if cfg and printer_index >= len(cfg.printers):
             log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
         app.config["config"] = config
-        app.config["login"] = True if cfg else False
+        app.config["login"] = bool(cfg)
         app.config["printer_index"] = printer_index
         app.config["port"] = port
         app.config["host"] = host
