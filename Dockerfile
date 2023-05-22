@@ -1,9 +1,6 @@
 # First stage: build environment
 FROM python:3.11-slim AS build-env
 
-# Set the working directory to /app
-WORKDIR /app
-
 # Copy the requirements file
 COPY requirements.txt .
 
