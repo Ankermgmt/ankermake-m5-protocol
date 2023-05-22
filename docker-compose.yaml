@@ -1,5 +1,3 @@
-version: "3.9.1"
-
 # You must manually run `ankerctl config import` atleast once
 # docker run \
 # -v ankerctl_vol:/root/.config/ankerctl \
