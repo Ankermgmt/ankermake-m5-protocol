@@ -16,9 +16,6 @@ services:
             - ankerctl_vol:/root/.config/ankerctl
         ports:
             - 127.0.0.1:4470:4470
-        working_dir: /app
-        entrypoint: "/app/ankerctl.py"
-        command: ["webserver", "run"]
 
 volumes:
     ankerctl_vol:
