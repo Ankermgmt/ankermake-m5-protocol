@@ -230,7 +230,20 @@ def app_api_files_local():
     fd = request.files["file"]
 
     with app.svc.borrow("filetransfer") as ft:
-        ft.send_file(fd, user_name)
+        try:
+            ft.send_file(fd, user_name)
+        except ConnectionError as E:
+            log.error(f"Connection error: {E}")
+            # This message will be shown in i.e. PrusaSlicer, so attempt to
+            # provide a readable explanation.
+            cli.util.http_abort(
+                503,
+                "Cannot connect to printer!\n" \
+                "\n" \
+                "Please verify that printer is online, and on the same network as ankerctl.\n" \
+                "\n" \
+                f"Exception information: {E}"
+            )
 
     return {}
 
