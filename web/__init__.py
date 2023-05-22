@@ -128,9 +128,6 @@ def app_root():
         user_agent = user_agent_parse(request.headers.get("User-Agent"))
         user_os = web.platform.os_platform(user_agent.os.family)
 
-        host = request.host.split(":")
-        # If there is no 2nd array entry, the request port is 80
-        request_port = host[1] if len(host) > 1 else "80"
         if app.config["login"]:
             anker_config = str(web.config.config_show(cfg))
             printer = cfg.printers[app.config["printer_index"]]
@@ -138,10 +135,16 @@ def app_root():
             anker_config = "No printers found, please load your login config..."
             printer = None
 
+        if ":" in request.host:
+            request_host, request_port = request.host.split(":", 1)
+        else:
+            request_host = request.host
+            request_port = "80"
+
         return render_template(
             "index.html",
+            request_host=request_host,
             request_port=request_port,
-            request_host=host[0],
             configure=app.config["login"],
             login_file_path=web.platform.login_path(user_os),
             anker_config=anker_config,
