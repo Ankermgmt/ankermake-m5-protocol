@@ -2,7 +2,7 @@
 
 Welcome! This repository contains `ankerctl.py`, a command-line interface for monitoring, controlling and interfacing with AnkerMake M5 3D printers.
 
-**NOTE:** This software is in early stages, so expect sharp edges and occasional errors!
+**NOTE:** This is our first major release and while we have tested thoroughly there may be bugs. If you encounter one please open a [Github Issue](https://github.com/Ankermgmt/ankermake-m5-protocol/issues/new/choose)
 
 The `ankerctl` program uses [`libflagship`](documentation/libflagship.md), a library for communicating with the numerous different protocols required for connecting to an AnkerMake M5 printer. The `libflagship` library is also maintained in this repo, under [`libflagship/`](libflagship/).
 
@@ -14,7 +14,7 @@ The `ankerctl` program uses [`libflagship`](documentation/libflagship.md), a lib
 
  - Connect to AnkerMake M5 and AnkerMake APIs without using closed-source Anker software.
 
- - Send raw gcode commands directly to the printer (and see the response).
+ - Send raw gcode commands to the printer (and see the response).
 
  - Low-level access to MQTT, PPPP and HTTPS APIs.
 
@@ -30,7 +30,9 @@ The `ankerctl` program uses [`libflagship`](documentation/libflagship.md), a lib
 
 Let us know what you want to see; Pull requests always welcome! :smile:
 
-## Installation (Prerequisite to the Usage section)
+## Installation
+
+There are currently two ways to do an install of ankerctl. You can install directly from git utilizing python on your Operating System or you can install from Docker which will install ankerctl in a containerized environment. Only one installation method should be chosen. 
 
 Follow the instructions for a [docker install](./documentation/install-from-docker.md) (recommended) or a [git install](./documentation/install-from-git.md).
 
@@ -40,19 +42,23 @@ Follow the instructions for a [docker install](./documentation/install-from-dock
 
 1. Start the webserver by running one of the following commands in the folder you placed ankerctl in. You’ll need to have this running whenever you want to use the web interface or send jobs to the printer via a slicer:
 
-   docker:
+   Docker Installation Method:
 
    ```sh
    docker compose up
    ```
 
-   python:
+   Git Installation Method Using Python:
 
    ```sh
    ./ankerctl.py webserver run
    ```
 
-2. Navigate to [http://localhost:4470](http://localhost:4470) in your browser of choice on the same computer the webserver is running on. You’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. Once the `login.json` has been uploaded, the page will refresh and the web interface is usable. To access it from other devices (must be on the same network), replace “localhost” with the IP address of the computer running the web server.
+2. Navigate to [http://localhost:4470](http://localhost:4470) in your browser of choice on the same computer the webserver is running on. 
+ 
+   You’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. 
+   Once the `login.json` has been uploaded, the page will refresh and the web interface is usable. To access it from other devices (must be on the same network), 
+   replace “localhost” with the IP address of the computer running the web server.
 
 ### CLI Utilities (Python Scripts)
 
@@ -134,7 +140,11 @@ Some examples:
 
 ### Printing Directly from PrusaSlicer
 
-ankerctl can allow slicers like PrusaSlicer (and its derivatives) to send print jobs directly to the printer using the slicer’s built in communications tools. The web server must be running in order to send jobs to the printer. Currently there’s no way to store the jobs for later printing on the printer, so you’re limited to using the “Send and Print” option only to immediately start the print once it’s been transmitted. Additional instructions can be found in the web interface.
+ankerctl can allow slicers like PrusaSlicer (and its derivatives) to send print jobs to the printer using the slicer’s built in communications tools. The web server must be running in order to send jobs to the printer. 
+
+Currently there’s no way to store the jobs for later printing on the printer, so you’re limited to using the “Send and Print” option only to immediately start the print once it’s been transmitted. 
+
+Additional instructions can be found in the web interface.
 
 ![Screenshot of prusa slicer](/static/img/setup/prusaslicer-2.png "Screenshot of prusa slicer")
 
