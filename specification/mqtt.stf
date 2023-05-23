@@ -121,8 +121,8 @@ enum MqttMsgType
     #
     ZZ_MQTT_CMD_ONLINE_NOTIFY          = 0x404
 
-    #
-    ZZ_MQTT_CMD_APP_RECOVER_FACTORY    = 0x405
+    # Factory reset printer
+    ZZ_MQTT_CMD_RECOVER_FACTORY        = 0x405
 
     # (probably) Enable/disable Bluetooth Low Energy ("ble") radio
     ZZ_MQTT_CMD_BLE_ONOFF              = 0x407

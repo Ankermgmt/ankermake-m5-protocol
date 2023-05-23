@@ -150,7 +150,7 @@ def mqtt_send(env, command_type, args, force):
     }
 
     if not force:
-        if command_type == MqttMsgType.ZZ_MQTT_CMD_APP_RECOVER_FACTORY.value:
+        if command_type == MqttMsgType.ZZ_MQTT_CMD_RECOVER_FACTORY.value:
             log.fatal("Refusing to perform factory reset (override with --force)")
             return
 

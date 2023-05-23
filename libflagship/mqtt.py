@@ -46,7 +46,7 @@ class MqttMsgType(enum.IntEnum):
     ZZ_MQTT_CMD_MOVE_ZERO              = 0x0402 # (probably) Move to home position
     ZZ_MQTT_CMD_APP_QUERY_STATUS       = 0x0403 # 
     ZZ_MQTT_CMD_ONLINE_NOTIFY          = 0x0404 # 
-    ZZ_MQTT_CMD_APP_RECOVER_FACTORY    = 0x0405 # 
+    ZZ_MQTT_CMD_RECOVER_FACTORY        = 0x0405 # Factory reset printer
     ZZ_MQTT_CMD_BLE_ONOFF              = 0x0407 # (probably) Enable/disable Bluetooth Low Energy ("ble") radio
     ZZ_MQTT_CMD_DELETE_GCODE_FILE      = 0x0408 # (probably) Delete specified gcode file
     ZZ_MQTT_CMD_RESET_GCODE_PARAM      = 0x0409 # ?
