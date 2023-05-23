@@ -4,21 +4,26 @@
     role="tabpanel"
     aria-labelledby="home-tab"
 >
-    <div class="container">
+    <div class="container" id="vmain">
         <div class="row g-3">
-            <div class="col-md-12 col-lg-6 col-xl-8">
+            <div class="col-md-12 col-lg-6 col-xl-8 col-xxl-9">
                 <!-- Video Container -->
-                <video
-                    class="w-100 d-block rounded-3 bg-body-tertiary"
-                    playsinline
-                    autoplay
-                    muted
-                    id="player"
-                    poster="{{ url_for('static', filename='img/load-screen.svg') }}"
-                >
-                </video>
+                <div id="vplayer" class="position-relative">
+                    <video
+                        class="w-100 d-block rounded-3 bg-body-tertiary"
+                        playsinline
+                        autoplay
+                        muted
+                        id="player"
+                        poster="{{ url_for('static', filename='img/load-screen.svg') }}"
+                    >
+                    </video>
+                    <button class="btn btn-secondary opacity-50" id="video-fs">
+                        full-screen
+                    </button>
+                </div>
             </div>
-            <div class="col-md-12 col-lg-6 col-xl-4">
+            <div class="col-md-12 col-lg-6 col-xl-4 col-xxl-3">
                 <div class="card">
                     {% if printer %}
                     <div class="card-header">
