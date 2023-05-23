@@ -39,9 +39,7 @@ There are currently two ways to do an install of ankerctl. You can install direc
 
 Follow the instructions for a [git install](documentation/install-from-git.md) (recommended), or [docker install](documentation/install-from-docker.md).
 
-## Usage
-
-### CLI Utilities (Python Scripts)
+## Importing configuration
 
 1. Import your AnkerMake account data by opening a terminal window in the folder you placed ankerctl in and running the following command:
 
@@ -95,33 +93,10 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
 
 2. Now that the printer information is known to `ankerctl`, the tool is ready to use. There’s a lot of available commands and utilities, use a command followed by `-h` to learn what your options are and get more in specific usage instructions.
 
-Some examples:
+> **NOTE:**
+> As an alternative to using "config import" on the command line, it is possible to upload `login.json` through the web interface. Either method will work fine.
 
-```sh
-# run the webserver to control over webgui
-./ankerctl.py webserver run
-
-# attempt to detect printers on local network
-./ankerctl.py pppp lan-search
-
-# monitor mqtt events
-./ankerctl.py mqtt monitor
-
-# start gcode prompt
-./ankerctl.py mqtt gcode
-
-# set printer name
-./ankerctl.py mqtt rename-printer BoatyMcBoatFace
-
-# print boaty.gcode
-./ankerctl.py pppp print-file boaty.gcode
-
-# capture 4mb of video from camera
-./ankerctl.py pppp capture-video -m 4mb output.h264
-
-# select printer to use when you have multiple
-./ankerctl.py -p <index> #index starts at 0 and goes up to the number of printers you have
-```
+## Usage
 
 ### Web Interface
 
@@ -154,6 +129,36 @@ Currently there’s no way to store the jobs for later printing on the printer, 
 Additional instructions can be found in the web interface.
 
 ![Screenshot of prusa slicer](/static/img/setup/prusaslicer-2.png "Screenshot of prusa slicer")
+
+### Command-line tools
+
+Some examples:
+
+```sh
+# run the webserver to control over webgui
+./ankerctl.py webserver run
+
+# attempt to detect printers on local network
+./ankerctl.py pppp lan-search
+
+# monitor mqtt events
+./ankerctl.py mqtt monitor
+
+# start gcode prompt
+./ankerctl.py mqtt gcode
+
+# set printer name
+./ankerctl.py mqtt rename-printer BoatyMcBoatFace
+
+# print boaty.gcode
+./ankerctl.py pppp print-file boaty.gcode
+
+# capture 4mb of video from camera
+./ankerctl.py pppp capture-video -m 4mb output.h264
+
+# select printer to use when you have multiple
+./ankerctl.py -p <index> # index starts at 0 and goes up to the number of printers you have
+```
 
 ## Legal
 
