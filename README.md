@@ -1,137 +1,156 @@
-# Ankermake M5 Protocol
+# AnkerMake M5 Protocol
 
-Welcome! This repository contains `ankerctl.py`, a command-line interface for
-monitoring, controlling and interfacing with Ankermake M5 3D printers.
+Welcome! This repository contains `ankerctl`, a command-line interface for monitoring, controlling and interfacing with AnkerMake M5 3D printers.
 
-NOTE: This software is in early stages, so expect sharp edges and occasional errors!
+**NOTE:** This is our first major release and while we have tested thoroughly there may be bugs. If you encounter one please open a [Github Issue](https://github.com/Ankermgmt/ankermake-m5-protocol/issues/new/choose)
 
-The `ankerctl` program uses [`libflagship`](documentation/libflagship.md), a
-library for communicating with the numerous different protocols required for
-connecting to an Ankermake M5 printer. The `libflagship` library is also maintained
-in this repo, under [`libflagship/`](libflagship/).
+The `ankerctl` program uses [`libflagship`](documentation/developer-docs/libflagship.md), a library for communicating with the numerous different protocols required for connecting to an AnkerMake M5 printer. The `libflagship` library is also maintained in this repo, under [`libflagship/`](libflagship/).
 
-## Current features
+![Screenshot of ankerctl](/documentation/web-interface.png "Screenshot of ankerctl web interface")
 
- - Print directly from PrusaSlicer, SuperSlicer
+## Features
 
- - Connect to Ankermake M5 and Ankermake APIs without using closed-source Anker
-   software.
+### Current Features
 
- - Send raw gcode commands directly to the printer (and see the response)
+ - Print directly from PrusaSlicer and its derivatives (SuperSlicer, Bamboo Studio, OrcaSlicer, etc.)
 
- - Low-level access to MQTT, PPPP and HTTPS APIs
+ - Connect to AnkerMake M5 and AnkerMake APIs without using closed-source Anker software.
 
- - Send print jobs to the printer
+ - Send raw gcode commands to the printer (and see the response).
 
- - Stream camera image/video to your computer
+ - Low-level access to MQTT, PPPP and HTTPS APIs.
 
+ - Send print jobs (gcode files) to the printer.
 
-## Upcoming and planned features
+ - Stream camera image/video to your computer.
 
- - Easily monitor print status
+ - Easily monitor print status.
 
- - Integration into other software. Home Assistant? Prusa Slicer?
+### Upcoming and Planned Features
 
-Pull requests always welcome :-)
+ - Integration into other software. Home Assistant? Cura plugin?
 
-## Installation instructions
+Let us know what you want to see; Pull requests always welcome! :smile:
 
-First, please follow the [installation
-instructions](documentation/example-file-usage/example-file-prerequistes.md) for
-your platform.
+## Installation
 
-Verify that you can start `ankerctl.py`, and get the help screen:
+There are currently two ways to do an install of ankerctl. You can install directly from git utilizing python on your Operating System or you can install from Docker which will install ankerctl in a containerized environment. Only one installation method should be chosen. 
 
-### For Windows, use: 
-```powershell
-python3 ankerctl.py -h
-```
-If that does not work then try running using `python ankerctl.py -h`
+Order of Operations for Success:
+- Choose installation method: [Docker](documentation/install-from-docker.md) or [Git](documentation/install-from-git.md)
+- Follow the installation intructions for the install method
+- Import the login.json file
+- Have fun! Either run `ankerctl` from CLI or launch the webserver
 
-### Linux and MacOS, use:
-```sh
-./ankerctl.py -h
-```
+> **Note**
+> Minimum version of Python required is 3.10
 
-You should see the below output - if not then head back to [installation instructions](documentation/example-file-usage/example-file-prerequistes.md)
-```
-Usage: ankerctl.py [OPTIONS] COMMAND [ARGS]...
+> **Warning**
+> Docker Installation ONLY works on Linux at this time
 
-Options:
-  -k, --insecure  Disable TLS certificate validation
-  -v, --verbose   Increase verbosity
-  -q, --quiet     Decrease verbosity
-  -h, --help      Show this message and exit.
+Follow the instructions for a [git install](documentation/install-from-git.md) (recommended), or [docker install](documentation/install-from-docker.md).
 
-Commands:
-  config  View and update configuration
-  http    Low-level http api access
-  mqtt    Low-level mqtt api access
-  pppp    Low-level pppp api access
-```
+## Importing configuration
 
-Before you can use ankerctl, you need to import the configuration.
+1. Import your AnkerMake account data by opening a terminal window in the folder you placed ankerctl in and running the following command:
 
-Support for logging in with username and password is not yet supported, but an
-`auth_token` can be imported from the saved credentials found in `login.json` in
-Ankermake Slicer. See `ankerctl.py config import -h` for details:
+   ```sh
+   python3 ankerctl.py config import
+   ```
 
-```
-Usage: ankerctl.py config import [OPTIONS] path/to/login.json
+   When run without filename on Windows and MacOS, the default location of `login.json` will be tried if no filename is specified.
 
-  Import printer and account information from login.json
+   Otherwise, you can specify the file path for `login.json`. Example for Linux:
+   ```sh
+   ./ankerctl.py config import ~/.wine/drive_c/users/username/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json
+   ```
+   MacOS
+   ```sh
+   ./ankerctl.py config import $HOME/Library/Application\ Support/AnkerMake/AnkerMake_64bit_fp/login.json
+   ```
+   Windows
+   ```sh
+   python3 ankerctl.py config import %APPDATA%\AnkerMake\AnkerMake_64bit_fp\login.json
+   ```
 
-  When run without filename, attempt to auto-detect login.json in default
-  install location
+   Type `ankerctl.py config import -h` for more details on the import options. Support for logging in with username and password is not yet supported. To learn more about the method used to extract the login information and add printers, see the [MQTT Overview](documentation/developer-docs/mqtt-overview.md) and [Example Files](documentation/developer-docs/example-file-usage) documentation.
 
-Options:
-  -h, --help  Show this message and exit.
-```
+   The output when successfully importing a config is similar to this:
 
-On Windows and MacOS, the default location of `login.json` will be tried if no
-filename is specified. Otherwise, you can specify the file path for
-`login.json`. Example for linux:
+   ```sh
+   [*] Loading cache..
+   [*] Initializing API..
+   [*] Requesting profile data..
+   [*] Requesting printer list..
+   [*] Requesting pppp keys..
+   [*] Adding printer [AK7ABC0123401234]
+   [*] Finished import
+   ```
 
-```sh
-ankerctl.py config import ~/.wine/drive_c/users/username/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json
-```
+   At this point, your config is saved to a configuration file managed by `ankerctl`. To see an overview of the stored data, use `config show`:
 
-The expected output is similar to this:
-```
-[*] Loading cache..
-[*] Initializing API..
-[*] Requesting profile data..
-[*] Requesting printer list..
-[*] Requesting pppp keys..
-[*] Adding printer [AK7ABC0123401234]
-[*] Finished import
-```
+   ```sh
+   ./ankerctl.py config show
+   [*] Account:
+       user_id: 01234567890abcdef012...<REDACTED>
+       email:   bob@example.org
+       region:  eu
+   
+   [*] Printers:
+       sn: AK7ABC0123401234
+       duid: EUPRAKM-001234-ABCDE
+   ```
 
-At this point, your config is saved to a configuration file managed by
-`ankerctl.py`. To see an overview of the stored data, use `config show`:
+> **NOTE:** 
+> The cached login info contains sensitive details. In particular, the `user_id` field is used when connecting to MQTT servers, and essentially works as a password. Thus, the end of the value is redacted when printed to screen, to avoid accidentally disclosing sensitive information.
 
-```sh
-./ankerctl.py config show
-[*] Account:
-    user_id: 01234567890abcdef012...<REDACTED>
-    email:   bob@example.org
-    region:  eu
+2. Now that the printer information is known to `ankerctl`, the tool is ready to use. There’s a lot of available commands and utilities, use a command followed by `-h` to learn what your options are and get more in specific usage instructions.
 
-[*] Printers:
-    sn: AK7ABC0123401234
-    duid: EUPRAKM-001234-ABCDE
-```
+> **NOTE:**
+> As an alternative to using "config import" on the command line, it is possible to upload `login.json` through the web interface. Either method will work fine.
 
-NOTE: The cached login info contains sensitive details. In particular, the
-`user_id` field is used when connecting to MQTT servers, and essentially works
-as a password. Thus, the end of the value is redacted when printed to screen, to avoid
-accidentally disclosing sensitive information.
+## Usage
 
-Now that the printer information is known to `ankerctl`, the tool is ready to use.
+### Web Interface
+
+1. Start the webserver by running one of the following commands in the folder you placed ankerctl in. You’ll need to have this running whenever you want to use the web interface or send jobs to the printer via a slicer:
+
+   Docker Installation Method:
+
+   ```sh
+   docker compose up
+   ```
+
+   Git Installation Method Using Python:
+
+   ```sh
+   ./ankerctl.py webserver run
+   ```
+
+2. Navigate to [http://localhost:4470](http://localhost:4470) in your browser of choice on the same computer the webserver is running on. 
+ 
+ > **Important**
+ > If your `login.json` file was not automatically found, you’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. 
+   Once the `login.json` has been uploaded, the page will refresh and the web interface is usable.
+
+### Printing Directly from PrusaSlicer
+
+ankerctl can allow slicers like PrusaSlicer (and its derivatives) to send print jobs to the printer using the slicer’s built in communications tools. The web server must be running in order to send jobs to the printer. 
+
+Currently there’s no way to store the jobs for later printing on the printer, so you’re limited to using the “Send and Print” option only to immediately start the print once it’s been transmitted. 
+
+Additional instructions can be found in the web interface.
+
+![Screenshot of prusa slicer](/static/img/setup/prusaslicer-2.png "Screenshot of prusa slicer")
+
+### Command-line tools
 
 Some examples:
 
 ```sh
+# run the webserver to control over webgui
+./ankerctl.py webserver run
+
 # attempt to detect printers on local network
 ./ankerctl.py pppp lan-search
 
@@ -149,70 +168,17 @@ Some examples:
 
 # capture 4mb of video from camera
 ./ankerctl.py pppp capture-video -m 4mb output.h264
+
+# select printer to use when you have multiple
+./ankerctl.py -p <index> # index starts at 0 and goes up to the number of printers you have
 ```
-
-## Webserver
-
-ankerctl can also be used as a webserver to allow slicers like prusaslicer to print directly to the printer. 
-
-![Screenshot of prusa slicer](/static/img/setup/prusaslicer-2.png?raw=true "Screenshot of prusa slicer")
-
-To start the webserver run the following command, then navigate to [http://localhost:4470](http://localhost:4470)
-
-```sh
-./ankerctl.py webserver run
-```
-
-You can alternativly use docker compose to start the webserver running behind nginx
-
-```sh
-docker compose up
-```
-
-
-
-## Docker
-
-While running the python script is generally prefered, there may be situations where you want a more portable solution. For this, a docker image is provided.
-
-```sh
-docker build -t ankerctl .
-```
-
-Example usage (no peristent storage)
-```bash
-docker run \
-  -v "$HOME/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json:/tmp/login.json" \
-  ankerctl config decode /tmp/login.json
-```
-
-Example usage (with peristent storage)
-```bash
-# create volume where we can store configs
-docker volume create ankerctl_vol
-
-# generate /root/.config/ankerctl/default.json which is mounted to the docker volume
-docker run \
-  -v ankerctl_vol:/root/.config/ankerctl \
-  -v "$HOME/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json:/tmp/login.json" \
-  ankerctl config import /tmp/login.json
-
-# Now that there is a /root/.config/ankerctl/default.json file that persists in the docker volume
-# we can run ankerctl without having to specify the login.json file
-docker run \
-  -v ankerctl_vol:/root/.config/ankerctl \
-  ankerctl config show
-```
-
 
 ## Legal
 
-This project is in ABSOLUTELY NO WAY endorsed, affiliated with, or supported by
-Anker. All information found herein is gathered entirely from reverse
-engineering.
+This project is **<u>NOT</u>** endorsed, affiliated with, or supported by AnkerMake. All information found herein is gathered entirely from reverse engineering using publicly available knowledge and resources.
 
-The goal of this project is to make the Ankermake M5 usable and accessible using
-only Free and Open Source Software.
+The goal of this project is to make the AnkerMake M5 usable and accessible using only Free and Open Source Software (FOSS).
 
-This project is [licensed under the GNU GPLv3](LICENSE), and copyright © 2023
-Christian Iversen.
+This project is [licensed under the GNU GPLv3](LICENSE), and copyright © 2023 Christian Iversen.
+
+Some icons from [IconFinder](https://www.iconfinder.com/iconsets/3d-printing-line), and licensed under [Creative Commons](https://creativecommons.org/licenses/by/3.0/)
