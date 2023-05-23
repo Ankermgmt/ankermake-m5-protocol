@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from ..lib.service import Service, ServiceRestartSignal, ServiceStoppedError
 from .. import app
 
+from libflagship.pktdump import PacketWriter
 from libflagship.pppp import P2PCmdType, PktClose, Duid, Type, Xzyh, Aabb
 from libflagship.ppppapi import AnkerPPPPAsyncApi, PPPPState
 
@@ -36,7 +37,11 @@ class PPPPService(Service):
             printer = cfg.printers[app.config["printer_index"]]
 
         api = AnkerPPPPAsyncApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
-        # _pppp_dumpfile(api, dumpfile)
+        if app.config["pppp_dump"]:
+            dumpfile = app.config["pppp_dump"]
+            log.info(f"Logging all pppp traffic to {dumpfile!r}")
+            pktwr = PacketWriter.open(dumpfile)
+            api.set_dumper(pktwr)
 
         log.info(f"Trying connect to printer {printer.name} ({printer.p2p_duid}) over pppp using ip {printer.ip_addr}")
 
