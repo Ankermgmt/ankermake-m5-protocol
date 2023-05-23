@@ -31,6 +31,15 @@ $(function () {
         $("[data-clipboard-src]").remove();
     };
 
+    $("#video-fs").on("click", function () {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            let vp = document.getElementById("vmain");
+            vp.requestFullscreen();
+        }
+    });
+
     /**
      * Initializes bootstrap alerts and sets a timeout for when they should automatically close
      */

@@ -68,6 +68,21 @@ code {
     background-color: #292929;
 }
 
+#video-fs {
+    position: absolute;
+    bottom: 1ex;
+    right: 1ex;
+}
+
+#vmain:fullscreen {
+    padding-top: 1rem;
+    background-color: var(--bs-body-bg);
+}
+
+#vplayer:fullscreen video {
+    aspect-ratio: 4 / 3;
+}
+
 /* Layout */
 
 #printProgress {
