@@ -34,31 +34,12 @@ Let us know what you want to see; Pull requests always welcome! :smile:
 
 There are currently two ways to do an install of ankerctl. You can install directly from git utilizing python on your Operating System or you can install from Docker which will install ankerctl in a containerized environment. Only one installation method should be chosen. 
 
+> **Warning**
+> Docker Installation ONLY works on Linux at this time
+
 Follow the instructions for a [docker install](./documentation/install-from-docker.md) (recommended) or a [git install](./documentation/install-from-git.md).
 
 ## Usage
-
-### Web Interface
-
-1. Start the webserver by running one of the following commands in the folder you placed ankerctl in. You’ll need to have this running whenever you want to use the web interface or send jobs to the printer via a slicer:
-
-   Docker Installation Method:
-
-   ```sh
-   docker compose up
-   ```
-
-   Git Installation Method Using Python:
-
-   ```sh
-   ./ankerctl.py webserver run
-   ```
-
-2. Navigate to [http://localhost:4470](http://localhost:4470) in your browser of choice on the same computer the webserver is running on. 
- 
-   You’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. 
-   Once the `login.json` has been uploaded, the page will refresh and the web interface is usable. To access it from other devices (must be on the same network), 
-   replace “localhost” with the IP address of the computer running the web server.
 
 ### CLI Utilities (Python Scripts)
 
@@ -109,13 +90,17 @@ Follow the instructions for a [docker install](./documentation/install-from-dock
        duid: EUPRAKM-001234-ABCDE
    ```
 
-   **NOTE:** The cached login info contains sensitive details. In particular, the `user_id` field is used when connecting to MQTT servers, and essentially works as a password. Thus, the end of the value is redacted when printed to screen, to avoid accidentally disclosing sensitive information.
+> **NOTE:** 
+> The cached login info contains sensitive details. In particular, the `user_id` field is used when connecting to MQTT servers, and essentially works as a password. Thus, the end of the value is redacted when printed to screen, to avoid accidentally disclosing sensitive information.
 
 2. Now that the printer information is known to `ankerctl`, the tool is ready to use. There’s a lot of available commands and utilities, use a command followed by `-h` to learn what your options are and get more in specific usage instructions.
 
 Some examples:
 
 ```sh
+# run the webserver to control over webgui
+./ankerctl.py webserver run
+
 # attempt to detect printers on local network
 ./ankerctl.py pppp lan-search
 
@@ -137,6 +122,29 @@ Some examples:
 # select printer to use when you have multiple
 ./ankerctl.py -p <index> #index starts at 0 and goes up to the number of printers you have
 ```
+
+### Web Interface
+
+1. Start the webserver by running one of the following commands in the folder you placed ankerctl in. You’ll need to have this running whenever you want to use the web interface or send jobs to the printer via a slicer:
+
+   Docker Installation Method:
+
+   ```sh
+   docker compose up
+   ```
+
+   Git Installation Method Using Python:
+
+   ```sh
+   ./ankerctl.py webserver run
+   ```
+
+2. Navigate to [http://localhost:4470](http://localhost:4470) in your browser of choice on the same computer the webserver is running on. 
+ 
+ > **Important**
+ > You’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. 
+   Once the `login.json` has been uploaded, the page will refresh and the web interface is usable. To access it from other devices (must be on the same network), 
+   replace “localhost” with the IP address of the computer running the web server.
 
 ### Printing Directly from PrusaSlicer
 
