@@ -57,7 +57,7 @@
 
 4. Install Python3 from the [Python website.](https://www.python.org/downloads/macos/)
 
-5. Enter in the following command to install the required pip packages and the Transwarp Complier:
+5. Enter in the following command to install the required pip packages:
 
    ```bash
    pip3 install -r requirements.txt
@@ -75,7 +75,7 @@
 
 3. Install Python3 from whatever package manager your distro uses via the terminal.
 
-4. Enter in the following command to install the required pip packages and the Transwarp Complier:
+4. Enter in the following command to install the required pip packages:
 
    ```bash
    pip3 install -r requirements.txt
