@@ -27,7 +27,7 @@ class MqttPktType(enum.IntEnum):
 class MqttMsgType(enum.IntEnum):
     ZZ_MQTT_CMD_EVENT_NOTIFY           = 0x03e8 # 
     ZZ_MQTT_CMD_PRINT_SCHEDULE         = 0x03a9 # 
-    ZZ_MQTT_CMD_FIRMWARE_VERSION       = 0x03ea # Not implemented?
+    ZZ_MQTT_CMD_FIRMWARE_VERSION       = 0x03ea # Returns firmware version string
     ZZ_MQTT_CMD_NOZZLE_TEMP            = 0x03eb # Set nozzle temperature in units of 1/100th deg C (i.e.31337 is 313.37C)
     ZZ_MQTT_CMD_HOTBED_TEMP            = 0x03ec # Set hotbed temperature in units of 1/100th deg C (i.e. 1337 is 13.37C)
     ZZ_MQTT_CMD_FAN_SPEED              = 0x03ed # Set fan speed

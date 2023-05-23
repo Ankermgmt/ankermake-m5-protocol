@@ -64,7 +64,7 @@ enum MqttMsgType
     #
     ZZ_MQTT_CMD_PRINT_SCHEDULE         = 0x3a9
 
-    # Not implemented?
+    # Returns firmware version string
     ZZ_MQTT_CMD_FIRMWARE_VERSION       = 0x3ea
 
     # Set nozzle temperature in units of 1/100th deg C (i.e.31337 is 313.37C)
