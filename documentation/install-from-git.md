@@ -20,7 +20,7 @@
 
    Now, one of two things will happen:
 
-- The first possibility is that the Microsoft Store will open and prompt you to install Python 3.10. You can do that and that's a perfectly fine way to install Python 3 or you can go to the [Python website](https://www.python.org/downloads/) and install it from there. Either way works, do whichever you prefer. Then enter in the above command again after and you should see what's in the next bullet.
+- The first possibility is that the Microsoft Store will open and prompt you to install Python 3.10 or newer. You can do that and that's a perfectly fine way to install Python 3 or you can go to the [Python website](https://www.python.org/downloads/) and install it from there. Either way works, do whichever you prefer. Then enter in the above command again after and you should see what's in the next bullet.
 
 - The other possibility is that you get a message similar to this:
 
