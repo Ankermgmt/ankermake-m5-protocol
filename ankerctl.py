@@ -189,7 +189,7 @@ def mqtt_gcode(env):
 
     Press Ctrl-C to exit. (or Ctrl-D to close connection, except on Windows)
     """
-    client = cli.mqtt.mqtt_open(env.config, env.insecure)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
 
     while True:
         gcode = click.prompt("gcode", prompt_suffix="> ")
