@@ -182,6 +182,9 @@ enum MqttMsgType
     ZZ_MQTT_CMD_MODEL_DL_PROCESS       = 0x41d
 
     # ?
+    ZZ_MQTT_CMD_PRINT_MAX_SPEED        = 0x41f
+
+    # ?
     ZZ_STEST_CMD_GCODE_TRANSPOR        = 0x7e2
 
     #
