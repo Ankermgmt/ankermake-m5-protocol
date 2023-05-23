@@ -48,6 +48,5 @@ const MqttMsgType = {
     ZZ_MQTT_CMD_MODEL_LAYER            : 0x041c,
     ZZ_MQTT_CMD_MODEL_DL_PROCESS       : 0x041d,
     ZZ_MQTT_CMD_PRINT_MAX_SPEED        : 0x041f,
-    ZZ_STEST_CMD_GCODE_TRANSPOR        : 0x07e2,
     ZZ_MQTT_CMD_ALEXA_MSG              : 0x0bb8,
 }

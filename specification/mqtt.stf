@@ -184,8 +184,5 @@ enum MqttMsgType
     # ?
     ZZ_MQTT_CMD_PRINT_MAX_SPEED        = 0x41f
 
-    # ?
-    ZZ_STEST_CMD_GCODE_TRANSPOR        = 0x7e2
-
     #
     ZZ_MQTT_CMD_ALEXA_MSG              = 0xbb8
