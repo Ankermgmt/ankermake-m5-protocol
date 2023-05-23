@@ -37,7 +37,7 @@ There are currently two ways to do an install of ankerctl. You can install direc
 > **Warning**
 > Docker Installation ONLY works on Linux at this time
 
-Follow the instructions for a [docker install](./documentation/install-from-docker.md) (recommended) or a [git install](./documentation/install-from-git.md).
+Follow the instructions for a [git install](documentation/install-from-git.md) (recommended), or [docker install](documentation/install-from-docker.md).
 
 ## Usage
 
