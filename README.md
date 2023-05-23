@@ -143,8 +143,7 @@ Some examples:
  
  > **Important**
  > You’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. 
-   Once the `login.json` has been uploaded, the page will refresh and the web interface is usable. To access it from other devices (must be on the same network), 
-   replace “localhost” with the IP address of the computer running the web server.
+   Once the `login.json` has been uploaded, the page will refresh and the web interface is usable.
 
 ### Printing Directly from PrusaSlicer
 
