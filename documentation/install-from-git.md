@@ -1,7 +1,7 @@
 # Installation (git)
 
 > **Note**
-> Minimum version of Python is 3.10
+> Minimum version of Python is 3.10. If having trouble running ankerctl.py try running it via `python3.10 ankerctly.py`
 
 ## Windows
 
