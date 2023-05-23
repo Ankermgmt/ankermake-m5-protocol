@@ -1,28 +1,38 @@
 # Installation (Docker)
 
-## Linux
+## login.json pre-requisites for Linux Install
 
-1a. Install the [AnkerMake slicer](https://www.ankermake.com/software) on a supported Operating System. Make sure you open it and login via the “Account” dropdown in the top toolbar.
+### AnkerMake Slicer installed on another Machine
 
-1b. Install the [AnkerMake slicer](https://www.ankermake.com/software) on Linux via emulation such as Wine.
+1. Install the [AnkerMake slicer](https://www.ankermake.com/software) on a supported Operating System.  Make sure you open it and login via the “Account” dropdown in the top toolbar.
 
-2a. Retreive the ```login.json``` file from the supported operating system:
+2. Retreive the ```login.json``` file from the supported operating system:
 
-      Windows Default Location:
+  Windows Default Location:
    
-         ```%APPDATA%\AnkerMake\AnkerMake_64bit_fp\login.json```
+      ```%APPDATA%\AnkerMake\AnkerMake_64bit_fp\login.json```
    
-      MacOS Default Location:
+  MacOS Default Location:
    
-         ```$HOME/Library/Application\ Support/AnkerMake/AnkerMake_64bit_fp/login.json```
-   
-2b. Retreive the ```login.json``` file ```~/.wine/drive_c/users/$USER/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json```
+      ```$HOME/Library/Application\ Support/AnkerMake/AnkerMake_64bit_fp/login.json```
 
 3. Take said ```login.json``` file and store it in a location your docker instance will be able to access it from.
 
-4a. Run ```docker compose up``` if you want to have Docker Compose build most of your container
+4. Now follow either the Docker Instructions or Docker Compose Instructions below.
 
-4b. Run the following commands:
+### Native Linux
+
+1. Install the [AnkerMake slicer](https://www.ankermake.com/software) on Linux via emulation such as Wine.  Make sure you open it and login via the “Account” dropdown in the top toolbar.
+   
+2. Retreive the ```login.json``` file ```~/.wine/drive_c/users/$USER/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json```
+
+3. Take said ```login.json``` file and store it in a location your docker instance will be able to access it from.
+
+4. Now follow either the Docker Instructions or Docker Compose Instructions below.
+
+## Docker Instructions
+
+1. Run the following commands:
 
 ```sh
 docker build -t ankerctl .
@@ -58,3 +68,6 @@ docker run \
   -v ankerctl_vol:/root/.config/ankerctl \
   -v "<replace with location of your login.json file>:/tmp/login.json" \
   ankerctl webserver run
+```
+## Docker Compose Instructions
+1. Run ```docker compose up``` if you want to have Docker Compose build your container
