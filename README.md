@@ -40,7 +40,7 @@ Order of Operations for Success:
 - Choose installation method: [Docker](documentation/install-from-docker.md) or [Git](documentation/install-from-git.md)
 - Follow the installation intructions for the install method
 - Import the login.json file
-- Have fun! Either run ankerctl.py from CLI or launch the webserver
+- Have fun! Either run `ankerctl` from CLI or launch the webserver
 
 > **Note**
 > Minimum version of Python required is 3.10
