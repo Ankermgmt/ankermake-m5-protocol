@@ -20,7 +20,7 @@
 
 3. Take said ```login.json``` file and store it in a location your docker instance will be able to access it from.
 
-4. Now follow either the Docker Compose Instructions below.
+4. Now follow the Docker Compose Instructions below.
 
 ### Native Linux
 
@@ -30,7 +30,7 @@
 
 3. Take said ```login.json``` file and store it in a location your docker instance will be able to access it from.
 
-4. Now follow either the Docker Compose Instructions below.
+4. Now follow the Docker Compose Instructions below.
 
 ## Docker Compose Instructions
 
