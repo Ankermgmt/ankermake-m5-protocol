@@ -75,7 +75,7 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
 
    The output when successfully importing a config is similar to this:
 
-   ```
+   ```sh
    [*] Loading cache..
    [*] Initializing API..
    [*] Requesting profile data..
