@@ -1,5 +1,3 @@
-version: "3.9.1"
-
 # You must manually run `ankerctl config import` atleast once
 # docker run \
 # -v ankerctl_vol:/root/.config/ankerctl \
@@ -11,16 +9,17 @@ services:
         container_name: ankerctl
         restart: unless-stopped
         build: .
+
+        # host-mode networking is required for pppp communication with the
+        # printer, since it is an asymmetrical udp protocol.
+        network_mode: host
+
+        # bind to localhost by default
         environment:
+            - FLASK_HOST=127.0.0.1
             - FLASK_PORT=4470
-            - FLASK_HOST=0.0.0.0
         volumes:
             - ankerctl_vol:/root/.config/ankerctl
-        ports:
-            - 127.0.0.1:4470:4470
-        working_dir: /app
-        entrypoint: "/app/ankerctl.py"
-        command: ["webserver", "run"]
 
 volumes:
     ankerctl_vol:
