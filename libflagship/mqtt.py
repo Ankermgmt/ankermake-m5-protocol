@@ -63,6 +63,9 @@ class MqttMsgType(enum.IntEnum):
     ZZ_MQTT_CMD_PREVIEW_IMAGE_URL      = 0x0414 # 
     ZZ_MQTT_CMD_SYSTEM_CHECK           = 0x0419 # ?
     ZZ_MQTT_CMD_AI_SWITCH              = 0x041a # ?
+    ZZ_MQTT_CMD_AI_INFO_CHECK          = 0x041b # ?
+    ZZ_MQTT_CMD_MODEL_LAYER            = 0x041c # ?
+    ZZ_MQTT_CMD_MODEL_DL_PROCESS       = 0x041d # ?
     ZZ_STEST_CMD_GCODE_TRANSPOR        = 0x07e2 # ?
     ZZ_MQTT_CMD_ALEXA_MSG              = 0x0bb8 # 
 

@@ -173,6 +173,15 @@ enum MqttMsgType
     ZZ_MQTT_CMD_AI_SWITCH              = 0x41a
 
     # ?
+    ZZ_MQTT_CMD_AI_INFO_CHECK          = 0x41b
+
+    # ?
+    ZZ_MQTT_CMD_MODEL_LAYER            = 0x41c
+
+    # ?
+    ZZ_MQTT_CMD_MODEL_DL_PROCESS       = 0x41d
+
+    # ?
     ZZ_STEST_CMD_GCODE_TRANSPOR        = 0x7e2
 
     #
