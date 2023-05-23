@@ -128,7 +128,7 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
 2. Navigate to [http://localhost:4470](http://localhost:4470) in your browser of choice on the same computer the webserver is running on. 
  
  > **Important**
- > You’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. 
+ > If your `login.json` file was not automatically found, you’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. 
    Once the `login.json` has been uploaded, the page will refresh and the web interface is usable.
 
 ### Printing Directly from PrusaSlicer
