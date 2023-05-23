@@ -7,9 +7,15 @@ RUN sh /tmp/docker-os-detect
 # Copy the requirements file
 COPY requirements.txt .
 
+# Disable warning about running as "root"
+ENV PIP_ROOT_USER_ACTION=ignore
+
+# Disable caching - we just want the output
+ENV PIP_NO_CACHE_DIR=1
+
 # Install the dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
 
 # Second stage: runtime environment
 FROM python:3.11-slim
