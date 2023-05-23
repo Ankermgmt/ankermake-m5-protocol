@@ -6,6 +6,8 @@ Welcome! This repository contains `ankerctl`, a command-line interface for monit
 
 The `ankerctl` program uses [`libflagship`](documentation/developer-docs/libflagship.md), a library for communicating with the numerous different protocols required for connecting to an AnkerMake M5 printer. The `libflagship` library is also maintained in this repo, under [`libflagship/`](libflagship/).
 
+![Screenshot of ankerctl](/documentation/web-interface.png "Screenshot of ankerctl web interface")
+
 ## Features
 
 ### Current Features
