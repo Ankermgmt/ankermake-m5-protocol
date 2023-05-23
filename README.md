@@ -180,4 +180,5 @@ This project is **<u>NOT</u>** endorsed, affiliated with, or supported by AnkerM
 The goal of this project is to make the AnkerMake M5 usable and accessible using only Free and Open Source Software (FOSS).
 
 This project is [licensed under the GNU GPLv3](LICENSE), and copyright © 2023 Christian Iversen.
-The images in this project are from [IconFinder](https://www.iconfinder.com/iconsets/3d-printing-line) and licensed under [Creative Commons](https://creativecommons.org/licenses/by/3.0/)
+
+Some icons from [IconFinder](https://www.iconfinder.com/iconsets/3d-printing-line), and licensed under [Creative Commons](https://creativecommons.org/licenses/by/3.0/)
