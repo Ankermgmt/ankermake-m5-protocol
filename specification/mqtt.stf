@@ -62,7 +62,7 @@ enum MqttMsgType
     ZZ_MQTT_CMD_EVENT_NOTIFY           = 0x3e8
 
     #
-    ZZ_MQTT_CMD_PRINT_SCHEDULE         = 0x3a9
+    ZZ_MQTT_CMD_PRINT_SCHEDULE         = 0x3e9
 
     # Returns firmware version string
     ZZ_MQTT_CMD_FIRMWARE_VERSION       = 0x3ea

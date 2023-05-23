@@ -7,7 +7,7 @@
 
 const MqttMsgType = {
     ZZ_MQTT_CMD_EVENT_NOTIFY           : 0x03e8,
-    ZZ_MQTT_CMD_PRINT_SCHEDULE         : 0x03a9,
+    ZZ_MQTT_CMD_PRINT_SCHEDULE         : 0x03e9,
     ZZ_MQTT_CMD_FIRMWARE_VERSION       : 0x03ea,
     ZZ_MQTT_CMD_NOZZLE_TEMP            : 0x03eb,
     ZZ_MQTT_CMD_HOTBED_TEMP            : 0x03ec,
