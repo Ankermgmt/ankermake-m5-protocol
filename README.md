@@ -55,10 +55,12 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
 1. Import your AnkerMake account data by opening a terminal window in the folder you placed ankerctl in and running the following command:
 
    ```sh
-   ./ankerctl.py config import [OPTIONS] path/to/login.json 
+   python3 ankerctl.py config import
    ```
 
-   When run without filename on Windows and MacOS, the default location of `login.json` will be tried if no filename is specified. Otherwise, you can specify the file path for `login.json`. Example for Linux:
+   When run without filename on Windows and MacOS, the default location of `login.json` will be tried if no filename is specified.
+
+   Otherwise, you can specify the file path for `login.json`. Example for Linux:
    ```sh
    ./ankerctl.py config import ~/.wine/drive_c/users/username/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json
    ```
