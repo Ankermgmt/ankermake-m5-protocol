@@ -32,9 +32,10 @@ for root in "${APPDATA}" "${HOME}"; do
             if [ -f "${name}" ]; then
                 echo "** Importing ${name} credentials **";
                 docker cp -L "${name}" ${CONTAINER}:/tmp
-                if docker exec -it ${CONTAINER} /app/ankerctl.py config import /tmp/login.json; then
-                    echo "Configuration imported successfully."
-                    exit 0
+                if docker exec -it ${CONTAINER} /app/ankerctl.py -k config import /tmp/login.json; then
+                    echo "Configuration imported successfully. Restarting container..."
+                    docker restart ${CONTAINER}
+                    exit $?
                 else
                     echo "Configuration import failed :("
                 fi
