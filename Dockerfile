@@ -1,6 +1,9 @@
 # First stage: build environment
 FROM python:3.11-slim AS build-env
 
+COPY .docker-os-detect /tmp/docker-os-detect
+RUN sh /tmp/docker-os-detect
+
 # Copy the requirements file
 COPY requirements.txt .
 
