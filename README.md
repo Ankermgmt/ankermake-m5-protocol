@@ -36,6 +36,9 @@ Let us know what you want to see; Pull requests always welcome! :smile:
 
 There are currently two ways to do an install of ankerctl. You can install directly from git utilizing python on your Operating System or you can install from Docker which will install ankerctl in a containerized environment. Only one installation method should be chosen. 
 
+> **Note**
+> Minimum version of Python required is 3.10
+
 > **Warning**
 > Docker Installation ONLY works on Linux at this time
 
