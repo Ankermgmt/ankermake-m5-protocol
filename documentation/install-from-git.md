@@ -44,7 +44,7 @@
 
    If required, enter `Y` to all installation prompts.
 
-
+6. You now should be able to run ankerctl.py
 
 ## MacOS
 
@@ -64,6 +64,8 @@
    ```
 
    If required, enter `Y` to all installation prompts.
+   
+ 6. You now should be able to run ankerctl.py
 
 ## Linux
 
@@ -82,3 +84,5 @@
    ```
 
    If required, enter `Y` to all installation prompts.
+
+5. You now should be able to run ankerctl.py
