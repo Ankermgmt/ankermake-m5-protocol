@@ -55,7 +55,7 @@
 
 3. Hold down the "Control" key and click the folder in the path bar, then choose "Open in Terminal". (If you don’t see the path bar at the bottom of the Finder window, choose View > Show Path Bar)
 
-4. Install Python3 from the [Python website.](https://www.python.org/downloads/macos/)
+4. Install Python3 from the [Python website.](https://www.python.org/downloads/macos/), homebrew, or Anaconda. It needs to be 3.10 or newer.
 
 5. Enter in the following command to install the required pip packages:
 
@@ -73,7 +73,7 @@
 
 2. Using `git`, clone this repository into a location of your choice and then navigate to that location in your terminal app of choice.
 
-3. Install Python3 from whatever package manager your distro uses via the terminal.
+3. Install Python3 from whatever package manager your distro uses via the terminal. The minimum version has to be 3.10 or newer. 
 
 4. Enter in the following command to install the required pip packages:
 
