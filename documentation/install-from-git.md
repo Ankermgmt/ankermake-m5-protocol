@@ -1,5 +1,8 @@
 # Installation (git)
 
+> **Note**
+> Minimum version of Python is 3.10
+
 ## Windows
 
 1. Install the [AnkerMake slicer](https://www.ankermake.com/software). Make sure you open it and login via the “Account” dropdown in the top toolbar.
