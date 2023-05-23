@@ -10,11 +10,15 @@
 
   Windows Default Location:
    
-      ```%APPDATA%\AnkerMake\AnkerMake_64bit_fp\login.json```
+      ```sh
+      %APPDATA%\AnkerMake\AnkerMake_64bit_fp\login.json
+      ```
    
   MacOS Default Location:
    
-      ```$HOME/Library/Application\ Support/AnkerMake/AnkerMake_64bit_fp/login.json```
+      ```sh
+      $HOME/Library/Application\ Support/AnkerMake/AnkerMake_64bit_fp/login.json
+      ```
 
 3. Take said ```login.json``` file and store it in a location your docker instance will be able to access it from.
 
