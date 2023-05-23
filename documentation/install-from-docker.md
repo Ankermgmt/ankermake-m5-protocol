@@ -32,44 +32,10 @@
 
 4. Now follow either the Docker Instructions or Docker Compose Instructions below.
 
-## Docker Instructions
-
-1. Run the following commands:
-
-```sh
-docker build -t ankerctl .
-```
-
-Example usage (no peristent storage)
-```bash
-docker run \
-  -v "<replace with location of your login.json file>:/tmp/login.json" \
-  ankerctl config decode /tmp/login.json
-```
-
-Example usage (with peristent storage)
-```bash
-# create volume where we can store configs
-docker volume create ankerctl_vol
-
-# generate /root/.config/ankerctl/default.json which is mounted to the docker volume
-docker run \
-  -v ankerctl_vol:/root/.config/ankerctl \
-  -v "<replace with location of your login.json file>:/tmp/login.json" \
-  ankerctl config import /tmp/login.json
-
-# Now that there is a /root/.config/ankerctl/default.json file that persists in the docker volume
-# we can run ankerctl without having to specify the login.json file
-docker run \
-  -v ankerctl_vol:/root/.config/ankerctl \
-  ankerctl config show
-```
-Example usage of webserver
-```sh
-docker run \
-  -v ankerctl_vol:/root/.config/ankerctl \
-  -v "<replace with location of your login.json file>:/tmp/login.json" \
-  ankerctl webserver run
-```
 ## Docker Compose Instructions
-1. Run ```docker compose up``` if you want to have Docker Compose build your container
+
+To start `ankerctl` using docker compose, run:
+
+```sh
+docker compose up
+```
