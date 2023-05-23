@@ -149,6 +149,37 @@ def app_root():
         )
 
 
+@app.get("/streamview")
+def app_streamview():
+    """
+    Renders the html template for the root route, which is the homepage of the Flask app
+    """
+    config = app.config["config"]
+    with config.open() as cfg:
+        user_agent = user_agent_parse(request.headers.get("User-Agent"))
+        user_os = web.platform.os_platform(user_agent.os.family)
+
+        host = request.host.split(":")
+        # If there is no 2nd array entry, the request port is 80
+        request_port = host[1] if len(host) > 1 else "80"
+        if app.config["login"]:
+            anker_config = str(web.config.config_show(cfg))
+            printer = cfg.printers[app.config["printer_index"]]
+        else:
+            anker_config = "No printers found, please load your login config..."
+            printer = None
+
+        return render_template(
+            "stream.html",
+            request_port=request_port,
+            request_host=host[0],
+            configure=app.config["login"],
+            login_file_path=web.platform.login_path(user_os),
+            anker_config=anker_config,
+            printer=printer
+        )
+
+
 @app.get("/api/version")
 def app_api_version():
     """

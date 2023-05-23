@@ -1,0 +1,175 @@
+<div class="container-fluid">
+    {% if printer %}
+    <!-- Video Container -->
+    <video
+        class="streamview-player d-block bg-body-tertiary"
+        playsinline
+        autoplay
+        muted
+        id="player"
+        2
+        poster="{{ url_for('static', filename='img/load-screen.svg') }}"
+    ></video>
+    <div class="overlay">
+        <div class="overlay-content my-auto mx-auto p-3">
+            <div class="row h-30 pt-4">
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col-2">
+                        <div class="input-group input-group-lg">
+                            <div class="input-group-text mx-auto" id="nozzleGroup">
+                                <i class="overlay-icon icon-hotend"></i>
+                            </div>
+                            <span
+                                id="nozzle-temp"
+                                class="form-control text-center"
+                                title="Current Nozzle Temperature"
+                                aria-describedby="nozzleGroup"
+                            >
+                                0°C
+                            </span>
+                            <input
+                                type="text"
+                                id="set-nozzle-temp"
+                                name="set-nozzle-temp"
+                                class="form-control text-center"
+                                value="0°C"
+                                title="Target Nozzle Temperature"
+                                aria-label="Target Nozzle Temperature"
+                                aria-describedby="nozzleGroup"
+                                disabled
+                                readonly
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col-2">
+                        <div class="input-group input-group-lg">
+                            <div class="input-group-text mx-auto" id="bedGroup">
+                                <i class="overlay-icon icon-bed"></i>
+                            </div>
+                            <span
+                                id="bed-temp"
+                                class="form-control text-center"
+                                title="Current Bed Temperature"
+                                aria-describedby="bedGroup"
+                            >
+                                0°C
+                            </span>
+                            <input
+                                type="text"
+                                id="set-bed-temp"
+                                name="set-bed-temp"
+                                class="form-control text-center"
+                                value="0°C"
+                                title="Target Bed Temperature"
+                                aria-label="Target Bed Temperature"
+                                aria-describedby="bedGroup"
+                                disabled
+                                readonly
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col-2">
+                        <div class="input-group input-group-lg">
+                            <div class="input-group-text print-info-label" id="timeElapsed">
+                                <i class="overlay-icon icon-time-passed"></i>
+                            </div>
+                            <span
+                                id="time-elapsed"
+                                class="form-control text-center"
+                                title="Time Elapsed"
+                                aria-describedby="timeElapsed"
+                            >
+                                00:00:00
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col-2">
+                        <div class="input-group input-group-lg">
+                            <div class="input-group-text print-info-label" id="timeRemain">
+                                <i class="overlay-icon icon-time-remaining"></i>
+                            </div>
+                            <span
+                                id="time-remain"
+                                class="form-control text-center"
+                                title="Time Remaining"
+                                aria-describedby="timeRemain"
+                            >
+                                00:00:00
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col-2">
+                        <div class="input-group input-group-lg">
+                            <div class="input-group-text print-info-label" id="printLayer">
+                                <i class="overlay-icon icon-layers-half"></i>
+                            </div>
+                            <span
+                                id="print-layer"
+                                class="form-control text-center"
+                                title="Print Layers"
+                                aria-describedby="printLayer"
+                            >
+                                0/0
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col-2">
+                        <div class="input-group input-group-lg">
+                            <div class="input-group-text print-info-label" id="printSpeed">
+                                <i class="overlay-icon icon-speedometer"></i>
+                            </div>
+                            <span
+                                id="print-speed"
+                                class="form-control text-center small"
+                                title="Print Speed"
+                                aria-describedby="printSpeed"
+                            >
+                                0mm/s
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row position-absolute overlay-bottom">
+                <div class="col">
+                    <div class="input-group input-group-lg">
+                        <div class="input-group-text print-info-label" id="printName">Name</div>
+                        <span id="print-name" class="form-control" title="Print Name" aria-describedby="printName">
+                        </span>
+                    </div>
+                    <div class="progress position-relative" id="printProgress">
+                        <div
+                            class="progress-bar progress-bar-striped progress-bar-animated fs-5"
+                            role="progressbar"
+                            id="progressbar"
+                            title="Progress Bar"
+                            aria-valuenow="0"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            style="width: 0%"
+                        >
+                            <span id="progress" class="position-absolute w-100 fw-bold"> 0% </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}`
+    </div>
+</div>

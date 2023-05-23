@@ -96,9 +96,53 @@ code {
     content: url(img/icon-time-remaining.svg);
 }
 
+.icon-speedometer:before {
+    content: url(img/icon-speedometer.svg);
+}
+
+.icon-layers-half:before {
+    content: url(img/icon-layers-half.svg);
+}
+
 /* Bootstrap overrides */
 
 .img-thumbnail {
     border: 0 none;
     padding: 0;
+}
+
+/* Stream View Styles */
+video.streamview-player {
+    width: 99vw;
+    height: 99vh;
+}
+
+.overlay {
+    position: absolute;
+    height: 98vh;
+    width: 98vw;
+    top: 0;
+    bottom: 0;
+    left: auto;
+    right: auto;
+    text-align: center;
+}
+
+.overlay-content {
+    aspect-ratio: 4 / 3;
+    height: 100%;
+}
+
+.overlay-bottom {
+    bottom: 0;
+}
+
+.overlay-icon {
+    display: block;
+    height: 32px;
+    width: 32px;
+}
+
+.h-30 {
+    height: 30% !important;
 }
