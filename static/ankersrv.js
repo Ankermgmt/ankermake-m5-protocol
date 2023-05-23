@@ -118,13 +118,13 @@ $(function () {
         }
 
         _open() {
-            $(this.badge).removeClass("text-bg-danger").addClass("text-bg-success");
+            $(this.badge).removeClass("text-bg-success text-bg-danger").addClass("text-bg-warning");
             if (this.open)
                 this.open(this.ws);
         }
 
         _close() {
-            $(this.badge).removeClass("text-bg-success").addClass("text-bg-danger");
+            $(this.badge).removeClass("text-bg-warning text-bg-success").addClass("text-bg-danger");
             console.log(`${this.name} close`);
             setTimeout(() => this.connect(), this.reconnect);
             if (this.close)
@@ -139,6 +139,7 @@ $(function () {
         }
 
         _message(event) {
+            $(this.badge).removeClass("text-bg-danger text-bg-warning").addClass("text-bg-success");
             if (this.message)
                 this.message(event);
         }

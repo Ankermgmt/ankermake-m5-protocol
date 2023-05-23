@@ -92,6 +92,10 @@ def ctrl(sock):
     """
     if not app.config["login"]:
         return
+
+    # send a response on connect, to let the client know the connection is ready
+    sock.send(json.dumps({"ankerctl": 1}))
+
     while True:
         msg = json.loads(sock.receive())
 
