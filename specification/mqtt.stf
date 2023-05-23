@@ -62,9 +62,9 @@ enum MqttMsgType
     ZZ_MQTT_CMD_EVENT_NOTIFY           = 0x3e8
 
     #
-    ZZ_MQTT_CMD_PRINT_SCHEDULE         = 0x3a9
+    ZZ_MQTT_CMD_PRINT_SCHEDULE         = 0x3e9
 
-    # Not implemented?
+    # Returns firmware version string
     ZZ_MQTT_CMD_FIRMWARE_VERSION       = 0x3ea
 
     # Set nozzle temperature in units of 1/100th deg C (i.e.31337 is 313.37C)
@@ -121,8 +121,8 @@ enum MqttMsgType
     #
     ZZ_MQTT_CMD_ONLINE_NOTIFY          = 0x404
 
-    #
-    ZZ_MQTT_CMD_APP_RECOVER_FACTORY    = 0x405
+    # Factory reset printer
+    ZZ_MQTT_CMD_RECOVER_FACTORY        = 0x405
 
     # (probably) Enable/disable Bluetooth Low Energy ("ble") radio
     ZZ_MQTT_CMD_BLE_ONOFF              = 0x407
@@ -173,7 +173,16 @@ enum MqttMsgType
     ZZ_MQTT_CMD_AI_SWITCH              = 0x41a
 
     # ?
-    ZZ_STEST_CMD_GCODE_TRANSPOR        = 0x7e2
+    ZZ_MQTT_CMD_AI_INFO_CHECK          = 0x41b
+
+    # ?
+    ZZ_MQTT_CMD_MODEL_LAYER            = 0x41c
+
+    # ?
+    ZZ_MQTT_CMD_MODEL_DL_PROCESS       = 0x41d
+
+    # ?
+    ZZ_MQTT_CMD_PRINT_MAX_SPEED        = 0x41f
 
     #
     ZZ_MQTT_CMD_ALEXA_MSG              = 0xbb8

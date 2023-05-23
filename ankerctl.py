@@ -25,8 +25,6 @@ from libflagship.mqtt import MqttMsgType
 from libflagship.pppp import PktLanSearch, P2PCmdType, P2PSubCmdType, FileTransfer
 from libflagship.ppppapi import FileUploadInfo, PPPPError
 
-import web
-
 
 class Environment:
     def __init__(self):
@@ -150,7 +148,7 @@ def mqtt_send(env, command_type, args, force):
     }
 
     if not force:
-        if command_type == MqttMsgType.ZZ_MQTT_CMD_APP_RECOVER_FACTORY.value:
+        if command_type == MqttMsgType.ZZ_MQTT_CMD_RECOVER_FACTORY.value:
             log.fatal("Refusing to perform factory reset (override with --force)")
             return
 
@@ -189,7 +187,7 @@ def mqtt_gcode(env):
 
     Press Ctrl-C to exit. (or Ctrl-D to close connection, except on Windows)
     """
-    client = cli.mqtt.mqtt_open(env.config, env.insecure)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
 
     while True:
         gcode = click.prompt("gcode", prompt_suffix="> ")
@@ -488,6 +486,7 @@ def webserver(env):
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
 @pass_env
 def webserver(env, host, port):
+    import web
     web.webserver(env.config, env.printer_index, host, port, env.insecure, pppp_dump=env.pppp_dump)
 
 

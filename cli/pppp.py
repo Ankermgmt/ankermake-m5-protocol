@@ -32,9 +32,9 @@ def pppp_open(config, printer_index, timeout=None, dumpfile=None):
         _pppp_dumpfile(api, dumpfile)
 
         log.info(f"Trying connect to printer {printer.name} ({printer.p2p_duid}) over pppp using ip {printer.ip_addr}")
-        api.start()
 
         api.connect_lan_search()
+        api.start()
 
         while api.state != PPPPState.Connected:
             time.sleep(0.1)

@@ -24,7 +24,11 @@ class FileTransferService(Service):
         log.debug(f"{self.name}: Aabb response: {resp}")
 
     def send_file(self, fd, user_name):
-        api = self.pppp._api
+        try:
+            api = self.pppp._api
+        except AttributeError:
+            raise ConnectionError("No pppp connection to printer")
+
         data = fd.read()
         fui = FileUploadInfo.from_data(data, fd.filename, user_name=user_name, user_id="-", machine_id="-")
         log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")

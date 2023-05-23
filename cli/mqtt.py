@@ -41,3 +41,13 @@ def mqtt_command(client, msg):
         click.echo(cli.util.pretty_json(reply))
     else:
         log.error("No response from printer")
+
+
+def mqtt_query(client, msg):
+    client.query(msg)
+
+    reply = client.await_response(msg["commandType"])
+    if reply:
+        click.echo(cli.util.pretty_json(reply))
+    else:
+        log.error("No response from printer")
