@@ -4,7 +4,7 @@ Welcome! This repository contains `ankerctl.py`, a command-line interface for mo
 
 **NOTE:** This is our first major release and while we have tested thoroughly there may be bugs. If you encounter one please open a [Github Issue](https://github.com/Ankermgmt/ankermake-m5-protocol/issues/new/choose)
 
-The `ankerctl` program uses [`libflagship`](documentation/libflagship.md), a library for communicating with the numerous different protocols required for connecting to an AnkerMake M5 printer. The `libflagship` library is also maintained in this repo, under [`libflagship/`](libflagship/).
+The `ankerctl` program uses [`libflagship`](documentation/developer-docs/libflagship.md), a library for communicating with the numerous different protocols required for connecting to an AnkerMake M5 printer. The `libflagship` library is also maintained in this repo, under [`libflagship/`](libflagship/).
 
 ## Features
 
@@ -62,7 +62,7 @@ Follow the instructions for a [docker install](./documentation/install-from-dock
    python3 ankerctl.py config import %APPDATA%\AnkerMake\AnkerMake_64bit_fp\login.json
    ```
 
-   Type `ankerctl.py config import -h` for more details on the import options. Support for logging in with username and password is not yet supported. To learn more about the method used to extract the login information and add printers, see the [MQTT Overview](./documentation/mqtt-overview.md) and [Example Files](./documentation/example-file-usage) documentation.
+   Type `ankerctl.py config import -h` for more details on the import options. Support for logging in with username and password is not yet supported. To learn more about the method used to extract the login information and add printers, see the [MQTT Overview](documentation/developer-docs/mqtt-overview.md) and [Example Files](documentation/developer-docs/example-file-usage) documentation.
 
    The output when successfully importing a config is similar to this:
 
