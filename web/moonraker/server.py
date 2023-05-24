@@ -6,6 +6,8 @@ from jsonrpc import JSONRPCResponseManager, dispatcher
 from werkzeug.utils import secure_filename
 
 from .. import sock, app, rpcutil
+from .rpc import server
+
 
 @sock.route("/websocket")
 def websocket(sock):
@@ -18,6 +20,11 @@ def websocket(sock):
                 jmsg = json.loads(msg)
                 rpcutil.log_jsonrpc_req(jmsg, response)
                 sock.send(response.json)
+
+
+@app.get("/server/info")
+def server_info():
+    return { "result": server.server_info() }
 
 
 @app.get("/server/files/<string:root>/<path:path>")
