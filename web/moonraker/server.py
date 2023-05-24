@@ -10,18 +10,14 @@ from .. import sock, app, rpcutil
 @sock.route("/websocket")
 def websocket(sock):
 
-    app.websockets.append(sock)
-    app.svc.get("mqttnotifier")
-    try:
-        while True:
-            msg = sock.receive()
-            response = JSONRPCResponseManager.handle(msg, dispatcher)
-            jmsg = json.loads(msg)
-            rpcutil.log_jsonrpc_req(jmsg, response)
-            sock.send(response.json)
-    finally:
-        app.websockets.remove(sock)
-        app.svc.put("mqttnotifier")
+    with app.svc.borrow("mqttnotifier") as notifier:
+        with notifier.tap(lambda data: sock.send(json.dumps(data))):
+            while True:
+                msg = sock.receive()
+                response = JSONRPCResponseManager.handle(msg, dispatcher)
+                jmsg = json.loads(msg)
+                rpcutil.log_jsonrpc_req(jmsg, response)
+                sock.send(response.json)
 
 
 @app.get("/server/files/<string:root>/<path:path>")

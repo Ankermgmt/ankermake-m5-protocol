@@ -45,11 +45,8 @@ class MqttNotifierService(Service):
 
     def _handler(self, data):
         upd = mqtt_to_jsonrpc_req(data)
-        if not upd:
-            return
-
-        for ws in app.websockets:
-            ws.send(upd)
+        if upd:
+            self.notify(upd)
 
     def worker_start(self):
         self.mqtt = app.svc.get("mqttqueue")
