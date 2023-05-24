@@ -1,4 +1,5 @@
-from flask import flash, redirect
+import logging as log
+from flask import flash, redirect, request, url_for
 
 
 def flash_redirect(path: str, message: str | None = None, category="info"):
@@ -24,3 +25,19 @@ def flash_redirect(path: str, message: str | None = None, category="info"):
         flash(message, category)
 
     return redirect(path)
+
+
+def upload_file_to_printer(app, file, web_upload=False):
+    user_name = request.headers.get("User-Agent", "ankerctl").split(url_for('app_root'))[0]
+
+    with app.svc.borrow("filetransfer") as ft:
+        try:
+            ft.send_file(file, user_name)
+        except ConnectionError as err:
+            log.error(f"Connection error: {err}")
+            raise ConnectionError(err)
+        except Exception as err:
+            log.error(f"Unknown error: {err}")
+            raise Exception(err)
+
+    return {}

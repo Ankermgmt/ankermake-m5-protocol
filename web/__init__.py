@@ -219,6 +219,28 @@ def app_api_ankerctl_server_reload():
         return web.util.flash_redirect(url_for('app_root'), "Ankerctl reloaded successfully", "success")
 
 
+@app.post("/api/ankerctl/file/upload")
+def app_api_ankerctl_file_upload():
+    if request.method != "POST":
+        return web.util.flash_redirect(url_for('app_root'))
+    if "gcode_file" not in request.files:
+        return web.util.flash_redirect(url_for('app_root'), "No file found", "danger")
+    file = request.files["gcode_file"]
+
+    try:
+        web.util.upload_file_to_printer(app, file, True)
+        return web.util.flash_redirect(url_for('app_root'),
+                                       f"File {file.filename} sent to printer!", "success")
+    except ConnectionError as err:
+        return web.util.flash_redirect(url_for('app_root'),
+                                       "Cannot connect to printer!\n"
+                                       "Please verify that printer is online, and on the same network as ankerctl.\n"
+                                       f"Exception information: {err}", "danger")
+    except Exception as err:
+        return web.util.flash_redirect(url_for('app_root'),
+                                       f"Unknown error occurred: {err}", "danger")
+    
+    
 @app.post("/api/files/local")
 def app_api_files_local():
     """
@@ -227,8 +249,6 @@ def app_api_files_local():
     Returns:
         A dictionary containing file details
     """
-    user_name = request.headers.get("User-Agent", "ankerctl").split(url_for('app_root'))[0]
-
     no_act = not cli.util.parse_http_bool(request.form["print"])
 
     if no_act:
@@ -236,21 +256,20 @@ def app_api_files_local():
 
     fd = request.files["file"]
 
-    with app.svc.borrow("filetransfer") as ft:
-        try:
-            ft.send_file(fd, user_name)
-        except ConnectionError as E:
-            log.error(f"Connection error: {E}")
-            # This message will be shown in i.e. PrusaSlicer, so attempt to
-            # provide a readable explanation.
-            cli.util.http_abort(
-                503,
-                "Cannot connect to printer!\n" \
-                "\n" \
-                "Please verify that printer is online, and on the same network as ankerctl.\n" \
-                "\n" \
-                f"Exception information: {E}"
-            )
+    try:
+        web.util.upload_file_to_printer(app, fd)
+    except ConnectionError as E:
+        log.error(f"Connection error: {E}")
+        # This message will be shown in i.e. PrusaSlicer, so attempt to
+        # provide a readable explanation.
+        cli.util.http_abort(
+            503,
+            "Cannot connect to printer!\n" \
+            "\n" \
+            "Please verify that printer is online, and on the same network as ankerctl.\n" \
+            "\n" \
+            f"Exception information: {E}"
+        )
 
     return {}
 
