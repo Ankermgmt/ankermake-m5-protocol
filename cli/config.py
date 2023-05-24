@@ -25,8 +25,6 @@ class BaseConfigManager:
 
     @contextlib.contextmanager
     def _borrow(self, value, write, default=None):
-        if not default:
-            default = {}
         pr = self.load(value, default)
         yield pr
         if write:
@@ -76,7 +74,7 @@ class AnkerConfigManager(BaseConfigManager):
         return self._borrow("default", write=True)
 
     def open(self):
-        return self._borrow("default", write=False)
+        return self._borrow("default", write=False, default=Config(account=None, printers=[]))
 
 
 def configmgr(profile="default"):

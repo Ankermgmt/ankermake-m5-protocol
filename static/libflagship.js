@@ -7,7 +7,7 @@
 
 const MqttMsgType = {
     ZZ_MQTT_CMD_EVENT_NOTIFY           : 0x03e8,
-    ZZ_MQTT_CMD_PRINT_SCHEDULE         : 0x03a9,
+    ZZ_MQTT_CMD_PRINT_SCHEDULE         : 0x03e9,
     ZZ_MQTT_CMD_FIRMWARE_VERSION       : 0x03ea,
     ZZ_MQTT_CMD_NOZZLE_TEMP            : 0x03eb,
     ZZ_MQTT_CMD_HOTBED_TEMP            : 0x03ec,
@@ -27,7 +27,7 @@ const MqttMsgType = {
     ZZ_MQTT_CMD_MOVE_ZERO              : 0x0402,
     ZZ_MQTT_CMD_APP_QUERY_STATUS       : 0x0403,
     ZZ_MQTT_CMD_ONLINE_NOTIFY          : 0x0404,
-    ZZ_MQTT_CMD_APP_RECOVER_FACTORY    : 0x0405,
+    ZZ_MQTT_CMD_RECOVER_FACTORY        : 0x0405,
     ZZ_MQTT_CMD_BLE_ONOFF              : 0x0407,
     ZZ_MQTT_CMD_DELETE_GCODE_FILE      : 0x0408,
     ZZ_MQTT_CMD_RESET_GCODE_PARAM      : 0x0409,
@@ -44,6 +44,9 @@ const MqttMsgType = {
     ZZ_MQTT_CMD_PREVIEW_IMAGE_URL      : 0x0414,
     ZZ_MQTT_CMD_SYSTEM_CHECK           : 0x0419,
     ZZ_MQTT_CMD_AI_SWITCH              : 0x041a,
-    ZZ_STEST_CMD_GCODE_TRANSPOR        : 0x07e2,
+    ZZ_MQTT_CMD_AI_INFO_CHECK          : 0x041b,
+    ZZ_MQTT_CMD_MODEL_LAYER            : 0x041c,
+    ZZ_MQTT_CMD_MODEL_DL_PROCESS       : 0x041d,
+    ZZ_MQTT_CMD_PRINT_MAX_SPEED        : 0x041f,
     ZZ_MQTT_CMD_ALEXA_MSG              : 0x0bb8,
 }

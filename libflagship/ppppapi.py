@@ -394,6 +394,10 @@ class AnkerPPPPBaseApi(Thread):
 
 class AnkerPPPPApi(AnkerPPPPBaseApi):
 
+    def __init__(self, sock, duid, addr=None):
+        super().__init__(sock, duid, addr)
+        self.daemon = True
+
     def recv_xzyh(self, chan=1, timeout=None):
         fd = self.chans[chan]
 

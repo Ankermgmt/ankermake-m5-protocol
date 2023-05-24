@@ -104,7 +104,6 @@ $(function () {
             message=null,
             binary=false,
             reconnect=1000,
-            autoconnect=true
         }) {
             this.name = name;
             this.url = url;
@@ -116,18 +115,16 @@ $(function () {
             this.message = message;
             this.binary = binary;
             this.ws = null;
-            if (autoconnect)
-                this.connect();
         }
 
         _open() {
-            $(this.badge).removeClass("text-bg-danger").addClass("text-bg-success");
+            $(this.badge).removeClass("text-bg-success text-bg-danger").addClass("text-bg-warning");
             if (this.open)
                 this.open(this.ws);
         }
 
         _close() {
-            $(this.badge).removeClass("text-bg-success").addClass("text-bg-danger");
+            $(this.badge).removeClass("text-bg-warning text-bg-success").addClass("text-bg-danger");
             console.log(`${this.name} close`);
             setTimeout(() => this.connect(), this.reconnect);
             if (this.close)
@@ -142,6 +139,7 @@ $(function () {
         }
 
         _message(event) {
+            $(this.badge).removeClass("text-bg-danger text-bg-warning").addClass("text-bg-success");
             if (this.message)
                 this.message(event);
         }
@@ -266,6 +264,15 @@ $(function () {
         url: `ws://${location.host}/ws/ctrl`,
         badge: "#badge-ctrl",
     });
+
+    /* Only connect websockets if #player element exists in DOM (i.e., if we
+     * have a configuration). Otherwise we are constantly trying to make
+     * connections that will never succeed. */
+    if ($("#player").length) {
+        sockets.mqtt.connect();
+        sockets.video.connect();
+        sockets.ctrl.connect();
+    }
 
     /**
      * On click of element with id "light-on", sends JSON data to wsctrl to turn light on
