@@ -2,12 +2,11 @@
 
 import json
 import click
-import logging
 import platform
-from os import path
-from rich import print # you need python3
+import logging as log
+from os import path, environ
+from rich import print  # you need python3
 from tqdm import tqdm
-from flask import Flask, request, render_template
 
 import cli.config
 import cli.model
@@ -15,7 +14,7 @@ import cli.logfmt
 import cli.mqtt
 import cli.util
 import cli.pppp
-import cli.checkver # check python version
+import cli.checkver  # check python version
 
 import libflagship.httpapi
 import libflagship.logincache
@@ -24,17 +23,22 @@ import libflagship.seccode
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
 from libflagship.pppp import PktLanSearch, P2PCmdType, P2PSubCmdType, FileTransfer
-from libflagship.ppppapi import AnkerPPPPApi, FileUploadInfo, PPPPError
+from libflagship.ppppapi import FileUploadInfo, PPPPError
 
 
 class Environment:
     def __init__(self):
         pass
 
-    def require_config(self):
+    def load_config(self, required=True):
         with self.config.open() as config:
             if not getattr(config, 'printers', False):
-                log.critical("No printers found in config. Please import configuration using 'config import'")
+                msg = "No printers found in config. Please upload configuration " \
+                    "using the webserver or 'ankerctl.py config import'"
+                if required:
+                    log.critical(msg)
+                else:
+                    log.warning(msg)
 
     def upgrade_config_if_needed(self):
         try:
@@ -52,40 +56,48 @@ pass_env = click.make_pass_decorator(Environment)
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.option("--pppp-dump", required=False, metavar="<file.log>", type=click.Path(),
+              help="Enable logging of PPPP data to <file.log>")
 @click.option("--insecure", "-k", is_flag=True, help="Disable TLS certificate validation")
 @click.option("--verbose", "-v", count=True, help="Increase verbosity")
 @click.option("--quiet", "-q", count=True, help="Decrease verbosity")
+@click.option("--printer", "-p", type=int, default=environ.get('PRINTER_INDEX') or 0, help="Select printer number")
 @click.pass_context
-def main(ctx, verbose, quiet, insecure):
+def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
     ctx.ensure_object(Environment)
     env = ctx.obj
-
     levels = {
-        -3: logging.CRITICAL,
-        -2: logging.ERROR,
-        -1: logging.WARNING,
-        0: logging.INFO,
-        1: logging.DEBUG,
+        -3: log.CRITICAL,
+        -2: log.ERROR,
+        -1: log.WARNING,
+        0: log.INFO,
+        1: log.DEBUG,
     }
     env.config   = cli.config.configmgr()
     env.insecure = insecure
     env.level = max(-3, min(verbose - quiet, 1))
-    env.log = cli.logfmt.setup_logging(levels[env.level])
+    env.pppp_dump = pppp_dump
 
-    global log
-    log = env.log
+    cli.logfmt.setup_logging(levels[env.level])
 
     if insecure:
         import urllib3
         urllib3.disable_warnings()
+        log.warning('[Not Verifying Certificates]')
+        log.warning('This is insecure and should not be used in production environments.')
+        log.warning('It is recommended to run without "-k/--insecure".')
 
-    env.upgrade_config_if_needed()
+    if ctx.invoked_subcommand not in {"http", "config"}:
+        env.upgrade_config_if_needed()
+
+    env.printer_index = printer
+    log.debug(f"Using printer [{env.printer_index}]")
 
 
 @main.group("mqtt", help="Low-level mqtt api access")
 @pass_env
 def mqtt(env):
-    env.require_config()
+    env.load_config()
 
 
 @mqtt.command("monitor")
@@ -95,7 +107,7 @@ def mqtt_monitor(env):
     Connect to mqtt broker, and show low-level events in realtime.
     """
 
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
 
     for msg, body in client.fetchloop():
         log.info(f"TOPIC [{msg.topic}]")
@@ -110,7 +122,7 @@ def mqtt_monitor(env):
 
                 del obj["commandType"]
                 print(f"  [{cmdtype:4}] {name:20} {obj}")
-            except:
+            except Exception:
                 print(f"  {obj}")
 
 
@@ -136,7 +148,7 @@ def mqtt_send(env, command_type, args, force):
     }
 
     if not force:
-        if command_type == MqttMsgType.ZZ_MQTT_CMD_APP_RECOVER_FACTORY.value:
+        if command_type == MqttMsgType.ZZ_MQTT_CMD_RECOVER_FACTORY.value:
             log.fatal("Refusing to perform factory reset (override with --force)")
             return
 
@@ -144,7 +156,7 @@ def mqtt_send(env, command_type, args, force):
             log.fatal("Sending DEVICE_NAME_SET without devName=<name> will crash printer (override with --force)")
             return
 
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
     cli.mqtt.mqtt_command(client, cmd)
 
 
@@ -156,7 +168,7 @@ def mqtt_rename_printer(env, newname):
     Set a new nickname for your printer
     """
 
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
 
     cmd = {
         "commandType": MqttMsgType.ZZ_MQTT_CMD_DEVICE_NAME_SET,
@@ -175,7 +187,7 @@ def mqtt_gcode(env):
 
     Press Ctrl-C to exit. (or Ctrl-D to close connection, except on Windows)
     """
-    client = cli.mqtt.mqtt_open(env)
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
 
     while True:
         gcode = click.prompt("gcode", prompt_suffix="> ")
@@ -209,7 +221,7 @@ def pppp_lan_search(env):
 
     Works by broadcasting a LAN_SEARCH packet, and waiting for a reply.
     """
-    api = AnkerPPPPApi.open_broadcast()
+    api = cli.pppp.pppp_open_broadcast(dumpfile=env.pppp_dump)
     try:
         api.send(PktLanSearch())
         resp = api.recv(timeout=1.0)
@@ -232,8 +244,8 @@ def pppp_print_file(env, file, no_act):
     executing the print job. NOTE: the printer only ever stores ONE uploaded
     file, so anytime a file is uploaded, the old one is deleted.
     """
-    env.require_config()
-    api = cli.pppp.pppp_open(env)
+    env.load_config()
+    api = cli.pppp.pppp_open(env.config, env.printer_index, dumpfile=env.pppp_dump)
 
     data = file.read()
     fui = FileUploadInfo.from_file(file.name, user_name="ankerctl", user_id="-", machine_id="-")
@@ -256,7 +268,8 @@ def pppp_print_file(env, file, no_act):
 
 @pppp.command("capture-video")
 @click.argument("file", required=True, type=click.File("wb"), metavar="<output.h264>")
-@click.option("--max-size", "-m", required=True, type=cli.util.FileSizeType(), help="Stop capture at this size (kb, mb, gb, etc)")
+@click.option("--max-size", "-m", required=True, type=cli.util.FileSizeType(),
+              help="Stop capture at this size (kb, mb, gb, etc)")
 @pass_env
 def pppp_capture_video(env, file, max_size):
     """
@@ -265,8 +278,8 @@ def pppp_capture_video(env, file, max_size):
     The output is in h264 ES (Elementary Stream) format. It can be played with
     "ffplay" from the ffmpeg program suite.
     """
-    env.require_config()
-    api = cli.pppp.pppp_open(env)
+    env.load_config()
+    api = cli.pppp.pppp_open(env.config, env.printer_index, dumpfile=env.pppp_dump)
 
     cmd = {"commandType": P2PSubCmdType.START_LIVE, "data": {"encryptkey": "x", "accountId": "y"}}
     api.send_xzyh(json.dumps(cmd).encode(), cmd=P2PCmdType.P2P_JSON_CMD)
@@ -326,7 +339,13 @@ def http_calc_sec_code(duid, mac):
 
 
 @main.group("config", help="View and update configuration")
-def config(): pass
+@click.pass_context
+def config(ctx):
+    if ctx.invoked_subcommand in {"import", "decode"}:
+        return
+
+    env = ctx.obj
+    env.upgrade_config_if_needed()
 
 
 @config.command("decode")
@@ -407,7 +426,7 @@ def config_import(env, fd):
         config = cli.config.load_config_from_api(auth_token, region, env.insecure)
     except libflagship.httpapi.APIError as E:
         log.critical(f"Config import failed: {E} "
-                     "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
+                    "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
     except Exception as E:
         log.critical(f"Config import failed: {E}")
 
@@ -432,78 +451,34 @@ def config_show(env):
             return
 
         log.info("Account:")
-        print(f"    user_id:    {cfg.account.user_id[:20]}...<REDACTED>")
-        print(f"    auth_token: {cfg.account.auth_token[:20]}...<REDACTED>")
+        print(f"    user_id:    {cfg.account.user_id[:10]}...<REDACTED>")
+        print(f"    auth_token: {cfg.account.auth_token[:10]}...<REDACTED>")
         print(f"    email:      {cfg.account.email}")
         print(f"    region:     {cfg.account.region.upper()}")
         print()
 
         log.info("Printers:")
-        for p in cfg.printers:
+        # Sort the list of printers by printer.id
+        for i, p in enumerate(cfg.printers):
+            print(f"    printer:   {i}")
+            print(f"    id:        {p.id}")
+            print(f"    name:      {p.name}")
             print(f"    duid:      {p.p2p_duid}") # Printer Serial Number
             print(f"    sn:        {p.sn}")
+            print(f"    model:     {p.model}")
+            print(f"    created:   {p.create_time}")
+            print(f"    updated:   {p.update_time}")
             print(f"    ip:        {p.ip_addr}")
             print(f"    wifi_mac:  {cli.util.pretty_mac(p.wifi_mac)}")
             print(f"    api_hosts: {', '.join(p.api_hosts)}")
             print(f"    p2p_hosts: {', '.join(p.p2p_hosts)}")
+            print()
 
 
 @main.group("webserver", help="Built-in webserver support")
 @pass_env
 def webserver(env):
-    env.require_config()
-
-
-app = Flask(__name__, template_folder='./static')
-# app.config['TEMPLATES_AUTO_RELOAD'] = True
-
-
-@app.get("/")
-def app_root():
-    host = request.host.split(':')
-    requestPort = host[1] if len(host) > 1 else '80' # If there is no 2nd array entry, the request port is 80
-    return render_template("index.html", requestPort=requestPort, requestHost=host[0])
-
-
-@app.get("/api/version")
-def app_api_version():
-    return {
-        "api": "0.1",
-        "server": "1.9.0",
-        "text": "OctoPrint 1.9.0"
-    }
-
-
-@app.post("/api/files/local")
-def app_api_files_local():
-    env = app.config["env"]
-
-    user_name = request.headers.get("User-Agent", "ankerctl").split("/")[0]
-
-    no_act = not cli.util.parse_http_bool(request.form["print"])
-
-    if no_act:
-        cli.util.http_abort(409, "Upload-only not supported by Ankermake M5")
-
-    fd = request.files["file"]
-
-    api = cli.pppp.pppp_open(env)
-
-    data = fd.read()
-    fui = FileUploadInfo.from_data(data, fd.filename, user_name=user_name, user_id="-", machine_id="-")
-    log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")
-    try:
-        cli.pppp.pppp_send_file(api, fui, data)
-        log.info("File upload complete. Requesting print start of job.")
-        api.aabb_request(b"", frametype=FileTransfer.END)
-    except PPPPError as E:
-        log.error(f"Could not send print job: {E}")
-    else:
-        log.info("Successfully sent print job")
-    finally:
-        api.stop()
-
-    return {}
+    env.load_config(False)
 
 
 @webserver.command("run", help="Run ankerctl webserver")
@@ -511,11 +486,8 @@ def app_api_files_local():
 @click.option("--port", default=4470, envvar="FLASK_PORT", help="Port to bind to")
 @pass_env
 def webserver(env, host, port):
-    env.require_config()
-    app.config["env"] = env
-    app.config["port"] = port
-    app.config["host"] = host
-    app.run(host=host,port=port)
+    import web
+    web.webserver(env.config, env.printer_index, host, port, env.insecure, pppp_dump=env.pppp_dump)
 
 
 if __name__ == "__main__":

@@ -53,6 +53,12 @@ class MqttMsg(_MqttMsg):
     @classmethod
     def parse(cls, p, key):
         p = mqtt_checksum_remove(p)
+        ## Old printer firmwares transmit mqtt messages in an earlier,
+        ## unsupported format. Peek at p[6] (corresponding to `.m5` field),
+        ## which seems to be set to 1 for old-style messages, and 2 for
+        ## new-style messages.
+        if p[6] != 2:
+            raise ValueError(f"Unsupported mqtt message format (expected 2, but found {p[6]})")
         body, data = p[:64], mqtt_aes_decrypt(p[64:], key)
         res = super().parse(body + data)
         assert res[0].size == (len(p) + 1)

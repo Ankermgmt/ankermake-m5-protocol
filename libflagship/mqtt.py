@@ -26,8 +26,8 @@ class MqttPktType(enum.IntEnum):
 
 class MqttMsgType(enum.IntEnum):
     ZZ_MQTT_CMD_EVENT_NOTIFY           = 0x03e8 # 
-    ZZ_MQTT_CMD_PRINT_SCHEDULE         = 0x03a9 # 
-    ZZ_MQTT_CMD_FIRMWARE_VERSION       = 0x03ea # Not implemented?
+    ZZ_MQTT_CMD_PRINT_SCHEDULE         = 0x03e9 # 
+    ZZ_MQTT_CMD_FIRMWARE_VERSION       = 0x03ea # Returns firmware version string
     ZZ_MQTT_CMD_NOZZLE_TEMP            = 0x03eb # Set nozzle temperature in units of 1/100th deg C (i.e.31337 is 313.37C)
     ZZ_MQTT_CMD_HOTBED_TEMP            = 0x03ec # Set hotbed temperature in units of 1/100th deg C (i.e. 1337 is 13.37C)
     ZZ_MQTT_CMD_FAN_SPEED              = 0x03ed # Set fan speed
@@ -46,7 +46,7 @@ class MqttMsgType(enum.IntEnum):
     ZZ_MQTT_CMD_MOVE_ZERO              = 0x0402 # (probably) Move to home position
     ZZ_MQTT_CMD_APP_QUERY_STATUS       = 0x0403 # 
     ZZ_MQTT_CMD_ONLINE_NOTIFY          = 0x0404 # 
-    ZZ_MQTT_CMD_APP_RECOVER_FACTORY    = 0x0405 # 
+    ZZ_MQTT_CMD_RECOVER_FACTORY        = 0x0405 # Factory reset printer
     ZZ_MQTT_CMD_BLE_ONOFF              = 0x0407 # (probably) Enable/disable Bluetooth Low Energy ("ble") radio
     ZZ_MQTT_CMD_DELETE_GCODE_FILE      = 0x0408 # (probably) Delete specified gcode file
     ZZ_MQTT_CMD_RESET_GCODE_PARAM      = 0x0409 # ?
@@ -63,7 +63,10 @@ class MqttMsgType(enum.IntEnum):
     ZZ_MQTT_CMD_PREVIEW_IMAGE_URL      = 0x0414 # 
     ZZ_MQTT_CMD_SYSTEM_CHECK           = 0x0419 # ?
     ZZ_MQTT_CMD_AI_SWITCH              = 0x041a # ?
-    ZZ_STEST_CMD_GCODE_TRANSPOR        = 0x07e2 # ?
+    ZZ_MQTT_CMD_AI_INFO_CHECK          = 0x041b # ?
+    ZZ_MQTT_CMD_MODEL_LAYER            = 0x041c # ?
+    ZZ_MQTT_CMD_MODEL_DL_PROCESS       = 0x041d # ?
+    ZZ_MQTT_CMD_PRINT_MAX_SPEED        = 0x041f # ?
     ZZ_MQTT_CMD_ALEXA_MSG              = 0x0bb8 # 
 
     @classmethod
@@ -128,6 +131,8 @@ class MqttMsg(_MqttMsg):
     @classmethod
     def parse(cls, p, key):
         p = mqtt_checksum_remove(p)
+        if p[6] != 2:
+            raise ValueError(f"Unsupported mqtt message format (expected 2, but found {p[6]})")
         body, data = p[:64], mqtt_aes_decrypt(p[64:], key)
         res = super().parse(body + data)
         assert res[0].size == (len(p) + 1)

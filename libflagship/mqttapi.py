@@ -48,7 +48,11 @@ class AnkerMQTTBaseClient:
 
     # internal function
     def _on_message(self, client, userdata, msg):
-        pkt, tail = MqttMsg.parse(msg.payload, key=self._key)
+        try:
+            pkt, tail = MqttMsg.parse(msg.payload, key=self._key)
+        except Exception as E:
+            log.error(f"Failed to decode mqtt message: {E}")
+            return
 
         data = json.loads(pkt.data)
         if isinstance(data, list):
@@ -66,15 +70,11 @@ class AnkerMQTTBaseClient:
         pass
 
     @classmethod
-    def login(cls, printersn, username, password, key, ca_certs="ankermake-mqtt.crt", verify=True):
+    def login(cls, printersn, username, password, key, ca_certs=None, verify=True):
         client = mqtt.Client()
-
-        if verify:
-            client.tls_set(ca_certs=ca_certs)
-        else:
-            client.tls_set(ca_certs=ca_certs, cert_reqs=ssl.CERT_NONE)
-            client.tls_insecure_set(True)
-
+        cert_reqs = ssl.CERT_NONE if not verify else ssl.VERIFY_DEFAULT
+        client.tls_set(ca_certs=ca_certs, cert_reqs=cert_reqs)
+        client.tls_insecure_set(not verify)
         client.username_pw_set(username, password)
 
         return cls(printersn, client, key)

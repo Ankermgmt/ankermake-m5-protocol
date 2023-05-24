@@ -1,0 +1,6 @@
+#!/bin/sh
+
+if uname -r | grep -cq microsoft-; then
+    echo "WINDOWS DETECTED. Docker-on-windows is not compatible with ankerctl." > /dev/stderr
+    exit 1
+fi

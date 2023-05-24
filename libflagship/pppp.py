@@ -88,38 +88,140 @@ class Type(enum.IntEnum):
     INVALID                   = 0xff # unknown
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u8):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u8):
+        return typ.pack(self)
 
 class P2PCmdType(enum.IntEnum):
-    P2P_JSON_CMD  = 0x06a4 # unknown
-    P2P_SEND_FILE = 0x3a98 # unknown
+    APP_CMD_START_REC_BROADCASE       = 0x0384 # unknown
+    APP_CMD_STOP_REC_BROADCASE        = 0x0385 # unknown
+    APP_CMD_BIND_BROADCAST            = 0x03e8 # unknown
+    APP_CMD_BIND_SYNC_ACCOUNT_INFO    = 0x03e9 # unknown
+    APP_CMD_UNBIND_ACCOUNT            = 0x03ea # unknown
+    APP_CMD_START_REALTIME_MEDIA      = 0x03eb # unknown
+    APP_CMD_STOP_REALTIME_MEDIA       = 0x03ec # unknown
+    APP_CMD_START_TALKBACK            = 0x03ed # unknown
+    APP_CMD_STOP_TALKBACK             = 0x03ee # unknown
+    APP_CMD_START_VOICECALL           = 0x03ef # unknown
+    APP_CMD_STOP_VOICECALL            = 0x03f0 # unknown
+    APP_CMD_START_RECORD              = 0x03f1 # unknown
+    APP_CMD_STOP_RECORD               = 0x03f2 # unknown
+    APP_CMD_PIR_SWITCH                = 0x03f3 # unknown
+    APP_CMD_CLOSE_PIR                 = 0x03f4 # unknown
+    APP_CMD_IRCUT_SWITCH              = 0x03f5 # unknown
+    APP_CMD_CLOSE_IRCUT               = 0x03f6 # unknown
+    APP_CMD_EAS_SWITCH                = 0x03f7 # unknown
+    APP_CMD_CLOSE_EAS                 = 0x03f8 # unknown
+    APP_CMD_AUDDEC_SWITCH             = 0x03f9 # unknown
+    APP_CMD_CLOSE_AUDDEC              = 0x03fa # unknown
+    APP_CMD_DEVS_LOCK_SWITCH          = 0x03fb # unknown
+    APP_CMD_DEVS_UNLOCK               = 0x03fc # unknown
+    APP_CMD_RECORD_IMG                = 0x03fd # unknown
+    APP_CMD_RECORD_IMG_STOP           = 0x03fe # unknown
+    APP_CMD_STOP_SHARE                = 0x03ff # unknown
+    APP_CMD_DOWNLOAD_VIDEO            = 0x0400 # unknown
+    APP_CMD_RECORD_VIEW               = 0x0401 # unknown
+    APP_CMD_RECORD_PLAY_CTRL          = 0x0402 # unknown
+    APP_CMD_DELLETE_RECORD            = 0x0403 # unknown
+    APP_CMD_SNAPSHOT                  = 0x0404 # unknown
+    APP_CMD_FORMAT_SD                 = 0x0405 # unknown
+    APP_CMD_CHANGE_PWD                = 0x0406 # unknown
+    APP_CMD_CHANGE_WIFI_PWD           = 0x0407 # unknown
+    APP_CMD_WIFI_CONFIG               = 0x0408 # unknown
+    APP_CMD_TIME_SYCN                 = 0x0409 # unknown
+    APP_CMD_HUB_REBOOT                = 0x040a # unknown
+    APP_CMD_DEVS_SWITCH               = 0x040b # unknown
+    APP_CMD_HUB_TO_FACTORY            = 0x040c # unknown
+    APP_CMD_DEVS_TO_FACTORY           = 0x040d # unknown
+    APP_CMD_DEVS_BIND_BROADCASE       = 0x040e # unknown
+    APP_CMD_DEVS_BIND_NOTIFY          = 0x040f # unknown
+    APP_CMD_DEVS_UNBIND               = 0x0410 # unknown
+    APP_CMD_RECORDDATE_SEARCH         = 0x0411 # unknown
+    APP_CMD_RECORDLIST_SEARCH         = 0x0412 # unknown
+    APP_CMD_GET_UPGRADE_RESULT        = 0x0413 # unknown
+    APP_CMD_P2P_DISCONNECT            = 0x0414 # unknown
+    APP_CMD_DEV_LED_SWITCH            = 0x0415 # unknown
+    APP_CMD_CLOSE_DEV_LED             = 0x0416 # unknown
+    APP_CMD_COLLECT_RECORD            = 0x0417 # unknown
+    APP_CMD_DECOLLECT_RECORD          = 0x0418 # unknown
+    APP_CMD_BATCH_RECORD              = 0x0419 # unknown
+    APP_CMD_STRESS_TEST_OPER          = 0x041a # unknown
+    APP_CMD_DOWNLOAD_CANCEL           = 0x041b # unknown
+    APP_CMD_BIND_SYNC_ACCOUNT_INFO_EX = 0x041e # unknown
+    APP_CMD_LIVEVIEW_LED_SWITCH       = 0x0420 # unknown
+    APP_CMD_REPAIR_SD                 = 0x0421 # unknown
+    APP_CMD_GET_ASEKEY                = 0x044c # unknown
+    APP_CMD_GET_BATTERY               = 0x044d # unknown
+    APP_CMD_SDINFO                    = 0x044e # unknown
+    APP_CMD_CAMERA_INFO               = 0x044f # unknown
+    APP_CMD_GET_RECORD_TIME           = 0x0450 # unknown
+    APP_CMD_GET_MDETECT_PARAM         = 0x0451 # unknown
+    APP_CMD_MDETECTINFO               = 0x0452 # unknown
+    APP_CMD_GET_ARMING_INFO           = 0x0453 # unknown
+    APP_CMD_GET_ARMING_STATUS         = 0x0454 # unknown
+    APP_CMD_GET_AUDDEC_INFO           = 0x0455 # unknown
+    APP_CMD_GET_AUDDEC_SENSITIVITY    = 0x0456 # unknown
+    APP_CMD_GET_AUDDE_CSTATUS         = 0x0457 # unknown
+    APP_CMD_GET_MIRRORMODE            = 0x0458 # unknown
+    APP_CMD_GET_IRMODE                = 0x0459 # unknown
+    APP_CMD_GET_IRCUTSENSITIVITY      = 0x045a # unknown
+    APP_CMD_GET_PIRINFO               = 0x045b # unknown
+    APP_CMD_GET_PIRCTRL               = 0x045c # unknown
+    APP_CMD_GET_PIRSENSITIVITY        = 0x045d # unknown
+    APP_CMD_GET_EAS_STATUS            = 0x045e # unknown
+    APP_CMD_GET_CAMERA_LOCK           = 0x045f # unknown
+    APP_CMD_GET_GATEWAY_LOCK          = 0x0460 # unknown
+    APP_CMD_GET_UPDATE_STATUS         = 0x0461 # unknown
+    APP_CMD_GET_ADMIN_PWD             = 0x0462 # unknown
+    APP_CMD_GET_WIFI_PWD              = 0x0463 # unknown
+    APP_CMD_GET_EXCEPTION_LOG         = 0x0464 # unknown
+    APP_CMD_GET_NEWVESION             = 0x0465 # unknown
+    APP_CMD_GET_HUB_TONE_INFO         = 0x0466 # unknown
+    APP_CMD_GET_DEV_TONE_INFO         = 0x0467 # unknown
+    APP_CMD_GET_HUB_NAME              = 0x0468 # unknown
+    APP_CMD_GET_DEVS_NAME             = 0x0469 # unknown
+    APP_CMD_GET_P2P_CONN_STATUS       = 0x046a # unknown
+    APP_CMD_SET_DEV_STORAGE_TYPE      = 0x04cc # unknown
+    APP_CMD_VIDEO_FRAME               = 0x0514 # unknown
+    APP_CMD_AUDIO_FRAME               = 0x0515 # unknown
+    APP_CMD_STREAM_MSG                = 0x0516 # unknown
+    APP_CMD_CONVERT_MP4_OK            = 0x0517 # unknown
+    APP_CMD_DOENLOAD_FINISH           = 0x0518 # unknown
+    APP_CMD_SET_PAYLOAD               = 0x0546 # unknown
+    APP_CMD_NOTIFY_PAYLOAD            = 0x0547 # unknown
+    APP_CMD_MAKER_SET_PAYLOAD         = 0x06a4 # unknown
+    APP_CMD_MAKER_NOTIFY_PAYLOAD      = 0x06a5 # unknown
+    PC_CMD_FILE_RECV                  = 0x3a98 # unknown
+    P2P_JSON_CMD                      = 0x06a4 # unknown
+    P2P_SEND_FILE                     = 0x3a98 # unknown
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u16le):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u16le):
+        return typ.pack(self)
 
 class P2PSubCmdType(enum.IntEnum):
     START_LIVE          = 0x03e8 # unknown
     CLOSE_LIVE          = 0x03e9 # unknown
     VIDEO_RECORD_SWITCH = 0x03ea # unknown
-    LIGHT_STATE_SWITCH  = 0x03ab # unknown
+    LIGHT_STATE_SWITCH  = 0x03eb # unknown
     LIGHT_STATE_GET     = 0x03ec # unknown
     LIVE_MODE_SET       = 0x03ed # unknown
     LIVE_MODE_GET       = 0x03ee # unknown
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u16le):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u16le):
+        return typ.pack(self)
 
 class FileTransfer(enum.IntEnum):
     BEGIN = 0x00 # Begin file transfer (sent with metadata)
@@ -129,11 +231,12 @@ class FileTransfer(enum.IntEnum):
     REPLY = 0x80 # Reply from printer
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u8):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u8):
+        return typ.pack(self)
 
 class FileTransferReply(enum.IntEnum):
     OK             = 0x00 # Success
@@ -143,11 +246,63 @@ class FileTransferReply(enum.IntEnum):
     ERR_BUSY       = 0xff # Printer was not ready to receive
 
     @classmethod
-    def parse(cls, p):
-        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+    def parse(cls, p, typ=u8):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
 
-    def pack(self):
-        return struct.pack("B", self)
+    def pack(self, typ=u8):
+        return typ.pack(self)
+
+class Result(enum.IntEnum):
+    ERROR_P2P_SUCCESSFUL                         = 0x00000000 # unknown
+    TFCARD_VOLUME_OVERFLOW                       = 0xffffff7c # unknown
+    PARAM_NO_CHANGE                              = 0xffffff8c # unknown
+    NOT_FACE                                     = 0xffffff8d # unknown
+    DEV_BUSY                                     = 0xffffff8e # unknown
+    DEV_UPDATEING                                = 0xffffff8f # unknown
+    HUB_UPDATEING                                = 0xffffff90 # unknown
+    OPEN_FILE_FAIL                               = 0xffffff91 # unknown
+    INVALID_PARAM                                = 0xffffff92 # unknown
+    DEV_OFFLINE                                  = 0xffffff93 # unknown
+    WAIT_TIMEOUT                                 = 0xffffff94 # unknown
+    NVALID_PARAM_LEN                             = 0xffffff95 # unknown
+    NOT_FIND_DEV                                 = 0xffffff96 # unknown
+    WRITE_FLASH                                  = 0xffffff97 # unknown
+    INVALID_ACCOUNT                              = 0xffffff98 # unknown
+    INVALID_COMMAND                              = 0xffffff99 # unknown
+    MAX_HUB_CONNECT_NUM                          = 0xffffff9a # unknown
+    HAVE_CONNECT                                 = 0xffffff9b # unknown
+    NULL_POINT                                   = 0xffffff9c # unknown
+    ERROR_P2P_FAIL_TO_CREATE_THREAD              = 0xffffffea # unknown
+    ERROR_P2P_INVALID_APILICENSE                 = 0xffffffeb # unknown
+    ERROR_P2P_SESSION_CLOSED_INSUFFICIENT_MEMORY = 0xffffffec # unknown
+    ERROR_P2P_USER_CONNECT_BREAK                 = 0xffffffed # unknown
+    ERROR_P2P_UDP_PORT_BIND_FAILED               = 0xffffffee # unknown
+    ERROR_P2P_MAX_SESSION                        = 0xffffffef # unknown
+    ERROR_P2P_USER_LISTEN_BREAK                  = 0xfffffff0 # unknown
+    ERROR_P2P_REMOTE_SITE_BUFFER_FULL            = 0xfffffff1 # unknown
+    ERROR_P2P_SESSION_CLOSED_CALLED              = 0xfffffff2 # unknown
+    ERROR_P2P_SESSION_CLOSED_TIMEOUT             = 0xfffffff3 # unknown
+    ERROR_P2P_SESSION_CLOSED_REMOTE              = 0xfffffff4 # unknown
+    ERROR_P2P_INVALID_SESSION_HANDLE             = 0xfffffff5 # unknown
+    ERROR_P2P_NO_RELAY_SERVER_AVAILABLE          = 0xfffffff6 # unknown
+    ERROR_P2P_ID_OUT_OF_DATE                     = 0xfffffff7 # unknown
+    ERROR_P2P_INVALID_PREFIX                     = 0xfffffff8 # unknown
+    ERROR_P2P_FAIL_TO_RESOLVE_NAME               = 0xfffffff9 # unknown
+    ERROR_P2P_DEVICE_NOT_ONLINE                  = 0xfffffffa # unknown
+    ERROR_PPCS_INVALID_PARAMETER                 = 0xfffffffb # unknown
+    ERROR_P2P_INVALID_ID                         = 0xfffffffc # unknown
+    ERROR_P2P_TIME_OUT                           = 0xfffffffd # unknown
+    ERROR_P2P_ALREADY_INITIALIZED                = 0xfffffffe # unknown
+    ERROR_P2P_NOT_INITIALIZED                    = 0xffffffff # unknown
+
+    @classmethod
+    def parse(cls, p, typ=u32):
+        d = typ.parse(p)
+        return cls(d[0]), d[1]
+
+    def pack(self, typ=u32):
+        return typ.pack(self)
 
 
 @dataclass
@@ -266,7 +421,7 @@ class Duid(_Duid):
 @dataclass
 class Xzyh(_Xzyh):
     magic     : bytes = field(repr=False, kw_only=True, default=b'XZYH') # unknown
-    cmd       : u16le # Command field (P2PCmdType)
+    cmd       : P2PCmdType # Command field (P2PCmdType)
     len       : u32le # Payload length
     unk0      : u8 # unknown
     unk1      : u8 # unknown
@@ -280,7 +435,7 @@ class Xzyh(_Xzyh):
     def parse(cls, p):
         # not encrypted
         magic, p = Magic.parse(p, 4, b'XZYH')
-        cmd, p = u16le.parse(p)
+        cmd, p = P2PCmdType.parse(p, u16le)
         len, p = u32le.parse(p)
         unk0, p = u8.parse(p)
         unk1, p = u8.parse(p)
@@ -294,7 +449,7 @@ class Xzyh(_Xzyh):
 
     def pack(self):
         p  = Magic.pack(self.magic, 4, b'XZYH')
-        p += u16le.pack(self.cmd)
+        p += P2PCmdType.pack(self.cmd, u16le)
         p += u32le.pack(self.len)
         p += u8.pack(self.unk0)
         p += u8.pack(self.unk1)

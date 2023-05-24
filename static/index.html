@@ -1,56 +1,31 @@
-<!DOCTYPE html>
-<html data-bs-theme="dark" lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta content="width=device-width, initial-scale=1" name="viewport">
-        <title>ankerctl</title>
-        <link href="/static/vendor/bootstrap-5.3.0-alpha3-dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-    <body>
-        <div class="container my-5">
-            <div class="p-2 text-center bg-body-tertiary rounded-3">
-                <h1 class="text-body-emphasis display-3">ankerctl</h1>
-                <p class="lead">Congratulations on running ankerctl</p>
-            </div>
-        </div>
-        <div class="container mb-4">
-            <div class="row row-cols-1 row-cols-md-1 row-cols-lg-2 row-cols-xxl-2 g-3 p-2">
-                <div class="col-12 col-lg-12">
-                    <h2 class="display-6 fs-2 mb-2">Connecting PrusaSlicer/SuperSlicer</h2>
-                    <ol class="list-group list-group-numbered">
-                        <li class="list-group-item">Go to "Printer settings" tab</li>
-                        <li class="list-group-item">Click "Gear"⚙️ (Add/Edit Physical Printer)</li>
-                        <li class="list-group-item">Fill in "Descriptive name for the printer" with whatever you like</li>
-                        <li class="list-group-item">Select your Ankermake printer profile from the dropdown menu</li>
-                        <li class="list-group-item">Under "Host Type" select "OctoPrint"</li>
-                        <li class="list-group-item">In "Hostname, IP or URL" fill in with: <kbd>{{ requestHost }}:{{ requestPort }}</kbd>&nbsp;<a class="text-decoration-none" href="#" title="Copy to clipboard" id="configData">📋</a></li>
-                        <li class="list-group-item">Leave "API Key / Password" blank</a></li>
-                        <li class="list-group-item">Click "Test" to validate input</li>
-                        <li class="list-group-item">Click "Ok" to close the window</li>
-                        <li class="list-group-item">Slice your file as normal</li>
-                        <li class="list-group-item">Click "G&#x3E;" button to start direct upload to the printer</li>
-                        <li class="list-group-item">Click "Upload and print" - the "Upload"-only is not supported</li>
-                        <li class="list-group-item">Enjoy printing with ankerctl 😉</li>
-                    </ol>
-                    <br><span class="fw-light">Hint: <kbd>Ctrl+Shift+G</kbd> will slice and open the upload to printer window</span>
-                </div>
-                <div class="col-12 col-lg-12 text-center">
-                    <img src="/static/img/setup/prusaslicer-1.png" class="img-thumbnail" alt="step 1">
-                    <img src="/static/img/setup/prusaslicer-2.png" class="img-thumbnail mt-2" alt="step 2">
-                    <img src="/static/img/setup/prusaslicer-3.png" class="img-thumbnail mt-2" alt="step 3">
-                    <img src="/static/img/setup/prusaslicer-4.png" class="img-thumbnail mt-2" alt="step 4">
-                </div>
-            </div>
-        </div>
-        <script src="/static/vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js"></script>
-        <script src="/static/vendor/cash.min.js"></script>
-        <script>
-         $(function () {
-             $('#configData').on('click',function(){
-                 navigator.clipboard.writeText("{{ requestHost }}:{{ requestPort }}");
-                 return false;
-             })
-         });
-        </script>
-    </body>
-</html>
+{% extends "base.html" %}
+{% import "macro.html" as macro %}
+
+{% block title -%}
+    ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
+{%- endblock %}
+
+{% block contents %}
+    {% if configure %}
+        {% include "tabs/home.html" %}
+        {% include "tabs/instructions.html" %}
+    {% endif %}
+
+    {% include "tabs/setup.html" %}
+{% endblock %}
+
+{% block menu %}
+    {% if configure %}
+        {% call macro.menu_button(id="home-tab", target="home", active=configure) %}
+            {{ macro.bi_icon("house", "Home") }}
+        {% endcall %}
+
+        {% call macro.menu_button(id="instructions-tab", target="instructions") %}
+            {{ macro.bi_icon("list-check", "Instructions") }}
+        {% endcall %}
+    {% endif %}
+
+    {% call macro.menu_button(id="setup-tab", target="setup", active=not configure) %}
+        {{ macro.bi_icon("gear-fill", "Setup") }}
+    {% endcall %}
+{% endblock %}
