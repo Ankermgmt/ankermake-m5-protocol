@@ -1,6 +1,6 @@
 services:
     ankerctl:
-        image: ankerctl/ankerctl:latest
+        image: ghcr.io/ankermgmt/ankermake-m5-protocol:latest
         container_name: ankerctl
         restart: unless-stopped
         build: .
