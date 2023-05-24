@@ -19,6 +19,18 @@ $(function () {
     });
 
     /**
+     * Opens modal if gcode upload file is present
+     */
+    document.getElementById('gcode-upload').addEventListener('click', function(event) {
+        var fileInput = document.getElementById('gcode_file');
+        console.log({fileInput})
+        if (fileInput.value.trim() !== '') {
+            var modal = new bootstrap.Modal(popupModal);
+            modal.show();
+        }
+    });
+
+    /**
      * On click of an element with attribute "data-clipboard-src", updates clipboard with text from that element
      */
     if (navigator.clipboard) {

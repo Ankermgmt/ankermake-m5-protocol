@@ -6,9 +6,10 @@
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <title>{% block title %}{% endblock title %}</title>
         <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" />
-        {{ macro.static_css("vendor/bootstrap-5.3.0-alpha3-dist/css/bootstrap.min.css") }} {{
-        macro.static_css("vendor/bootstrap-icons-1.10.5/font/bootstrap-icons.min.css") }} {{
-        macro.static_css("ankersrv.css") }} {%- block head %}{% endblock head %}
+        {{ macro.static_css("vendor/bootstrap-5.3.0-alpha3-dist/css/bootstrap.min.css") }}
+        {{ macro.static_css("vendor/bootstrap-icons-1.10.5/font/bootstrap-icons.min.css") }}
+        {{ macro.static_css("ankersrv.css") }}
+        {%- block head %}{% endblock head %}
     </head>
     <body class="fullscreen-emulate">
         <!-- Header -->
@@ -67,11 +68,14 @@
         <!-- Footer -->
         <footer class="container fullscreen-emulate-d-none">
             <div class="my-3 p-3 text-center bg-body-tertiary rounded-3">
-                {% block footer %} {% include "footer.html" %} {% endblock %}
+                {% block footer %}
+                {% include "footer.html" %}
+                {% endblock %}
             </div>
         </footer>
-        {{ macro.static_script("vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js") }} {{
-        macro.static_script("vendor/cash.min.js") }} {{ macro.static_script("vendor/jmuxer.min.js") }} {{
-        macro.static_script("ankersrv.js") }}
+        {{ macro.static_script("vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js") }}
+        {{ macro.static_script("vendor/cash.min.js") }}
+        {{ macro.static_script("vendor/jmuxer.min.js") }}
+        {{ macro.static_script("ankersrv.js") }}
     </body>
 </html>
