@@ -35,3 +35,5 @@ def upload_file_to_printer(app, file, web_upload=False):
             ft.send_file(file, user_name)
         except:
             raise
+
+    return

@@ -10,10 +10,10 @@ $(function () {
     var popupModalDom = document.getElementById("popupModal");
     var popupModalBS = new bootstrap.Modal(popupModalDom);
 
-    popupModalDom.addEventListener("shown.bs.modal", function (event) {
-        const trigger = event.relatedTarget;
-        const modalInner = document.getElementById("modal-inner");
-        modalInner.innerText = trigger.dataset.msg;
+    popupModalDom.addEventListener("shown.bs.modal", function (e) {
+        const trigger = e.relatedTarget;
+        const modalInner = $("#modal-inner");
+        modalInner.text(trigger.dataset.msg);
         if (trigger.dataset.href) {
             window.location.href = trigger.dataset.href;
         }
@@ -22,10 +22,16 @@ $(function () {
     /**
      * Opens modal if gcode upload file is present
      */
-    $("#gcode-upload").on("click", function (event) {
+    const gcodeUpload = $("#gcode-upload")
+    gcodeUpload.on("click", function (event) {
         var fileInput = $("#gcode_file");
         if (fileInput.prop("value").trim() !== "") {
-            popupModalBS.show();
+            const relatedTarget = {
+                dataset: {
+                    msg: gcodeUpload.data("msg"),
+                },
+            };
+            popupModalBS.show(relatedTarget);
         }
     });
 
