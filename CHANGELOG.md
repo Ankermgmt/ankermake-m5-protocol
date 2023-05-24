@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2023-05-24
+
+ - Version 1.0.0!
+ - Add video streaming support to web ui
+ - Add support for uploading `login.json` through web ui
+ - Add print monitoring through web ui
+ - Add new mqtt types to libflagship
+ - Add status icons for mqtt, pppp and ctrl websocket
+ - Add support for restarting web services through web ui
+ - Add support for turning on/off camera light from web ui
+ - Add support for controlling video mode (sd/hd) from web ui
+ - Add `--pppp-dump` option for making a debug packet capture
+ - Stabilized video streaming, by fixing some rare corner cases.
+ - Make video stream automatically reconnect on connection loss
+ - Make video stream automatically suspend when no clients are connected
+
 ## [0.9.0] - 2023-04-17
 
  - First version with github actions for building docker image. (thanks to @cisien)
