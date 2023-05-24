@@ -40,6 +40,17 @@ $(function () {
         }
     });
 
+    document.addEventListener("fullscreenchange", function() {
+        /* Make more room for video element in fullscreen mode */
+        if (document.fullscreenElement) {
+            $("#vmain .col-xl-8").removeClass("col-xl-8").addClass("col-xl-9");
+            $("#vmain .col-xl-4").removeClass("col-xl-4").addClass("col-xl-3");
+        } else {
+            $("#vmain .col-xl-9").removeClass("col-xl-9").addClass("col-xl-8");
+            $("#vmain .col-xl-3").removeClass("col-xl-3").addClass("col-xl-4");
+        }
+    });
+
     /**
      * Initializes bootstrap alerts and sets a timeout for when they should automatically close
      */
