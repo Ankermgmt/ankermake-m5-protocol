@@ -31,9 +31,6 @@ def upload_file_to_printer(app, file, web_upload=False):
     user_name = request.headers.get("User-Agent", "ankerctl").split(url_for('app_root'))[0]
 
     with app.svc.borrow("filetransfer") as ft:
-        try:
-            ft.send_file(file, user_name)
-        except:
-            raise
+        ft.send_file(file, user_name)
 
     return
