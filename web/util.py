@@ -27,7 +27,7 @@ def flash_redirect(path: str, message: str | None = None, category="info"):
     return redirect(path)
 
 
-def upload_file_to_printer(app, file, web_upload=False):
+def upload_file_to_printer(app, file):
     user_name = request.headers.get("User-Agent", "ankerctl").split(url_for('app_root'))[0]
 
     with app.svc.borrow("filetransfer") as ft:

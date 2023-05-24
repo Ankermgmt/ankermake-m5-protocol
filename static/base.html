@@ -32,14 +32,11 @@
                     <div class="modal-body">
                         <p id="modal-inner"></p>
                         <div class="progress">
-                            <div
-                                class="progress-bar progress-bar-striped progress-bar-animated w-100"
-                                role="progressbar"
-                                aria-valuenow="100"
-                                aria-valuemin="0"
-                                aria-valuemax="100"
-                                style="width: 100%"
-                            ></div>
+                            <div class="progress-bar progress-bar-striped progress-bar-animated w-100"
+                                 role="progressbar"
+                                 aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+                                 style="width: 100%">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -50,9 +47,9 @@
         <div class="container text-center" id="messages">
             <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
             {% for category, message in get_flashed_messages(with_categories=true) %}
-            <div 
-                class="alert alert-{{ category }} alert-dismissible fade show" 
-                data-timeout="7500" 
+            <div
+                class="alert alert-{{ category }} alert-dismissible fade show"
+                data-timeout="7500"
                 role="alert"
             >
                 <button
