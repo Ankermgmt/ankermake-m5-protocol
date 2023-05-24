@@ -37,5 +37,6 @@
 To start `ankerctl` using docker compose, run:
 
 ```sh
+docker compose pull
 docker compose up
 ```
