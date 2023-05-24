@@ -79,7 +79,7 @@ code {
     background-color: var(--bs-body-bg);
 }
 
-#vplayer:fullscreen video {
+#vmain:fullscreen video {
     aspect-ratio: 4 / 3;
 }
 
