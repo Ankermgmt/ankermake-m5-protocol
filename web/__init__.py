@@ -79,6 +79,7 @@ import web.service.pppp
 import web.service.video
 import web.service.mqtt
 import web.service.filetransfer
+import web.service.mqttnotifier
 # autopep8: on
 
 
@@ -321,6 +322,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.svc.register("videoqueue", web.service.video.VideoQueue())
         app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
         app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
+        app.svc.register("mqttnotifier", web.service.mqttnotifier.MqttNotifierService())
         app.websockets = []
         app.heater_target = 0.0
         app.hotbed_target = 0.0

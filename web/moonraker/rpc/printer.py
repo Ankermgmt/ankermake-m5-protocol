@@ -1007,6 +1007,7 @@ def printer_gcode_script(script):
             "cmdLen": len(script),
         }
 
-    app.mqttq.client.command(update)
+    with app.svc.borrow("mqttqueue") as mqttq:
+        mqttq.client.command(update)
 
     return "ok"
