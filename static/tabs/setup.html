@@ -15,9 +15,7 @@
                     id="config-upload-form"
                 >
                     <div class="card">
-                        <div class="card-header fs-4">
-                            Upload AnkerMake Login File
-                        </div>
+                        <div class="card-header fs-4">Upload AnkerMake Login File</div>
 
                         <div class="card-body input-group">
                             <input
@@ -25,6 +23,7 @@
                                 type="file"
                                 id="loginFile"
                                 name="login_file"
+                                accept=".json"
                                 required
                                 aria-required="true"
                             />
@@ -42,17 +41,20 @@
 
                 <div class="card">
                     <div class="card">
-                        <div class="card-header fs-4">
-                            Reload Ankerctl Services
-                        </div>
+                        <div class="card-header fs-4">Reload Ankerctl Services</div>
                         <div class="card-body">
                             <p>
-                                If you are experiencing issues with printing or viewing the video feed reloading
-                                the Ankerctl services will often resolve these issues.
+                                If you are experiencing issues with printing or viewing the video feed reloading the
+                                Ankerctl services will often resolve these issues.
                             </p>
-                            <button id="reload" type="button" class="btn btn-danger"
-                                    data-bs-toggle="modal" data-bs-target="#popupModal"
-                                    data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
+                            <button
+                                id="reload"
+                                type="button"
+                                class="btn btn-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#popupModal"
+                                data-href="{{ url_for('app_api_ankerctl_server_reload') }}"
+                            >
                                 {{ macro.bi_icon("bootstrap-reboot", "Reload Services") }}
                             </button>
                         </div>
@@ -61,9 +63,7 @@
             </div>
             <div class="col-lg-6">
                 <div class="card">
-                    <div class="card-header fs-4">
-                        AnkerMake M5 Config
-                    </div>
+                    <div class="card-header fs-4">AnkerMake M5 Config</div>
                     <div class="card-body p-0">
                         <pre class="p-3 m-0" id="ankerctl-settings">{{ anker_config }}</pre>
                     </div>
