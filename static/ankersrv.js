@@ -7,10 +7,11 @@ $(function () {
     /**
      * Handle modal being shown
      */
-    var popupModal = document.getElementById("popupModal");
+    var popupModalDom = document.getElementById("popupModal");
+    var popupModalBS = new bootstrap.Modal(popupModalDom);
 
-    popupModal.addEventListener("shown.bs.modal", function (e) {
-        const trigger = e.relatedTarget;
+    popupModalDom.addEventListener("shown.bs.modal", function (event) {
+        const trigger = event.relatedTarget;
         const modalInner = document.getElementById("modal-inner");
         modalInner.innerText = trigger.dataset.msg;
         if (trigger.dataset.href) {
@@ -21,12 +22,10 @@ $(function () {
     /**
      * Opens modal if gcode upload file is present
      */
-    document.getElementById('gcode-upload').addEventListener('click', function(event) {
-        var fileInput = document.getElementById('gcode_file');
-        console.log({fileInput})
-        if (fileInput.value.trim() !== '') {
-            var modal = new bootstrap.Modal(popupModal);
-            modal.show();
+    $("#gcode-upload").on("click", function (event) {
+        var fileInput = $("#gcode_file");
+        if (fileInput.prop("value").trim() !== "") {
+            popupModalBS.show();
         }
     });
 
@@ -186,13 +185,13 @@ $(function () {
         constructor({
             name,
             url,
-            badge = null,
-            open = null,
-            close = null,
-            error = null,
-            message = null,
-            binary = false,
-            reconnect = 1000,
+            badge=null,
+            open=null,
+            close=null,
+            error=null,
+            message=null,
+            binary=false,
+            reconnect=1000,
         }) {
             this.name = name;
             this.url = url;

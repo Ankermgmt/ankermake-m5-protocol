@@ -33,11 +33,5 @@ def upload_file_to_printer(app, file, web_upload=False):
     with app.svc.borrow("filetransfer") as ft:
         try:
             ft.send_file(file, user_name)
-        except ConnectionError as err:
-            log.error(f"Connection error: {err}")
-            raise ConnectionError(err)
-        except Exception as err:
-            log.error(f"Unknown error: {err}")
-            raise Exception(err)
-
-    return {}
+        except:
+            raise

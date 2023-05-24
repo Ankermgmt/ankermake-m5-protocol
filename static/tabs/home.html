@@ -26,9 +26,13 @@
             <div class="col-md-12 col-lg-6 col-xl-4">
                 <div class="card">
                     {% if printer %}
-                    <div class="card-header">Connection</div>
+                    <div class="card-header">
+                        Connection
+                    </div>
                     <div class="card-body fw-bold">
-                        <div>{{ printer.name }} ({{ printer.sn }})</div>
+                        <div>
+                            {{ printer.name }} ({{ printer.sn }})
+                        </div>
                         <span id="badge-mqtt" class="badge">MQTT</span>
                         <span id="badge-pppp" class="badge">PPPP</span>
                         <span id="badge-ctrl" class="badge">CTRL</span>
