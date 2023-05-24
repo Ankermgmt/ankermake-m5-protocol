@@ -1,5 +1,5 @@
 # First stage: build environment
-FROM python:3.11-slim AS build-env
+FROM python:3.11-bullseye AS build-env
 
 COPY .docker-os-detect /tmp/docker-os-detect
 RUN sh /tmp/docker-os-detect
