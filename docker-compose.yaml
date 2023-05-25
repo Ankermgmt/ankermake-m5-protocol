@@ -1,3 +1,5 @@
+version: '3.9.1'
+
 services:
     ankerctl:
         image: ghcr.io/ankermgmt/ankermake-m5-protocol:latest
