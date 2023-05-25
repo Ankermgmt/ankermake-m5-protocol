@@ -242,7 +242,7 @@ $(function () {
         }
 
         connect() {
-            var ws = (this.ws = new WebSocket(this.url));
+            var ws = this.ws = new WebSocket(this.url);
             if (this.binary)
                 ws.binaryType = "arraybuffer";
             ws.addEventListener("open", this._open.bind(this));
