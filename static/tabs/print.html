@@ -1,0 +1,35 @@
+<!-- Print Modal -->
+<div class="modal fade" id="printModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">Print G-Code File</div>
+            <form
+                action="{{ url_for('app_api_ankerctl_file_upload') }}"
+                method="POST"
+                enctype="multipart/form-data"
+                class="mb-3"
+                id="gcode-upload-form"
+            >
+                <div class="modal-body fw-bold input-group">
+                    <input
+                        class="form-control"
+                        type="file"
+                        id="gcode_file"
+                        name="gcode_file"
+                        accept=".gcode,.acode"
+                        required
+                        aria-required="true"
+                    />
+                    <button
+                        class="btn btn-secondary submit"
+                        type="submit"
+                        id="gcode-upload"
+                        data-msg="Uploading Gcode to {{ printer.name }}"
+                    >
+                        {{ macro.bi_icon("cloud-arrow-up-fill", "Upload") }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

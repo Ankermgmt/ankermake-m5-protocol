@@ -14,6 +14,12 @@
     {% include "tabs/setup.html" %}
 {% endblock %}
 
+{% block print %}
+    {% if configure %}
+        {% include "tabs/print.html" %}
+    {% endif %}
+{% endblock %}
+
 {% block menu %}
     {% if configure %}
         {% call macro.menu_button(id="home-tab", target="home", active=configure) %}
@@ -22,6 +28,10 @@
 
         {% call macro.menu_button(id="instructions-tab", target="instructions") %}
             {{ macro.bi_icon("list-check", "Instructions") }}
+        {% endcall %}
+
+        {% call macro.menu_button(id="print-tab", target="printModal", active=False, toggle="modal") %}
+            {{ macro.bi_icon("file-earmark-arrow-up", "Print") }}
         {% endcall %}
     {% endif %}
 

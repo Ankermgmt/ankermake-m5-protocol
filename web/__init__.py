@@ -228,7 +228,7 @@ def app_api_ankerctl_file_upload():
     file = request.files["gcode_file"]
 
     try:
-        web.util.upload_file_to_printer(app, file, True)
+        web.util.upload_file_to_printer(app, file)
         return web.util.flash_redirect(url_for('app_root'),
                                        f"File {file.filename} sent to printer!", "success")
     except ConnectionError as err:

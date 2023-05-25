@@ -5,18 +5,17 @@
         <meta charset="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <title>{% block title %}{% endblock title %}</title>
-        <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}">
-        {{ macro.static_css("vendor/bootstrap-5.3.0-alpha3-dist/css/bootstrap.min.css") }}
-        {{ macro.static_css("vendor/bootstrap-icons-1.10.5/font/bootstrap-icons.min.css") }}
-        {{ macro.static_css("ankersrv.css") }}
-        {%- block head %}{% endblock head %}
+        <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" />
+        {{ macro.static_css("vendor/bootstrap-5.3.0-alpha3-dist/css/bootstrap.min.css") }} {{
+        macro.static_css("vendor/bootstrap-icons-1.10.5/font/bootstrap-icons.min.css") }} {{
+        macro.static_css("ankersrv.css") }} {%- block head %}{% endblock head %}
     </head>
     <body class="fullscreen-emulate">
         <!-- Header -->
         <div class="bg-dark bg-gradient mb-3 fullscreen-emulate-d-none">
             <header class="container d-flex align-items-center py-2">
                 <a href="/" class="d-flex me-md-auto text-decoration-none">
-                    <img src="{{ url_for('static', filename='img/logo.svg') }}" class="me-2" alt="logo">
+                    <img src="{{ url_for('static', filename='img/logo.svg') }}" class="me-2" alt="logo" />
                     <span class="text-body-emphasis align-self-baseline fs-4">ankerctl</span>
                 </a>
                 <ul class="nav nav-pills align-items-baseline" id="tab" role="tablist">
@@ -32,11 +31,14 @@
                     <div class="modal-body">
                         <p id="modal-inner"></p>
                         <div class="progress">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated w-100"
-                                 role="progressbar"
-                                 aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
-                                 style="width: 100%">
-                            </div>
+                            <div
+                                class="progress-bar progress-bar-striped progress-bar-animated w-100"
+                                role="progressbar"
+                                aria-valuenow="100"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                style="width: 100%"
+                            ></div>
                         </div>
                     </div>
                 </div>
@@ -47,11 +49,7 @@
         <div class="container text-center" id="messages">
             <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
             {% for category, message in get_flashed_messages(with_categories=true) %}
-            <div
-                class="alert alert-{{ category }} alert-dismissible fade show"
-                data-timeout="7500"
-                role="alert"
-            >
+            <div class="alert alert-{{ category }} alert-dismissible fade show" data-timeout="7500" role="alert">
                 <button
                     type="button"
                     class="btn-close btn-sm btn-close-white"
@@ -63,23 +61,19 @@
             {% endfor %}
         </div>
 
+        {% block print %} {% endblock %}
+
         <!-- Content Area -->
-        <div class="tab-content" id="ankerctlContent">
-            {% block contents %}
-            {% endblock %}
-        </div>
+        <div class="tab-content" id="ankerctlContent">{% block contents %} {% endblock %}</div>
 
         <!-- Footer -->
         <footer class="container fullscreen-emulate-d-none">
             <div class="my-3 p-3 text-center bg-body-tertiary rounded-3">
-                {% block footer %}
-                {% include "footer.html" %}
-                {% endblock %}
+                {% block footer %} {% include "footer.html" %} {% endblock %}
             </div>
         </footer>
-        {{ macro.static_script("vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js") }}
-        {{ macro.static_script("vendor/cash.min.js") }}
-        {{ macro.static_script("vendor/jmuxer.min.js") }}
-        {{ macro.static_script("ankersrv.js") }}
+        {{ macro.static_script("vendor/bootstrap-5.3.0-alpha3-dist/js/bootstrap.bundle.min.js") }} {{
+        macro.static_script("vendor/cash.min.js") }} {{ macro.static_script("vendor/jmuxer.min.js") }} {{
+        macro.static_script("ankersrv.js") }}
     </body>
 </html>
