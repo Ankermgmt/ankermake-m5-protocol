@@ -49,7 +49,7 @@ class RunState(Enum):
 
 class Service(Thread):
 
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
         self.running = True
         self.deadline = None
@@ -59,6 +59,7 @@ class Service(Thread):
         self.handlers = []
         self._holdoff = Holdoff()
         self.daemon = True
+        self.app = app
         super().start()
 
     @property

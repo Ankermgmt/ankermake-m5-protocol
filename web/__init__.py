@@ -318,11 +318,11 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.config["host"] = host
         app.config["insecure"] = insecure
         app.config.update(kwargs)
-        app.svc.register("pppp", web.service.pppp.PPPPService())
-        app.svc.register("videoqueue", web.service.video.VideoQueue())
-        app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
-        app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
-        app.svc.register("mqttnotifier", web.service.mqttnotifier.MqttNotifierService())
+        app.svc.register("pppp", web.service.pppp.PPPPService(app))
+        app.svc.register("videoqueue", web.service.video.VideoQueue(app))
+        app.svc.register("mqttqueue", web.service.mqtt.MqttQueue(app))
+        app.svc.register("filetransfer", web.service.filetransfer.FileTransferService(app))
+        app.svc.register("mqttnotifier", web.service.mqttnotifier.MqttNotifierService(app))
         app.websockets = []
         app.heater_target = 0.0
         app.hotbed_target = 0.0
