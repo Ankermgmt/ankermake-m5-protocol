@@ -2,25 +2,10 @@ import json
 from pathlib import Path
 
 from flask import request, send_from_directory
-from jsonrpc import JSONRPCResponseManager, dispatcher
 from werkzeug.utils import secure_filename
 
 from .. import sock, app, rpcutil
 from .rpc import server
-
-
-@sock.route("/websocket")
-def websocket(sock):
-
-    with app.svc.borrow("mqttnotifier") as notifier:
-        with notifier.tap(lambda data: sock.send(json.dumps(data))):
-            while True:
-                msg = sock.receive()
-                response = JSONRPCResponseManager.handle(msg, dispatcher)
-                jmsg = json.loads(msg)
-                rpcutil.log_jsonrpc_req(jmsg, response)
-                sock.send(response.json)
-
 
 @app.get("/server/info")
 def server_info():

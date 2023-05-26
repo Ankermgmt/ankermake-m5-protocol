@@ -33,6 +33,7 @@ from flask import Flask, flash, request, render_template, Response, session, url
 from flask_sock import Sock
 from flask_cors import CORS
 from user_agents import parse as user_agent_parse
+from jsonrpc import JSONRPCResponseManager, dispatcher
 
 from libflagship import ROOT_DIR
 
@@ -41,6 +42,7 @@ from web.lib.service import ServiceManager
 import web.config
 import web.platform
 import web.util
+import web.rpcutil
 
 import cli.util
 import cli.config
@@ -81,6 +83,18 @@ import web.service.mqtt
 import web.service.filetransfer
 import web.service.mqttnotifier
 # autopep8: on
+
+
+@sock.route("/websocket")
+def websocket(sock):
+    with app.svc.borrow("mqttnotifier") as notifier:
+        with notifier.tap(lambda data: sock.send(data)):
+            while True:
+                msg = sock.receive()
+                response = JSONRPCResponseManager.handle(msg, dispatcher)
+                jmsg = json.loads(msg)
+                web.rpcutil.log_jsonrpc_req(jmsg, response)
+                sock.send(response.json)
 
 
 @app.get("/video")
