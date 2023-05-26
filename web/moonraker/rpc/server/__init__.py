@@ -9,7 +9,7 @@ def server_connection_identify(**kwargs):
 
 
 @dispatcher.add_method(name="server.announcements.list")
-def server_announcements_list(**kwargs):
+def server_announcements_list(include_dismissed=True):
     return {
         "entries": [],
         "feeds": [
