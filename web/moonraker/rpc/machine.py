@@ -4,9 +4,8 @@ import psutil
 import cpuinfo
 import platform
 
+from flask import current_app as app
 from jsonrpc import dispatcher
-
-from ... import app
 
 
 @dispatcher.add_method(name="machine.system_info")

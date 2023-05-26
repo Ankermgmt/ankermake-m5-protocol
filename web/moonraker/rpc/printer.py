@@ -1,10 +1,10 @@
 import psutil
 
+from flask import current_app as app
 from jsonrpc import dispatcher
 
 from libflagship.mqtt import MqttMsgType
 
-from ... import app
 from ...lib.gcode import GCode
 
 
