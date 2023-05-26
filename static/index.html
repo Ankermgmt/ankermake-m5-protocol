@@ -23,11 +23,11 @@
 {% block menu %}
     {% if configure %}
         {% call macro.menu_button(id="home-tab", target="home", active=configure) %}
-            {{ macro.bi_icon("house", "Home") }}
+            {{ macro.bi_icon("house", "Live") }}
         {% endcall %}
 
         {% call macro.menu_button(id="instructions-tab", target="instructions") %}
-            {{ macro.bi_icon("list-check", "Instructions") }}
+            {{ macro.bi_icon("list-check", "Slicer Setup") }}
         {% endcall %}
 
         {% call macro.menu_button(id="print-tab", target="printModal", active=False, toggle="modal") %}
@@ -36,6 +36,6 @@
     {% endif %}
 
     {% call macro.menu_button(id="setup-tab", target="setup", active=not configure) %}
-        {{ macro.bi_icon("gear-fill", "Setup") }}
+        {{ macro.bi_icon("gear-fill", "Configure") }}
     {% endcall %}
 {% endblock %}
