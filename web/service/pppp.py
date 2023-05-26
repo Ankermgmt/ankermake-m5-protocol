@@ -4,7 +4,6 @@ import logging as log
 from datetime import datetime, timedelta
 
 from ..lib.service import Service, ServiceRestartSignal, ServiceStoppedError
-from .. import app
 
 from libflagship.pktdump import PacketWriter
 from libflagship.pppp import P2PCmdType, PktClose, Duid, Type, Xzyh, Aabb
@@ -27,6 +26,7 @@ class PPPPService(Service):
         )
 
     def worker_start(self):
+        app = self.app
         config = app.config["config"]
 
         deadline = datetime.now() + timedelta(seconds=2)

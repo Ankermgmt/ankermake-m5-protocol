@@ -4,7 +4,6 @@ import logging as log
 from multiprocessing import Queue
 
 from ..lib.service import Service
-from .. import app
 
 from libflagship.pppp import P2PCmdType, Aabb, FileTransfer
 from libflagship.ppppapi import FileUploadInfo, PPPPError
@@ -62,7 +61,7 @@ class FileTransferService(Service):
             self._tap.put(msg)
 
     def worker_start(self):
-        self.pppp = app.svc.get("pppp")
+        self.pppp = self.app.svc.get("pppp")
         self._tap = Queue()
 
         self.pppp.handlers.append(self.handler)
@@ -74,4 +73,4 @@ class FileTransferService(Service):
         self.pppp.handlers.remove(self.handler)
         del self._tap
 
-        app.svc.put("pppp")
+        self.app.svc.put("pppp")

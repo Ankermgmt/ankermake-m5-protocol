@@ -1,7 +1,6 @@
 import logging as log
 
 from ..lib.service import Service
-from .. import app
 
 from libflagship.util import enhex
 
@@ -11,10 +10,11 @@ import cli.mqtt
 class MqttQueue(Service):
 
     def worker_start(self):
+        config = self.app.config
         self.client = cli.mqtt.mqtt_open(
-            app.config["config"],
-            app.config["printer_index"],
-            app.config["insecure"]
+            config["config"],
+            config["printer_index"],
+            config["insecure"]
         )
 
     def worker_run(self, timeout):
