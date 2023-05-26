@@ -83,52 +83,6 @@ import web.service.mqttnotifier
 # autopep8: on
 
 
-@sock.route("/ws/mqtt")
-def mqtt(sock):
-    """
-    Handles receiving and sending messages on the 'mqttqueue' stream service through websocket
-    """
-    if not app.config["login"]:
-        return
-    for data in app.svc.stream("mqttqueue"):
-        log.debug(f"MQTT message: {data}")
-        sock.send(json.dumps(data))
-
-
-@sock.route("/ws/video")
-def video(sock):
-    """
-    Handles receiving and sending messages on the 'videoqueue' stream service through websocket
-    """
-    if not app.config["login"]:
-        return
-    for msg in app.svc.stream("videoqueue"):
-        sock.send(msg.data)
-
-
-@sock.route("/ws/ctrl")
-def ctrl(sock):
-    """
-    Handles controlling of light and video quality through websocket
-    """
-    if not app.config["login"]:
-        return
-
-    # send a response on connect, to let the client know the connection is ready
-    sock.send(json.dumps({"ankerctl": 1}))
-
-    while True:
-        msg = json.loads(sock.receive())
-
-        if "light" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_light_state(msg["light"])
-
-        if "quality" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_video_mode(msg["quality"])
-
-
 @app.get("/video")
 def video_download():
     """
@@ -309,6 +263,8 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         - None
     """
     with config.open() as cfg:
+        import web.api.ws
+
         if cfg and printer_index >= len(cfg.printers):
             log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
         app.config["config"] = config
@@ -326,4 +282,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.websockets = []
         app.heater_target = 0.0
         app.hotbed_target = 0.0
+
+        app.register_blueprint(web.api.ws.router, url_prefix="/ws")
+
         app.run(host=host, port=port)
