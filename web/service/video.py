@@ -1,8 +1,4 @@
-import json
 import logging as log
-
-from queue import Empty
-from multiprocessing import Queue
 
 from ..lib.service import Service, ServiceRestartSignal
 
