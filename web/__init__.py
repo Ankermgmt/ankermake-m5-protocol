@@ -145,50 +145,6 @@ def app_root():
         )
 
 
-@app.get("/api/version")
-def app_api_version():
-    """
-    Returns the version details of api and server as dictionary
-
-    Returns:
-        A dictionary containing version details of api and server
-    """
-    return {"api": "0.1", "server": "1.9.0", "text": "OctoPrint 1.9.0"}
-
-
-@app.post("/api/files/local")
-def app_api_files_local():
-    """
-    Handles the uploading of files to Flask server
-
-    Returns:
-        A dictionary containing file details
-    """
-    no_act = not cli.util.parse_http_bool(request.form["print"])
-
-    if no_act:
-        cli.util.http_abort(409, "Upload-only not supported by Ankermake M5")
-
-    fd = request.files["file"]
-
-    try:
-        web.util.upload_file_to_printer(app, fd)
-    except ConnectionError as E:
-        log.error(f"Connection error: {E}")
-        # This message will be shown in i.e. PrusaSlicer, so attempt to
-        # provide a readable explanation.
-        cli.util.http_abort(
-            503,
-            "Cannot connect to printer!\n" \
-            "\n" \
-            "Please verify that printer is online, and on the same network as ankerctl.\n" \
-            "\n" \
-            f"Exception information: {E}"
-        )
-
-    return {}
-
-
 def webserver(config, printer_index, host, port, insecure=False, **kwargs):
     """
     Starts the Flask webserver
@@ -206,6 +162,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         import web.moonraker.server
         import web.api.ws
         import web.api.ankerctl
+        import web.api.octoprint
 
         if cfg and printer_index >= len(cfg.printers):
             log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
@@ -227,6 +184,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
 
         app.register_blueprint(web.moonraker.server.router, url_prefix="/server")
         app.register_blueprint(web.api.ws.router, url_prefix="/ws")
+        app.register_blueprint(web.api.octoprint.router, url_prefix="/api")
         app.register_blueprint(web.api.ankerctl.router, url_prefix="/api/ankerctl")
 
         app.run(host=host, port=port)
