@@ -1,6 +1,3 @@
-import time
-import logging as log
-
 from datetime import datetime
 
 from ..lib.service import Service
