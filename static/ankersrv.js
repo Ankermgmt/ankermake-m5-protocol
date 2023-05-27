@@ -232,30 +232,35 @@ $(function () {
 
         _open() {
             $(this.badge).removeClass("text-bg-success text-bg-danger").addClass("text-bg-warning");
-            if (this.open) this.open(this.ws);
+            if (this.open)
+                this.open(this.ws);
         }
 
         _close() {
             $(this.badge).removeClass("text-bg-warning text-bg-success").addClass("text-bg-danger");
             console.log(`${this.name} close`);
             setTimeout(() => this.connect(), this.reconnect);
-            if (this.close) this.close(this.ws);
+            if (this.close)
+                this.close(this.ws);
         }
 
         _error() {
             console.log(`${this.name} error`);
             this.ws.close();
-            if (this.error) this.error(this.ws);
+            if (this.error)
+                this.error(this.ws);
         }
 
         _message(event) {
             $(this.badge).removeClass("text-bg-danger text-bg-warning").addClass("text-bg-success");
-            if (this.message) this.message(event);
+            if (this.message)
+                this.message(event);
         }
 
         connect() {
             var ws = (this.ws = new WebSocket(this.url));
-            if (this.binary) ws.binaryType = "arraybuffer";
+            if (this.binary)
+                ws.binaryType = "arraybuffer";
             ws.addEventListener("open", this._open.bind(this));
             ws.addEventListener("close", this._close.bind(this));
             ws.addEventListener("error", this._error.bind(this));
