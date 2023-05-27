@@ -16,8 +16,8 @@ router = Blueprint("base", __name__)
 
 @sock.route("/websocket", bp=router)
 def websocket(sock):
-    with app.svc.borrow("mqttnotifier") as notifier:
-        with notifier.tap(lambda data: sock.send(data)):
+    with app.svc.borrow("updates") as updates:
+        with updates.tap(lambda data: sock.send(data)):
             while True:
                 msg = sock.receive()
                 response = JSONRPCResponseManager.handle(msg, dispatcher)

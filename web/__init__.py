@@ -46,7 +46,7 @@ import web.service.pppp
 import web.service.video
 import web.service.mqtt
 import web.service.filetransfer
-import web.service.mqttnotifier
+import web.service.updates
 
 
 def webserver(config, printer_index, host, port, insecure=False, **kwargs):
@@ -101,7 +101,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.svc.register("videoqueue", web.service.video.VideoQueue(app))
         app.svc.register("mqttqueue", web.service.mqtt.MqttQueue(app))
         app.svc.register("filetransfer", web.service.filetransfer.FileTransferService(app))
-        app.svc.register("mqttnotifier", web.service.mqttnotifier.MqttNotifierService(app))
+        app.svc.register("updates", web.service.updates.UpdateNotifierService(app))
 
         app.websockets = []
         app.heater_target = 0.0

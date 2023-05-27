@@ -6,7 +6,7 @@ from .. import rpcutil
 from libflagship.mqtt import MqttMsgType
 
 
-class MqttNotifierService(Service):
+class UpdateNotifierService(Service):
 
     def mqtt_to_jsonrpc_req(self, data):
         update = {
