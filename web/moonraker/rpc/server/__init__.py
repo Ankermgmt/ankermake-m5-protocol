@@ -336,3 +336,8 @@ def server_config():
             }
         ]
     }
+
+
+@dispatcher.add_method(name="server.logs.rollover")
+def server_logs_rollover(application):
+    ...
