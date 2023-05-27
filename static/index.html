@@ -9,6 +9,7 @@
     {% if configure %}
         {% include "tabs/home.html" %}
         {% include "tabs/instructions.html" %}
+        {% include "tabs/print.html" %}
     {% endif %}
 
     {% include "tabs/setup.html" %}
@@ -16,9 +17,18 @@
 
 {% block print %}
     {% if configure %}
-        {% include "tabs/print.html" %}
+        {% include "print.html" %}
     {% endif %}
 {% endblock %}
+
+{% block print_button %}
+    {% if configure %}
+        {% call macro.trigger_button(id="print-tab", type="info", target="printModal", toggle="modal") %}
+            {{ macro.bi_icon("file-earmark-arrow-up", "Print") }}
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+        
 
 {% block menu %}
     {% if configure %}
@@ -30,7 +40,7 @@
             {{ macro.bi_icon("list-check", "Slicer Setup") }}
         {% endcall %}
 
-        {% call macro.menu_button(id="print-tab", target="printModal", active=False, toggle="modal") %}
+        {% call macro.menu_button(id="print-tab", target="print") %}
             {{ macro.bi_icon("file-earmark-arrow-up", "Print") }}
         {% endcall %}
     {% endif %}
