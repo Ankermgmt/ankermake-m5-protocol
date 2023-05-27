@@ -8,6 +8,11 @@ from libflagship.mqtt import MqttMsgType
 from ...lib.gcode import GCode
 
 
+@dispatcher.add_method(name="printer.print.start")
+def printer_print_start(filename):
+    return "ok"
+
+
 @dispatcher.add_method(name="printer.emergency_stop")
 def printer_emergency_stop():
     return "ok"
