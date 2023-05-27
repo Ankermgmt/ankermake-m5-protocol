@@ -39,6 +39,9 @@ class UpdateNotifierService(Service):
 
         return rpcutil.make_jsonrpc_req("notify_status_update", update)
 
+    def notify_error(self, message):
+        self.notify(rpcutil.make_jsonrpc_req("notify_gcode_response", f"!! {message}"))
+
     def _handler(self, data):
         upd = self.mqtt_to_jsonrpc_req(data)
         if upd:
