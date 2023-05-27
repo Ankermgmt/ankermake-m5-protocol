@@ -254,6 +254,7 @@ class ServiceManager:
         log.debug("ServiceManager: Waiting for threads to stop..")
         self.dump()
         for svc in self.svcs.values():
+            log.debug(f"ServiceManager: Waiting for {svc.name}..")
             svc.await_stopped()
 
         log.debug("ServiceManager: Cleaning up threads..")
