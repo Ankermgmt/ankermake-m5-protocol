@@ -23,6 +23,11 @@ def server_files_list(root):
     return files
 
 
+@dispatcher.add_method(name="server.files.move")
+def server_files_move(source, dest):
+    ...
+
+
 @dispatcher.add_method(name="server.files.post_directory")
 def server_files_post_directory(path: Path):
     pth = Path("database") / path
