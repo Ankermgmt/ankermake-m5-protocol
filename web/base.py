@@ -23,7 +23,11 @@ def websocket(sock):
                 response = JSONRPCResponseManager.handle(msg, dispatcher)
                 jmsg = json.loads(msg)
                 web.rpcutil.log_jsonrpc_req(jmsg, response)
-                sock.send(response.json)
+                if response.error:
+                    updates.notify_error(
+                        f"<h1>Error in method {jmsg['method']}</h1>\n{response.error['data']['message']}"
+                    )
+                sock.send(web.rpcutil.format_response(response))
 
 
 @router.get("/video")
