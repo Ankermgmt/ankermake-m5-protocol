@@ -48,6 +48,11 @@ import web.moonraker.server
 
 import cli.util
 import cli.config
+import web.service.pppp
+import web.service.video
+import web.service.mqtt
+import web.service.filetransfer
+import web.service.mqttnotifier
 
 
 app = Flask(__name__, root_path=ROOT_DIR, static_folder="static", template_folder="static")
@@ -67,15 +72,6 @@ cors = CORS(
         r"/video/*": {"origins": "*"},
     }
 )
-
-
-# autopep8: off
-import web.service.pppp
-import web.service.video
-import web.service.mqtt
-import web.service.filetransfer
-import web.service.mqttnotifier
-# autopep8: on
 
 
 @sock.route("/websocket")
