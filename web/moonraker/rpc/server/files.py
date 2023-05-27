@@ -47,7 +47,6 @@ def server_files_post_directory(path: Path):
 @dispatcher.add_method(name="server.files.delete_file")
 def server_files_delete_file(path: Path):
     pth = Path("database") / path.lstrip("/")
-    print(pth, path)
     pth.unlink()
     return {
         "item": {
