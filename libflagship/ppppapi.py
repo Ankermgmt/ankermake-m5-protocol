@@ -352,7 +352,7 @@ class AnkerPPPPBaseApi(Thread):
         if self.dumper:
             self.dumper.rx(data, self.addr)
         msg = Message.parse(data)[0]
-        log.debug(f"RX <--  {str(msg)[:128]}")
+        # log.debug(f"RX <--  {str(msg)[:128]}")
         return msg
 
     def send(self, pkt, addr=None):
@@ -363,7 +363,7 @@ class AnkerPPPPBaseApi(Thread):
         if self.dumper:
             self.dumper.tx(resp, self.addr)
         msg = Message.parse(resp)[0]
-        log.debug(f"TX  --> {str(msg)[:128]}")
+        # log.debug(f"TX  --> {str(msg)[:128]}")
         self.sock.sendto(resp, addr or self.addr)
 
     def send_xzyh(self, data, cmd, chan=0, unk0=0, unk1=0, sign_code=0, unk3=0, dev_type=0, block=True):
