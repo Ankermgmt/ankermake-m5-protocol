@@ -257,6 +257,11 @@ def machine_device_power_devices():
     }
 
 
+@dispatcher.add_method(name="machine.device_power.on")
+def machine_device_power_on(**objs):
+    return "ok"
+
+
 @dispatcher.add_method(name="machine.proc_stats")
 def machine_proc_stats():
     return {
@@ -301,3 +306,18 @@ def machine_proc_stats():
         "system_uptime": 2876970.38089603,
         "websocket_connections": len(app.websockets),
     }
+
+
+@dispatcher.add_method(name="machine.services.restart")
+def machine_reboot(service):
+    return "ok"
+
+
+@dispatcher.add_method(name="machine.reboot")
+def machine_reboot():
+    return "ok"
+
+
+@dispatcher.add_method(name="machine.shutdown")
+def machine_shutdown():
+    return "ok"
