@@ -27,3 +27,22 @@ def make_jsonrpc_req(method, *args, **kwargs):
         "jsonrpc": "2.0",
         "id": 0,
     })
+
+
+def format_response(response):
+    """
+    Format a JSON-RPC response for use with Moonraker
+
+    Args:
+        - response: The result of a JSON-RPC request
+
+    Returns:
+        - the formatted json response
+    """
+    if not response.error:
+        return response.json
+
+    error = response.data.setdefault("error", {})
+    error["code"] = 400
+    error["message"] = error.get("data", {}).get("message", "Unknown error")
+    return response.json
