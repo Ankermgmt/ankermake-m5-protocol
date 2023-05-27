@@ -25,15 +25,12 @@ Services:
     - util: Houses utility services for use in the web module
     - config: Handles configuration manipulation for ankerctl
 """
-import json
 import logging as log
 
 from secrets import token_urlsafe as token
-from flask import Flask, request, render_template, Response, url_for
+from flask import Flask
 from flask_sock import Sock
 from flask_cors import CORS
-from user_agents import parse as user_agent_parse
-from jsonrpc import JSONRPCResponseManager, dispatcher
 
 from libflagship import ROOT_DIR
 
@@ -46,8 +43,6 @@ import web.rpcutil
 import web.moonraker
 import web.moonraker.server
 
-import cli.util
-import cli.config
 import web.service.pppp
 import web.service.video
 import web.service.mqtt
@@ -74,66 +69,6 @@ cors = CORS(
 )
 
 
-@sock.route("/websocket")
-def websocket(sock):
-    with app.svc.borrow("mqttnotifier") as notifier:
-        with notifier.tap(lambda data: sock.send(data)):
-            while True:
-                msg = sock.receive()
-                response = JSONRPCResponseManager.handle(msg, dispatcher)
-                jmsg = json.loads(msg)
-                web.rpcutil.log_jsonrpc_req(jmsg, response)
-                sock.send(response.json)
-
-
-@app.get("/video")
-def video_download():
-    """
-    Handles the video streaming/downloading feature in the Flask app
-    """
-    def generate():
-        if not app.config["login"]:
-            return
-        for msg in app.svc.stream("videoqueue"):
-            yield msg.data
-
-    return Response(generate(), mimetype="video/mp4")
-
-
-@app.get("/")
-def app_root():
-    """
-    Renders the html template for the root route, which is the homepage of the Flask app
-    """
-    config = app.config["config"]
-    with config.open() as cfg:
-        user_agent = user_agent_parse(request.headers.get("User-Agent"))
-        user_os = web.platform.os_platform(user_agent.os.family)
-
-        if cfg:
-            anker_config = str(web.config.config_show(cfg))
-            printer = cfg.printers[app.config["printer_index"]]
-        else:
-            anker_config = "No printers found, please load your login config..."
-            printer = None
-
-        if ":" in request.host:
-            request_host, request_port = request.host.split(":", 1)
-        else:
-            request_host = request.host
-            request_port = "80"
-
-        return render_template(
-            "index.html",
-            request_host=request_host,
-            request_port=request_port,
-            configure=app.config["login"],
-            login_file_path=web.platform.login_path(user_os),
-            anker_config=anker_config,
-            printer=printer
-        )
-
-
 def webserver(config, printer_index, host, port, insecure=False, **kwargs):
     """
     Starts the Flask webserver
@@ -149,6 +84,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
     """
     with config.open() as cfg:
         import web.moonraker.server
+        import web.base
         import web.api.ws
         import web.api.ankerctl
         import web.api.octoprint
@@ -175,5 +111,6 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.register_blueprint(web.api.ws.router, url_prefix="/ws")
         app.register_blueprint(web.api.octoprint.router, url_prefix="/api")
         app.register_blueprint(web.api.ankerctl.router, url_prefix="/api/ankerctl")
+        app.register_blueprint(web.base.router, url_prefix="/")
 
         app.run(host=host, port=port)
