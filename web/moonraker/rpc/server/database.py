@@ -44,7 +44,7 @@ def server_database_get_item(namespace, key=None):
 
 
 @dispatcher.add_method(name="server.database.list")
-def server_database_list(root):
+def server_database_list(root=None):
     return {
         "namespaces": list(database.db.keys())
     }
