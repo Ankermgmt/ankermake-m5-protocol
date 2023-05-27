@@ -29,7 +29,6 @@ import logging as log
 
 from secrets import token_urlsafe as token
 from flask import Flask
-from flask_sock import Sock
 from flask_cors import CORS
 
 from libflagship import ROOT_DIR
@@ -48,25 +47,6 @@ import web.service.video
 import web.service.mqtt
 import web.service.filetransfer
 import web.service.mqttnotifier
-
-
-app = Flask(__name__, root_path=ROOT_DIR, static_folder="static", template_folder="static")
-# secret_key is required for flash() to function
-app.secret_key = token(24)
-app.config.from_prefixed_env()
-app.svc = ServiceManager()
-
-sock = Sock(app)
-
-# Register CORS handler for rpc endpoints, to allow mainsail to accept files and
-# resources from ankerctl.
-cors = CORS(
-    app,
-    resources={
-        r"/server/*": {"origins": "*"},
-        r"/video/*": {"origins": "*"},
-    }
-)
 
 
 def webserver(config, printer_index, host, port, insecure=False, **kwargs):
@@ -89,8 +69,26 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         import web.api.ankerctl
         import web.api.octoprint
 
+        app = Flask(__name__, root_path=ROOT_DIR, static_folder="static", template_folder="static")
+
+        # secret_key is required for flash() to function
+        app.secret_key = token(24)
+        app.config.from_prefixed_env()
+        app.svc = ServiceManager()
+
+        # Register CORS handler for rpc endpoints, to allow mainsail to accept files and
+        # resources from ankerctl.
+        app.cors = CORS(
+            app,
+            resources={
+                r"/server/*": {"origins": "*"},
+                r"/video/*": {"origins": "*"},
+            }
+        )
+
         if cfg and printer_index >= len(cfg.printers):
             log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
+
         app.config["config"] = config
         app.config["login"] = bool(cfg)
         app.config["printer_index"] = printer_index
@@ -98,11 +96,13 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.config["host"] = host
         app.config["insecure"] = insecure
         app.config.update(kwargs)
+
         app.svc.register("pppp", web.service.pppp.PPPPService(app))
         app.svc.register("videoqueue", web.service.video.VideoQueue(app))
         app.svc.register("mqttqueue", web.service.mqtt.MqttQueue(app))
         app.svc.register("filetransfer", web.service.filetransfer.FileTransferService(app))
         app.svc.register("mqttnotifier", web.service.mqttnotifier.MqttNotifierService(app))
+
         app.websockets = []
         app.heater_target = 0.0
         app.hotbed_target = 0.0
