@@ -43,6 +43,8 @@ import web.config
 import web.platform
 import web.util
 import web.rpcutil
+import web.moonraker
+import web.moonraker.server
 
 import cli.util
 import cli.config
@@ -55,15 +57,6 @@ app.config.from_prefixed_env()
 app.svc = ServiceManager()
 
 sock = Sock(app)
-
-# We have to import these modules here, since they need access to "app" and
-# "sock" defined above. Even though this is technically a circular import, it is
-# actually the recommended way, as described in the flask documentation:
-#
-# https://flask.palletsprojects.com/en/2.2.x/patterns/packages/
-import web.moonraker
-import web.moonraker.server
-
 
 # Register CORS handler for rpc endpoints, to allow mainsail to accept files and
 # resources from ankerctl.
