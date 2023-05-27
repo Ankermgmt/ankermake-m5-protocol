@@ -2,7 +2,7 @@ from jsonrpc import dispatcher
 
 
 @dispatcher.add_method(name="server.connection.identify")
-def server_connection_identify(**kwargs):
+def server_connection_identify(client_name, version, type, url, access_token=None, api_key=None):
     return {
         "connection_id": id(id),
     }
@@ -21,7 +21,7 @@ def server_announcements_list(include_dismissed=True):
 
 
 @dispatcher.add_method(name="server.job_queue.status")
-def server_job_queue_status(**kwargs):
+def server_job_queue_status():
     return {
         "queued_jobs": [],
         "queue_state": "ready",
@@ -29,7 +29,7 @@ def server_job_queue_status(**kwargs):
 
 
 @dispatcher.add_method(name="server.info")
-def server_info(**kwargs):
+def server_info():
     return {
         "klippy_connected": True,
         "klippy_state": "ready",
@@ -77,7 +77,7 @@ def server_info(**kwargs):
 
 
 @dispatcher.add_method(name="server.history.list")
-def server_history_list(**kwargs):
+def server_history_list(start=0, limit=50, before=None, since=None, order="desc"):
     return {
         "count": 1,
         "jobs": [
@@ -100,7 +100,7 @@ def server_history_list(**kwargs):
 
 
 @dispatcher.add_method(name="server.history.totals")
-def server_history_totals(**kwargs):
+def server_history_totals():
     return {
         "job_totals": {
             "total_jobs": 3,
@@ -114,7 +114,7 @@ def server_history_totals(**kwargs):
 
 
 @dispatcher.add_method(name="server.gcode_store")
-def server_gcode_store(**kwargs):
+def server_gcode_store(count=1000):
     return {
         "gcode_store": [
             {
@@ -152,7 +152,7 @@ def server_gcode_store(**kwargs):
 
 
 @dispatcher.add_method(name="server.temperature_store")
-def server_temperature_store(**kwargs):
+def server_temperature_store():
     return {
         "extruder": {
             "temperatures": [21.05, 21.12, 21.1, 21.1, 21.1],
@@ -171,7 +171,7 @@ def server_temperature_store(**kwargs):
 
 
 @dispatcher.add_method(name="server.config")
-def server_config(**kwargs):
+def server_config():
     return {
         "config": {
             "server": {

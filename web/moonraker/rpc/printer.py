@@ -9,12 +9,12 @@ from ...lib.gcode import GCode
 
 
 @dispatcher.add_method(name="printer.emergency_stop")
-def printer_emergency_stop(**kwargs):
+def printer_emergency_stop():
     return "ok"
 
 
 @dispatcher.add_method(name="printer.objects.list")
-def printer_objects_list(**kwargs):
+def printer_objects_list():
     return {
         "objects": [
             "webhooks",
@@ -61,7 +61,7 @@ def printer_objects_list(**kwargs):
 
 
 @dispatcher.add_method(name="printer.objects.subscribe")
-def printer_objects_subscribe(**kwargs):
+def printer_objects_subscribe(objects):
     return {
         "eventtime": 3793707.88993766,
         "status": {
@@ -954,7 +954,7 @@ def printer_objects_subscribe(**kwargs):
 
 
 @dispatcher.add_method(name="printer.query_endstops.status")
-def printer_query_endstops_status(**kwargs):
+def printer_query_endstops_status():
     return {
         "x": "TRIGGERED",
         "y": "open",
@@ -963,7 +963,7 @@ def printer_query_endstops_status(**kwargs):
 
 
 @dispatcher.add_method(name="printer.info")
-def printer_info(**kwargs):
+def printer_info():
     return {
         "state": "ready",
         "state_message": "Printer is ready",
@@ -978,7 +978,7 @@ def printer_info(**kwargs):
 
 
 @dispatcher.add_method(name="printer.gcode.help")
-def printer_gcode_help(**kwargs):
+def printer_gcode_help():
     return {
         "CUSTOM": "yep"
     }

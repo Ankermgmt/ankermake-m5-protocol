@@ -30,7 +30,7 @@ def server_database_delete_item(namespace, key):
 
 
 @dispatcher.add_method(name="server.database.get_item")
-def server_database_get_item(namespace, key=None, **kwargs):
+def server_database_get_item(namespace, key=None):
     if key:
         value = database.get(f"{namespace}.{key}")
     else:
@@ -44,7 +44,7 @@ def server_database_get_item(namespace, key=None, **kwargs):
 
 
 @dispatcher.add_method(name="server.database.list")
-def server_database_list(**kwargs):
+def server_database_list(root):
     return {
         "namespaces": list(database.db.keys())
     }

@@ -9,7 +9,7 @@ from jsonrpc import dispatcher
 
 
 @dispatcher.add_method(name="machine.system_info")
-def machine_system_info(**kwargs):
+def machine_system_info():
     version_parts = distro.version_parts()
     cpuid = cpuinfo.CPUID()
     cpu_brand = cpuid.get_processor_brand(cpuid.get_max_extension_support())
@@ -125,7 +125,7 @@ def machine_system_info(**kwargs):
 
 
 @dispatcher.add_method(name="machine.update.status")
-def machine_update_status(**kwargs):
+def machine_update_status(refresh=False):
     return {
         "busy": False,
         "github_rate_limit": 60,
@@ -238,7 +238,7 @@ def machine_update_status(**kwargs):
 
 
 @dispatcher.add_method(name="machine.device_power.devices")
-def machine_device_power_devices(**kwargs):
+def machine_device_power_devices():
     return {
         "devices": [
             {
@@ -258,7 +258,7 @@ def machine_device_power_devices(**kwargs):
 
 
 @dispatcher.add_method(name="machine.proc_stats")
-def machine_proc_stats(**kwargs):
+def machine_proc_stats():
     return {
         "moonraker_stats": [
             {
