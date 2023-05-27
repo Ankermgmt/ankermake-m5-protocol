@@ -1,5 +1,5 @@
 import logging as log
-from flask import flash, redirect, request, url_for
+from flask import flash, redirect, request
 
 
 def flash_redirect(path: str, message: str | None = None, category="info"):
