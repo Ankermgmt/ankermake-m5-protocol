@@ -6,12 +6,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename=url) }}" />
 {%- endmacro %}
 
-{% macro menu_button(id, target, active=False) %}
+{% macro menu_button(id, target, active=False, toggle="pill") %}
     <li class="nav-item" role="presentation">
         <button
             class="btn btn-outline-primary nav-link{% if active %} active{% endif %}"
             id="{{id}}"
-            data-bs-toggle="pill"
+            data-bs-toggle="{{toggle}}"
             data-bs-target="#{{target}}"
             type="button"
             role="tab"

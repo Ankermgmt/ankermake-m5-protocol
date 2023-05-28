@@ -9,6 +9,7 @@
     {% if configure %}
         {% include "tabs/home.html" %}
         {% include "tabs/instructions.html" %}
+        {% include "tabs/print.html" %}
     {% endif %}
 
     {% include "tabs/setup.html" %}
@@ -17,11 +18,15 @@
 {% block menu %}
     {% if configure %}
         {% call macro.menu_button(id="home-tab", target="home", active=configure) %}
-            {{ macro.bi_icon("house", "Home") }}
+            {{ macro.bi_icon("house", "Live") }}
+        {% endcall %}
+
+        {% call macro.menu_button(id="print-tab", target="print") %}
+            {{ macro.bi_icon("file-earmark-arrow-up", "Print") }}
         {% endcall %}
 
         {% call macro.menu_button(id="instructions-tab", target="instructions") %}
-            {{ macro.bi_icon("list-check", "Instructions") }}
+            {{ macro.bi_icon("list-check", "Slicer") }}
         {% endcall %}
     {% endif %}
 

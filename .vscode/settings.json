@@ -8,5 +8,29 @@
     "python.linting.pycodestyleEnabled": true,
     "python.linting.pycodestyleArgs": ["--config", ".pep8"],
     "python.formatting.autopep8Args": ["--config", ".pep8"],
-    "python.formatting.provider": "autopep8"
+    "python.formatting.provider": "autopep8",
+    "[javascript]": {
+        "editor.maxTokenizationLineLength": 2500,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnPaste": true,
+        "editor.formatOnType": true,
+        "editor.formatOnSave": false,
+        "editor.formatOnSaveMode": "modifications"
+    },
+    "[html]": {
+        "editor.maxTokenizationLineLength": 2500,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnPaste": true,
+        "editor.formatOnType": true,
+        "editor.formatOnSave": false,
+        "editor.formatOnSaveMode": "modifications"
+    },
+    "[json]": {
+        "editor.maxTokenizationLineLength": 2500,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnPaste": true,
+        "editor.formatOnType": true,
+        "editor.formatOnSave": false,
+        "editor.formatOnSaveMode": "modifications"
+    }
 }

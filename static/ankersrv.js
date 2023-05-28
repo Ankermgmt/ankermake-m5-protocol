@@ -5,12 +5,34 @@ $(function () {
     $("#copyYear").text(new Date().getFullYear());
 
     /**
-     * Redirect page when modal dialog is shown
+     * Handle modal being shown
      */
-    var popupModal = document.getElementById("popupModal");
+    var popupModalDom = document.getElementById("popupModal");
+    var popupModalBS = new bootstrap.Modal(popupModalDom);
 
-    popupModal.addEventListener("shown.bs.modal", function (e) {
-        window.location.href = $("#reload").data("href");
+    popupModalDom.addEventListener("shown.bs.modal", function (e) {
+        const trigger = e.relatedTarget;
+        const modalInner = $("#modal-inner");
+        modalInner.text(trigger.dataset.msg);
+        if (trigger.dataset.href) {
+            window.location.href = trigger.dataset.href;
+        }
+    });
+
+    /**
+     * Opens modal if gcode upload file is present
+     */
+    const gcodeUpload = $("#gcode-upload");
+    gcodeUpload.on("click", function (event) {
+        var fileInput = $("#gcode_file");
+        if (fileInput.prop("value").trim() !== "") {
+            const relatedTarget = {
+                dataset: {
+                    msg: gcodeUpload.data("msg"),
+                },
+            };
+            popupModalBS.show(relatedTarget);
+        }
     });
 
     /**
@@ -18,7 +40,7 @@ $(function () {
      */
     if (navigator.clipboard) {
         /* Clipboard support present: link clipboard icons to source object */
-        $("[data-clipboard-src]").each(function(i, elm) {
+        $("[data-clipboard-src]").each(function (i, elm) {
             $(elm).on("click", function () {
                 const src = $(elm).attr("data-clipboard-src");
                 const value = $(src).text();
@@ -169,13 +191,13 @@ $(function () {
         constructor({
             name,
             url,
-            badge=null,
-            open=null,
-            close=null,
-            error=null,
-            message=null,
-            binary=false,
-            reconnect=1000,
+            badge = null,
+            open = null,
+            close = null,
+            error = null,
+            message = null,
+            binary = false,
+            reconnect = 1000,
         }) {
             this.name = name;
             this.url = url;
