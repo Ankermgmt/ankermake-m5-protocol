@@ -49,7 +49,6 @@ def printer_objects_list():
             "gcode_move",
             "exclude_object",
             "print_stats",
-            "firmware_retraction",
             "bed_mesh",
             "motion_report",
             "idle_timeout",
@@ -251,11 +250,6 @@ def printer_objects_subscribe(objects):
                     "exclude_object": {},
                     "mcu": {},
                     "virtual_sdcard": {},
-                    "firmware_retraction": {
-                        "retract_length": "0.5",
-                        "retract_speed": "75",
-                        "unretract_speed": "75"
-                    },
                     "bed_mesh": {
                         "speed": "120",
                         "horizontal_move_z": "5",
@@ -424,12 +418,6 @@ def printer_objects_subscribe(objects):
                     },
                     "pause_resume": {
                         "recover_velocity": 50
-                    },
-                    "firmware_retraction": {
-                        "retract_length": 0.5,
-                        "retract_speed": 75,
-                        "unretract_extra_length": 0,
-                        "unretract_speed": 75
                     },
                     "bed_mesh": {
                         "probe_count": [
@@ -723,12 +711,6 @@ def printer_objects_subscribe(objects):
                 "objects": [],
                 "excluded_objects": [],
                 "current_object": None
-            },
-            "firmware_retraction": {
-                "retract_length": 0.5,
-                "retract_speed": 75,
-                "unretract_extra_length": 0,
-                "unretract_speed": 75
             },
             "bed_mesh": {
                 "profile_name": "",
