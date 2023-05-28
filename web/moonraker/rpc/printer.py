@@ -253,6 +253,7 @@ def printer_objects_subscribe(objects):
                         "serial": "/tmp/pseudoserial",
                         "restart_method": "arduino"
                     },
+                    "virtual_sdcard": {},
                     "firmware_retraction": {
                         "retract_length": "0.5",
                         "retract_speed": "75",
