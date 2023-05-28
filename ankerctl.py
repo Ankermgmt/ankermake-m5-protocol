@@ -142,10 +142,7 @@ def mqtt_send(env, command_type, args, force):
     To see a list of known command types, run this command without arguments.
     """
 
-    cmd = {
-        "commandType": command_type,
-        **{key: value for (key, value) in args},
-    }
+    cmd = cli.util.make_mqtt_req(command_type, args)
 
     if not force:
         if command_type == MqttMsgType.ZZ_MQTT_CMD_RECOVER_FACTORY.value:

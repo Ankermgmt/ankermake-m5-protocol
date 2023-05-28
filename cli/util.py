@@ -28,6 +28,18 @@ def json_key_value(str):
         except ValueError:
             return key, value
 
+def make_mqtt_req(command_type, args):
+    cmd = { "commandType": command_type }
+    for path, value in args:
+        path = path.split(".")
+        obj = cmd
+        for step in path[:-1]:
+            obj = obj.setdefault(step, {})
+
+        obj[path[-1]] = value
+
+    return cmd
+
 
 class EnumType(click.ParamType):
     def __init__(self, enum):
