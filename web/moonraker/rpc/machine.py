@@ -251,6 +251,9 @@ def machine_device_power_on(**objs):
 
 @dispatcher.add_method(name="machine.proc_stats")
 def machine_proc_stats():
+    with app.svc.borrow("updates") as upd:
+        sockets = len(upd.handlers)
+
     return {
         "moonraker_stats": [
             {
@@ -291,7 +294,7 @@ def machine_proc_stats():
             "cpu3": 1
         },
         "system_uptime": 2876970.38089603,
-        "websocket_connections": len(app.websockets),
+        "websocket_connections": sockets,
     }
 
 

@@ -113,8 +113,6 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         # will not prevent any other programs from using the printer.
         app.svc.get("updates")
 
-        app.websockets = []
-
         app.register_blueprint(web.moonraker.server.router, url_prefix="/server")
         app.register_blueprint(web.api.ws.router, url_prefix="/ws")
         app.register_blueprint(web.api.octoprint.router, url_prefix="/api")
