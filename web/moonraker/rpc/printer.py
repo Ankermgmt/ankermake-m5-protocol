@@ -54,7 +54,6 @@ def printer_objects_list():
             "firmware_retraction",
             "bed_mesh",
             "motion_report",
-            "query_endstops",
             "idle_timeout",
             "system_stats",
             "manual_probe",
@@ -927,9 +926,6 @@ def printer_objects_subscribe(objects):
                     "extruder",
                     "toolhead"
                 ]
-            },
-            "query_endstops": {
-                "last_query": {}
             },
             "system_stats": {
                 "sysload": psutil.getloadavg()[0],
