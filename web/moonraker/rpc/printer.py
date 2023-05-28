@@ -55,7 +55,6 @@ def printer_objects_list():
             "motion_report",
             "idle_timeout",
             "system_stats",
-            "manual_probe",
             "toolhead",
             "extruder"
         ]
@@ -909,12 +908,6 @@ def printer_objects_subscribe(objects):
                 "cputime": psutil.cpu_times().user,
                 "memavail": psutil.virtual_memory().available,
             },
-            "manual_probe": {
-                "is_active": False,
-                "z_position": None,
-                "z_position_lower": None,
-                "z_position_upper": None
-            }
         }
     }
 
