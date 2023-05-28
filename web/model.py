@@ -1,5 +1,6 @@
 import copy
-from dataclasses import dataclass
+import json
+from dataclasses import dataclass, asdict
 
 
 @dataclass
@@ -31,3 +32,11 @@ class PrinterStats:
         self.hotbed.append(copy.copy(state.hotbed))
         self.nozzle = self.nozzle[:1200]
         self.hotbed = self.hotbed[:1200]
+
+    def save(self, fd):
+        json.dump(asdict(self), fd)
+
+    def load(self, fd):
+        js = json.load(fd)
+        self.nozzle = [Heater(**h) for h in js.get("nozzle", [])]
+        self.hotbed = [Heater(**h) for h in js.get("hotbed", [])]

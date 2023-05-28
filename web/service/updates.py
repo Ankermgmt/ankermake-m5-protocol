@@ -64,6 +64,11 @@ class UpdateNotifierService(Service):
         self.pstats = PrinterStats(nozzle=[], hotbed=[])
         self.holdoff = Holdoff()
         self.holdoff.reset(delay=1)
+        try:
+            with open("stats.json") as fd:
+                self.pstats.load(fd)
+        except OSError:
+            pass
 
     def worker_start(self):
         self.mqtt = self.app.svc.get("mqttqueue", ready=False)
@@ -78,6 +83,8 @@ class UpdateNotifierService(Service):
         self.idle(timeout=timeout)
 
     def worker_stop(self):
+        with open("stats.json", "w") as fd:
+            self.pstats.save(fd)
         self.mqtt.handlers.remove(self._handler)
 
         self.app.svc.put("mqttqueue")
