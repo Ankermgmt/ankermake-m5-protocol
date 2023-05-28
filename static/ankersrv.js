@@ -75,16 +75,16 @@ $(function () {
      * @param {boolean} emulate - Whether to emulate the fullscreen mode or not.
      */
     function setFullscreenClasses(fullscreen = false, emulate = false) {
+        $(".fullscreen-emulate").removeClass("fullscreen-emulate-active");
+        $(".fullscreen-emulate-d-none").removeClass("fullscreen-emulate-d-none-active");
         if (fullscreen) {
             if (emulate) {
                 $(".fullscreen-emulate").addClass("fullscreen-emulate-active");
+                $(".fullscreen-emulate-d-none").addClass("fullscreen-emulate-d-none-active");
             }
             $("#vmain .col-xl-8").removeClass("col-xl-8").addClass("col-xl-9");
             $("#vmain .col-xl-4").removeClass("col-xl-4").addClass("col-xl-3");
         } else {
-            if (emulate) {
-                $(".fullscreen-emulate").removeClass("fullscreen-emulate-active");
-            }
             $("#vmain .col-xl-9").removeClass("col-xl-9").addClass("col-xl-8");
             $("#vmain .col-xl-3").removeClass("col-xl-3").addClass("col-xl-4");
         }
