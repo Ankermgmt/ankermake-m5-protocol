@@ -24,7 +24,7 @@ def server_files(root, path):
 
 @router.post("/files/upload")
 def server_files_upload():
-    root = request.values["root"]
+    root = request.values.get("root", "gcodes")
     if root not in {"gcodes", "config", "config_examples", "docs"}:
         raise ValueError(f"Forbidden root {root!r}")
 
