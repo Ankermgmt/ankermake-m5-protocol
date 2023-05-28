@@ -103,6 +103,16 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.svc.register("filetransfer", web.service.filetransfer.FileTransferService(app))
         app.svc.register("updates", web.service.updates.UpdateNotifierService(app))
 
+        # Take a reference to the "updates" service to make it run at all
+        # times. This ensures that we can track temperatures and other state,
+        # even when no clients are actively connected.
+        #
+        # One downside of this, is that the "mqttqueue" service will always be
+        # activated, since the "updates" service depends on it. However, unlike
+        # most of the other services, mqtt supports multiple clients, so this
+        # will not prevent any other programs from using the printer.
+        app.svc.get("updates")
+
         app.websockets = []
 
         app.register_blueprint(web.moonraker.server.router, url_prefix="/server")
