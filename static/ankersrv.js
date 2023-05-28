@@ -23,31 +23,12 @@ $(function () {
      * Opens modal if gcode upload file is present
      */
     const gcodeUpload = $("#gcode-upload");
-    const gcodeModalDom = document.getElementById("printModal");
-    const gcodeModal = new bootstrap.Modal(gcodeModalDom);
     gcodeUpload.on("click", function (event) {
         var fileInput = $("#gcode_file");
         if (fileInput.prop("value").trim() !== "") {
             const relatedTarget = {
                 dataset: {
                     msg: gcodeUpload.data("msg"),
-                },
-            };
-            gcodeModal.hide();
-            popupModalBS.show(relatedTarget);
-        }
-    });
-
-    /**
-     * Opens modal if gcode upload file is present
-     */
-    const gcodeUploadB = $("#gcode-upload-b");
-    gcodeUploadB.on("click", function (event) {
-        var fileInput = $("#gcode_file-b");
-        if (fileInput.prop("value").trim() !== "") {
-            const relatedTarget = {
-                dataset: {
-                    msg: gcodeUploadB.data("msg"),
                 },
             };
             popupModalBS.show(relatedTarget);

@@ -12,7 +12,7 @@
                     <div class="card-header">
                         <div class="card-title fs-4">Print G-Code File</div>
                         <div class="card-subtitle mb-2 text-muted">
-                            Supports <code>.gcode</code> and <code>.acode</code>
+                            Supports <code>.gcode</code>, <code>.acode</code> and <code>.zip</code>
                         </div>
                     </div>
                     <div class="card-body">
@@ -21,22 +21,22 @@
                             method="POST"
                             enctype="multipart/form-data"
                             class="mb-3"
-                            id="gcode-upload-form-b"
+                            id="gcode-upload-form"
                         >
                             <div class="modal-body fw-bold input-group">
                                 <input
                                     class="form-control"
                                     type="file"
-                                    id="gcode_file-b"
+                                    id="gcode_file"
                                     name="gcode_file"
-                                    accept=".gcode,.acode"
+                                    accept=".gcode,.acode,.zip"
                                     required
                                     aria-required="true"
                                 />
                                 <button
                                     class="btn btn-secondary submit"
                                     type="submit"
-                                    id="gcode-upload-b"
+                                    id="gcode-upload"
                                     data-msg="Uploading Gcode to {{ printer.name }}"
                                 >
                                     {{ macro.bi_icon("cloud-arrow-up-fill", "Upload") }}
