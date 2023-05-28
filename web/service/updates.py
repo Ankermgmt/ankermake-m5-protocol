@@ -56,7 +56,7 @@ class UpdateNotifierService(Service):
         self.holdoff.reset(delay=1)
 
     def worker_start(self):
-        self.mqtt = self.app.svc.get("mqttqueue")
+        self.mqtt = self.app.svc.get("mqttqueue", ready=False)
 
         self.mqtt.handlers.append(self._handler)
 
