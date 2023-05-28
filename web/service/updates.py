@@ -47,6 +47,13 @@ class UpdateNotifierService(Service):
     def notify_status_update(self, **kwargs):
         self.notify(rpcutil.make_jsonrpc_req("notify_status_update", kwargs, datetime.now().timestamp()))
 
+    def notify_job_queue_changed(self, action, queue, state):
+        self.notify(rpcutil.make_jsonrpc_req("notify_job_queue_changed", {
+            "action": action,
+            "updated_queue": queue,
+            "queue_state": state,
+        }))
+
     def _handler(self, data):
         upd = self.mqtt_to_jsonrpc_req(data)
         if upd:
