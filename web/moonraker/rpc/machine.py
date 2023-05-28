@@ -281,6 +281,16 @@ def machine_reboot(service):
     return "ok"
 
 
+@dispatcher.add_method(name="machine.services.stop")
+def machine_reboot(service):
+    return "ok"
+
+
+@dispatcher.add_method(name="machine.services.start")
+def machine_reboot(service):
+    return "ok"
+
+
 @dispatcher.add_method(name="machine.reboot")
 def machine_reboot():
     return "ok"
