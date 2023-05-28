@@ -19,9 +19,6 @@
                     <img src="{{ url_for('static', filename='img/logo.svg') }}" class="me-2" alt="logo">
                     <span class="text-body-emphasis align-self-baseline fs-4">ankerctl</span>
                 </a>
-                <ul class="nav nav-pills align-items-baseline px-3" id="printBtn" role="tablist">
-                    {% block print_button %}{% endblock %}
-                </ul>
                 <ul class="nav nav-pills align-items-baseline btn-group" id="tab" role="tablist">
                     {% block menu %}{% endblock %}
                 </ul>
