@@ -249,10 +249,7 @@ def printer_objects_subscribe(objects):
                     "pause_resume": {},
                     "display_status": {},
                     "exclude_object": {},
-                    "mcu": {
-                        "serial": "/tmp/pseudoserial",
-                        "restart_method": "arduino"
-                    },
+                    "mcu": {},
                     "virtual_sdcard": {},
                     "firmware_retraction": {
                         "retract_length": "0.5",
@@ -669,36 +666,8 @@ def printer_objects_subscribe(objects):
             "mcu": {
                 "mcu_version": "Linux 4.4.94",
                 "mcu_build_versions": "Ingenic r4.1.1-gcc720-glibc226-fp64 2020.11-05",
-                "mcu_constants": {
-                    "ADC_MAX": 1023,
-                    "BUS_PINS_spi": "PB6,PB5,PB7",
-                    "BUS_PINS_twi": "PC0,PC1",
-                    "CLOCK_FREQ": 20000000,
-                    "MCU": "Ingenic XBurst@II.V2",
-                    "PWM_MAX": 255,
-                    "RECEIVE_WINDOW": 192,
-                    "RESERVE_PINS_serial": "PD0,PD1",
-                    "SERIAL_BAUD": 10000000,
-                    "STATS_SUMSQ_BASE": 256
-                },
-                "last_stats": {
-                    "mcu_awake": 0.011,
-                    "mcu_task_avg": 0.00008,
-                    "mcu_task_stddev": 0.00005,
-                    "bytes_write": 10696,
-                    "bytes_read": 45413,
-                    "bytes_retransmit": 9,
-                    "bytes_invalid": 0,
-                    "send_seq": 1726,
-                    "receive_seq": 1726,
-                    "retransmit_seq": 17,
-                    "srtt": 0.01,
-                    "rttvar": 0.001,
-                    "rto": 0.025,
-                    "ready_bytes": 0,
-                    "upcoming_bytes": 0,
-                    "freq": 2054046
-                }
+                "mcu_constants": {},
+                "last_stats": {},
             },
             "gcode_macro START_PRINT": {},
             "gcode_macro END_PRINT": {},
