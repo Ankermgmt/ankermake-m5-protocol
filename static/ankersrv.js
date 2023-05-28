@@ -39,6 +39,7 @@ $(function () {
      * @returns {boolean} - True if the input string is "true", "yes", or "1"; otherwise, false.
      */
     function stringToBoolean(string) {
+        if (!string) return false;
         switch (string.toLowerCase().trim()) {
             case "true":
             case "yes":
