@@ -155,51 +155,6 @@ def printer_objects_subscribe(objects):
             },
             "configfile": {
                 "config": {
-                    "printer": {
-                        "kinematics": "cartesian",
-                        "max_velocity": "300",
-                        "max_accel": "3000",
-                        "max_z_velocity": "5",
-                        "max_z_accel": "100"
-                    },
-                    "stepper_x": {
-                        "step_pin": "PD7",
-                        "dir_pin": "!PC5",
-                        "enable_pin": "!PD6",
-                        "endstop_pin": "^PC2",
-                        "microsteps": "16",
-                        "rotation_distance": "40",
-                        "position_endstop": "0",
-                        "position_max": "235",
-                        "position_min": "-15",
-                        "homing_speed": "50",
-                        "homing_retract_dist": "0"
-                    },
-                    "stepper_y": {
-                        "step_pin": "PC6",
-                        "dir_pin": "!PC7",
-                        "enable_pin": "!PD6",
-                        "endstop_pin": "^PC3",
-                        "microsteps": "16",
-                        "rotation_distance": "40",
-                        "position_endstop": "0",
-                        "position_max": "235",
-                        "position_min": "-15",
-                        "homing_speed": "50",
-                        "homing_retract_dist": "0"
-                    },
-                    "stepper_z": {
-                        "step_pin": "PB3",
-                        "dir_pin": "PB2",
-                        "enable_pin": "!PA5",
-                        "endstop_pin": "^PC4",
-                        "microsteps": "16",
-                        "rotation_distance": "8",
-                        "position_endstop": "0.0",
-                        "position_max": "250",
-                        "position_min": "-2",
-                        "homing_retract_dist": "0"
-                    },
                     "gcode_macro START_PRINT": {
                         "gcode": "\nM117 START_PRINT called with {rawparams}\nG28"
                     },
