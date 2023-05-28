@@ -44,7 +44,6 @@ def printer_objects_list():
             "heater_fan heater_fan",
             "stepper_enable",
             "controller_fan controller_fan",
-            "output_pin output_pin",
             "pause_resume",
             "display_status",
             "gcode_move",
@@ -291,12 +290,6 @@ def printer_objects_subscribe(objects):
                         "shutdown_speed": "1.0",
                         "max_power": "1.0"
                     },
-                    "output_pin output_pin": {
-                        "pin": "PC0",
-                        "pwm": "false",
-                        "shutdown_value": "0",
-                        "value": "1"
-                    },
                     "respond": {},
                     "pause_resume": {},
                     "display_status": {},
@@ -471,13 +464,6 @@ def printer_objects_subscribe(objects):
                         "heater": [
                             "extruder"
                         ]
-                    },
-                    "output_pin output_pin": {
-                        "pwm": False,
-                        "pin": "PC0",
-                        "maximum_mcu_duration": 0,
-                        "value": 1,
-                        "shutdown_value": 0
                     },
                     "respond": {
                         "default_type": "echo",
@@ -782,9 +768,6 @@ def printer_objects_subscribe(objects):
             "controller_fan controller_fan": {
                 "speed": 0,
                 "rpm": None
-            },
-            "output_pin output_pin": {
-                "value": 1
             },
             "gcode_move": {
                 "speed_factor": 1,
