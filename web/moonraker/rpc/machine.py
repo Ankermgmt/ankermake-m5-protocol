@@ -240,20 +240,7 @@ def machine_update_status(refresh=False):
 @dispatcher.add_method(name="machine.device_power.devices")
 def machine_device_power_devices():
     return {
-        "devices": [
-            {
-                "device": "green_led",
-                "status": "off",
-                "locked_while_printing": True,
-                "type": "gpio"
-            },
-            {
-                "device": "printer",
-                "status": "off",
-                "locked_while_printing": False,
-                "type": "tplink_smartplug"
-            }
-        ]
+        "devices": []
     }
 
 
