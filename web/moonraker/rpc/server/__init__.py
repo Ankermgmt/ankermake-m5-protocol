@@ -21,14 +21,6 @@ def server_announcements_list(include_dismissed=True):
     }
 
 
-@dispatcher.add_method(name="server.job_queue.status")
-def server_job_queue_status():
-    return {
-        "queued_jobs": [],
-        "queue_state": "ready",
-    }
-
-
 @dispatcher.add_method(name="server.info")
 def server_info():
     return {
