@@ -119,24 +119,24 @@ code {
 }
 
 .fullscreen-emulate {
-    position: fixed !important;
-    width: 90vw !important;
-    height: 99vh !important;
-    top: 1% !important;
-    left: 5% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    z-index: 9999 !important;
-    overflow: hidden !important;
-    max-width: 90vw !important;
-    max-height: 99vh !important;
+    position: fixed;
+    width: 90vw;
+    height: 99vh;
+    top: 1%;
+    left: 5%;
+    margin: 0;
+    padding: 0;
+    z-index: 9999;
+    overflow: hidden;
+    max-width: 90vw;
+    max-height: 99vh;
 }
 
 body.fullscreen-emulate {
-    background-color: rgba(0,0,0,0) !important;
+    background-color: rgba(0,0,0,0);
 }
 
 header.fullscreen-emulate,
 footer.fullscreen-emulate {
-    display: none !important;
+    display: none;
 }
