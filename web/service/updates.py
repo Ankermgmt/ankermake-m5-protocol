@@ -1,7 +1,9 @@
+import copy
 from datetime import datetime
 
-from ..lib.service import Service
+from ..lib.service import Service, Holdoff
 from .. import rpcutil
+from web.model import PrinterState, PrinterStats, Heater
 
 from libflagship.mqtt import MqttMsgType
 
@@ -15,17 +17,17 @@ class UpdateNotifierService(Service):
 
         cmd = data.get("commandType", 0)
         if cmd == MqttMsgType.ZZ_MQTT_CMD_HOTBED_TEMP:
-            self.app.hotbed_target_temp = float(data["targetTemp"]) / 100
+            self.pstate.hotbed = Heater.from_mqtt(data)
             update["heater_bed"] = {
-                "temperature": float(data["currentTemp"]) / 100,
-                "target": self.app.hotbed_target_temp,
+                "temperature": self.pstate.hotbed.current,
+                "target": self.pstate.hotbed.target,
                 "power": None,
             }
         elif cmd == MqttMsgType.ZZ_MQTT_CMD_NOZZLE_TEMP:
-            self.app.heater_target_temp = float(data["targetTemp"]) / 100
+            self.pstate.nozzle = Heater.from_mqtt(data)
             update["extruder"] = {
-                "temperature": float(data["currentTemp"]) / 100,
-                "target": self.app.heater_target_temp,
+                "temperature": self.pstate.nozzle.current,
+                "target": self.pstate.nozzle.target,
                 "power": 0,
                 "can_extrude": True,
                 "pressure_advance": None,
@@ -47,12 +49,22 @@ class UpdateNotifierService(Service):
         if upd:
             self.notify(upd)
 
+    def worker_init(self):
+        self.pstate = PrinterState(nozzle=Heater(), hotbed=Heater())
+        self.pstats = PrinterStats(nozzle=[], hotbed=[])
+        self.holdoff = Holdoff()
+        self.holdoff.reset(delay=1)
+
     def worker_start(self):
         self.mqtt = self.app.svc.get("mqttqueue")
 
         self.mqtt.handlers.append(self._handler)
 
     def worker_run(self, timeout):
+        if self.holdoff.passed:
+            self.holdoff.reset(delay=1)
+            self.pstats.append(self.pstate)
+
         self.idle(timeout=timeout)
 
     def worker_stop(self):

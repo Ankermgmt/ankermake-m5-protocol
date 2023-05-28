@@ -104,8 +104,6 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.svc.register("updates", web.service.updates.UpdateNotifierService(app))
 
         app.websockets = []
-        app.heater_target = 0.0
-        app.hotbed_target = 0.0
 
         app.register_blueprint(web.moonraker.server.router, url_prefix="/server")
         app.register_blueprint(web.api.ws.router, url_prefix="/ws")

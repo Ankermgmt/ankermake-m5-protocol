@@ -67,6 +67,9 @@ def printer_objects_list():
 
 @dispatcher.add_method(name="printer.objects.subscribe")
 def printer_objects_subscribe(objects):
+    with app.svc.borrow("updates") as upd:
+        pstate = upd.pstate
+
     return {
         "eventtime": 3793707.88993766,
         "status": {
@@ -87,13 +90,13 @@ def printer_objects_subscribe(objects):
                 }
             },
             "heater_bed": {
-                "temperature": 0,
-                "target": 0,
+                "temperature": pstate.hotbed.current,
+                "target": pstate.hotbed.target,
                 "power": 0
             },
             "extruder": {
-                "temperature": 0,
-                "target": 0,
+                "temperature": pstate.nozzle.current,
+                "target": pstate.nozzle.target,
                 "power": 0,
                 "can_extrude": True,
                 "pressure_advance": 0.1,
@@ -993,17 +996,20 @@ def printer_gcode_help():
 def printer_gcode_script(script):
     gcode = GCode(script)
     if gcode.cmd == "SET_HEATER_TEMPERATURE":
+        with app.svc.borrow("updates") as upd:
+            pstate = upd.pstate
+
         if gcode.vals["HEATER"] == "extruder":
-            app.heater_target = float(gcode.vals["TARGET"])
+            pstate.nozzle.target = float(gcode.vals["TARGET"])
         elif gcode.vals["HEATER"] == "heater_bed":
-            app.hotbed_target = float(gcode.vals["TARGET"])
+            pstate.hotbed.target = float(gcode.vals["TARGET"])
 
         update = {
             "commandType": MqttMsgType.ZZ_MQTT_CMD_PREHEAT_CONFIG.value,
             "userid": "ankerctl",
-            "value": int(bool(app.heater_target or app.hotbed_target)),
-            "nozzle": int(app.heater_target * 100),
-            "heatbed": int(app.hotbed_target * 100),
+            "value": int(bool(pstate.nozzle.target or pstate.hotbed.target)),
+            "nozzle": int(pstate.nozzle.target * 100),
+            "heatbed": int(pstate.hotbed.target * 100),
         }
     else:
         update = {

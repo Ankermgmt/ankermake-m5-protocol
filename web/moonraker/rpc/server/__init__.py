@@ -1,4 +1,5 @@
 from jsonrpc import dispatcher
+from flask import current_app as app
 
 
 @dispatcher.add_method(name="server.connection.identify")
@@ -153,21 +154,17 @@ def server_gcode_store(count=1000):
 
 @dispatcher.add_method(name="server.temperature_store")
 def server_temperature_store():
-    return {
-        "extruder": {
-            "temperatures": [21.05, 21.12, 21.1, 21.1, 21.1],
-            "targets": [0, 0, 0, 0, 0],
-            "powers": [0, 0, 0, 0, 0]
-        },
-        "temperature_fan my_fan": {
-            "temperatures": [21.05, 21.12, 21.1, 21.1, 21.1],
-            "targets": [0, 0, 0, 0, 0],
-            "speeds": [0, 0, 0, 0, 0],
-        },
-        "temperature_sensor my_sensor": {
-            "temperatures": [21.05, 21.12, 21.1, 21.1, 21.1]
+    with app.svc.borrow("updates") as upd:
+        return {
+            "extruder": {
+                "temperatures": [h.current for h in upd.pstats.nozzle],
+                "targets": [h.target for h in upd.pstats.nozzle],
+            },
+            "heater_bed": {
+                "temperatures": [h.current for h in upd.pstats.hotbed],
+                "targets": [h.target for h in upd.pstats.hotbed],
+            },
         }
-    }
 
 
 @dispatcher.add_method(name="server.config")
