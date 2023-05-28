@@ -28,17 +28,6 @@ def machine_system_info():
                 "total_memory": psutil.virtual_memory().total // 1024,
                 "memory_units": "kB"
             },
-            "sd_info": {
-                "manufacturer_id": "03",
-                "manufacturer": "Sandisk",
-                "oem_id": "5344",
-                "product_name": "SU32G",
-                "product_revision": "8.0",
-                "serial_number": "46ba46",
-                "manufacturer_date": "4/2018",
-                "capacity": "29.7 GiB",
-                "total_bytes": 31914983424
-            },
             "distribution": {
                 "name": f"{distro.name()} {distro.version()} ({distro.codename()})",
                 "id": distro.id(),
