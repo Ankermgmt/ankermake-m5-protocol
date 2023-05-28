@@ -44,7 +44,6 @@ def printer_objects_list():
             "heater_fan heater_fan",
             "stepper_enable",
             "controller_fan controller_fan",
-            "filament_motion_sensor runout_sensor",
             "output_pin output_pin",
             "pause_resume",
             "display_status",
@@ -293,14 +292,6 @@ def printer_objects_subscribe(objects):
                         "shutdown_speed": "1.0",
                         "max_power": "1.0"
                     },
-                    "filament_motion_sensor runout_sensor": {
-                        "switch_pin": "PC1",
-                        "detection_length": "1.0",
-                        "extruder": "extruder",
-                        "pause_on_runout": "FALSE",
-                        "runout_gcode": "\nM117 Runout sensor reports: Runout G-Code",
-                        "insert_gcode": "\nM117 Runout sensor reports: Insert G-Code"
-                    },
                     "output_pin output_pin": {
                         "pin": "PC0",
                         "pwm": "false",
@@ -481,16 +472,6 @@ def printer_objects_subscribe(objects):
                         "heater": [
                             "extruder"
                         ]
-                    },
-                    "filament_motion_sensor runout_sensor": {
-                        "switch_pin": "PC1",
-                        "extruder": "extruder",
-                        "detection_length": 1,
-                        "pause_on_runout": False,
-                        "runout_gcode": "\nM117 Runout sensor reports: Runout G-Code",
-                        "insert_gcode": "\nM117 Runout sensor reports: Insert G-Code",
-                        "pause_delay": 0.5,
-                        "event_delay": 3
                     },
                     "output_pin output_pin": {
                         "pwm": False,
@@ -802,10 +783,6 @@ def printer_objects_subscribe(objects):
             "controller_fan controller_fan": {
                 "speed": 0,
                 "rpm": None
-            },
-            "filament_motion_sensor runout_sensor": {
-                "filament_detected": True,
-                "enabled": True
             },
             "output_pin output_pin": {
                 "value": 1
