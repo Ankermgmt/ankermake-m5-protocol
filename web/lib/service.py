@@ -7,6 +7,8 @@ from threading import Thread, Event
 from datetime import datetime, timedelta
 from multiprocessing import Queue
 
+from ..lib import trace
+
 
 class Holdoff:
 
@@ -246,6 +248,8 @@ class ServiceManager:
 
     def atexit(self):
         log.debug("ServiceManager: Shutting down threads..")
+        trace.trace_all_threads()
+
         self.dump()
         for svc in self.svcs.values():
             if svc.state != RunState.Stopped:
@@ -255,6 +259,7 @@ class ServiceManager:
         self.dump()
         for svc in self.svcs.values():
             log.debug(f"ServiceManager: Waiting for {svc.name}..")
+            trace.trace_thread(svc)
             svc.await_stopped()
 
         log.debug("ServiceManager: Cleaning up threads..")
