@@ -118,7 +118,7 @@ code {
     padding: 0;
 }
 
-.fullscreen-emulate {
+#vmain.fullscreen-emulate {
     position: fixed;
     width: 90vw;
     height: 99vh;
@@ -138,5 +138,5 @@ body.fullscreen-emulate {
 
 header.fullscreen-emulate,
 footer.fullscreen-emulate {
-    display: none;
+    display: none!important;
 }
