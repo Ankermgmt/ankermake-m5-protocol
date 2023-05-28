@@ -117,3 +117,26 @@ code {
     border: 0 none;
     padding: 0;
 }
+
+.fullscreen-emulate {
+    position: fixed !important;
+    width: 90vw !important;
+    height: 99vh !important;
+    top: 1% !important;
+    left: 5% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 9999 !important;
+    overflow: hidden !important;
+    max-width: 90vw !important;
+    max-height: 99vh !important;
+}
+
+body.fullscreen-emulate {
+    background-color: #000000 !important;
+}
+
+header.fullscreen-emulate,
+footer.fullscreen-emulate {
+    display: none !important;
+}

@@ -29,8 +29,34 @@ $(function () {
     } else {
         /* Clipboard support missing: remove clipboard icons to minimize confusion */
         $("[data-clipboard-src]").remove();
-    };
+    }
 
+    /**
+     * Converts a string to its boolean value.
+     *
+     * @function
+     * @param {string} string - The string to be converted.
+     * @returns {boolean} - True if the input string is "true", "yes", or "1"; otherwise, false.
+     */
+    function stringToBoolean(string) {
+        switch (string.toLowerCase().trim()) {
+            case "true":
+            case "yes":
+            case "1":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // Get URL parameter for fullscreen and apply it if needed, this emulates fullscreen
+    let urlParams = new URLSearchParams(window.location.search);
+    let fullscreenParam = stringToBoolean(urlParams.get("fullscreen"));
+    if (fullscreenParam) {
+        setFullscreenClasses(true, true);
+    }
+
+    // Toggle fullscreen when the full screen button in the video element is clicked
     $("#video-fs").on("click", function () {
         if (document.fullscreenElement) {
             document.exitFullscreen();
@@ -40,14 +66,45 @@ $(function () {
         }
     });
 
-    document.addEventListener("fullscreenchange", function() {
-        /* Make more room for video element in fullscreen mode */
-        if (document.fullscreenElement) {
+    /**
+     * Sets or unsets the required classes for fullscreen functionality.
+     *
+     * @function
+     * @param {boolean} fullscreen - Whether to set or unset the classes (true to set, false to unset).
+     * @param {boolean} emulate - Whether to emulate the fullscreen mode or not.
+     */
+    function setFullscreenClasses(fullscreen = false, emulate = false) {
+        if (fullscreen) {
+            if (emulate) {
+                $("#vmain").addClass("fullscreen-emulate");
+                $("body").addClass("fullscreen-emulate");
+                $("header").addClass("fullscreen-emulate");
+                $("footer").addClass("fullscreen-emulate");
+            }
             $("#vmain .col-xl-8").removeClass("col-xl-8").addClass("col-xl-9");
             $("#vmain .col-xl-4").removeClass("col-xl-4").addClass("col-xl-3");
         } else {
+            if (emulate) {
+                $("#vmain").removeClass("fullscreen-emulate");
+                $("body").removeClass("fullscreen-emulate");
+                $("header").removeClass("fullscreen-emulate");
+                $("footer").removeClass("fullscreen-emulate");
+            }
             $("#vmain .col-xl-9").removeClass("col-xl-9").addClass("col-xl-8");
             $("#vmain .col-xl-3").removeClass("col-xl-3").addClass("col-xl-4");
+        }
+    }
+
+    /**
+     * Event listener for fullscreen change event.
+     * Adds or removes appropriate CSS classes to adjust the video element size.
+     */
+    document.addEventListener("fullscreenchange", function () {
+        /* Make more room for video element in fullscreen mode */
+        if (document.fullscreenElement) {
+            setFullscreenClasses(true);
+        } else {
+            setFullscreenClasses(false);
         }
     });
 
@@ -325,5 +382,4 @@ $(function () {
         sockets.ctrl.ws.send(JSON.stringify({ quality: 1 }));
         return false;
     });
-
 });
