@@ -51,7 +51,6 @@ def printer_objects_list():
             "gcode_move",
             "exclude_object",
             "print_stats",
-            "virtual_sdcard",
             "firmware_retraction",
             "bed_mesh",
             "motion_report",
@@ -124,13 +123,6 @@ def printer_objects_subscribe(objects):
             "display_status": {
                 "progress": 0,
                 "message": "Greetings, Professor Falken"
-            },
-            "virtual_sdcard": {
-                "file_path": None,
-                "progress": 0,
-                "is_active": True,
-                "file_position": 0,
-                "file_size": 0
             },
             "idle_timeout": {
                 "state": "Idle",
@@ -324,9 +316,6 @@ def printer_objects_subscribe(objects):
                         "serial": "/tmp/pseudoserial",
                         "restart_method": "arduino"
                     },
-                    "virtual_sdcard": {
-                        "path": "~/printer_data/gcodes"
-                    },
                     "firmware_retraction": {
                         "retract_length": "0.5",
                         "retract_speed": "75",
@@ -517,10 +506,6 @@ def printer_objects_subscribe(objects):
                     },
                     "pause_resume": {
                         "recover_velocity": 50
-                    },
-                    "virtual_sdcard": {
-                        "path": "~/printer_data/gcodes",
-                        "on_error_gcode": ""
                     },
                     "firmware_retraction": {
                         "retract_length": 0.5,
