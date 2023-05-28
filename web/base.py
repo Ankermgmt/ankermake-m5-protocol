@@ -24,9 +24,8 @@ def websocket(sock):
                 jmsg = json.loads(msg)
                 web.rpcutil.log_jsonrpc_req(jmsg, response)
                 if response.error:
-                    updates.notify_error(
-                        f"<h1>Error in method {jmsg['method']}</h1>\n{response.error['data']['message']}"
-                    )
+                    error_msg = response.error.get("data", {}).get("message") or response.error["message"]
+                    updates.notify_error(f"<h1>Error in method {jmsg['method']}</h1>\n{error_msg}")
                 sock.send(web.rpcutil.format_response(response))
 
 
