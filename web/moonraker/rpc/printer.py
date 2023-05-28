@@ -963,10 +963,11 @@ def printer_objects_subscribe(objects):
 
 @dispatcher.add_method(name="printer.query_endstops.status")
 def printer_query_endstops_status():
+    # There's no known way to really query endstops on the M5
     return {
-        "x": "TRIGGERED",
-        "y": "open",
-        "z": "open"
+        # "x": "TRIGGERED",
+        # "y": "open",
+        # "z": "open"
     }
 
 
