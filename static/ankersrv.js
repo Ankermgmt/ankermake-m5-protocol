@@ -77,19 +77,13 @@ $(function () {
     function setFullscreenClasses(fullscreen = false, emulate = false) {
         if (fullscreen) {
             if (emulate) {
-                $("#vmain").addClass("fullscreen-emulate");
-                $("body").addClass("fullscreen-emulate");
-                $("header").addClass("fullscreen-emulate");
-                $("footer").addClass("fullscreen-emulate");
+                $(".fullscreen-emulate").addClass("fullscreen-emulate-active");
             }
             $("#vmain .col-xl-8").removeClass("col-xl-8").addClass("col-xl-9");
             $("#vmain .col-xl-4").removeClass("col-xl-4").addClass("col-xl-3");
         } else {
             if (emulate) {
-                $("#vmain").removeClass("fullscreen-emulate");
-                $("body").removeClass("fullscreen-emulate");
-                $("header").removeClass("fullscreen-emulate");
-                $("footer").removeClass("fullscreen-emulate");
+                $(".fullscreen-emulate").removeClass("fullscreen-emulate-active");
             }
             $("#vmain .col-xl-9").removeClass("col-xl-9").addClass("col-xl-8");
             $("#vmain .col-xl-3").removeClass("col-xl-3").addClass("col-xl-4");

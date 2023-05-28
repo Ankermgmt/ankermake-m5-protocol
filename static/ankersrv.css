@@ -118,7 +118,7 @@ code {
     padding: 0;
 }
 
-#vmain.fullscreen-emulate {
+#vmain.fullscreen-emulate-active {
     position: fixed;
     width: 90vw;
     height: 99vh;
@@ -132,11 +132,11 @@ code {
     max-height: 99vh;
 }
 
-body.fullscreen-emulate {
+body.fullscreen-emulate-active {
     background-color: rgba(0,0,0,0);
 }
 
-header.fullscreen-emulate,
-footer.fullscreen-emulate {
+header.fullscreen-emulate-active,
+footer.fullscreen-emulate-active {
     display: none!important;
 }
