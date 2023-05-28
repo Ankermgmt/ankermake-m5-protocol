@@ -133,7 +133,7 @@ code {
 }
 
 body.fullscreen-emulate {
-    background-color: #000000 !important;
+    background-color: rgba(0,0,0,0) !important;
 }
 
 header.fullscreen-emulate,
