@@ -6,20 +6,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename=url) }}" />
 {%- endmacro %}
 
-{% macro trigger_button(id, type, target, toggle="pill") %}
-    <li class="nav-item" role="presentation">
-        <button
-            class="btn btn-{{type}}"
-            id="{{id}}"
-            data-bs-toggle="{{toggle}}"
-            data-bs-target="#{{target}}"
-            type="button"
-            role="tab">
-            {{ caller() }}
-        </button>
-    </li>
-{% endmacro %}
-
 {% macro menu_button(id, target, active=False, toggle="pill") %}
     <li class="nav-item" role="presentation">
         <button
