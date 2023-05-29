@@ -1,4 +1,3 @@
-import copy
 from datetime import datetime
 
 from ..lib.service import Service, Holdoff
