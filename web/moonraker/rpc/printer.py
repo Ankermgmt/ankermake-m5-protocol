@@ -10,6 +10,52 @@ from ...lib.gcode import GCode
 
 @dispatcher.add_method(name="printer.print.start")
 def printer_print_start(filename):
+    with app.svc.borrow("updates") as upd:
+        upd.notify_status_update(**{
+            "print_stats": {
+                "state": "printing",
+            },
+        }
+    )
+    return "ok"
+
+
+@dispatcher.add_method(name="printer.print.pause")
+def printer_print_start():
+    with app.svc.borrow("updates") as upd:
+        upd.notify_status_update(**{
+            "display_status": {
+                "progress": None,
+            },
+            "print_stats": {
+                "state": "paused",
+            },
+        }
+    )
+    return "ok"
+
+
+@dispatcher.add_method(name="printer.print.resume")
+def printer_print_start():
+    with app.svc.borrow("updates") as upd:
+        upd.notify_status_update(**{
+            "print_stats": {
+                "state": "printing",
+            },
+        }
+    )
+    return "ok"
+
+
+@dispatcher.add_method(name="printer.print.cancel")
+def printer_print_start():
+    with app.svc.borrow("updates") as upd:
+        upd.notify_status_update(**{
+            "print_stats": {
+                "state": "ready",
+            },
+        }
+    )
     return "ok"
 
 
