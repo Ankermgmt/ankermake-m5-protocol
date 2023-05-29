@@ -350,7 +350,7 @@ def printer_objects_subscribe(objects):
             "system_stats": {
                 "sysload": psutil.getloadavg()[0],
                 "cputime": psutil.cpu_times().user,
-                "memavail": psutil.virtual_memory().available,
+                "memavail": psutil.virtual_memory().available / 1024.0,
             },
         }
     }
