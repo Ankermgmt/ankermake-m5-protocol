@@ -47,6 +47,7 @@ import web.service.video
 import web.service.mqtt
 import web.service.filetransfer
 import web.service.updates
+import web.service.jobqueue
 
 
 def webserver(config, printer_index, host, port, insecure=False, **kwargs):
@@ -102,6 +103,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.svc.register("mqttqueue", web.service.mqtt.MqttQueue(app))
         app.svc.register("filetransfer", web.service.filetransfer.FileTransferService(app))
         app.svc.register("updates", web.service.updates.UpdateNotifierService(app))
+        app.svc.register("jobqueue", web.service.jobqueue.JobQueueService(app))
 
         # Take a reference to the "updates" service to make it run at all
         # times. This ensures that we can track temperatures and other state,
