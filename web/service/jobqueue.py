@@ -43,5 +43,9 @@ class JobQueueService(Service):
             time_added=datetime.now(),
         ))
 
+        self.upd.notify_job_queue_changed("jobs_added", self.queued_jobs(), "ready")
+
     def delete_jobs(self, job_ids):
         self.queue.jobs = [j for j in self.queue.jobs if not j.job_id in job_ids]
+
+        self.upd.notify_job_queue_changed("jobs_removed", self.queued_jobs(), "ready")
