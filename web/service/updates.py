@@ -14,29 +14,31 @@ class UpdateNotifierService(Service):
             "eventtime": datetime.now().timestamp(),
         }
 
-        cmd = data.get("commandType", 0)
-        if cmd == MqttMsgType.ZZ_MQTT_CMD_HOTBED_TEMP:
-            self.pstate.hotbed = Heater.from_mqtt(data)
-            update["heater_bed"] = {
-                "temperature": self.pstate.hotbed.current,
-                "target": self.pstate.hotbed.target,
-                "power": None,
-            }
-        elif cmd == MqttMsgType.ZZ_MQTT_CMD_NOZZLE_TEMP:
-            self.pstate.nozzle = Heater.from_mqtt(data)
-            update["extruder"] = {
-                "temperature": self.pstate.nozzle.current,
-                "target": self.pstate.nozzle.target,
-                "power": 0,
-                "can_extrude": True,
-                "pressure_advance": None,
-                "smooth_time": None,
-                "motion_queue": None,
-            }
-        elif cmd == MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND:
-            return rpcutil.make_jsonrpc_req("notify_gcode_response", data["resData"])
-        else:
-            return None
+        match data.get("commandType", 0):
+            case MqttMsgType.ZZ_MQTT_CMD_HOTBED_TEMP:
+                self.pstate.hotbed = Heater.from_mqtt(data)
+                update["heater_bed"] = {
+                    "temperature": self.pstate.hotbed.current,
+                    "target": self.pstate.hotbed.target,
+                    "power": None,
+                }
+
+            case MqttMsgType.ZZ_MQTT_CMD_NOZZLE_TEMP:
+                self.pstate.nozzle = Heater.from_mqtt(data)
+                update["extruder"] = {
+                    "temperature": self.pstate.nozzle.current,
+                    "target": self.pstate.nozzle.target,
+                    "power": 0,
+                    "can_extrude": True,
+                    "pressure_advance": None,
+                    "smooth_time": None,
+                    "motion_queue": None,
+                }
+            case MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND:
+                return rpcutil.make_jsonrpc_req("notify_gcode_response", data["resData"])
+
+            case _:
+                return None
 
         return rpcutil.make_jsonrpc_req("notify_status_update", update)
 
