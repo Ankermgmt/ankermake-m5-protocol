@@ -148,35 +148,37 @@ class Service(Thread):
         self.worker_init()
 
         while self.running:
-            if self.state == RunState.Starting:
-                if self._holdoff.passed:
-                    self._attempt_start()
-                else:
-                    self.idle(timeout=0.1)
+            match self.state:
+                case RunState.Starting:
+                    if self._holdoff.passed:
+                        self._attempt_start()
+                    else:
+                        self.idle(timeout=0.1)
 
-            elif self.state == RunState.Running:
-                if self.wanted:
-                    self._attempt_run()
-                else:
-                    log.debug(f"{self.name}: Stopping worker")
-                    self._holdoff.reset()
-                    self.state = RunState.Stopping
+                case RunState.Running:
+                    if self.wanted:
+                        self._attempt_run()
+                    else:
+                        log.debug(f"{self.name}: Stopping worker")
+                        self._holdoff.reset()
+                        self.state = RunState.Stopping
 
-            elif self.state == RunState.Stopping:
-                if self._holdoff.passed:
-                    self._attempt_stop()
-                else:
-                    self.idle(timeout=0.1)
+                case RunState.Stopping:
+                    if self._holdoff.passed:
+                        self._attempt_stop()
+                    else:
+                        self.idle(timeout=0.1)
 
-            elif self.state == RunState.Stopped:
-                if self.wanted:
-                    log.debug(f"{self.name}: Starting worker")
-                    self._holdoff.reset()
-                    self.state = RunState.Starting
-                else:
-                    self.idle(timeout=0.1)
-            else:
-                raise ValueError("Unknown state value")
+                case RunState.Stopped:
+                    if self.wanted:
+                        log.debug(f"{self.name}: Starting worker")
+                        self._holdoff.reset()
+                        self.state = RunState.Starting
+                    else:
+                        self.idle(timeout=0.1)
+
+                case _:
+                    raise ValueError("Unknown state value")
 
         log.debug(f"{self.name}: Shutting down thread")
         if self.state == RunState.Running:
