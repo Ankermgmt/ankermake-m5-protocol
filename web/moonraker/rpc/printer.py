@@ -395,10 +395,9 @@ def printer_gcode_script(script):
         with app.svc.borrow("updates") as upd:
             pstate = upd.pstate
 
-        if gcode.vals["HEATER"] == "extruder":
-            pstate.nozzle.target = float(gcode.vals["TARGET"])
-        elif gcode.vals["HEATER"] == "heater_bed":
-            pstate.hotbed.target = float(gcode.vals["TARGET"])
+        match gcode.vals["HEATER"]:
+            case "extruder":   pstate.nozzle.target = float(gcode.vals["TARGET"])
+            case "heater_bed": pstate.hotbed.target = float(gcode.vals["TARGET"])
 
         update = {
             "commandType": MqttMsgType.ZZ_MQTT_CMD_PREHEAT_CONFIG.value,
