@@ -199,8 +199,103 @@ def printer_objects_subscribe(objects):
                 "square_corner_velocity": 5
             },
             "configfile": {
-                "config": {},
-                "settings": {},
+                "config": {
+                    "pause_resume": {},
+                    "display_status": {},
+                    "exclude_object": {},
+                    "virtual_sdcard": {},
+                    "gcode_macro START_PRINT": {
+                        "gcode": "\nM117 START_PRINT called with {rawparams}\nG28"
+                    },
+                    "gcode_macro END_PRINT": {
+                        "gcode": "\nM117 END_PRINT called with {rawparams}"
+                    },
+                    "gcode_macro CANCEL_PRINT": {
+                        "rename_existing": "CANCEL_PRINT_BASE",
+                        "gcode": "\nM117 CANCEL_PRINT called with {rawparams}\nCANCEL_PRINT_BASE"
+                    },
+                    "gcode_macro PAUSE": {
+                        "rename_existing": "PAUSE_BASE",
+                        "gcode": "\nM117 PAUSE called with {rawparams}\nPAUSE_BASE"
+                    },
+                    "gcode_macro RESUME": {
+                        "rename_existing": "RESUME_BASE",
+                        "gcode": "\nM117 RESUME called with {rawparams}\nRESUME_BASE"
+                    },
+                    "gcode_macro M117": {
+                        "rename_existing": "M117.1",
+                        "gcode": "\nM117.1 {rawparams}\n{action_respond_info(rawparams)}"
+                    },
+                    "gcode_macro M600": {
+                        "gcode": "\nM117 M600 called with {rawparams}\nPAUSE"
+                    },
+                    "gcode_macro LOAD_FILAMENT": {
+                        "gcode": "\nM117 Loading Filament! Please wait..."
+                    },
+                    "gcode_macro UNLOAD_FILAMENT": {
+                        "gcode": "\nM117 Unloading Filament! Please wait..."
+                    },
+                    "gcode_macro M104": {
+                        "rename_existing": "M104.1",
+                        "gcode": "\nM117 M104 called with {rawparams}"
+                    },
+                    "gcode_macro M109": {
+                        "rename_existing": "M109.1",
+                        "gcode": "\nM117 M109 called with {rawparams}"
+                    },
+                },
+                "settings": {
+                    "gcode_macro start_print": {
+                        "gcode": "\nM117 START_PRINT called with {rawparams}\nG28",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro end_print": {
+                        "gcode": "\nM117 END_PRINT called with {rawparams}",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro cancel_print": {
+                        "gcode": "\nM117 CANCEL_PRINT called with {rawparams}\nCANCEL_PRINT_BASE",
+                        "rename_existing": "CANCEL_PRINT_BASE",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro pause": {
+                        "gcode": "\nM117 PAUSE called with {rawparams}\nPAUSE_BASE",
+                        "rename_existing": "PAUSE_BASE",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro resume": {
+                        "gcode": "\nM117 RESUME called with {rawparams}\nRESUME_BASE",
+                        "rename_existing": "RESUME_BASE",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro m117": {
+                        "gcode": "\nM117.1 {rawparams}\n{action_respond_info(rawparams)}",
+                        "rename_existing": "M117.1",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro m600": {
+                        "gcode": "\nM117 M600 called with {rawparams}\nPAUSE",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro load_filament": {
+                        "gcode": "\nM117 Loading Filament! Please wait...",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro unload_filament": {
+                        "gcode": "\nM117 Unloading Filament! Please wait...",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro m104": {
+                        "gcode": "\nM117 M104 called with {rawparams}",
+                        "rename_existing": "M104.1",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro m109": {
+                        "gcode": "\nM117 M109 called with {rawparams}",
+                        "rename_existing": "M109.1",
+                        "description": "G-Code macro"
+                    },
+                },
                 "warnings": [],
                 "save_config_pending": False,
                 "save_config_pending_items": {}
