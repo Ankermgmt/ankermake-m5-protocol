@@ -126,6 +126,21 @@ def machine_update_status(refresh=False):
     }
 
 
+@dispatcher.add_method(name="machine.update.klipper")
+def machine_update_klipper():
+    return "ok"
+
+
+@dispatcher.add_method(name="machine.update.system")
+def machine_update_system():
+    return "ok"
+
+
+@dispatcher.add_method(name="machine.update.full")
+def machine_update_full():
+    return "ok"
+
+
 @dispatcher.add_method(name="machine.device_power.devices")
 def machine_device_power_devices():
     return {
