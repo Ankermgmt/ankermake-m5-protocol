@@ -110,11 +110,17 @@ def machine_update_status(refresh=False):
         "github_requests_remaining": 57,
         "github_limit_reset_time": 1615836932,
         "version_info": {
-            "ankerctl": {
-                "full_version_string": "0.1.2.3",
+            "system": {
+                "package_count": 0,
             },
-            "libflagship": {
-                "full_version_string": "0.4.5.6",
+            "ankerctl": {
+                "full_version_string": "2.0.0-alpha0",
+            },
+            "ankermake-m5-linux": {
+                "full_version_string": "3.0.16",
+            },
+            "ankermake-m5-marlin": {
+                "full_version_string": "3.0.46",
             },
         }
     }
