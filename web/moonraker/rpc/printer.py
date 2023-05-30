@@ -86,6 +86,8 @@ def printer_objects_list():
             "heater_bed",
             "gcode_macro M140",
             "gcode_macro M190",
+            "gcode_macro ANKERMAKE_LIGHT_ON",
+            "gcode_macro ANKERMAKE_LIGHT_OFF",
             "fan",
             "heater_fan heater_fan",
             "stepper_enable",
@@ -243,6 +245,14 @@ def printer_objects_subscribe(objects):
                         "rename_existing": "M109.1",
                         "gcode": "\nM117 M109 called with {rawparams}"
                     },
+                    "gcode_macro ANKERCTL_LIGHT_ON": {
+                        "gcode": "\nANKERCTL_LIGHT_ON {rawparams}",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro ANKERCTL_LIGHT_OFF": {
+                        "gcode": "\nANKERCTL_LIGHT_OFF {rawparams}",
+                        "description": "G-Code macro"
+                    },
                 },
                 "settings": {
                     "gcode_macro start_print": {
@@ -295,6 +305,14 @@ def printer_objects_subscribe(objects):
                         "rename_existing": "M109.1",
                         "description": "G-Code macro"
                     },
+                    "gcode_macro ankerctl_light_on": {
+                        "gcode": "\nANKERCTL_LIGHT_ON {rawparams}",
+                        "description": "G-Code macro"
+                    },
+                    "gcode_macro ankerctl_light_off": {
+                        "gcode": "\nANKERCTL_LIGHT_OFF {rawparams}",
+                        "description": "G-Code macro"
+                    },
                 },
                 "warnings": [],
                 "save_config_pending": False,
@@ -319,6 +337,8 @@ def printer_objects_subscribe(objects):
             "gcode_macro M109": {},
             "gcode_macro M140": {},
             "gcode_macro M190": {},
+            "gcode_macro ANKERMAKE_LIGHT_ON": {},
+            "gcode_macro ANKERMAKE_LIGHT_OFF": {},
             "stepper_enable": {
                 "steppers": {
                     "stepper_x": False,
