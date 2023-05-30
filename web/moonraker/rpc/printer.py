@@ -521,14 +521,17 @@ def printer_gcode_script(script):
             "nozzle": int(pstate.nozzle.target * 100),
             "heatbed": int(pstate.hotbed.target * 100),
         }
+        with app.svc.borrow("mqttqueue") as mqttq:
+            mqttq.client.command(update)
     else:
-        update = {
-            "commandType": MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value,
-            "cmdData": script,
-            "cmdLen": len(script),
-        }
-
-    with app.svc.borrow("mqttqueue") as mqttq:
-        mqttq.client.command(update)
+        with app.svc.borrow("mqttqueue") as mqttq:
+            for line in script.splitlines():
+                update = {
+                    "commandType": MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value,
+                    "userid": "ankerctl",
+                    "cmdData": line,
+                    "cmdLen": len(line),
+                }
+                mqttq.client.command(update)
 
     return "ok"
