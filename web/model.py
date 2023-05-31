@@ -66,3 +66,39 @@ class Job(Serialize):
 @dataclass
 class JobQueue(Serialize):
     jobs: list[Job]
+
+
+@dataclass
+class FileThumbnail(Serialize):
+    width: int
+    height: int
+    size: int
+    relative_path: str
+
+
+@dataclass
+class FileMetadata(Serialize):
+    print_start_time:      str                 | None = None
+    job_id:                str                 | None = None
+    size:                  int                 | None = None
+    modified:              float               | None = None
+    uuid:                  str                 | None = None
+    slicer:                str                 | None = None
+    slicer_version:        str                 | None = None
+    layer_height:          float               | None = None
+    first_layer_height:    float               | None = None
+    object_height:         float               | None = None
+    filament_total:        float               | None = None
+    estimated_time:        float               | None = None
+    thumbnails:            list[FileThumbnail] | None = None
+    first_layer_bed_temp:  float               | None = None
+    first_layer_extr_temp: float               | None = None
+    gcode_start_byte:      int                 | None = None
+    gcode_end_byte:        int                 | None = None
+    filename:              str                 | None = None
+    estimated_time:        float               | None = None
+    nozzle_diameter:       float               | None = None
+    filament_name:         str                 | None = None
+    filament_type:         str                 | None = None
+    filament_total:        float               | None = None
+    filament_weight_total: float               | None = None
