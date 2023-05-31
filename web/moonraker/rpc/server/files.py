@@ -1,5 +1,11 @@
 import psutil
 
+from web.model import FileMetadata
+from web.lib.gcodemeta import GCodeMetaAuto
+from web.lib.gcodemeta.ankerslicer import GCodeMetaAnkerSlicer
+from web.lib.gcodemeta.prusaslicer import GCodeMetaPrusaSlicer
+from web.lib.gcodemeta.superslicer import GCodeMetaSuperSlicer
+
 from jsonrpc import dispatcher
 from pathlib import Path
 
@@ -117,35 +123,28 @@ def server_files_get_directory(path):
 
 @dispatcher.add_method(name="server.files.metadata")
 def server_files_get_metadata(filename):
-    return {
-        "print_start_time": None,
-        "job_id": None,
-        "size": 4926481,
-        "modified": 1615077020.2025201,
-        "slicer": "SuperSlicer",
-        "slicer_version": "2.2.52",
-        "layer_height": 0.15,
-        "first_layer_height": 0.2,
-        "object_height": 48.05,
-        "filament_total": 4056.4,
-        "estimated_time": 7569,
-        "thumbnails": [
-            # {
-            #     "width": 32,
-            #     "height": 32,
-            #     "size": 2596,
-            #     "relative_path": ".thumbs/3DBenchy_0.15mm_PLA_MK3S_2h6m-32x32.png"
-            # },
-            # {
-            #     "width": 400,
-            #     "height": 300,
-            #     "size": 73308,
-            #     "relative_path": ".thumbs/3DBenchy_0.15mm_PLA_MK3S_2h6m-400x300.png"
-            # }
-        ],
-        "first_layer_bed_temp": 60,
-        "first_layer_extr_temp": 215,
-        "gcode_start_byte": 79451,
-        "gcode_end_byte": 4915668,
-        "filename": "3DBenchy_0.15mm_PLA_MK3S_2h6m.gcode"
-    }
+    pth = Path("database") / "gcodes" / filename
+
+    if not pth.exists():
+        raise FileNotFoundError(f"File not found: {filename}")
+
+    stat = pth.stat()
+
+    gcm = GCodeMetaAuto([
+        GCodeMetaAnkerSlicer(),
+        GCodeMetaPrusaSlicer(),
+        GCodeMetaSuperSlicer(),
+    ])
+
+    md = FileMetadata()
+
+    if pth.is_file():
+        fd = pth.open(mode="rb")
+        if gcm.detect(fd):
+            props = gcm.load_props(fd)
+            md = gcm.load_metadata(props)
+
+    md.size = stat.st_size
+    md.modified = stat.st_mtime
+    md.filename = filename
+    return md.to_dict()
