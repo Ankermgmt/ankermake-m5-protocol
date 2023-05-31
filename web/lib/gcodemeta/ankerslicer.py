@@ -6,6 +6,7 @@ from base64 import b64decode
 from web.lib.gcodemeta import GCodeMeta
 
 
+re_slicer = re.compile("^;AnkerMake version: (\S+)")
 re_thumb_begin = re.compile("; thumbnail begin (\d+) (\d+)")
 re_thumb_end = re.compile("; thumbnail end")
 
@@ -24,6 +25,15 @@ class GCodeMetaAnkerSlicer(GCodeMeta):
             return json.loads(val)
         except json.decoder.JSONDecodeError:
             return val
+
+    def _parse_slicer(self, data):
+        res = {}
+        for line in data.decode().splitlines():
+            if m := re_slicer.match(line):
+                res["__slicer_name"] = "AnkerSlicer"
+                res["__slicer_version"] = m.group(1).removeprefix("V").replace("_", "-")
+
+        return res
 
     def _parse_head(self, data):
         res = {}
@@ -73,13 +83,13 @@ class GCodeMetaAnkerSlicer(GCodeMeta):
         if not b";paramEnd" in data:
             return {}
 
-        data = data.split(b";paramEnd", 1)[0]
+        data, tail = data.split(b";paramEnd", 1)
 
         data = data.replace(b"\r\n;", b"")
 
         data = b64decode(data).decode()
 
-        res = {}
+        res = self._parse_slicer(tail)
         for line in data.splitlines():
             if "=" not in line:
                 continue
