@@ -3,6 +3,7 @@ import json
 
 from base64 import b64decode
 
+from web.model import FileMetadata, FileThumbnail
 from web.lib.gcodemeta import GCodeMeta
 
 
@@ -124,3 +125,29 @@ class GCodeMetaAnkerSlicer(GCodeMeta):
             }
 
         return res
+
+    def load_metadata(self, props):
+        return FileMetadata(
+            print_start_time=None,
+            job_id=None,
+            size=None,
+            modified=None,
+            uuid=None,
+            estimated_time=None,
+            filename=None,
+            first_layer_bed_temp=props.get("material_bed_temperature_layer_0"),
+            first_layer_extr_temp=props.get("material_print_temperature_layer_0"),
+            first_layer_height=props.get("layer_height_0"),
+            gcode_end_byte=None,
+            gcode_start_byte=None,
+            layer_height=props.get("layer_height"),
+            nozzle_diameter=props.get("machine_nozzle_size"),
+            object_height=props.get("_maxz"),
+            slicer=props.get("__slicer_name"),
+            slicer_version=props.get("__slicer_version"),
+            thumbnails=None,
+            filament_name=props.get("filament_settings_id"),
+            filament_type=props.get("filament_type") or props.get("meta_current_material_name"),
+            filament_total=float(props.get("_filament_used", "0m")[:-1]) * 1000.0,
+            filament_weight_total=float(props.get("_filament_weight", "0g")[:-1]),
+        )
