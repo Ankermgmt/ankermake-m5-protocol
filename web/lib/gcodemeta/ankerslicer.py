@@ -1,6 +1,14 @@
+import re
 import json
-from web.lib.gcodemeta import GCodeMeta
+
 from base64 import b64decode
+
+from web.lib.gcodemeta import GCodeMeta
+
+
+re_thumb_begin = re.compile("; thumbnail begin (\d+) (\d+)")
+re_thumb_end = re.compile("; thumbnail end")
+
 
 class GCodeMetaAnkerSlicer(GCodeMeta):
 
@@ -20,18 +28,39 @@ class GCodeMetaAnkerSlicer(GCodeMeta):
     def _parse_head(self, data):
         res = {}
 
+        thumbs = []
+        thumb = []
+        thumb_size = None
+
         for line in data.splitlines():
             line = line.decode()
 
             if not line.startswith(";"):
                 continue
 
-            if ":" not in line:
-                continue
+            if ":" in line:
+                key, value = line.split(":", 1)
+                key = key[1:].lower().replace(" ", "_")
+                res[f"_{key}"] = self.parse_prop(value.strip())
+            elif m := re_thumb_begin.match(line):
+                thumb = []
+                thumb_size = [int(m.group(1)), int(m.group(2))]
+            elif m := re_thumb_end.match(line):
+                thumbs.append((thumb_size, b64decode("".join(thumb))))
+                thumb = []
+            else:
+                thumb.append(line)
 
-            key, value = line.split(":", 1)
-            key = key[1:].lower().replace(" ", "_")
-            res[f"_{key}"] = self.parse_prop(value.strip())
+        if not thumbs:
+            return res
+
+        res["__thumbs"] = []
+        for t in thumbs:
+            res["__thumbs"].append({
+                "width": t[0][0],
+                "height": t[0][1],
+                "data": t[1],
+            })
 
         return res
 
