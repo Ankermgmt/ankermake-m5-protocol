@@ -4,6 +4,9 @@ on:
   push:
     tags:
      - v**
+    branches:
+      - 'upcoming/*'
+      - 'master'
   pull_request:
     branches: [ master ]
      
@@ -48,8 +51,12 @@ jobs:
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         flavor: |
-          latest=${{ github.event_name == 'push' }}
-        tags: ${{ github.ref_name }}
+          latest=${{ github.ref == 'refs/heads/master' }}
+        tags: |
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+          type=edge,value=edge,enable=${{ startsWith(github.ref, 'refs/heads/upcoming/') }}
+          type=raw,value=upcoming,enable=${{ startsWith(github.ref, 'refs/heads/upcoming/') }}
+          type=ref,event=tag
         
     - name: Build and push Docker images
       uses: docker/build-push-action@v4.0.0
@@ -87,4 +94,3 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         args: release/ankerctl*
-  
