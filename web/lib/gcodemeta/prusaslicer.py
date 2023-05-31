@@ -3,6 +3,7 @@ import json
 
 from base64 import b64decode
 
+from web.model import FileMetadata, FileThumbnail
 from web.lib.gcodemeta import GCodeMeta
 
 
@@ -102,3 +103,41 @@ class GCodeMetaPrusaSlicer(GCodeMeta):
         else:
             fd.seek(0)
             return self._parse_props(fd.read())
+
+    def _parse_estimated_time(self, time):
+        total = 0
+        for part in time.split():
+            val = int(part[:-1])
+            match part[-1]:
+                case "s": total += val
+                case "m": total += val * 60
+                case "h": total += val * 60 * 60
+        return total
+
+    def load_metadata(self, props):
+        estimated_time = self._parse_estimated_time(props.get("estimated_printing_time_normal_mode"))
+
+        return FileMetadata(
+            print_start_time=None,
+            job_id=None,
+            size=None,
+            modified=None,
+            uuid=None,
+            estimated_time=estimated_time,
+            filename=None,
+            first_layer_bed_temp=props.get("first_layer_bed_temperature"),
+            first_layer_extr_temp=props.get("first_layer_temperature"),
+            first_layer_height=props.get("first_layer_height"),
+            gcode_end_byte=None,
+            gcode_start_byte=None,
+            layer_height=props.get("layer_height"),
+            nozzle_diameter=props.get("nozzle_diameter"),
+            object_height=None,
+            slicer=props.get("__slicer_name"),
+            slicer_version=props.get("__slicer_version"),
+            thumbnails=None,
+            filament_name=props.get("filament_name"),
+            filament_type=props.get("filament_type"),
+            filament_total=props.get("filament_total") or props.get("filament_used_mm"),
+            filament_weight_total=props.get("filament_weight_total") or props.get("filament_used_g"),
+        )
