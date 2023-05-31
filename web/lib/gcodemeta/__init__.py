@@ -11,6 +11,9 @@ class GCodeMeta:
     def load_props(self, fd):
         raise NotImplemented
 
+    def load_metadata(self, props):
+        raise NotImplemented
+
 
 class GCodeMetaAuto(GCodeMeta):
 
@@ -31,3 +34,6 @@ class GCodeMetaAuto(GCodeMeta):
 
     def load_props(self, fd):
         return self.type.load_props(fd)
+
+    def load_metadata(self, props):
+        return self.type.load_metadata(props)
