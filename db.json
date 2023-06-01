@@ -1,0 +1,31 @@
+{
+    "announcements": {},
+    "gcode_metadata": {},
+    "history": {},
+    "mainsail": {
+        "dashboard": {
+            "nonExpandPanels": {
+                "widescreen": []
+            }
+        },
+        "gcodeViewer": {
+            "klipperCache": {
+                "axis_maximum": [
+                    235,
+                    235,
+                    250,
+                    0
+                ],
+                "axis_minimum": [
+                    -15,
+                    -15,
+                    -2,
+                    0
+                ]
+            }
+        }
+    },
+    "moonraker": {},
+    "update_manager": {},
+    "webcams": []
+}

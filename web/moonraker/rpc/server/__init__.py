@@ -1,4 +1,5 @@
 from jsonrpc import dispatcher
+from flask import request
 from flask import current_app as app
 
 
@@ -228,7 +229,7 @@ def server_config():
                 "flip_h": False,
                 "flip_v": False,
                 "rotate_90": False,
-                "stream_url": "/webcam/?action=stream",
+                "stream_url": f"ws://{app.config['host']}:{app.config['port']}/ws/video",
                 "webcam_enabled": True
             },
             "history": {},
@@ -299,7 +300,7 @@ def server_config():
                 "password": "{secrets.mqtt_credentials.password}",
                 "enable_moonraker_api": True,
                 #                    "status_objects": "\nwebhooks\ntoolhead=position,print_time\nidle_timeout=state\ngcode_macro M118"
-                }
+            }
         },
         "files": [
             {
@@ -322,6 +323,40 @@ def server_config():
                 "sections": [
                     "mqtt"
                 ]
+            }
+        ]
+    }
+
+
+@dispatcher.add_method(name="server.webcams.list")
+def server_webcams_list():
+    if hasattr(request, "host"):
+        if ":" in request.host:
+            request_host, request_port = request.host.split(":", 1)
+        else:
+            request_host = request.host
+            request_port = "80"
+    else:
+        request_host = app.config["host"]
+        request_port = app.config["port"]
+
+    return {
+        "webcams": [
+            {
+                "name": "AnkerMake M5",
+                "location": "printer",
+                "service": "jmuxer-stream",
+                "enabled": True,
+                "icon": "mdiWebcam",
+                "target_fps": 15,
+                "target_fps_idle": 5,
+                "stream_url": f"ws://{request_host}:{request_port}/ws/video",
+                "snapshot_url": "",
+                "flip_horizontal": False,
+                "flip_vertical": False,
+                "rotation": 0,
+                "aspect_ratio": "4:3",
+                "source": "config"
             }
         ]
     }
