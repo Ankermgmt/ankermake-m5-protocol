@@ -53,6 +53,7 @@ def printer_print_cancel():
         upd.notify_status_update(**{
             "print_stats": {
                 "state": "ready",
+                "filename": None,
             },
         }
     )
