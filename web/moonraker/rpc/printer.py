@@ -21,7 +21,7 @@ def printer_print_start(filename):
 
 
 @dispatcher.add_method(name="printer.print.pause")
-def printer_print_start():
+def printer_print_pause():
     with app.svc.borrow("updates") as upd:
         upd.notify_status_update(**{
             "display_status": {
@@ -36,7 +36,7 @@ def printer_print_start():
 
 
 @dispatcher.add_method(name="printer.print.resume")
-def printer_print_start():
+def printer_print_resume():
     with app.svc.borrow("updates") as upd:
         upd.notify_status_update(**{
             "print_stats": {
@@ -48,7 +48,7 @@ def printer_print_start():
 
 
 @dispatcher.add_method(name="printer.print.cancel")
-def printer_print_start():
+def printer_print_cancel():
     with app.svc.borrow("updates") as upd:
         upd.notify_status_update(**{
             "print_stats": {

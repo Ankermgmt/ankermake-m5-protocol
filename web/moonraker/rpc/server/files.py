@@ -122,7 +122,7 @@ def server_files_get_directory(path):
 
 
 @dispatcher.add_method(name="server.files.metadata")
-def server_files_get_metadata(filename):
+def server_files_metadata(filename):
     pth = Path("database") / "gcodes" / filename
 
     if not pth.exists():

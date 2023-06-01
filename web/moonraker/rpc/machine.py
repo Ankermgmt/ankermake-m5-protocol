@@ -203,17 +203,17 @@ def machine_proc_stats():
 
 
 @dispatcher.add_method(name="machine.services.restart")
-def machine_reboot(service):
+def machine_services_restart(service):
     return "ok"
 
 
 @dispatcher.add_method(name="machine.services.stop")
-def machine_reboot(service):
+def machine_services_stop(service):
     return "ok"
 
 
 @dispatcher.add_method(name="machine.services.start")
-def machine_reboot(service):
+def machine_services_start(service):
     return "ok"
 
 
