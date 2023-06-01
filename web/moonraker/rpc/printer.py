@@ -89,10 +89,7 @@ def printer_objects_list():
             "gcode_macro M190",
             "gcode_macro ANKERMAKE_LIGHT_ON",
             "gcode_macro ANKERMAKE_LIGHT_OFF",
-            "fan",
-            "heater_fan heater_fan",
             "stepper_enable",
-            "controller_fan controller_fan",
             "pause_resume",
             "display_status",
             "gcode_move",
@@ -155,14 +152,6 @@ def printer_objects_subscribe(objects):
                     "heater_bed",
                     "extruder"
                 ]
-            },
-            "fan": {
-                "speed": 0,
-                "rpm": None
-            },
-            "heater_fan heater_fan": {
-                "speed": 1,
-                "rpm": None
             },
             "display_status": {
                 "progress": 0,
@@ -347,10 +336,6 @@ def printer_objects_subscribe(objects):
                     "stepper_z": False,
                     "extruder": False
                 }
-            },
-            "controller_fan controller_fan": {
-                "speed": 0,
-                "rpm": None
             },
             "gcode_move": {
                 "speed_factor": 1,
