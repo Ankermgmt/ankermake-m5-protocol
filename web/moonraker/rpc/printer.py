@@ -96,7 +96,6 @@ def printer_objects_list():
             "exclude_object",
             "print_stats",
             "bed_mesh",
-            "motion_report",
             "idle_timeout",
             "system_stats",
             "toolhead",
@@ -427,26 +426,6 @@ def printer_objects_subscribe(objects):
                         }
                     },
                 }
-            },
-            "motion_report": {
-                "live_position": [
-                    0,
-                    0,
-                    0,
-                    0
-                ],
-                "live_velocity": 0,
-                "live_extruder_velocity": 0,
-                "steppers": [
-                    "extruder",
-                    "stepper_x",
-                    "stepper_y",
-                    "stepper_z"
-                ],
-                "trapq": [
-                    "extruder",
-                    "toolhead"
-                ]
             },
             "system_stats": {
                 "sysload": psutil.getloadavg()[0],
