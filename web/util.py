@@ -1,4 +1,4 @@
-from flask import flash, redirect, request
+from flask import flash, redirect, request, url_for
 
 
 def flash_redirect(path: str, message: str | None = None, category="info"):
@@ -24,6 +24,10 @@ def flash_redirect(path: str, message: str | None = None, category="info"):
         flash(message, category)
 
     return redirect(path)
+
+
+def flash_redirect_root(path: str, message: str | None = None, category="info"):
+    return flash_redirect(url_for("base.app_root"), message, category)
 
 
 def upload_file_to_printer(app, file):
