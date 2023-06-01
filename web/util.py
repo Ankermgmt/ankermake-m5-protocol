@@ -37,3 +37,33 @@ def upload_file_to_printer(app, file):
 
     with app.svc.borrow("filetransfer") as ft:
         ft.send_file(file, user_name)
+
+
+def get_host_port(app):
+    """
+    Extracts the host and port from the incoming request.
+    If no host or port is provided in the request,
+    the function falls back to the host and port from the application configuration.
+
+    Args:
+        - app (object): The application object.
+
+    Returns:
+    A list containing.
+        - request_host (str): A string representing the hostname.
+        - request_port (str): A string representing the port number. Defaults to '80'.
+
+    Raises:
+        - None
+    """
+    if hasattr(request, "host"):
+        if ":" in request.host:
+            request_host, request_port = request.host.split(":", 1)
+        else:
+            request_host = request.host
+            request_port = "80"
+    else:
+        request_host = app.config["host"]
+        request_port = app.config["port"]
+
+    return [request_host, request_port]
