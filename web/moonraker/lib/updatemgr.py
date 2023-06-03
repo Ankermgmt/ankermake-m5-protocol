@@ -36,6 +36,14 @@ class UpdateManager:
     def __getitem__(self, k):
         return self.obj[k]
 
+    def moonraker_status_update(self):
+        update = {}
+        for obj in self.compare():
+            update[obj] = self[obj].to_dict()
+        self.snapshot()
+
+        return update
+
     @property
     def webhooks(self):
         return self.obj.get("webhooks")
