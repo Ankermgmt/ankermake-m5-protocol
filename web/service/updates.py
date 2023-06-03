@@ -67,6 +67,12 @@ class UpdateNotifierService(Service):
                     "print_duration": total - time,
                 }
 
+            case MqttMsgType.ZZ_MQTT_CMD_MOTOR_LOCK:
+                locked = data.get("value", 0)
+                update["toolhead"] = {
+                    "homed_axes": "xyz" if locked else "",
+                }
+
             case MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND:
                 return rpcutil.make_jsonrpc_req("notify_gcode_response", data["resData"])
 
