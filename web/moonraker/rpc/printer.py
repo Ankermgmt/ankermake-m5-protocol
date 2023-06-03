@@ -78,11 +78,12 @@ def printer_firmware_restart():
 
 @dispatcher.add_method(name="printer.objects.list")
 def printer_objects_list():
+    with app.svc.borrow("updates") as upd:
+        objs = upd.umgr.moonraker_object_list()
+
     return {
         "objects": [
-            "webhooks",
-            "configfile",
-            "mcu",
+            *objs,
             "gcode_macro START_PRINT",
             "gcode_macro END_PRINT",
             "gcode_macro CANCEL_PRINT",
@@ -94,23 +95,10 @@ def printer_objects_list():
             "gcode_macro UNLOAD_FILAMENT",
             "gcode_macro M104",
             "gcode_macro M109",
-            "heaters",
-            "heater_bed",
             "gcode_macro M140",
             "gcode_macro M190",
             "gcode_macro ANKERMAKE_LIGHT_ON",
             "gcode_macro ANKERMAKE_LIGHT_OFF",
-            "stepper_enable",
-            "pause_resume",
-            "display_status",
-            "gcode_move",
-            "exclude_object",
-            "print_stats",
-            "bed_mesh",
-            "idle_timeout",
-            "system_stats",
-            "toolhead",
-            "extruder"
         ]
     }
 
