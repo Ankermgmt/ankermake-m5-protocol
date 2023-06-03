@@ -121,6 +121,25 @@ class StepperEnable(Serialize):
 
 
 @dataclass(unsafe_hash=True)
+class GcodeMove(Serialize):
+    speed_factor:         float       = 1
+    speed:                float       = 1500
+    extrude_factor:       float       = 1
+    absolute_coordinates: bool        = True
+    absolute_extrude:     bool        = True
+    homing_origin:        list[float] = field(default_factory=lambda: [0, 0, 0, 0])
+    position:             list[float] = field(default_factory=lambda: [0, 0, 0, 0])
+    gcode_position:       list[float] = field(default_factory=lambda: [0, 0, 0, 0])
+
+
+@dataclass(unsafe_hash=True)
+class ExcludeObject(Serialize):
+    objects: list[str] = field(default_factory=list)
+    excluded_objects: list[str] = field(default_factory=list)
+    current_object: str | None = None
+
+
+@dataclass(unsafe_hash=True)
 class BedMeshParams(Serialize):
     min_x:      float = 10
     max_x:      float = 225
