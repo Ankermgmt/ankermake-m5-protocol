@@ -1,3 +1,7 @@
+from dataclasses import dataclass, field
+
+from cli.model import Serialize
+
 #
 # moonraker api printer objects
 #
