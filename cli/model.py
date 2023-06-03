@@ -6,6 +6,29 @@ from libflagship.util import unhex, enhex
 
 class Serialize:
 
+    @staticmethod
+    def _safe_hash(obj):
+        h = 0
+        if isinstance(obj, list):
+            for e in obj:
+                h ^= Serialize._safe_hash(e)
+        elif isinstance(obj, dict):
+            for k, v in obj.items():
+                h ^= Serialize._safe_hash(k)
+                h ^= Serialize._safe_hash(v)
+        elif hasattr(obj, "__dataclass_fields__"):
+            return Serialize.__hash__(obj)
+        else:
+            h ^= hash(obj)
+        return h
+
+    def __hash__(self):
+        h = 0
+        for name in self.__dataclass_fields__:
+            field = getattr(self, name)
+            h ^= self._safe_hash(field)
+        return h
+
     @classmethod
     def from_dict(cls, data):
         res = {}
