@@ -8,8 +8,8 @@ from cli.model import Serialize
 
 @dataclass
 class Webhooks(Serialize):
-    state: str
-    state_message: str
+    state:         str = ""
+    state_message: str = ""
 
 
 @dataclass
@@ -26,7 +26,7 @@ class PrintStats(Serialize):
     filament_used:  float = 0
     state:          str   = ""
     message:        str   = ""
-    info:           PrintStatsInfo
+    info:           PrintStatsInfo = field(default_factory=PrintStatsInfo)
 
 
 @dataclass
@@ -87,19 +87,19 @@ class Toolhead(Serialize):
 
 @dataclass
 class ConfigFile(Serialize):
-    config:                    dict      = {}
-    settings:                  dict      = {}
+    config:                    dict      = field(default_factory=dict)
+    settings:                  dict      = field(default_factory=dict)
     warnings:                  list[str] = field(default_factory=list)
     save_config_pending:       bool      = False
-    save_config_pending_items: dict      = {}
+    save_config_pending_items: dict      = field(default_factory=dict)
 
 
 @dataclass
 class MCU(Serialize):
-    mcu_version: str = "Linux 4.4.94"
-    mcu_build_versions: str = "Ingenic r4.1.1-gcc720-glibc226-fp64 2020.11-05"
-    mcu_constants: dict = {}
-    last_stats: dict = {}
+    mcu_version:        str  = "Linux 4.4.94"
+    mcu_build_versions: str  = "Ingenic r4.1.1-gcc720-glibc226-fp64 2020.11-05"
+    mcu_constants:      dict = field(default_factory=dict)
+    last_stats:         dict = field(default_factory=dict)
 
 
 @dataclass
