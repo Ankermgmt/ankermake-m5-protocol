@@ -83,7 +83,7 @@ def server_files_delete_directory(path: Path, force: bool):
 
 
 @dispatcher.add_method(name="server.files.get_directory")
-def server_files_get_directory(path="gcodes", extended=False):
+def server_files_get_directory(path="gcodes", extended=False, root=None):
     pth = Path("database") / path
 
     dirs = []
