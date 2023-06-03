@@ -45,3 +45,25 @@ def server_files_upload():
         "print_queued": False,
         "action": "create_file"
     }
+
+
+# http wrapper for websocket endpoint (needed for Fluidd)
+@router.get("/database/item")
+def get_database_item():
+    return {
+        "result": server.database.server_database_get_item(
+            request.args.get("namespace")
+        )
+    }
+
+
+# http wrapper for websocket endpoint (needed for Fluidd)
+@router.post("/database/item")
+def post_database_item():
+    return {
+        "result": server.database.server_database_post_item(
+            request.args.get("namespace"),
+            request.args.get("key"),
+            request.args.get("value"),
+        )
+    }
