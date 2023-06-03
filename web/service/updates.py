@@ -171,6 +171,7 @@ class UpdateNotifierService(Service):
         if self.holdoff.passed:
             self.holdoff.reset(delay=1)
             self.pstats.append(self.pstate)
+            self.notify(rpcutil.make_jsonrpc_req("notify_status_update", {}))
 
         self.idle(timeout=timeout)
 
