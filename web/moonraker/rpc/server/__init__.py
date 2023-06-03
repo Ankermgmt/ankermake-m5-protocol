@@ -21,6 +21,11 @@ def server_announcements_list(include_dismissed=True):
     }
 
 
+@dispatcher.add_method(name="server.announcements.dismiss")
+def server_announcements_dismiss():
+    raise NotImplementedError()
+
+
 @dispatcher.add_method(name="server.info")
 def server_info():
     return {
@@ -105,6 +110,11 @@ def server_history_totals():
             "longest_print": 11348.794790096988
         }
     }
+
+
+@dispatcher.add_method(name="server.history.delete_job")
+def server_history_delete_job():
+    raise NotImplementedError()
 
 
 @dispatcher.add_method(name="server.gcode_store")
@@ -331,3 +341,10 @@ def server_config():
 @dispatcher.add_method(name="server.logs.rollover")
 def server_logs_rollover(application):
     ...
+
+
+@dispatcher.add_method(name="server.webcams.list")
+def server_webcams_list():
+    return {
+        "webcams": [],
+    }
