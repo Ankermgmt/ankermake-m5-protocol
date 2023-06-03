@@ -206,6 +206,10 @@ def printer_objects_subscribe(objects):
                     "display_status": {},
                     "exclude_object": {},
                     "virtual_sdcard": {},
+                    "heater_bed": {
+                        "min_temp": 0,
+                        "max_temp": 100,
+                    },
                     "gcode_macro START_PRINT": {
                         "gcode": "\nM117 START_PRINT called with {rawparams}\nG28"
                     },
