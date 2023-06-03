@@ -73,9 +73,7 @@ class UpdateNotifierService(Service):
 
             case MqttMsgType.ZZ_MQTT_CMD_MOTOR_LOCK:
                 locked = data.get("value", 0)
-                update["toolhead"] = {
-                    "homed_axes": "xyz" if locked else "",
-                }
+                umgr.toolhead.homed_axes = "xyz" if locked else ""
 
             case MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND:
                 result = data["resData"]
