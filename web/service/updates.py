@@ -3,6 +3,7 @@ from datetime import datetime
 from ..lib.service import Service, Holdoff
 from .. import rpcutil
 from web.model import PrinterState, PrinterStats, Heater
+from web.moonraker.lib.updatemgr import UpdateManager
 
 from libflagship.mqtt import MqttMsgType
 
@@ -156,6 +157,7 @@ class UpdateNotifierService(Service):
         self.pstats = PrinterStats(nozzle=[], hotbed=[])
         self.holdoff = Holdoff()
         self.holdoff.reset(delay=1)
+        self.umgr = UpdateManager()
         try:
             with open("stats.json") as fd:
                 self.pstats.load(fd)
@@ -172,6 +174,9 @@ class UpdateNotifierService(Service):
             self.holdoff.reset(delay=1)
             self.pstats.append(self.pstate)
             self.notify(rpcutil.make_jsonrpc_req("notify_status_update", {}))
+
+        if update := self.umgr.moonraker_status_update():
+            self.notify(rpcutil.make_jsonrpc_req("notify_status_update", update))
 
         self.idle(timeout=timeout)
 
