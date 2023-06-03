@@ -34,26 +34,18 @@ class UpdateNotifierService(Service):
             "eventtime": datetime.now().timestamp(),
         }
 
+        pstate = self.pstate
+        umgr = self.umgr
         match data.get("commandType", 0):
             case MqttMsgType.ZZ_MQTT_CMD_HOTBED_TEMP:
-                self.pstate.hotbed = Heater.from_mqtt(data)
-                update["heater_bed"] = {
-                    "temperature": self.pstate.hotbed.current,
-                    "target": self.pstate.hotbed.target,
-                    "power": None,
-                }
+                pstate.hotbed = Heater.from_mqtt(data)
+                umgr.heater_bed.temperature = pstate.hotbed.current
+                umgr.heater_bed.target = pstate.hotbed.target
 
             case MqttMsgType.ZZ_MQTT_CMD_NOZZLE_TEMP:
-                self.pstate.nozzle = Heater.from_mqtt(data)
-                update["extruder"] = {
-                    "temperature": self.pstate.nozzle.current,
-                    "target": self.pstate.nozzle.target,
-                    "power": 0,
-                    "can_extrude": True,
-                    "pressure_advance": None,
-                    "smooth_time": None,
-                    "motion_queue": None,
-                }
+                pstate.nozzle = Heater.from_mqtt(data)
+                umgr.extruder.temperature = pstate.nozzle.current
+                umgr.extruder.target = pstate.nozzle.target
 
             case MqttMsgType.ZZ_MQTT_CMD_AUTO_LEVELING:
                 index = data.get("value", 0)
