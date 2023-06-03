@@ -59,6 +59,14 @@ class UpdateNotifierService(Service):
                         "progress": None,
                     }
 
+            case MqttMsgType.ZZ_MQTT_CMD_PRINT_SCHEDULE:
+                total = 670
+                time = data.get("time", 0)
+                update["print_stats"] = {
+                    "total_duration": total - time,
+                    "print_duration": total - time,
+                }
+
             case MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND:
                 return rpcutil.make_jsonrpc_req("notify_gcode_response", data["resData"])
 
