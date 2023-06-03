@@ -194,10 +194,12 @@ def printer_objects_subscribe(objects):
                     0,
                     0
                 ],
-                "max_velocity": 300,
-                "max_accel": 3000,
-                "max_accel_to_decel": 1500,
-                "square_corner_velocity": 5
+                "max_velocity": 600,
+                "max_accel": 6000,
+                "max_accel_to_decel": None,
+
+                # 15 / sqrt(2)
+                "square_corner_velocity": 10.6
             },
             "configfile": {
                 "config": {
