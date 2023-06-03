@@ -31,10 +31,6 @@ def parse_leveling_grid(data):
 class UpdateNotifierService(Service):
 
     def mqtt_to_jsonrpc_req(self, data):
-        update = {
-            "eventtime": datetime.now().timestamp(),
-        }
-
         pstate = self.pstate
         umgr = self.umgr
         match data.get("commandType", 0):
@@ -92,8 +88,6 @@ class UpdateNotifierService(Service):
 
             case _:
                 return None
-
-        return rpcutil.make_jsonrpc_req("notify_status_update", update)
 
     def notify_error(self, message):
         self.notify(rpcutil.make_jsonrpc_req("notify_gcode_response", f"!! {message}"))
