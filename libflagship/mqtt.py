@@ -76,6 +76,55 @@ class MqttMsgType(enum.IntEnum):
     def pack(self):
         return struct.pack("B", self)
 
+class MqttPrintEvent(enum.IntEnum):
+    ZZ_MQTT_PRINT_EVENT_IDLE          = 0x00 # 
+    ZZ_MQTT_PRINT_EVENT_PRINTING      = 0x01 # 
+    ZZ_MQTT_PRINT_EVENT_PAUSED        = 0x02 # 
+    ZZ_MQTT_PRINT_EVENT_STOPPED       = 0x03 # 
+    ZZ_MQTT_PRINT_EVENT_COMPLETED     = 0x04 # 
+    ZZ_MQTT_PRINT_EVENT_LEVELING      = 0x05 # 
+    ZZ_MQTT_PRINT_EVENT_DOWNLOADING   = 0x06 # 
+    ZZ_MQTT_PRINT_EVENT_LEVEL_HEATING = 0x07 # 
+    ZZ_MQTT_PRINT_EVENT_HEATING       = 0x08 # 
+    ZZ_MQTT_PRINT_EVENT_PREHEAT       = 0x09 # 
+    ZZ_MQTT_PRINT_EVENT_PRINT_DL      = 0x0a # 
+    ZZ_MQTT_PRINT_EVENT_MAX           = 0x0b # 
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+
+    def pack(self):
+        return struct.pack("B", self)
+
+class MqttMarlinEvent(enum.IntEnum):
+    ZZ_MQTT_MARLIN_ALERT_HALTED      = 0x01 # 
+    ZZ_MQTT_MARLIN_ALERT_OFFLINE     = 0x02 # 
+    ZZ_MQTT_MARLIN_ALERT_NOZZEL_HEAT = 0x03 # 
+    ZZ_MQTT_MARLIN_ALERT_PANEL_HEAT  = 0x04 # 
+    ZZ_MQTT_MARLIN_ALERT_PRINT       = 0x05 # 
+    ZZ_MQTT_MARLIN_ALERT_BLANKING    = 0x06 # 
+    ZZ_MQTT_MARLIN_ALERT_BLOCKING    = 0x07 # 
+    ZZ_MQTT_MARLIN_ALERT_LEVELING    = 0x08 # 
+    ZZ_MQTT_MARLIN_COMM_ERR          = 0x09 # 
+    ZZ_MQTT_LBOARD_COMM_ERR          = 0x0a # 
+    ZZ_MQTT_NOZZLE_HIGH_TEMP         = 0x0b # 
+    ZZ_MQTT_HEATBED_HIGH_TEMP        = 0x0c # 
+    ZZ_MQTT_HEATBED_MOS1             = 0x0d # 
+    ZZ_MQTT_LEVEL_FAILED             = 0x0e # 
+    ZZ_MQTT_HEATBED_MOS2             = 0x0f # 
+    ZZ_MQTT_NOZZLE_LOW_TEMP          = 0x10 # 
+    ZZ_MQTT_MARLIN_AUTO_PAUSE        = 0x11 # 
+    ZZ_MQTT_PRINT_DL_FAILED          = 0x12 # 
+    ZZ_MQTT_MARLIN_ALERT_MAX         = 0x13 # 
+
+    @classmethod
+    def parse(cls, p):
+        return cls(struct.unpack("B", p[:1])[0]), p[1:]
+
+    def pack(self):
+        return struct.pack("B", self)
+
 @dataclass
 class _MqttMsg:
     signature  : bytes = field(repr=False, kw_only=True, default=b'MA') # Signature: 'MA'
