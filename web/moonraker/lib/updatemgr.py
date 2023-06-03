@@ -37,6 +37,16 @@ class UpdateManager:
     def __getitem__(self, k):
         return self.obj[k]
 
+    def moonraker_object_list(self):
+        return self.obj.keys()
+
+    def moonraker_status_full(self):
+        update = {}
+        for obj in self.obj:
+            update[obj] = self[obj].to_dict()
+
+        return update
+
     def moonraker_status_update(self):
         update = {}
         for obj in self.compare():
