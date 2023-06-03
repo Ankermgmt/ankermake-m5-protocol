@@ -173,9 +173,9 @@ def printer_objects_subscribe(objects):
             "toolhead": {
                 "homed_axes": "",
                 "axis_minimum": [
-                    -15,
-                    -15,
-                    -2,
+                    0,
+                    0,
+                    0,
                     0
                 ],
                 "axis_maximum": [
