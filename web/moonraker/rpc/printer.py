@@ -65,6 +65,16 @@ def printer_emergency_stop():
     return "ok"
 
 
+@dispatcher.add_method(name="printer.restart")
+def printer_restart():
+    raise NotImplementedError()
+
+
+@dispatcher.add_method(name="printer.firmware_restart")
+def printer_firmware_restart():
+    raise NotImplementedError()
+
+
 @dispatcher.add_method(name="printer.objects.list")
 def printer_objects_list():
     return {
