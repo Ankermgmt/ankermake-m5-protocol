@@ -50,26 +50,20 @@ class UpdateNotifierService(Service):
             case MqttMsgType.ZZ_MQTT_CMD_AUTO_LEVELING:
                 index = data.get("value", 0)
                 if index < 50:
-                    update["display_status"] = {
-                        "message": "Bed leveling in progress..",
-                        "progress": float(index) / 49.0,
-                    }
-                    update["virtual_sdcard"] = {
-                        "progress": float(index) / 49.0,
-                        "file_position": None
-                    }
-                    update["print_stats"] = {
-                        "total_duration": 1,
-                        "print_duration": 1,
-                        "filament_used": 1,
-                        "filename": None,
-                        "state": "printing",
-                    }
+                    umgr.display_status.message = "Bed leveling in progress.."
+                    umgr.display_status.progress = float(index) / 49.0
+
+                    umgr.virtual_sdcard.progress = float(index) / 49.0
+                    umgr.virtual_sdcard.file_position = None
+
+                    umgr.print_stats.total_duration = 1
+                    umgr.print_stats.print_duration = 1
+                    umgr.print_stats.filament_used = 1
+                    umgr.print_stats.filename = None
+                    umgr.print_stats.state = "printing"
                 else:
-                    update["display_status"] = {
-                        "message": None,
-                        "progress": None,
-                    }
+                    umgr.display_status.message = None
+                    umgr.display_status.progress = None
 
             case MqttMsgType.ZZ_MQTT_CMD_PRINT_SCHEDULE:
                 total = 670
