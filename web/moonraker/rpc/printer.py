@@ -141,7 +141,7 @@ def printer_objects_subscribe(objects):
             "heater_bed": {
                 "temperature": pstate.hotbed.current,
                 "target": pstate.hotbed.target,
-                "power": 0
+                "power": 0,
             },
             "extruder": {
                 "temperature": pstate.nozzle.current,
@@ -150,7 +150,7 @@ def printer_objects_subscribe(objects):
                 "can_extrude": True,
                 "pressure_advance": 0.1,
                 "smooth_time": 0.01,
-                "motion_queue": None
+                "motion_queue": None,
             },
             "heaters": {
                 "available_heaters": [
@@ -184,9 +184,9 @@ def printer_objects_subscribe(objects):
                     250,
                     0
                 ],
-                "print_time": 0.005,
+                "print_time": None,
                 "stalls": 0,
-                "estimated_print_time": 166.10390085,
+                "estimated_print_time": None,
                 "extruder": "extruder",
                 "position": [
                     0,
