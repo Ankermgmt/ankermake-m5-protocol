@@ -26,7 +26,7 @@ def flash_redirect(path: str, message: str | None = None, category="info"):
     return redirect(path)
 
 
-def flash_redirect_root(path: str, message: str | None = None, category="info"):
+def flash_redirect_root(message: str | None = None, category="info"):
     return flash_redirect(url_for("base.app_root"), message, category)
 
 
