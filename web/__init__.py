@@ -67,6 +67,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         import web.moonraker.server
         import web.base
         import web.api.ws
+        import web.api.access
         import web.api.ankerctl
         import web.api.octoprint
 
@@ -84,6 +85,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
             resources={
                 r"/server/*": {"origins": "*"},
                 r"/video/*": {"origins": "*"},
+                r"/access/*": {"origins": "*"},
             }
         )
 
@@ -119,6 +121,7 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.register_blueprint(web.api.ws.router, url_prefix="/ws")
         app.register_blueprint(web.api.octoprint.router, url_prefix="/api")
         app.register_blueprint(web.api.ankerctl.router, url_prefix="/api/ankerctl")
+        app.register_blueprint(web.api.access.router, url_prefix="/access")
         app.register_blueprint(web.base.router, url_prefix="/")
 
         app.run(host=host, port=port)
