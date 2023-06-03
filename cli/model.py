@@ -40,14 +40,26 @@ class Serialize:
                 res[k] = datetime.fromtimestamp(res[k])
         return cls(**res)
 
+    @staticmethod
+    def _to_dict(val):
+        if isinstance(val, bytes):
+            return enhex(val)
+        elif isinstance(val, datetime):
+            return val.timestamp()
+        elif isinstance(val, Serialize):
+            return val.to_dict()
+        elif isinstance(val, dict):
+            res = {}
+            for k, v in val.items():
+                res[k] = Serialize._to_dict(v)
+            return res
+        else:
+            return val
+
     def to_dict(self):
         res = {}
         for k, v in self.__dataclass_fields__.items():
-            res[k] = getattr(self, k)
-            if v.type == bytes:
-                res[k] = enhex(res[k])
-            elif v.type == datetime:
-                res[k] = res[k].timestamp()
+            res[k] = self._to_dict(getattr(self, k))
         return res
 
     @classmethod
