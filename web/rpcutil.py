@@ -4,7 +4,7 @@ import logging as log
 
 def format_jsonrpc_req(req):
     args = []
-    for key, value in req["params"].items():
+    for key, value in req.get("params", {}).items():
         args.append(f"{key}={json.dumps(value)}")
 
     return f"{req['method']}({', '.join(args)})"
