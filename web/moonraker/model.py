@@ -86,7 +86,7 @@ class Toolhead(Serialize):
 
 
 @dataclass(unsafe_hash=True)
-class ConfigFile(Serialize):
+class Configfile(Serialize):
     config:                    dict      = field(default_factory=dict)
     settings:                  dict      = field(default_factory=dict)
     warnings:                  list[str] = field(default_factory=list)
@@ -95,7 +95,7 @@ class ConfigFile(Serialize):
 
 
 @dataclass(unsafe_hash=True)
-class MCU(Serialize):
+class Mcu(Serialize):
     mcu_version:        str  = "Linux 4.4.94"
     mcu_build_versions: str  = "Ingenic r4.1.1-gcc720-glibc226-fp64 2020.11-05"
     mcu_constants:      dict = field(default_factory=dict)
