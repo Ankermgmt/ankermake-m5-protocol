@@ -10,7 +10,6 @@ def machine_timelapse_get_settings():
         "flip_x": False,
         "flip_y": False,
     }
-    raise NotImplementedError()
 
 
 @dispatcher.add_method(name="machine.timelapse.post_settings")
@@ -25,9 +24,15 @@ def machine_timelapse_render():
 
 @dispatcher.add_method(name="machine.timelapse.saveframes")
 def machine_timelapse_saveframes():
-    raise NotImplementedError()
+    return {
+        "status": "finished",
+        "msg": "",
+    }
 
 
 @dispatcher.add_method(name="machine.timelapse.lastframeinfo")
 def machine_timelapse_lastframeinfo():
-    raise NotImplementedError()
+    return {
+         "framecount": 0,
+         "lastframefile": ""
+    }
