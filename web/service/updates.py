@@ -68,10 +68,8 @@ class UpdateNotifierService(Service):
             case MqttMsgType.ZZ_MQTT_CMD_PRINT_SCHEDULE:
                 total = 670
                 time = data.get("time", 0)
-                update["print_stats"] = {
-                    "total_duration": total - time,
-                    "print_duration": total - time,
-                }
+                umgr.print_stats.total_duration = total - time
+                umgr.print_stats.print_duration = total - time
 
             case MqttMsgType.ZZ_MQTT_CMD_MOTOR_LOCK:
                 locked = data.get("value", 0)
