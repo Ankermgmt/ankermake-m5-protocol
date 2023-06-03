@@ -6,19 +6,19 @@ from cli.model import Serialize
 # moonraker api printer objects
 #
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class Webhooks(Serialize):
     state:         str = ""
     state_message: str = ""
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class PrintStatsInfo(Serialize):
     total_layer:   int = 0
     current_layer: int = 0
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class PrintStats(Serialize):
     filename:       str   = ""
     total_duration: float = 0
@@ -29,19 +29,19 @@ class PrintStats(Serialize):
     info:           PrintStatsInfo = field(default_factory=PrintStatsInfo)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class Status(Serialize):
     webhooks: Webhooks = None
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class HeaterBed(Serialize):
     temperature: float = 0
     target:      float = 0
     power:       float = 0
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class Extruder(Serialize):
     temperature:      float = 0,
     target:           float = 0,
@@ -51,25 +51,25 @@ class Extruder(Serialize):
     smooth_time:      float = 0,
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class Heaters(Serialize):
     available_heaters: list[str] = field(default_factory=lambda: ["heater_bed", "extruder"])
     available_sensors: list[str] = field(default_factory=lambda: ["heater_bed", "extruder"])
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class DisplayStatus(Serialize):
     progress: float = 0
     message: str = ""
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class IdleTimeout(Serialize):
     state: str = "Idle"
     printing_time: float = 0
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class Toolhead(Serialize):
     homed_axes: str = ""
     axis_minimum: list[float] = field(default_factory=lambda: [0, 0, 0, 0])
@@ -85,7 +85,7 @@ class Toolhead(Serialize):
     square_corner_velocity: float = 10.6 # 15 / sqrt(2)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class ConfigFile(Serialize):
     config:                    dict      = field(default_factory=dict)
     settings:                  dict      = field(default_factory=dict)
@@ -94,7 +94,7 @@ class ConfigFile(Serialize):
     save_config_pending_items: dict      = field(default_factory=dict)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class MCU(Serialize):
     mcu_version:        str  = "Linux 4.4.94"
     mcu_build_versions: str  = "Ingenic r4.1.1-gcc720-glibc226-fp64 2020.11-05"
@@ -102,12 +102,12 @@ class MCU(Serialize):
     last_stats:         dict = field(default_factory=dict)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class GcodeMacro(Serialize):
     pass
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class Steppers(Serialize):
     stepper_x: bool = False
     stepper_y: bool = False
@@ -115,12 +115,12 @@ class Steppers(Serialize):
     extruder:  bool = False
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class StepperEnable(Serialize):
     stepper_enable: Steppers = field(default_factory=Steppers)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class BedMeshParams(Serialize):
     min_x:      float = 10
     max_x:      float = 225
@@ -134,13 +134,13 @@ class BedMeshParams(Serialize):
     tension:    float = 0.2
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class BedMeshProfile(Serialize):
     points: list[list[float]] = field(default_factory=lambda: [[]])
     mesh_params: list[BedMeshParams] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class BedMesh(Serialize):
     profile_name: str = ""
     mesh_min: list[float] = field(default_factory=lambda: [0, 0])
@@ -150,6 +150,6 @@ class BedMesh(Serialize):
     profiles: dict[str, BedMeshProfile] = field(default_factory=dict)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class SystemStats(Serialize):
     pass
