@@ -210,6 +210,7 @@ def printer_objects_subscribe(objects):
                         "min_temp": 0,
                         "max_temp": 100,
                     },
+                    "bed_mesh": {},
                     "gcode_macro START_PRINT": {
                         "description": "G-Code macro",
                         "gcode": "\nM117 START_PRINT called with {rawparams}\nG28"
@@ -329,6 +330,7 @@ def printer_objects_subscribe(objects):
                         "gcode": "\nANKERCTL_LIGHT_OFF {rawparams}",
                         "description": "G-Code macro"
                     },
+                    "bed_mesh": {},
                 },
                 "warnings": [],
                 "save_config_pending": False,
