@@ -154,3 +154,7 @@ def server_files_metadata(filename):
     md.modified = stat.st_mtime
     md.filename = filename
     return md.to_dict()
+
+@dispatcher.add_method(name="server.files.zip")
+def server_files_zip():
+    raise NotImplementedError()
