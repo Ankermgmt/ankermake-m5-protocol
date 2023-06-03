@@ -88,8 +88,6 @@ class FileMetadata(Serialize):
     layer_height:          float               | None = None
     first_layer_height:    float               | None = None
     object_height:         float               | None = None
-    filament_total:        float               | None = None
-    estimated_time:        float               | None = None
     thumbnails:            list[FileThumbnail] | None = None
     first_layer_bed_temp:  float               | None = None
     first_layer_extr_temp: float               | None = None
