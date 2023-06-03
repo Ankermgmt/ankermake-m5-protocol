@@ -43,12 +43,12 @@ class HeaterBed(Serialize):
 
 @dataclass(eq=False)
 class Extruder(Serialize):
-    temperature:      float = 0,
-    target:           float = 0,
-    power:            float = 0,
-    can_extrude:      bool = True,
-    pressure_advance: float = 0,
-    smooth_time:      float = 0,
+    temperature:      float = 0
+    target:           float = 0
+    power:            float = 0
+    can_extrude:      bool = True
+    pressure_advance: float = 0
+    smooth_time:      float = 0
 
 
 @dataclass(eq=False)
