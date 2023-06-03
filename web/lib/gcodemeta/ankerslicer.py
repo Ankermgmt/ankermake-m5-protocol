@@ -145,7 +145,7 @@ class GCodeMetaAnkerSlicer(GCodeMeta):
             object_height=props.get("_maxz"),
             slicer=props.get("__slicer_name"),
             slicer_version=props.get("__slicer_version"),
-            thumbnails=None,
+            thumbnails=[],
             filament_name=props.get("filament_settings_id"),
             filament_type=props.get("filament_type") or props.get("meta_current_material_name"),
             filament_total=float(props.get("_filament_used", "0m")[:-1]) * 1000.0,

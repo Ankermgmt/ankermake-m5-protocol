@@ -135,7 +135,7 @@ class GCodeMetaPrusaSlicer(GCodeMeta):
             object_height=None,
             slicer=props.get("__slicer_name"),
             slicer_version=props.get("__slicer_version"),
-            thumbnails=None,
+            thumbnails=[],
             filament_name=props.get("filament_name"),
             filament_type=props.get("filament_type"),
             filament_total=props.get("filament_total") or props.get("filament_used_mm"),
