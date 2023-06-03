@@ -38,3 +38,13 @@ def machine_update_system():
 @dispatcher.add_method(name="machine.update.full")
 def machine_update_full():
     return "ok"
+
+
+@dispatcher.add_method(name="machine.update.client")
+def machine_update_client():
+    raise NotImplementedError()
+
+
+@dispatcher.add_method(name="machine.update.recover")
+def machine_update_recover():
+    raise NotImplementedError()
