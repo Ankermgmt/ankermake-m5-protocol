@@ -191,6 +191,7 @@ def printer_objects_subscribe(objects):
             },
             "configfile": {
                 "config": {
+                    "timelapse": {},
                     "pause_resume": {},
                     "display_status": {},
                     "exclude_object": {},
@@ -244,6 +245,7 @@ def printer_objects_subscribe(objects):
                     },
                 },
                 "settings": {
+                    "timelapse": {},
                     "gcode_macro start_print": {
                         "gcode": "\nM117 START_PRINT called with {rawparams}\nG28",
                         "description": "G-Code macro"
