@@ -211,6 +211,11 @@ def printer_objects_subscribe(objects):
                         "max_temp": 100,
                     },
                     "bed_mesh": {},
+                    "extruder": {
+                        "min_temp": 0,
+                        "max_temp": 260,
+                        "min_extrude_temp": 165,
+                    },
                     "gcode_macro START_PRINT": {
                         "description": "G-Code macro",
                         "gcode": "\nM117 START_PRINT called with {rawparams}\nG28"
@@ -331,6 +336,7 @@ def printer_objects_subscribe(objects):
                         "description": "G-Code macro"
                     },
                     "bed_mesh": {},
+                    "extruder": {},
                 },
                 "warnings": [],
                 "save_config_pending": False,
