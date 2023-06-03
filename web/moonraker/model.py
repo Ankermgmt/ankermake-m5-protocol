@@ -8,8 +8,8 @@ from cli.model import Serialize
 
 @dataclass(eq=False)
 class Webhooks(Serialize):
-    state:         str = ""
-    state_message: str = ""
+    state:         str = "ready"
+    state_message: str = "Printer is ready"
 
 
 @dataclass(eq=False)
@@ -24,7 +24,7 @@ class PrintStats(Serialize):
     total_duration: float = 0
     print_duration: float = 0
     filament_used:  float = 0
-    state:          str   = ""
+    state:          str   = "standby"
     message:        str   = ""
     info:           PrintStatsInfo = field(default_factory=PrintStatsInfo)
 
@@ -145,8 +145,8 @@ class BedMeshParams(Serialize):
     max_x:      float = 225
     min_y:      float = 10
     max_y:      float = 225
-    x_count:    int = 5
-    y_count:    int = 5
+    x_count:    int = 7
+    y_count:    int = 7
     mesh_x_pps: int = 5
     mesh_y_pps: int = 5
     algo:       str = "bicubic"
@@ -163,7 +163,7 @@ class BedMeshProfile(Serialize):
 class BedMesh(Serialize):
     profile_name: str = ""
     mesh_min: list[float] = field(default_factory=lambda: [0, 0])
-    mesh_max: list[float] = field(default_factory=lambda: [0, 0])
+    mesh_max: list[float] = field(default_factory=lambda: [235, 235])
     probed_matrix: list[list[float]] = field(default_factory=lambda: [[]])
     mesh_matrix: list[list[float]] = field(default_factory=lambda: [[]])
     profiles: dict[str, BedMeshProfile] = field(default_factory=dict)
