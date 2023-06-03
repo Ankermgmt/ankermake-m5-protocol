@@ -140,6 +140,13 @@ class ExcludeObject(Serialize):
 
 
 @dataclass(eq=False)
+class VirtualSdcard(Serialize):
+    progress: float = 0
+    is_active: bool = False
+    file_position: int = 0
+
+
+@dataclass(eq=False)
 class BedMeshParams(Serialize):
     min_x:      float = 10
     max_x:      float = 225

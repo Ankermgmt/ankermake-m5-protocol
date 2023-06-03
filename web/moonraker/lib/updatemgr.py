@@ -17,6 +17,7 @@ class UpdateManager:
             "stepper_enable": StepperEnable(),
             "gcode_move":     GcodeMove(),
             "exclude_object": ExcludeObject(),
+            "virtual_sdcard": VirtualSdcard(),
             "bed_mesh":       BedMesh(),
             "system_stats":   SystemStats(),
         }
@@ -95,6 +96,10 @@ class UpdateManager:
     @property
     def exclude_object(self):
         return self.obj.get("exclude_object")
+
+    @property
+    def virtual_sdcard(self):
+        return self.obj.get("virtual_sdcard")
 
     @property
     def bed_mesh(self):
