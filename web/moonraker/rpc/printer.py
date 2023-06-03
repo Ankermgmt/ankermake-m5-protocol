@@ -508,6 +508,7 @@ def printer_gcode_help():
 @dispatcher.add_method(name="printer.gcode.script")
 def printer_gcode_script(script):
     gcode = GCode(script)
+
     if gcode.cmd == "SET_HEATER_TEMPERATURE":
         with app.svc.borrow("updates") as upd:
             pstate = upd.pstate
@@ -525,6 +526,15 @@ def printer_gcode_script(script):
         }
         with app.svc.borrow("mqttqueue") as mqttq:
             mqttq.client.command(update)
+
+    elif gcode.cmd == "M117":
+        with app.svc.borrow("updates") as upd:
+            upd.notify_status_update(display_status={
+                "progress": 0,
+                "message": " ".join(gcode.args)
+            })
+        return "ok"
+
     else:
         with app.svc.borrow("mqttqueue") as mqttq:
             for line in script.splitlines():
