@@ -156,7 +156,7 @@ class BedMeshParams(Serialize):
 @dataclass(eq=False)
 class BedMeshProfile(Serialize):
     points: list[list[float]] = field(default_factory=lambda: [[]])
-    mesh_params: list[BedMeshParams] = field(default_factory=list)
+    mesh_params: BedMeshParams = field(default_factory=lambda: BedMeshParams)
 
 
 @dataclass(eq=False)
