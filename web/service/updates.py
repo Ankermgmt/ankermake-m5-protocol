@@ -7,6 +7,25 @@ from web.model import PrinterState, PrinterStats, Heater
 from libflagship.mqtt import MqttMsgType
 
 
+def parse_leveling_grid(data):
+    lines = data.splitlines()
+
+    if not lines[0].startswith("Bilinear Leveling Grid:"):
+        return
+
+    if not lines[1].split()[0] == "0":
+        return
+
+    if not lines[2].split()[0] == "0":
+        return
+
+    res = []
+    for line in lines[2:9]:
+        res.append([float(n) for n in line.split()[1:]])
+
+    return res
+
+
 class UpdateNotifierService(Service):
 
     def mqtt_to_jsonrpc_req(self, data):
@@ -74,7 +93,40 @@ class UpdateNotifierService(Service):
                 }
 
             case MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND:
-                return rpcutil.make_jsonrpc_req("notify_gcode_response", data["resData"])
+                result = data["resData"]
+                if result.startswith("Bilinear Leveling Grid"):
+                    mesh = parse_leveling_grid(result)
+                    mesh_params = {
+                        "min_x": 0,
+                        "min_y": 0,
+                        "max_x": 235,
+                        "max_y": 235,
+                        "x_count": 5,
+                        "y_count": 5,
+                        "mesh_x_pps": 5,
+                        "mesh_y_pps": 5,
+                        "algo": "bicubic",
+                        "tension": 0.2
+                    }
+                    return rpcutil.make_jsonrpc_req("notify_status_update", {
+                            "bed_mesh": {
+                                "profile_name": "anker-builtin",
+                                "mesh_min": [  0,   0],
+                                "mesh_max": [235, 235],
+                                "mesh_params": mesh_params,
+                                "probed_matrix": mesh,
+                                "profiles": {
+                                    "anker-builtin": {
+                                        "points": mesh,
+                                        "mesh_params": mesh_params,
+                                    }
+                                }
+                            }
+                        },
+                        datetime.now().timestamp()
+                    )
+                else:
+                    return rpcutil.make_jsonrpc_req("notify_gcode_response", result)
 
             case _:
                 return None
