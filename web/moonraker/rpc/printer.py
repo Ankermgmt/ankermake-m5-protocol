@@ -211,42 +211,53 @@ def printer_objects_subscribe(objects):
                         "max_temp": 100,
                     },
                     "gcode_macro START_PRINT": {
+                        "description": "G-Code macro",
                         "gcode": "\nM117 START_PRINT called with {rawparams}\nG28"
                     },
                     "gcode_macro END_PRINT": {
+                        "description": "G-Code macro",
                         "gcode": "\nM117 END_PRINT called with {rawparams}"
                     },
                     "gcode_macro CANCEL_PRINT": {
                         "rename_existing": "CANCEL_PRINT_BASE",
+                        "description": "G-Code macro",
                         "gcode": "\nM117 CANCEL_PRINT called with {rawparams}\nCANCEL_PRINT_BASE"
                     },
                     "gcode_macro PAUSE": {
                         "rename_existing": "PAUSE_BASE",
+                        "description": "G-Code macro",
                         "gcode": "\nM117 PAUSE called with {rawparams}\nPAUSE_BASE"
                     },
                     "gcode_macro RESUME": {
                         "rename_existing": "RESUME_BASE",
+                        "description": "G-Code macro",
                         "gcode": "\nM117 RESUME called with {rawparams}\nRESUME_BASE"
                     },
                     "gcode_macro M117": {
                         "rename_existing": "M117.1",
+                        "description": "G-Code macro",
                         "gcode": "\nM117.1 {rawparams}\n{action_respond_info(rawparams)}"
                     },
                     "gcode_macro M600": {
+                        "description": "G-Code macro",
                         "gcode": "\nM117 M600 called with {rawparams}\nPAUSE"
                     },
                     "gcode_macro LOAD_FILAMENT": {
+                        "description": "G-Code macro",
                         "gcode": "\nM117 Loading Filament! Please wait..."
                     },
                     "gcode_macro UNLOAD_FILAMENT": {
+                        "description": "G-Code macro",
                         "gcode": "\nM117 Unloading Filament! Please wait..."
                     },
                     "gcode_macro M104": {
                         "rename_existing": "M104.1",
+                        "description": "G-Code macro",
                         "gcode": "\nM117 M104 called with {rawparams}"
                     },
                     "gcode_macro M109": {
                         "rename_existing": "M109.1",
+                        "description": "G-Code macro",
                         "gcode": "\nM117 M109 called with {rawparams}"
                     },
                     "gcode_macro ANKERCTL_LIGHT_ON": {
