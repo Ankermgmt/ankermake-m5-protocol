@@ -34,6 +34,31 @@ class UpdateNotifierService(Service):
                     "smooth_time": None,
                     "motion_queue": None,
                 }
+
+            case MqttMsgType.ZZ_MQTT_CMD_AUTO_LEVELING:
+                index = data.get("value", 0)
+                if index < 50:
+                    update["display_status"] = {
+                        "message": "Bed leveling in progress..",
+                        "progress": float(index) / 49.0,
+                    }
+                    update["virtual_sdcard"] = {
+                        "progress": float(index) / 49.0,
+                        "file_position": None
+                    }
+                    update["print_stats"] = {
+                        "total_duration": 1,
+                        "print_duration": 1,
+                        "filament_used": 1,
+                        "filename": None,
+                        "state": "printing",
+                    }
+                else:
+                    update["display_status"] = {
+                        "message": None,
+                        "progress": None,
+                    }
+
             case MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND:
                 return rpcutil.make_jsonrpc_req("notify_gcode_response", data["resData"])
 
