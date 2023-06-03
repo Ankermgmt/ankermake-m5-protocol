@@ -536,6 +536,14 @@ def printer_gcode_script(script):
             })
         return "ok"
 
+    elif gcode.cmd == "ANKERCTL_LIGHT_ON":
+        with app.svc.borrow("videoqueue") as vq:
+            vq.api_light_state(True)
+
+    elif gcode.cmd == "ANKERCTL_LIGHT_OFF":
+        with app.svc.borrow("videoqueue") as vq:
+            vq.api_light_state(False)
+
     else:
         with app.svc.borrow("mqttqueue") as mqttq:
             for line in script.splitlines():
