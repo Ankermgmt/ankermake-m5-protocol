@@ -1,3 +1,4 @@
+import time
 import psutil
 
 from flask import current_app as app
@@ -545,5 +546,6 @@ def printer_gcode_script(script):
                     "cmdLen": len(line),
                 }
                 mqttq.client.command(update)
+                time.sleep(0.2)
 
     return "ok"
