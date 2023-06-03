@@ -1,7 +1,7 @@
 import copy
 import json
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from cli.model import Serialize
 
 
@@ -88,7 +88,7 @@ class FileMetadata(Serialize):
     layer_height:          float               | None = None
     first_layer_height:    float               | None = None
     object_height:         float               | None = None
-    thumbnails:            list[FileThumbnail] | None = None
+    thumbnails:            list[FileThumbnail] | None = field(default_factory=list)
     first_layer_bed_temp:  float               | None = None
     first_layer_extr_temp: float               | None = None
     gcode_start_byte:      int                 | None = None
