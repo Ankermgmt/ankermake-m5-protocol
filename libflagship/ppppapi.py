@@ -298,7 +298,7 @@ class AnkerPPPPBaseApi(Thread):
 
         if msg.type == Type.CLOSE:
             log.error("CLOSE")
-            raise ConnectionResetError
+            raise ConnectionResetError("Printer rejected connection")
 
         elif msg.type == Type.REPORT_SESSION_READY:
             pkt = PktSessionReady(
