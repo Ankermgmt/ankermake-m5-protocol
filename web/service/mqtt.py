@@ -4,11 +4,23 @@ from multiprocessing import Queue
 from ..lib.service import Service
 
 from libflagship.util import enhex
+from libflagship.mqtt import MqttMsgType
 
 import cli.mqtt
 
 
 class MqttQueue(Service):
+
+    def api_command(self, msg):
+        self.queue.put(msg)
+
+    def api_gcode(self, gcode):
+        self.api_command({
+            "commandType": MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value,
+            "userid": "ankerctl",
+            "cmdData": gcode,
+            "cmdLen": len(gcode),
+        })
 
     def worker_start(self):
         config = self.app.config
