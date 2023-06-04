@@ -2,6 +2,7 @@ import psutil
 
 from jsonrpc import dispatcher
 from pathlib import Path
+from flask import current_app as app
 
 from web.model import FileMetadata
 from web.lib.gcodemeta import GCodeMetaAuto
@@ -153,7 +154,19 @@ def server_files_metadata(filename):
     md.size = stat.st_size
     md.modified = stat.st_mtime
     md.filename = filename
-    return md.to_dict()
+
+    with app.svc.borrow("jobqueue") as jq:
+        job_info = {}
+        for h in jq.queue.history:
+            if h.filename == filename:
+                job_info["job_id"] = h.job_id
+                job_info["uuid"] = h.metadata.uuid
+                break
+
+    return {
+        **md.to_dict(),
+        **job_info,
+    }
 
 @dispatcher.add_method(name="server.files.zip")
 def server_files_zip():
