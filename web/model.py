@@ -80,7 +80,7 @@ class FileMetadata(Serialize):
 @dataclass
 class Job(Serialize):
     filename:      str
-    job_id:        bytes
+    job_id:        str
     time_added:    datetime
     exists:        bool            = True
     start_time:    datetime | None = None

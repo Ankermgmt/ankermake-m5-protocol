@@ -25,7 +25,6 @@ def server_job_queue_post_job(filenames, reset=False):
 @dispatcher.add_method(name="server.job_queue.delete_job")
 def server_job_queue_delete_job(job_ids):
     with app.svc.borrow("jobqueue") as jq:
-        job_ids = [unhex(ji) for ji in job_ids]
         jq.delete_jobs(job_ids)
 
         return jq.queue_state()
