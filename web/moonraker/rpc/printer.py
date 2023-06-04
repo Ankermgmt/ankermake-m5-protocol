@@ -1,5 +1,6 @@
 import time
 import psutil
+import logging as log
 
 from datetime import datetime
 from flask import current_app as app
@@ -349,6 +350,13 @@ def printer_gcode_script(script):
     elif gcode.cmd == "ANKERCTL_LIGHT_OFF":
         with app.svc.borrow("videoqueue") as vq:
             vq.api_light_state(False)
+
+    elif gcode.cmd == "BED_MESH_PROFILE":
+        with app.svc.borrow("mqttqueue") as mqttq:
+            if gcode.vals.get("LOAD") == "ankermake-builtin":
+                mqttq.api_gcode("M420 V1")
+            else:
+                log.error(f"Unsupported gcode: {gcode}")
 
     else:
         with app.svc.borrow("mqttqueue") as mqttq:
