@@ -119,7 +119,6 @@ class GCodeMetaPrusaSlicer(GCodeMeta):
 
         return FileMetadata(
             print_start_time=None,
-            job_id=None,
             size=None,
             modified=None,
             uuid=None,

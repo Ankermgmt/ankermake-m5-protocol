@@ -55,7 +55,6 @@ class FileThumbnail(Serialize):
 @dataclass
 class FileMetadata(Serialize):
     print_start_time:      str                 | None = None
-    job_id:                str                 | None = None
     size:                  int                 | None = None
     modified:              float               | None = None
     uuid:                  str                 | None = None

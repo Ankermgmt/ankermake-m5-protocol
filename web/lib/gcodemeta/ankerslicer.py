@@ -129,7 +129,6 @@ class GCodeMetaAnkerSlicer(GCodeMeta):
     def load_metadata(self, props):
         return FileMetadata(
             print_start_time=None,
-            job_id=None,
             size=None,
             modified=None,
             uuid=None,
