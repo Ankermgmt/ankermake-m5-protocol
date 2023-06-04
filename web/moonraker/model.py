@@ -173,7 +173,7 @@ class BedMesh(Serialize):
     mesh_max: list[float] = field(default_factory=lambda: [235, 235])
     probed_matrix: list[list[float]] = field(default_factory=lambda: [[]])
     mesh_matrix: list[list[float]] = field(default_factory=lambda: [[]])
-    profiles: dict[str, BedMeshProfile] = field(default_factory=dict)
+    profiles: dict[str, BedMeshProfile] = field(default_factory=lambda: {"ankermake-builtin": BedMeshProfile()})
 
 
 @dataclass(eq=False)
