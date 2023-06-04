@@ -1,4 +1,5 @@
 import logging as log
+from multiprocessing import Queue
 
 from ..lib.service import Service
 
@@ -16,8 +17,14 @@ class MqttQueue(Service):
             config["printer_index"],
             config["insecure"]
         )
+        self.queue = Queue()
 
     def worker_run(self, timeout):
+        while not self.queue.empty():
+            msg = self.queue.get()
+            log.info(f"COMMAND [{msg}]")
+            self.client.command(msg)
+
         for msg, body in self.client.fetch(timeout=timeout):
             log.info(f"TOPIC [{msg.topic}]")
             log.debug(enhex(msg.payload[:]))
