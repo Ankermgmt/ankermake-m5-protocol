@@ -38,11 +38,13 @@ class UpdateNotifierService(Service):
                 pstate.hotbed = Heater.from_mqtt(data)
                 umgr.heater_bed.temperature = pstate.hotbed.current
                 umgr.heater_bed.target = pstate.hotbed.target
+                umgr.heater_bed.power = int(pstate.hotbed.target > pstate.hotbed.current)
 
             case MqttMsgType.ZZ_MQTT_CMD_NOZZLE_TEMP:
                 pstate.nozzle = Heater.from_mqtt(data)
                 umgr.extruder.temperature = pstate.nozzle.current
                 umgr.extruder.target = pstate.nozzle.target
+                umgr.extruder.power = int(pstate.nozzle.target > pstate.nozzle.current)
 
             case MqttMsgType.ZZ_MQTT_CMD_AUTO_LEVELING:
                 index = data.get("value", 0)
