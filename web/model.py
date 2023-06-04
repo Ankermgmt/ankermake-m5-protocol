@@ -45,22 +45,6 @@ class PrinterStats:
 
 
 @dataclass
-class Job(Serialize):
-    filename: str
-    job_id: bytes
-    time_added: datetime
-
-    @property
-    def time_in_queue(self):
-        return datetime.now() - self.time_added
-
-
-@dataclass
-class JobQueue(Serialize):
-    jobs: list[Job]
-
-
-@dataclass
 class FileThumbnail(Serialize):
     width: int
     height: int
@@ -92,3 +76,19 @@ class FileMetadata(Serialize):
     filament_type:         str                 | None = None
     filament_total:        float               | None = None
     filament_weight_total: float               | None = None
+
+
+@dataclass
+class Job(Serialize):
+    filename: str
+    job_id: bytes
+    time_added: datetime
+
+    @property
+    def time_in_queue(self):
+        return datetime.now() - self.time_added
+
+
+@dataclass
+class JobQueue(Serialize):
+    jobs: list[Job]
