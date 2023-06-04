@@ -153,6 +153,7 @@ def machine_proc_stats():
 
 @dispatcher.add_method(name="machine.services.restart")
 def machine_services_restart(service):
+    app.svc.restart_all(await_ready=True)
     return "ok"
 
 
