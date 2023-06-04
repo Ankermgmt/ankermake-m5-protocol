@@ -11,7 +11,7 @@ class JobQueueService(Service):
     def worker_init(self):
         self.cfg = BaseConfigManager(PlatformDirs("ankerctl"), classes=(Job, JobQueue, FileMetadata))
         try:
-            self.queue = self.cfg.load("jobs", JobQueue(jobs=[]))
+            self.queue = self.cfg.load("jobs", JobQueue(jobs=[], history=[]))
         except OSError:
             pass
 

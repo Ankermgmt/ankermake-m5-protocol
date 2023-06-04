@@ -110,3 +110,4 @@ class Job(Serialize):
 @dataclass
 class JobQueue(Serialize):
     jobs: list[Job]
+    history: list[Job]
