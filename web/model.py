@@ -95,6 +95,11 @@ class Job(Serialize):
     def time_in_queue(self):
         return datetime.now() - self.time_added
 
+    @property
+    def time_taken(self):
+        if self.start_time and self.end_time:
+            return (self.end_time - self.start_time).total_seconds()
+
 
 @dataclass
 class JobQueue(Serialize):
