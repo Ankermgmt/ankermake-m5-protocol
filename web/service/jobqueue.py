@@ -3,13 +3,13 @@ from platformdirs import PlatformDirs
 
 from cli.config import BaseConfigManager
 from ..lib.service import Service
-from web.model import Job, JobQueue
+from web.model import Job, JobQueue, FileMetadata
 
 
 class JobQueueService(Service):
 
     def worker_init(self):
-        self.cfg = BaseConfigManager(PlatformDirs("ankerctl"), classes=(Job, JobQueue))
+        self.cfg = BaseConfigManager(PlatformDirs("ankerctl"), classes=(Job, JobQueue, FileMetadata))
         try:
             self.queue = self.cfg.load("jobs", JobQueue(jobs=[]))
         except OSError:
