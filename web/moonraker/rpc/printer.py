@@ -336,11 +336,7 @@ def printer_gcode_script(script):
 
     elif gcode.cmd == "M117":
         with app.svc.borrow("updates") as upd:
-            upd.notify_status_update(display_status={
-                "progress": 0,
-                "message": " ".join(gcode.args)
-            })
-        return "ok"
+            upd.umgr.display_status.message = " ".join(gcode.args)
 
     elif gcode.cmd == "ANKERCTL_LIGHT_ON":
         with app.svc.borrow("videoqueue") as vq:
