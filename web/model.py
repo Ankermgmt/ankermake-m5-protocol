@@ -100,6 +100,12 @@ class Job(Serialize):
         if self.start_time and self.end_time:
             return (self.end_time - self.start_time).total_seconds()
 
+    def to_dict(self, recursive=True):
+        return {
+            **super().to_dict(recursive),
+            "time_in_queue": self.time_in_queue.total_seconds()
+        }
+
 
 @dataclass
 class JobQueue(Serialize):
