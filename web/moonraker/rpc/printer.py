@@ -325,15 +325,14 @@ def printer_gcode_script(script):
             case "extruder":   pstate.nozzle.target = float(gcode.vals["TARGET"])
             case "heater_bed": pstate.hotbed.target = float(gcode.vals["TARGET"])
 
-        update = {
-            "commandType": MqttMsgType.ZZ_MQTT_CMD_PREHEAT_CONFIG.value,
-            "userid": "ankerctl",
-            "value": int(bool(pstate.nozzle.target or pstate.hotbed.target)),
-            "nozzle": int(pstate.nozzle.target * 100),
-            "heatbed": int(pstate.hotbed.target * 100),
-        }
+
         with app.svc.borrow("mqttqueue") as mqttq:
-            mqttq.client.command(update)
+            mqttq.api_command(
+                MqttMsgType.ZZ_MQTT_CMD_PREHEAT_CONFIG,
+                value=int(bool(pstate.nozzle.target or pstate.hotbed.target)),
+                nozzle=int(pstate.nozzle.target * 100),
+                heatbed=int(pstate.hotbed.target * 100),
+            )
 
     elif gcode.cmd == "M117":
         with app.svc.borrow("updates") as upd:
