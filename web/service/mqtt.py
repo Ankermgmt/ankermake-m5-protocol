@@ -11,16 +11,19 @@ import cli.mqtt
 
 class MqttQueue(Service):
 
-    def api_command(self, msg):
-        self.queue.put(msg)
+    def api_command(self, cmd, userid="ankerctl", **kwargs):
+        self.queue.put({
+            "commandType": int(cmd),
+            "userid": userid,
+            **kwargs,
+        })
 
     def api_gcode(self, gcode):
-        self.api_command({
-            "commandType": MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value,
-            "userid": "ankerctl",
-            "cmdData": gcode,
-            "cmdLen": len(gcode),
-        })
+        self.api_command(
+            MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND,
+            cmdData=gcode,
+            cmdLen=len(gcode),
+        )
 
     def worker_start(self):
         config = self.app.config
