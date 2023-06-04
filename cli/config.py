@@ -52,7 +52,7 @@ class BaseConfigManager:
         if not isinstance(val, Serialize):
             return val
 
-        data = val.to_dict()
+        data = val.to_dict(recursive=False)
         data["__type__"] = type(val).__name__
         return data
 
