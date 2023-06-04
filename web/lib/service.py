@@ -214,7 +214,7 @@ class Service(Thread):
         while True:
             log.debug(f"{self.name}: Awaiting ready ({self.state})")
             if not (self.running and self.wanted):
-                raise ServiceStoppedError(f"{self.name}: Waiting for stopped thread")
+                raise ServiceStoppedError(f"{self.name}: Service stopped while waiting for it to start")
 
             if self.state == RunState.Running:
                 log.debug(f"{self.name}: Ready")
