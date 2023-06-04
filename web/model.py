@@ -54,14 +54,6 @@ class Job(Serialize):
     def time_in_queue(self):
         return datetime.now() - self.time_added
 
-    def to_dict(self):
-        return {
-            "time_in_queue": self.time_in_queue.total_seconds(),
-            "filename": self.filename,
-            "job_id": self.job_id.hex().zfill(16),
-            "time_added": self.time_added.timestamp()
-        }
-
 
 @dataclass
 class JobQueue(Serialize):
