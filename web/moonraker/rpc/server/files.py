@@ -1,13 +1,13 @@
 import psutil
 
+from jsonrpc import dispatcher
+from pathlib import Path
+
 from web.model import FileMetadata
 from web.lib.gcodemeta import GCodeMetaAuto
 from web.lib.gcodemeta.ankerslicer import GCodeMetaAnkerSlicer
 from web.lib.gcodemeta.prusaslicer import GCodeMetaPrusaSlicer
 from web.lib.gcodemeta.superslicer import GCodeMetaSuperSlicer
-
-from jsonrpc import dispatcher
-from pathlib import Path
 
 
 @dispatcher.add_method(name="server.files.list")
