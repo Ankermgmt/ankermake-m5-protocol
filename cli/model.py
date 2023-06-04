@@ -1,4 +1,5 @@
 import json
+from types import UnionType
 from datetime import datetime
 from dataclasses import dataclass
 from libflagship.util import unhex, enhex
@@ -38,6 +39,9 @@ class Serialize:
                 res[k] = unhex(res[k])
             elif v.type == datetime:
                 res[k] = datetime.fromtimestamp(res[k])
+            elif isinstance(v.type, UnionType):
+                if res[k] and v.type.__args__[0] == datetime:
+                    res[k] = datetime.fromtimestamp(res[k])
         return cls(**res)
 
     @staticmethod
