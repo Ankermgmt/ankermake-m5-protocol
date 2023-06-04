@@ -41,25 +41,25 @@ class Serialize:
         return cls(**res)
 
     @staticmethod
-    def _to_dict(val):
+    def _to_dict(val, recursive):
         if isinstance(val, bytes):
             return enhex(val)
         elif isinstance(val, datetime):
             return val.timestamp()
-        elif isinstance(val, Serialize):
+        elif isinstance(val, Serialize) and recursive:
             return val.to_dict()
-        elif isinstance(val, dict):
+        elif isinstance(val, dict) and recursive:
             res = {}
             for k, v in val.items():
-                res[k] = Serialize._to_dict(v)
+                res[k] = Serialize._to_dict(v, recursive)
             return res
         else:
             return val
 
-    def to_dict(self):
+    def to_dict(self, recursive=True):
         res = {}
         for k, v in self.__dataclass_fields__.items():
-            res[k] = self._to_dict(getattr(self, k))
+            res[k] = self._to_dict(getattr(self, k), recursive)
         return res
 
     @classmethod
