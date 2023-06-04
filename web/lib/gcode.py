@@ -1,9 +1,12 @@
+import shlex
+
+
 class GCode:
 
     def __init__(self, code):
         self.raw = code
 
-        words = code.split()
+        words = shlex.split(code)
         self.cmd = words[0]
         self.args = words[1:]
         self.vals = {}
