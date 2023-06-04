@@ -74,6 +74,8 @@ class UpdateNotifierService(Service):
 
             case MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND:
                 result = data["resData"]
+                result = result.rstrip().removesuffix("+ringbuf:1,512,0").rstrip()
+
                 if result.startswith("Bilinear Leveling Grid"):
                     umgr.bed_mesh.profile_name = "anker-builtin"
                     umgr.bed_mesh.probed_matrix = parse_leveling_grid(result)
