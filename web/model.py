@@ -80,9 +80,17 @@ class FileMetadata(Serialize):
 
 @dataclass
 class Job(Serialize):
-    filename: str
-    job_id: bytes
-    time_added: datetime
+    filename:      str
+    job_id:        bytes
+    time_added:    datetime
+    exists:        bool            = True
+    start_time:    datetime | None = None
+    end_time:      datetime | None = None
+    filament_used: float    | None = None
+    metadata:      FileMetadata    = field(default_factory=FileMetadata)
+
+    # cancelled, error, in_progress, klippy_shutdown, completed
+    status:        str             = ""
 
     @property
     def time_in_queue(self):
