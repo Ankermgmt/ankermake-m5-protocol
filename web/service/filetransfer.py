@@ -5,7 +5,7 @@ from multiprocessing import Queue
 
 from ..lib.service import Service
 
-from libflagship.pppp import P2PCmdType, Aabb, FileTransfer
+from libflagship.pppp import P2PCmdType, Aabb, FileTransfer, FileTransferReply
 from libflagship.ppppapi import FileUploadInfo, PPPPError
 
 import cli.mqtt
@@ -20,7 +20,10 @@ class FileTransferService(Service):
     def api_aabb_request(self, api, frametype, msg=b"", pos=0):
         self.api_aabb(api, frametype, msg, pos)
         resp = self._tap.get()
-        log.debug(f"{self.name}: Aabb response: {resp}")
+        res = FileTransferReply(resp.data[0])
+        log.debug(f"{self.name}: Aabb response: {resp} {res}")
+        if res != FileTransferReply.OK:
+            raise PPPPError(res, f"File transfer error: {res.name}")
 
     def send_file(self, fd, user_name):
         try:
