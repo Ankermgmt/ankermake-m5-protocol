@@ -73,10 +73,15 @@ class JobQueueService(Service):
         }
 
     def post_job(self, filename):
+        md = self.load_metadata_dict(Path("database/gcodes") / filename)
+        if not md.get("uuid"):
+            md["uuid"] = str(uuid.uuid4())
+
         self.queue.jobs.append(Job(
             filename=filename,
             job_id=self.queue.next_job_id(),
             time_added=datetime.now(),
+            metadata=FileMetadata(**md),
         ))
 
         self.upd.notify_job_queue_changed("jobs_added", self.queued_jobs(), "ready")
