@@ -2,6 +2,7 @@ import uuid
 import logging as log
 
 from multiprocessing import Queue
+from queue import Empty
 
 from ..lib.service import Service
 
@@ -53,8 +54,14 @@ class FileTransferService(Service):
             log.info("File upload complete. Requesting print start of job.")
 
             self.api_aabb_request(api, FileTransfer.END)
-        except PPPPError as E:
-            log.error(f"Could not send print job: {E}")
+
+        except Exception as e:
+            if isinstance(e, Empty):
+                e = PPPPError(FileTransferReply.ERR_TIMEOUT, "File transfer timeout")
+            desc = str(e) or repr(e)
+            log.error(f"Could not send print job: {desc}")
+            raise
+
         else:
             log.info("Successfully sent print job")
 
