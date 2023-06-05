@@ -88,7 +88,6 @@ class MqttPrintEvent(enum.IntEnum):
     ZZ_MQTT_PRINT_EVENT_HEATING       = 0x08 # 
     ZZ_MQTT_PRINT_EVENT_PREHEAT       = 0x09 # 
     ZZ_MQTT_PRINT_EVENT_PRINT_DL      = 0x0a # 
-    ZZ_MQTT_PRINT_EVENT_MAX           = 0x0b # 
 
     @classmethod
     def parse(cls, p):
@@ -116,7 +115,6 @@ class MqttMarlinEvent(enum.IntEnum):
     ZZ_MQTT_NOZZLE_LOW_TEMP          = 0x10 # 
     ZZ_MQTT_MARLIN_AUTO_PAUSE        = 0x11 # 
     ZZ_MQTT_PRINT_DL_FAILED          = 0x12 # 
-    ZZ_MQTT_MARLIN_ALERT_MAX         = 0x13 # 
 
     @classmethod
     def parse(cls, p):
