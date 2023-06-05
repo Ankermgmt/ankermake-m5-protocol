@@ -6,7 +6,7 @@ from web.model import PrinterState, PrinterStats, Heater
 from web.moonraker.model import BedMeshParams
 from web.moonraker.lib.updatemgr import UpdateManager
 
-from libflagship.mqtt import MqttMsgType
+from libflagship.mqtt import MqttMsgType, MqttPrintEvent, MqttMarlinEvent
 
 
 def parse_leveling_grid(data):
@@ -29,6 +29,47 @@ def parse_leveling_grid(data):
 
 
 class UpdateNotifierService(Service):
+
+    def _mqtt_event_notify_print_event(self, data):
+        umgr = self.umgr
+        print(data)
+        match data.get("value"):
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_IDLE.value:
+                umgr.display_status.message = "Idle"
+                umgr.print_stats.state = "idle"
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_PRINTING.value:
+                umgr.display_status.message = "Printing"
+                umgr.print_stats.state = "printing"
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_PAUSED.value:
+                umgr.display_status.message = "Print paused"
+                umgr.print_stats.state = "paused"
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_STOPPED.value:
+                umgr.display_status.message = "Print stopped"
+                umgr.print_stats.state = "stopped"
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_COMPLETED.value:
+                umgr.display_status.message = "Print completed"
+                umgr.print_stats.state = "completed"
+            # case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_LEVELING.value:
+            #     umgr.display_status.message = "Leveling.."
+            #     umgr.print_stats.state = "leveling"
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_DOWNLOADING.value:
+                umgr.display_status.message = "Downloading.."
+                umgr.print_stats.state = "downloading"
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_LEVEL_HEATING.value:
+                umgr.display_status.message = "Level heating"
+                umgr.print_stats.state = "level-heating"
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_HEATING.value:
+                umgr.display_status.message = "Heating.."
+                umgr.print_stats.state = "heating"
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_PREHEAT.value:
+                umgr.display_status.message = "Preheating.."
+                umgr.print_stats.state = "preheat"
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_PRINT_DL.value:
+                umgr.display_status.message = "Print download.."
+                umgr.print_stats.state = "print-downloading"
+
+    def _mqtt_event_notify_marlin_event(self, data):
+        pass
 
     def mqtt_to_jsonrpc_req(self, data):
         pstate = self.pstate
@@ -89,6 +130,11 @@ class UpdateNotifierService(Service):
                     }
                 else:
                     return rpcutil.make_jsonrpc_req("notify_gcode_response", result)
+
+            case MqttMsgType.ZZ_MQTT_CMD_EVENT_NOTIFY:
+                match data.get("subType"):
+                    case 1: self._mqtt_event_notify_print_event(data)
+                    case 2: self._mqtt_event_notify_marlin_event(data)
 
             case _:
                 return None
