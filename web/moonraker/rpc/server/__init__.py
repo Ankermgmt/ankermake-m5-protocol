@@ -87,14 +87,17 @@ def server_history_list(start=0, limit=50, before=None, since=None, order="desc"
 
 @dispatcher.add_method(name="server.history.totals")
 def server_history_totals():
+    with app.svc.borrow("jobqueue") as jq:
+        hist = jq.queue.history
+
     return {
         "job_totals": {
-            "total_jobs": 3,
-            "total_time": 11748.077333278954,
-            "total_print_time": 11348.794790096988,
-            "total_filament_used": 11615.718840001999,
-            "longest_job": 11665.191012736992,
-            "longest_print": 11348.794790096988
+            "total_jobs": len(hist),
+            "total_time": sum(h.time_taken or 0 for h in hist),
+            "total_print_time": sum(h.time_taken or 0 for h in hist),
+            "total_filament_used": sum(h.filament_used or 0 for h in hist),
+            "longest_job": max((h.time_taken or 0 for h in hist), default=0),
+            "longest_print": max((h.time_taken or 0 for h in hist), default=0),
         }
     }
 
