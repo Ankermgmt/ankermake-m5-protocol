@@ -20,7 +20,7 @@ class FileTransferService(Service):
 
     def api_aabb_request(self, api, frametype, msg=b"", pos=0):
         self.api_aabb(api, frametype, msg, pos)
-        resp = self._tap.get()
+        resp = self._tap.get(timeout=4)
         res = FileTransferReply(resp.data[0])
         log.debug(f"{self.name}: Aabb response: {resp} {res}")
         if res != FileTransferReply.OK:
