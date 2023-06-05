@@ -77,25 +77,12 @@ def server_info():
 
 @dispatcher.add_method(name="server.history.list")
 def server_history_list(start=0, limit=50, before=None, since=None, order="desc"):
-    return {
-        "count": 1,
-        "jobs": [
-            {
-                "job_id": "000001",
-                "exists": True,
-                "end_time": 1615764265.6493807,
-                "filament_used": 7.83,
-                "filename": "test/history_test.gcode",
-                "metadata": {
-                    # Object containing metadata at time of job
-                },
-                "print_duration": 18.37201827496756,
-                "status": "completed",
-                "start_time": 1615764496.622146,
-                "total_duration": 18.37201827496756
-            },
-        ]
-    }
+    with app.svc.borrow("jobqueue") as jq:
+        hist = jq.queue.history
+        return {
+            "count": len(hist),
+            "jobs": [h.to_dict() for h in hist]
+        }
 
 
 @dispatcher.add_method(name="server.history.totals")
