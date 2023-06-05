@@ -40,7 +40,7 @@ class FileTransferService(Service):
             api.send_xzyh(str(uuid.uuid4())[:16].encode(), cmd=P2PCmdType.P2P_SEND_FILE)
 
             log.info("Sending file metadata..")
-            self.api_aabb(api, FileTransfer.BEGIN, bytes(fui) + b"\x00")
+            self.api_aabb_request(api, FileTransfer.BEGIN, bytes(fui) + b"\x00")
 
             log.info("Sending file contents..")
             blocksize = 1024 * 32
