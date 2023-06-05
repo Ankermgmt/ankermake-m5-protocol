@@ -99,6 +99,9 @@ class UpdateNotifierService(Service):
     def notify_status_update(self, **kwargs):
         self.notify(rpcutil.make_jsonrpc_req("notify_status_update", kwargs, datetime.now().timestamp()))
 
+    def notify_history_changed(self, action, job):
+        self.notify(rpcutil.make_jsonrpc_req("notify_history_changed", {"action": action, "job": job}))
+
     def notify_job_queue_changed(self, action, queue, state):
         self.notify(rpcutil.make_jsonrpc_req("notify_job_queue_changed", {
             "action": action,
