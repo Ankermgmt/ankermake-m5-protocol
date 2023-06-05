@@ -32,9 +32,16 @@ class FileTransferService(Service):
         except AttributeError:
             raise ConnectionError("No pppp connection to printer")
 
+        umgr = self.upd.umgr
+
         data = fd.read()
         fui = FileUploadInfo.from_data(data, fd.filename, user_name=user_name, user_id="-", machine_id="-")
         log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")
+
+        self.jq.history_start()
+
+        umgr.print_stats.filename = fd.filename
+        umgr.print_stats.state = "Starting upload.."
         try:
             log.info("Requesting file transfer..")
             api.send_xzyh(str(uuid.uuid4())[:16].encode(), cmd=P2PCmdType.P2P_SEND_FILE)
@@ -50,6 +57,8 @@ class FileTransferService(Service):
             for chunk in chunks:
                 self.api_aabb_request(api, FileTransfer.DATA, chunk, pos)
                 pos += len(chunk)
+                umgr.print_stats.state = f"Uploading [{(pos / len(data))*100.0:.2f}%]"
+                umgr.display_status.message = f"Uploading {pos} of {len(data)}"
 
             log.info("File upload complete. Requesting print start of job.")
 
@@ -60,9 +69,16 @@ class FileTransferService(Service):
                 e = PPPPError(FileTransferReply.ERR_TIMEOUT, "File transfer timeout")
             desc = str(e) or repr(e)
             log.error(f"Could not send print job: {desc}")
+            umgr.print_stats.state = "ready"
+            umgr.print_stats.filename = None
+            umgr.display_status.message = desc
+            self.jq.history_error()
             raise
 
         else:
+            self.jq.history_status("in_progress")
+            umgr.print_stats.state = "Starting print.."
+            umgr.display_status.message = None
             log.info("Successfully sent print job")
 
     def handler(self, data):
@@ -72,6 +88,8 @@ class FileTransferService(Service):
 
     def worker_start(self):
         self.pppp = self.app.svc.get("pppp")
+        self.upd  = self.app.svc.get("updates")
+        self.jq   = self.app.svc.get("jobqueue")
         self._tap = Queue()
 
         self.pppp.handlers.append(self.handler)
@@ -83,4 +101,6 @@ class FileTransferService(Service):
         self.pppp.handlers.remove(self.handler)
         del self._tap
 
+        self.app.svc.put("jobqueue")
+        self.app.svc.put("updates")
         self.app.svc.put("pppp")
