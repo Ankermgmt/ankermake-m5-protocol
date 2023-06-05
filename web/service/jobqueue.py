@@ -1,3 +1,4 @@
+import copy
 import uuid
 from pathlib import Path
 from datetime import datetime
@@ -90,3 +91,23 @@ class JobQueueService(Service):
         self.queue.jobs = [j for j in self.queue.jobs if not j.job_id in job_ids]
 
         self.upd.notify_job_queue_changed("jobs_removed", self.queued_jobs(), "ready")
+
+    def history_start(self):
+        job = copy.deepcopy(self.queue.jobs[0])
+        job.job_id = self.queue.next_job_id()
+        job.start_time = datetime.now()
+        self.queue.history.append(job)
+        self.upd.notify_history_changed("added", job.to_dict())
+
+    def history_error(self):
+        job = self.queue.history[-1]
+        job.end_time = datetime.now()
+        job.status = "error"
+        self.upd.notify_history_changed("finished", job.to_dict())
+
+    def history_status(self, status):
+        job = self.queue.history[-1]
+        job.status = status
+
+    def history_delete(self, job_id):
+        self.queue.history = [j for j in self.queue.history if j.job_id != job_id]
