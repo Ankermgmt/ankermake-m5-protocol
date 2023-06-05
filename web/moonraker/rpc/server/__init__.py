@@ -1,6 +1,8 @@
 from jsonrpc import dispatcher
 from flask import current_app as app
 
+import web.util
+
 
 @dispatcher.add_method(name="server.connection.identify")
 def server_connection_identify(client_name, version, type, url, access_token=None, api_key=None):
@@ -173,12 +175,14 @@ def server_temperature_store():
 
 @dispatcher.add_method(name="server.config")
 def server_config():
+    host, port = web.util.get_host_port(app)
+
     return {
         "config": {
             "server": {
-                "host": "0.0.0.0",
-                "port": 7125,
-                "ssl_port": 7130,
+                "host": host,
+                "port": port,
+                "ssl_port": port,
                 "enable_debug_logging": True,
                 "enable_asyncio_debug": True,
                 "klippy_uds_address": "/tmp/klippy_uds",
@@ -240,7 +244,7 @@ def server_config():
                 "flip_h": False,
                 "flip_v": False,
                 "rotate_90": False,
-                "stream_url": "/webcam/?action=stream",
+                "stream_url": f"ws://{host}:{port}/ws/video",
                 "webcam_enabled": True
             },
             "history": {},
@@ -311,7 +315,7 @@ def server_config():
                 "password": "{secrets.mqtt_credentials.password}",
                 "enable_moonraker_api": True,
                 #                    "status_objects": "\nwebhooks\ntoolhead=position,print_time\nidle_timeout=state\ngcode_macro M118"
-                }
+            }
         },
         "files": [
             {
@@ -334,6 +338,32 @@ def server_config():
                 "sections": [
                     "mqtt"
                 ]
+            }
+        ]
+    }
+
+
+@dispatcher.add_method(name="server.webcams.list")
+def server_webcams_list():
+    host, port = web.util.get_host_port(app)
+
+    return {
+        "webcams": [
+            {
+                "name": "Printer",
+                "location": "printer",
+                "service": "jmuxer-stream",
+                "enabled": True,
+                "icon": "mdiWebcam",
+                "target_fps": 15,
+                "target_fps_idle": 5,
+                "stream_url": f"ws://{host}:{port}/ws/video",
+                "snapshot_url": "",
+                "flip_horizontal": False,
+                "flip_vertical": False,
+                "rotation": 0,
+                "aspect_ratio": "4:3",
+                "source": "config"
             }
         ]
     }
