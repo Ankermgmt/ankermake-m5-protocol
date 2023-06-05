@@ -136,6 +136,11 @@ class UpdateNotifierService(Service):
                     case 1: self._mqtt_event_notify_print_event(data)
                     case 2: self._mqtt_event_notify_marlin_event(data)
 
+            case MqttMsgType.ZZ_MQTT_CMD_MODEL_LAYER:
+                umgr.display_status.message = "Printing"
+                umgr.display_status.progress = data.get("real_print_layer", 0) / data.get("total_layer", 1)
+                umgr.virtual_sdcard.progress = umgr.display_status.progress
+
             case _:
                 return None
 
