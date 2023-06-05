@@ -5,10 +5,6 @@ from pathlib import Path
 from flask import current_app as app
 
 from web.model import FileMetadata
-from web.lib.gcodemeta import GCodeMetaAuto
-from web.lib.gcodemeta.ankerslicer import GCodeMetaAnkerSlicer
-from web.lib.gcodemeta.prusaslicer import GCodeMetaPrusaSlicer
-from web.lib.gcodemeta.superslicer import GCodeMetaSuperSlicer
 
 
 @dispatcher.add_method(name="server.files.list")
@@ -135,38 +131,11 @@ def server_files_metadata(filename):
     if not pth.exists():
         raise FileNotFoundError(f"File not found: {filename}")
 
-    stat = pth.stat()
-
-    gcm = GCodeMetaAuto([
-        GCodeMetaAnkerSlicer(),
-        GCodeMetaPrusaSlicer(),
-        GCodeMetaSuperSlicer(),
-    ])
-
-    md = FileMetadata()
-
-    if pth.is_file():
-        fd = pth.open(mode="rb")
-        if gcm.detect(fd):
-            props = gcm.load_props(fd)
-            md = gcm.load_metadata(props)
-
-    md.size = stat.st_size
-    md.modified = stat.st_mtime
-    md.filename = filename
+    if not pth.is_file():
+        return {}
 
     with app.svc.borrow("jobqueue") as jq:
-        job_info = {}
-        for h in jq.queue.history:
-            if h.filename == filename:
-                job_info["job_id"] = h.job_id
-                job_info["uuid"] = h.metadata.uuid
-                break
-
-    return {
-        **md.to_dict(),
-        **job_info,
-    }
+        return jq.load_metadata_dict(pth)
 
 @dispatcher.add_method(name="server.files.zip")
 def server_files_zip():
