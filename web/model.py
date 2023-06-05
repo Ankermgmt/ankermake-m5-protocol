@@ -111,3 +111,9 @@ class Job(Serialize):
 class JobQueue(Serialize):
     jobs: list[Job]
     history: list[Job]
+
+    def next_job_id(self):
+        if self.history:
+            return "%06x" % (max(int(j.job_id or "0", 16) for j in self.history) + 1)
+        else:
+            return "000001"

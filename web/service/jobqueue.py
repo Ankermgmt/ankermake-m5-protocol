@@ -35,16 +35,10 @@ class JobQueueService(Service):
             "queued_jobs": self.queued_jobs(),
         }
 
-    def next_job_id(self):
-        if self.queue.history:
-            return "%06x" % (max(int(j.job_id or "0", 16) for j in self.queue.history) + 1)
-        else:
-            return "000001"
-
     def post_job(self, filename):
         self.queue.jobs.append(Job(
             filename=filename,
-            job_id=self.next_job_id(),
+            job_id=self.queue.next_job_id(),
             time_added=datetime.now(),
         ))
 
