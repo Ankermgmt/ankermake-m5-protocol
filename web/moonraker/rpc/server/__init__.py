@@ -103,8 +103,19 @@ def server_history_totals():
 
 
 @dispatcher.add_method(name="server.history.delete_job")
-def server_history_delete_job():
-    raise NotImplementedError()
+def server_history_delete_job(uid=None, all=False):
+    if not all and not uid:
+        raise ValueError("Need 'uid' or 'all' parameter")
+
+    with app.svc.borrow("jobqueue") as jq:
+        if all:
+            ids = [j.job_id for j in jq.queue.history]
+            jq.queue.history = []
+        else:
+            ids = [uid]
+            jq.history_delete(uid)
+
+    return ids
 
 
 @dispatcher.add_method(name="server.gcode_store")
