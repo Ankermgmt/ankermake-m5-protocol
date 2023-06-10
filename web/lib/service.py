@@ -49,6 +49,28 @@ class Holdoff:
         return self.remaining < 0
 
 
+class WaitableHoldoff(Holdoff):
+
+    def __init__(self):
+        super().__init__()
+        self._event = Event()
+
+    def wait(self):
+        rem = self.remaining
+        if rem < 0:
+            self._event.clear()
+            return True
+
+        if self._event.wait(rem):
+            self._event.clear()
+            return self.passed
+        else:
+            return True
+
+    def signal(self):
+        self._event.set()
+
+
 class ServiceError(Exception):
     pass
 
