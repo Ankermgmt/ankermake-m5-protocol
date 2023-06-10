@@ -44,7 +44,7 @@ class ServiceRestartSignal(ServiceSignal):
 class RunState(Enum):
     Starting = 2
     Running  = 3
-    # Idle     = 4
+    Idle     = 4
     Stopping = 5
     Stopped  = 6
 
@@ -60,6 +60,7 @@ class Service(Thread):
         self._event = Event()
         self.handlers = []
         self._holdoff = Holdoff()
+        self._idle_time = Holdoff()
         self.daemon = True
         self.app = app
         super().start()
@@ -159,9 +160,23 @@ class Service(Thread):
                     if self.wanted:
                         self._attempt_run()
                     else:
-                        log.debug(f"{self.name}: Stopping worker")
+                        log.debug(f"{self.name}: Worker going idle")
                         self._holdoff.reset()
-                        self.state = RunState.Stopping
+                        self.state = RunState.Idle
+                        self._event.set()
+                        self._idle_time.reset(delay=0.5)
+
+                case RunState.Idle:
+                    if self.wanted:
+                        log.debug(f"{self.name}: Worker resuming")
+                        self.state = RunState.Running
+                        self._event.set()
+                        self._attempt_run()
+                    else:
+                        if self._idle_time.passed:
+                            log.debug(f"{self.name}: Stopping worker")
+                            self.state = RunState.Stopping
+                            self._event.set()
 
                 case RunState.Stopping:
                     if self._holdoff.passed:
@@ -174,6 +189,7 @@ class Service(Thread):
                         log.debug(f"{self.name}: Starting worker")
                         self._holdoff.reset()
                         self.state = RunState.Starting
+                        self._event.set()
                     else:
                         self.idle(timeout=0.1)
 
