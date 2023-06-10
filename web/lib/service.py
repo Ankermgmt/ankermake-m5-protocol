@@ -101,7 +101,7 @@ class Service(Thread):
         super().__init__()
         self.running = True
         self.deadline = None
-        self.state = RunState.Stopped
+        self._state = RunState.Stopped
         self.wanted = False
         self._event = WaitableHoldoff()
         self.handlers = []
@@ -110,6 +110,15 @@ class Service(Thread):
         self._shutdown = False
         self.name = type(self).__name__
         super().start()
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, new):
+        # log.debug(f"{self.name}: Changing state [{self._state.name}] -> [{new.name}]")
+        self._state = new
 
     def start(self):
         log.info(f"{self.name}: Requesting start")
