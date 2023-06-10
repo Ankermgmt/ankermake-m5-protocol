@@ -291,9 +291,9 @@ class ServiceManager:
 
     def atexit(self):
         log.debug("ServiceManager: Shutting down threads..")
+        self.dump()
         trace.trace_all_threads()
 
-        self.dump()
         for svc in self.svcs.values():
             if svc.state != RunState.Stopped:
                 svc.stop()
