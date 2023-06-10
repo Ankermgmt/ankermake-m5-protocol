@@ -238,10 +238,6 @@ class Service(Thread):
                 case _:
                     raise ValueError("Unknown state value")
 
-        log.debug(f"{self.name}: Shutting down thread")
-        if self.state == RunState.Running:
-            self.handlers.clear()
-            self.worker_stop()
         log.debug(f"{self.name}: Thread exit")
 
     def worker_init(self):
