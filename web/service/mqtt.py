@@ -19,11 +19,20 @@ class MqttQueue(Service):
         })
 
     def api_gcode(self, gcode):
+        # printer firmware cannot reliably handle the same gcode twice in a
+        # row, so put a blank space at the end, if we get a repeat command.
+        gcode = gcode.strip()
+        if gcode == self._last_gcode:
+            gcode += " "
         self.api_command(
             MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND,
             cmdData=gcode,
             cmdLen=len(gcode),
         )
+        self._last_gcode = gcode
+
+    def worker_init(self):
+        self._last_gcode = ""
 
     def worker_start(self):
         config = self.app.config
