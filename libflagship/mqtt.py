@@ -77,17 +77,17 @@ class MqttMsgType(enum.IntEnum):
         return struct.pack("B", self)
 
 class MqttPrintEvent(enum.IntEnum):
-    ZZ_MQTT_PRINT_EVENT_IDLE          = 0x00 # 
-    ZZ_MQTT_PRINT_EVENT_PRINTING      = 0x01 # 
-    ZZ_MQTT_PRINT_EVENT_PAUSED        = 0x02 # 
-    ZZ_MQTT_PRINT_EVENT_STOPPED       = 0x03 # 
-    ZZ_MQTT_PRINT_EVENT_COMPLETED     = 0x04 # 
-    ZZ_MQTT_PRINT_EVENT_LEVELING      = 0x05 # 
-    ZZ_MQTT_PRINT_EVENT_DOWNLOADING   = 0x06 # 
-    ZZ_MQTT_PRINT_EVENT_LEVEL_HEATING = 0x07 # 
-    ZZ_MQTT_PRINT_EVENT_HEATING       = 0x08 # 
-    ZZ_MQTT_PRINT_EVENT_PREHEAT       = 0x09 # 
-    ZZ_MQTT_PRINT_EVENT_PRINT_DL      = 0x0a # 
+    ZZ_MQTT_PRINT_EVENT_IDLE          = 0x00 # unknown
+    ZZ_MQTT_PRINT_EVENT_PRINTING      = 0x01 # unknown (guess: print job starting)
+    ZZ_MQTT_PRINT_EVENT_PAUSED        = 0x02 # print paused
+    ZZ_MQTT_PRINT_EVENT_STOPPED       = 0x03 # print stopped
+    ZZ_MQTT_PRINT_EVENT_COMPLETED     = 0x04 # print completed
+    ZZ_MQTT_PRINT_EVENT_LEVELING      = 0x05 # printer needs leveling
+    ZZ_MQTT_PRINT_EVENT_DOWNLOADING   = 0x06 # unknown
+    ZZ_MQTT_PRINT_EVENT_LEVEL_HEATING = 0x07 # heating for leveling
+    ZZ_MQTT_PRINT_EVENT_HEATING       = 0x08 # heating for printing
+    ZZ_MQTT_PRINT_EVENT_PREHEAT       = 0x09 # unknown
+    ZZ_MQTT_PRINT_EVENT_PRINT_DL      = 0x0a # unknown
 
     @classmethod
     def parse(cls, p):
@@ -113,8 +113,8 @@ class MqttMarlinEvent(enum.IntEnum):
     ZZ_MQTT_LEVEL_FAILED             = 0x0e # 
     ZZ_MQTT_HEATBED_MOS2             = 0x0f # 
     ZZ_MQTT_NOZZLE_LOW_TEMP          = 0x10 # 
-    ZZ_MQTT_MARLIN_AUTO_PAUSE        = 0x11 # 
-    ZZ_MQTT_PRINT_DL_FAILED          = 0x12 # 
+    ZZ_MQTT_MARLIN_AUTO_PAUSE        = 0x11 # M600 encountered
+    ZZ_MQTT_PRINT_DL_FAILED          = 0x12 # print failed to download
 
     @classmethod
     def parse(cls, p):

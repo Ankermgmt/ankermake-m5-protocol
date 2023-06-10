@@ -189,27 +189,27 @@ enum MqttMsgType
 
 
 enum MqttPrintEvent
-    #
+    # unknown
     ZZ_MQTT_PRINT_EVENT_IDLE           = 0x00
-    #
+    # unknown (guess: print job starting)
     ZZ_MQTT_PRINT_EVENT_PRINTING       = 0x01
-    #
+    # print paused
     ZZ_MQTT_PRINT_EVENT_PAUSED         = 0x02
-    #
+    # print stopped
     ZZ_MQTT_PRINT_EVENT_STOPPED        = 0x03
-    #
+    # print completed
     ZZ_MQTT_PRINT_EVENT_COMPLETED      = 0x04
-    #
+    # printer needs leveling
     ZZ_MQTT_PRINT_EVENT_LEVELING       = 0x05
-    #
+    # unknown
     ZZ_MQTT_PRINT_EVENT_DOWNLOADING    = 0x06
-    #
+    # heating for leveling
     ZZ_MQTT_PRINT_EVENT_LEVEL_HEATING  = 0x07
-    #
+    # heating for printing
     ZZ_MQTT_PRINT_EVENT_HEATING        = 0x08
-    #
+    # unknown
     ZZ_MQTT_PRINT_EVENT_PREHEAT        = 0x09
-    #
+    # unknown
     ZZ_MQTT_PRINT_EVENT_PRINT_DL       = 0x0a
 
 
@@ -246,7 +246,7 @@ enum MqttMarlinEvent
     ZZ_MQTT_HEATBED_MOS2               = 0x0f
     #
     ZZ_MQTT_NOZZLE_LOW_TEMP            = 0x10
-    #
+    # M600 encountered
     ZZ_MQTT_MARLIN_AUTO_PAUSE          = 0x11
-    #
+    # print failed to download
     ZZ_MQTT_PRINT_DL_FAILED            = 0x12
