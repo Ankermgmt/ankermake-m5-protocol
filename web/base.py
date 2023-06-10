@@ -1,7 +1,7 @@
 import json
 import flask_sock
 
-from flask import Blueprint, Response, request, render_template
+from flask import Blueprint, Response, request, render_template, stream_with_context
 from flask import current_app as app
 from jsonrpc import JSONRPCResponseManager, dispatcher
 from user_agents import parse as user_agent_parse
@@ -40,7 +40,7 @@ def video_download():
         for msg in app.svc.stream("videoqueue"):
             yield msg.data
 
-    return Response(generate(), mimetype="video/mp4")
+    return Response(stream_with_context(generate()), mimetype="video/mp4")
 
 
 @router.get("/")
