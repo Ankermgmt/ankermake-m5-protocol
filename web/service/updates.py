@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from ..lib.service import Service, Holdoff
@@ -7,6 +8,9 @@ from web.moonraker.model import BedMeshParams
 from web.moonraker.lib.updatemgr import UpdateManager
 
 from libflagship.mqtt import MqttMsgType, MqttPrintEvent, MqttMarlinEvent
+
+
+RE_GCODE_CLEANUP = re.compile(r"^\+ringbuf:\d+,512,\d+$|^pack dissymm$", re.MULTILINE)
 
 
 def parse_leveling_grid(data):
@@ -116,8 +120,7 @@ class UpdateNotifierService(Service):
                 umgr.toolhead.homed_axes = "xyz" if locked else ""
 
             case MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND:
-                result = data["resData"]
-                result = result.rstrip().removesuffix("+ringbuf:1,512,0").rstrip()
+                result = RE_GCODE_CLEANUP.sub("", data["resData"]).rstrip()
 
                 if result.startswith("Bilinear Leveling Grid"):
                     umgr.bed_mesh.profile_name = "anker-builtin"
