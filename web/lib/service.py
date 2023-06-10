@@ -298,8 +298,9 @@ class ServiceManager:
             if svc.state != RunState.Stopped:
                 svc.stop()
 
-        log.debug("ServiceManager: Waiting for threads to stop..")
         self.dump()
+
+        log.debug("ServiceManager: Waiting for threads to stop..")
         for svc in self.svcs.values():
             log.debug(f"ServiceManager: Waiting for {svc.name}..")
             trace.trace_thread(svc)
