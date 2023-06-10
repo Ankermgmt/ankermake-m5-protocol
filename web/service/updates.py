@@ -74,7 +74,29 @@ class UpdateNotifierService(Service):
                 umgr.print_stats.state = "print-downloading"
 
     def _mqtt_event_notify_marlin_event(self, data):
-        pass
+        umgr = self.umgr
+        umgr.print_stats.state = "error"
+
+        ds = umgr.display_status
+        match data.get("value"):
+            case MqttMarlinEvent.ZZ_MQTT_MARLIN_ALERT_HALTED:      ds.message = "marlin_alert_halted"
+            case MqttMarlinEvent.ZZ_MQTT_MARLIN_ALERT_OFFLINE:     ds.message = "marlin_alert_offline"
+            case MqttMarlinEvent.ZZ_MQTT_MARLIN_ALERT_NOZZEL_HEAT: ds.message = "marlin_alert_nozzel_h"
+            case MqttMarlinEvent.ZZ_MQTT_MARLIN_ALERT_PANEL_HEAT:  ds.message = "marlin_alert_panel_he"
+            case MqttMarlinEvent.ZZ_MQTT_MARLIN_ALERT_PRINT:       ds.message = "marlin_alert_print"
+            case MqttMarlinEvent.ZZ_MQTT_MARLIN_ALERT_BLANKING:    ds.message = "marlin_alert_blanking"
+            case MqttMarlinEvent.ZZ_MQTT_MARLIN_ALERT_BLOCKING:    ds.message = "marlin_alert_blocking"
+            case MqttMarlinEvent.ZZ_MQTT_MARLIN_ALERT_LEVELING:    ds.message = "marlin_alert_leveling"
+            case MqttMarlinEvent.ZZ_MQTT_MARLIN_COMM_ERR:          ds.message = "marlin_comm_err"
+            case MqttMarlinEvent.ZZ_MQTT_LBOARD_COMM_ERR:          ds.message = "lboard_comm_err"
+            case MqttMarlinEvent.ZZ_MQTT_NOZZLE_HIGH_TEMP:         ds.message = "nozzle_high_temp"
+            case MqttMarlinEvent.ZZ_MQTT_HEATBED_HIGH_TEMP:        ds.message = "heatbed_high_temp"
+            case MqttMarlinEvent.ZZ_MQTT_HEATBED_MOS1:             ds.message = "heatbed_mos1"
+            case MqttMarlinEvent.ZZ_MQTT_LEVEL_FAILED:             ds.message = "level_failed"
+            case MqttMarlinEvent.ZZ_MQTT_HEATBED_MOS2:             ds.message = "heatbed_mos2"
+            case MqttMarlinEvent.ZZ_MQTT_NOZZLE_LOW_TEMP:          ds.message = "nozzle_low_temp"
+            case MqttMarlinEvent.ZZ_MQTT_MARLIN_AUTO_PAUSE:        ds.message = "marlin_auto_pause"
+            case MqttMarlinEvent.ZZ_MQTT_PRINT_DL_FAILED:          ds.message = "print_dl_failed"
 
     def mqtt_to_jsonrpc_req(self, data):
         pstate = self.pstate
