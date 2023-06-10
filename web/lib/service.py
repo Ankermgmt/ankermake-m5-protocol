@@ -21,8 +21,12 @@ class Holdoff:
             self.deadline += timedelta(seconds=delay)
 
     @property
+    def remaining(self):
+        return (self.deadline - datetime.now()).total_seconds()
+
+    @property
     def passed(self):
-        return datetime.now() > self.deadline
+        return self.remaining < 0
 
 
 class ServiceError(Exception):
