@@ -15,6 +15,9 @@ class Holdoff:
     def __init__(self):
         self.deadline = datetime.now()
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}<deadline={self.deadline}, remaining={self.remaining}>"
+
     def reset(self, delay=None):
         self.deadline = datetime.now()
         if delay:
