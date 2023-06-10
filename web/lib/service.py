@@ -11,6 +11,23 @@ from ..lib import trace
 
 
 class Holdoff:
+    """Holdoff manages a deadline, set some time in the future.
+
+    When creating a new Holdoff object, its deadline is initially set to
+    datetime.now().
+
+    h = Holdoff()
+
+    # set a deadline for 0.5 seconds from now
+    h.reset(delay=0.5)
+
+    # will be slightly less than 0.5
+    print(h.remaining)
+
+    print(h.passed) # False
+    time.sleep(1)
+    print(h.passed) # True
+    """
 
     def __init__(self):
         self.deadline = datetime.now()
