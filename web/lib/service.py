@@ -13,7 +13,7 @@ from ..lib import trace
 class Holdoff:
 
     def __init__(self):
-        self.deadline = None
+        self.deadline = datetime.now()
 
     def reset(self, delay=None):
         self.deadline = datetime.now()
