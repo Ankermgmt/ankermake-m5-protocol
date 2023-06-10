@@ -212,7 +212,6 @@ class Service(Thread):
 
     def await_ready(self):
         while True:
-            log.debug(f"{self.name}: Awaiting ready ({self.state})")
             if not (self.running and self.wanted):
                 raise ServiceStoppedError(f"{self.name}: Service stopped while waiting for it to start")
 
@@ -220,6 +219,7 @@ class Service(Thread):
                 log.debug(f"{self.name}: Ready")
                 return True
 
+            log.debug(f"{self.name}: Awaiting ready ({self.state})")
             self.idle(timeout=0.4)
 
     def await_stopped(self):
@@ -232,6 +232,7 @@ class Service(Thread):
                 log.debug(f"{self.name}: Stopped")
                 return True
 
+            log.debug(f"{self.name}: Awaiting stopped ({self.state})")
             self.idle(timeout=0.4)
 
 
