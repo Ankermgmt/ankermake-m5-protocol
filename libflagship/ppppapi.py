@@ -145,7 +145,7 @@ class Channel:
         # drop any packets we have already recieved
         if self.rx_ctr > index:
             if self.max_age_warn and (self.rx_ctr - index > self.max_age_warn):
-                log.warn(f"Dropping old packet: index {index} while expecting {self.rx_ctr}.")
+                log.warning(f"Dropping old packet: index {index} while expecting {self.rx_ctr}.")
             return
 
         # record packet in queue
