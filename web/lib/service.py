@@ -108,11 +108,8 @@ class Service(Thread):
         self.daemon = True
         self.app = app
         self._shutdown = False
+        self.name = type(self).__name__
         super().start()
-
-    @property
-    def name(self):
-        return type(self).__name__
 
     def start(self):
         log.info(f"{self.name}: Requesting start")
