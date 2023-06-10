@@ -53,9 +53,10 @@ class UpdateNotifierService(Service):
             case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_COMPLETED.value:
                 umgr.display_status.message = "Print completed"
                 umgr.print_stats.state = "completed"
-            # case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_LEVELING.value:
-            #     umgr.display_status.message = "Leveling.."
-            #     umgr.print_stats.state = "leveling"
+            case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_LEVELING.value:
+                if umgr.print_stats.state != "printing":
+                    umgr.display_status.message = "Leveling.."
+                    umgr.print_stats.state = "leveling"
             case MqttPrintEvent.ZZ_MQTT_PRINT_EVENT_DOWNLOADING.value:
                 umgr.display_status.message = "Downloading.."
                 umgr.print_stats.state = "downloading"
