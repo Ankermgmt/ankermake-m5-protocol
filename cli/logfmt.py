@@ -49,5 +49,6 @@ def setup_logging(level=logging.INFO):
     log = logging.getLogger()
     log.setLevel(level)
     handler = log.handlers[0]
-    handler.setFormatter(ColorFormatter("[%(asctime)s] %(message)s"))
+    name_fmt = click.style('%(name)s', fg='blue', bold=True)
+    handler.setFormatter(ColorFormatter(f"[%(asctime)s] {name_fmt}: %(message)s"))
     return log
