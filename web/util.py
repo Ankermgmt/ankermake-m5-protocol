@@ -8,7 +8,7 @@ def flash_redirect(path: str, message: str | None = None, category="info"):
     Args:
         - path (str): A string representing the path to redirect the user to.
         - message (str | None): An optional string message to flash to the user.
-        - category (str): A string representing the category of the flashed message. 
+        - category (str): A string representing the category of the flashed message.
             Possible values are "info" (default), "danger", "warning", "success".
 
     Raises:
