@@ -45,3 +45,6 @@ def server_files_upload():
 rpc_wrap_get(router,  "/info",             server.server_info)
 rpc_wrap_get(router,  "/database/item",    server.database.server_database_get_item)
 rpc_wrap_post(router, "/database/item",    server.database.server_database_post_item)
+rpc_wrap_get(router,  "/files/metadata",   server.files.server_files_metadata)
+rpc_wrap_get(router,  "/job_queue/status", server.job_queue.server_job_queue_status)
+rpc_wrap_get(router,  "/webcams/list",     server.server_webcams_list)
