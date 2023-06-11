@@ -33,6 +33,7 @@ class MqttQueue(Service):
 
     def worker_init(self):
         self._last_gcode = ""
+        self.queue = Queue()
 
     def worker_start(self):
         config = self.app.config
@@ -41,7 +42,6 @@ class MqttQueue(Service):
             config["printer_index"],
             config["insecure"]
         )
-        self.queue = Queue()
 
     def worker_run(self, timeout):
         while not self.queue.empty():
