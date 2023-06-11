@@ -12,6 +12,7 @@ class UpdateManager:
             "display_status": DisplayStatus(),
             "idle_timeout":   IdleTimeout(),
             "toolhead":       Toolhead(),
+            "motion_report":  MotionReport(),
             "configfile":     Configfile(),
             "mcu":            Mcu(),
             "stepper_enable": StepperEnable(),
@@ -86,6 +87,10 @@ class UpdateManager:
     @property
     def toolhead(self):
         return self.obj.get("toolhead")
+
+    @property
+    def motion_report(self):
+        return self.obj.get("motion_report")
 
     @property
     def configfile(self):
