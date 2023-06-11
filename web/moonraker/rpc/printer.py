@@ -89,6 +89,11 @@ def printer_objects_list():
 
 @dispatcher.add_method(name="printer.objects.subscribe")
 def printer_objects_subscribe(objects):
+    return printer_objects_query(objects)
+
+
+@dispatcher.add_method(name="printer.objects.query")
+def printer_objects_query(objects):
     with app.svc.borrow("updates") as upd:
         status = upd.umgr.moonraker_status_full()
 
