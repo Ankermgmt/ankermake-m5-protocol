@@ -1,3 +1,4 @@
+import sys
 import atexit
 import logging as log
 import contextlib
@@ -310,6 +311,7 @@ class ServiceManager:
         return name in self.svcs
 
     def atexit(self):
+        sys.stderr.write("\n")
         log.debug("ServiceManager: Shutting down threads..")
         self.dump()
         trace.trace_all_threads()
