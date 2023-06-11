@@ -44,6 +44,15 @@ def upload_file_to_printer(app, file):
 
 
 def rpc_wrap_get(router, route, func):
+    """Create a HTTP GET wrapper for a json-rpc endpoint.
+
+    Passes all arguments as keyword arguments.
+
+    Args:
+        - router: Application or BluePrint used for routing
+        - route: route to the wrapped endpoint
+        - func: function to invoke
+    """
 
     @router.get(route)
     def wrap():
@@ -52,6 +61,15 @@ def rpc_wrap_get(router, route, func):
 
 
 def rpc_wrap_get_list(router, route, func):
+    """Create a HTTP GET wrapper for a json-rpc endpoint
+
+    Passes all given arguments as a single argument.
+
+    Args:
+        - router: Application or BluePrint used for routing
+        - route: route to the wrapped endpoint
+        - func: function to invoke
+    """
 
     @router.get(route)
     def wrap():
@@ -60,6 +78,15 @@ def rpc_wrap_get_list(router, route, func):
 
 
 def rpc_wrap_post(router, route, func):
+    """Create a HTTP POST wrapper for a json-rpc endpoint.
+
+    Passes all arguments as keyword arguments.
+
+    Args:
+        - router: Application or BluePrint used for routing
+        - route: route to the wrapped endpoint
+        - func: function to invoke
+    """
 
     @router.post(route)
     def wrap():
