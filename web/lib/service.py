@@ -130,6 +130,8 @@ class Service(Thread):
     def stop(self):
         self._log.info("Requesting stop")
         self.wanted = False
+        if self._shutdown:
+            self._event.reset()
         self._event.signal()
 
     def restart(self):
@@ -216,7 +218,7 @@ class Service(Thread):
                 case RunState.Running:
                     if self.wanted:
                         self._attempt_run()
-                    else:
+                    elif not self._shutdown:
                         self._log.debug("Worker going idle")
                         self.state = RunState.Idle
                         self._event.reset(delay=5)
@@ -318,6 +320,9 @@ class ServiceManager:
         self._log.debug("Shutting down threads..")
         self.dump()
         trace.trace_all_threads()
+
+        for svc in self.svcs.values():
+            svc._shutdown = True
 
         for svc in self.svcs.values():
             if svc.state != RunState.Stopped:
