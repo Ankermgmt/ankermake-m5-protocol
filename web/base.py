@@ -8,6 +8,8 @@ from user_agents import parse as user_agent_parse
 
 import web.config
 import web.util
+import web.moonraker.rpc.printer
+from .util import rpc_wrap_get_list
 
 
 sock = flask_sock.Sock()
@@ -75,3 +77,6 @@ def app_root():
             anker_config=anker_config,
             printer=printer
         )
+
+
+rpc_wrap_get_list(router, "/printer/objects/query", web.moonraker.rpc.printer.printer_objects_query)
