@@ -86,6 +86,13 @@ class Toolhead(Serialize):
 
 
 @dataclass(eq=False)
+class MotionReport(Serialize):
+    live_position:          list[float] = field(default_factory=lambda: [0, 0, 0, 0])
+    live_velocity:          list[float] = field(default_factory=lambda: [0, 0, 0])
+    live_extruder_velocity: float = 0.0
+
+
+@dataclass(eq=False)
 class Configfile(Serialize):
     config:                    dict      = field(default_factory=dict)
     settings:                  dict      = field(default_factory=dict)
