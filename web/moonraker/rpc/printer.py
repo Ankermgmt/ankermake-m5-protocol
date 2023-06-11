@@ -340,6 +340,10 @@ def printer_gcode_script(script):
             else:
                 log.error(f"Unsupported gcode: {gcode}")
 
+    elif gcode.cmd == "BED_MESH_CALIBRATE":
+        with app.svc.borrow("mqttqueue") as mqttq:
+            mqttq.api_command(MqttMsgType.ZZ_MQTT_CMD_AUTO_LEVELING, value=2)
+
     else:
         with app.svc.borrow("mqttqueue") as mqttq:
             mqttq.api_gcode(",".join(script.splitlines()))
