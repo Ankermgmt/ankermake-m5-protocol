@@ -342,8 +342,6 @@ def printer_gcode_script(script):
 
     else:
         with app.svc.borrow("mqttqueue") as mqttq:
-            for line in script.splitlines():
-                mqttq.api_gcode(line)
-                time.sleep(0.2)
+            mqttq.api_gcode(",".join(script.splitlines()))
 
     return "ok"
