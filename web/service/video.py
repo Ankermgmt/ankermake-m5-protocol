@@ -1,11 +1,6 @@
-import json
 import logging as log
 
-from queue import Empty
-from multiprocessing import Queue
-
 from ..lib.service import Service, ServiceRestartSignal
-from .. import app
 
 from libflagship.pppp import P2PSubCmdType, Xzyh
 
@@ -49,7 +44,7 @@ class VideoQueue(Service):
         self.saved_video_mode = None
 
     def worker_start(self):
-        self.pppp = app.svc.get("pppp")
+        self.pppp = self.app.svc.get("pppp")
 
         self.api_id = id(self.pppp._api)
 
@@ -80,4 +75,4 @@ class VideoQueue(Service):
 
         self.pppp.handlers.remove(self._handler)
 
-        app.svc.put("pppp")
+        self.app.svc.put("pppp")

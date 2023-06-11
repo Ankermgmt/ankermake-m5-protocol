@@ -1,10 +1,34 @@
 import json
+from types import UnionType
 from datetime import datetime
 from dataclasses import dataclass
 from libflagship.util import unhex, enhex
 
 
 class Serialize:
+
+    @staticmethod
+    def _safe_hash(obj):
+        h = 0
+        if isinstance(obj, list):
+            for e in obj:
+                h ^= Serialize._safe_hash(e)
+        elif isinstance(obj, dict):
+            for k, v in obj.items():
+                h ^= Serialize._safe_hash(k)
+                h ^= Serialize._safe_hash(v)
+        elif hasattr(obj, "__dataclass_fields__"):
+            return Serialize.__hash__(obj)
+        else:
+            h ^= hash(obj)
+        return h
+
+    def __hash__(self):
+        h = 0
+        for name in self.__dataclass_fields__:
+            field = getattr(self, name)
+            h ^= self._safe_hash(field)
+        return h
 
     @classmethod
     def from_dict(cls, data):
@@ -15,16 +39,31 @@ class Serialize:
                 res[k] = unhex(res[k])
             elif v.type == datetime:
                 res[k] = datetime.fromtimestamp(res[k])
+            elif isinstance(v.type, UnionType):
+                if res[k] and v.type.__args__[0] == datetime:
+                    res[k] = datetime.fromtimestamp(res[k])
         return cls(**res)
 
-    def to_dict(self):
+    @staticmethod
+    def _to_dict(val, recursive):
+        if isinstance(val, bytes):
+            return enhex(val)
+        elif isinstance(val, datetime):
+            return val.timestamp()
+        elif isinstance(val, Serialize) and recursive:
+            return val.to_dict()
+        elif isinstance(val, dict) and recursive:
+            res = {}
+            for k, v in val.items():
+                res[k] = Serialize._to_dict(v, recursive)
+            return res
+        else:
+            return val
+
+    def to_dict(self, recursive=True):
         res = {}
         for k, v in self.__dataclass_fields__.items():
-            res[k] = getattr(self, k)
-            if v.type == bytes:
-                res[k] = enhex(res[k])
-            elif v.type == datetime:
-                res[k] = res[k].timestamp()
+            res[k] = self._to_dict(getattr(self, k), recursive)
         return res
 
     @classmethod

@@ -23,6 +23,8 @@ class ColorFormatter(logging.Formatter):
             logging.DEBUG:    "D",
         }
 
+    default_msec_format = click.style("%s.%03d", dim=True)
+
     def format(self, rec):
         marks, colors = self._marks, self._colors
         return "".join([
@@ -47,5 +49,6 @@ def setup_logging(level=logging.INFO):
     log = logging.getLogger()
     log.setLevel(level)
     handler = log.handlers[0]
-    handler.setFormatter(ColorFormatter("%(message)s"))
+    name_fmt = click.style('%(name)s', fg='blue', bold=True)
+    handler.setFormatter(ColorFormatter(f"[%(asctime)s] {name_fmt}: %(message)s"))
     return log

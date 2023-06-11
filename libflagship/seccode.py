@@ -55,15 +55,15 @@ def gen_check_code_v1(base_code, seed):
 
 
 def gen_rand_seed(mac):
-    rnd = random.randint(10000000,99999999)
+    rnd = random.randint(10000000, 99999999)
 
     suffix = cal_hw_id_suffix(mac)
     txtbuf = str(1000 - suffix) + str(rnd)
 
     sec_ts = "01%d" % rnd
-    sec_code = hashlib.md5(txtbuf.encode()).hexdigest().upper().encode()
+    seed = hashlib.md5(txtbuf.encode()).hexdigest().upper().encode()
 
-    return sec_ts, sec_code
+    return sec_ts, seed
 
 
 def create_check_code_v1(sn, mac):

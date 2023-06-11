@@ -145,7 +145,7 @@ class Channel:
         # drop any packets we have already recieved
         if self.rx_ctr > index:
             if self.max_age_warn and (self.rx_ctr - index > self.max_age_warn):
-                log.warn(f"Dropping old packet: index {index} while expecting {self.rx_ctr}.")
+                log.warning(f"Dropping old packet: index {index} while expecting {self.rx_ctr}.")
             return
 
         # record packet in queue
@@ -298,7 +298,7 @@ class AnkerPPPPBaseApi(Thread):
 
         if msg.type == Type.CLOSE:
             log.error("CLOSE")
-            raise ConnectionResetError
+            raise ConnectionResetError("Printer rejected connection")
 
         elif msg.type == Type.REPORT_SESSION_READY:
             pkt = PktSessionReady(
@@ -352,7 +352,7 @@ class AnkerPPPPBaseApi(Thread):
         if self.dumper:
             self.dumper.rx(data, self.addr)
         msg = Message.parse(data)[0]
-        log.debug(f"RX <--  {str(msg)[:128]}")
+        # log.debug(f"RX <--  {str(msg)[:128]}")
         return msg
 
     def send(self, pkt, addr=None):
@@ -363,7 +363,7 @@ class AnkerPPPPBaseApi(Thread):
         if self.dumper:
             self.dumper.tx(resp, self.addr)
         msg = Message.parse(resp)[0]
-        log.debug(f"TX  --> {str(msg)[:128]}")
+        # log.debug(f"TX  --> {str(msg)[:128]}")
         self.sock.sendto(resp, addr or self.addr)
 
     def send_xzyh(self, data, cmd, chan=0, unk0=0, unk1=0, sign_code=0, unk3=0, dev_type=0, block=True):

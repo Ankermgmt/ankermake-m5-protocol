@@ -8,7 +8,7 @@
         <div class="row g-3">
             <div class="col-lg-6">
                 <form
-                    action="{{ url_for('app_api_ankerctl_config_upload') }}"
+                    action="{{ url_for('ankerctl.app_api_ankerctl_config_upload') }}"
                     method="POST"
                     enctype="multipart/form-data"
                     class="mb-3"
@@ -53,7 +53,7 @@
                             <button id="reload" type="button" class="btn btn-danger"
                                     data-bs-toggle="modal" data-bs-target="#popupModal"
                                     data-msg="Reloading ankerctl..."
-                                    data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
+                                    data-href="{{ url_for('ankerctl.app_api_ankerctl_server_reload') }}">
                                 {{ macro.bi_icon("bootstrap-reboot", "Reload Services") }}
                             </button>
                         </div>
