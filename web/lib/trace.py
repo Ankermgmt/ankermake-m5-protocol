@@ -1,7 +1,10 @@
 import sys
 import traceback
 import threading
-import logging as log
+import logging
+
+
+log = logging.getLogger("trace")
 
 
 def log_stack(stack):
