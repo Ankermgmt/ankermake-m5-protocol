@@ -41,3 +41,27 @@ def upload_file_to_printer(app, file):
 
     with app.svc.borrow("filetransfer") as ft:
         ft.send_file(file, user_name)
+
+
+def rpc_wrap_get(router, route, func):
+
+    @router.get(route)
+    def wrap():
+        return {"result": func(**request.args)}
+    wrap.__name__ = func.__name__
+
+
+def rpc_wrap_get_list(router, route, func):
+
+    @router.get(route)
+    def wrap():
+        return {"result": func(request.args)}
+    wrap.__name__ = func.__name__
+
+
+def rpc_wrap_post(router, route, func):
+
+    @router.post(route)
+    def wrap():
+        return {"result": func(**request.args)}
+    wrap.__name__ = func.__name__
