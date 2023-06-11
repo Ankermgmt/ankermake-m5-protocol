@@ -6,15 +6,11 @@ from flask import Blueprint, request, send_from_directory
 from werkzeug.utils import secure_filename
 
 from .rpc import server
+from ..util import rpc_wrap_get, rpc_wrap_post
 
 
 sock = flask_sock.Sock()
 router = Blueprint("server", __name__)
-
-
-@router.get("/info")
-def server_info():
-    return { "result": server.server_info() }
 
 
 @router.get("/files/<string:root>/<path:path>")
@@ -46,24 +42,6 @@ def server_files_upload():
         "action": "create_file"
     }
 
-
-# http wrapper for websocket endpoint (needed for Fluidd)
-@router.get("/database/item")
-def get_database_item():
-    return {
-        "result": server.database.server_database_get_item(
-            request.args.get("namespace")
-        )
-    }
-
-
-# http wrapper for websocket endpoint (needed for Fluidd)
-@router.post("/database/item")
-def post_database_item():
-    return {
-        "result": server.database.server_database_post_item(
-            request.args.get("namespace"),
-            request.args.get("key"),
-            request.args.get("value"),
-        )
-    }
+rpc_wrap_get(router,  "/info",             server.server_info)
+rpc_wrap_get(router,  "/database/item",    server.database.server_database_get_item)
+rpc_wrap_post(router, "/database/item",    server.database.server_database_post_item)
