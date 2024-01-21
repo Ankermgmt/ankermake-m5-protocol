@@ -82,7 +82,7 @@ class _MqttMsg:
     size       : u16le # length of packet, including header and checksum (minimum 65).
     m3         : u8 # Magic constant: 5
     m4         : u8 # Magic constant: 1
-    m5         : u8 # Magic constant: 2
+    m5         : u8 # Magic constant: 2 (M5) or 1 (M5C)
     m6         : u8 # Magic constant: 5
     m7         : u8 # Magic constant: 'F'
     packet_type: MqttPktType # Packet type
@@ -103,9 +103,19 @@ class _MqttMsg:
         m7, p = u8.parse(p)
         packet_type, p = MqttPktType.parse(p)
         packet_num, p = u16le.parse(p)
-        time, p = u32le.parse(p)
-        device_guid, p = String.parse(p, 37)
-        padding, p = Bytes.parse(p, 11)
+        if m5 == 2:
+            # AnkerMake M5
+            time, p = u32le.parse(p)
+            device_guid, p = String.parse(p, 37)
+            padding, p = Bytes.parse(p, 11)
+        elif m5 == 1:
+            # AnkerMake M5C
+            time = 0        # does not seem to be sent for M5C
+            device_guid = "none"      # still present for M5C???
+            padding, p = Bytes.parse(p, 12)     # first 6 bytes seem to change with each packet, rest is all zeros
+        else:
+            raise ValueError(f"Unsupported mqtt message format (expected 1 or 2, but found {m5})")
+
         data, p = Tail.parse(p)
         return cls(signature=signature, size=size, m3=m3, m4=m4, m5=m5, m6=m6, m7=m7, packet_type=packet_type, packet_num=packet_num, time=time, device_guid=device_guid, padding=padding, data=data), p
 
@@ -119,9 +129,14 @@ class _MqttMsg:
         p += u8.pack(self.m7)
         p += MqttPktType.pack(self.packet_type)
         p += u16le.pack(self.packet_num)
-        p += u32le.pack(self.time)
-        p += String.pack(self.device_guid, 37)
-        p += Bytes.pack(self.padding, 11)
+        if self.m5 == 2:
+            p += u32le.pack(self.time)
+            p += String.pack(self.device_guid, 37)
+            padding_len = 11
+        elif self.m5 == 1:
+            padding_len = 12
+        padding_missing = padding_len - len(self.padding)
+        p += Bytes.pack(self.padding + b"\x00" * padding_missing, padding_len)
         p += Tail.pack(self.data)
         return p
 
@@ -131,17 +146,25 @@ class MqttMsg(_MqttMsg):
     @classmethod
     def parse(cls, p, key):
         p = mqtt_checksum_remove(p)
-        if p[6] != 2:
-            raise ValueError(f"Unsupported mqtt message format (expected 2, but found {p[6]})")
-        body, data = p[:64], mqtt_aes_decrypt(p[64:], key)
+        try:
+            body_len = {1:24, 2:64}[p[6]]
+        except KeyError:
+            raise ValueError("Unsupported mqtt message format " +
+                             f"(expected 1 or 2, but found {p[6]})")
+        body, data = p[:body_len], mqtt_aes_decrypt(p[body_len:], key)
         res = super().parse(body + data)
         assert res[0].size == (len(p) + 1)
         return res
 
     def pack(self, key):
         data = mqtt_aes_encrypt(self.data, key)
-        self.size = 64 + len(data) + 1
-        body = super().pack()[:64]
+        try:
+            body_len = {1:24, 2:64}[self.m5]
+        except KeyError:
+            raise ValueError("Unsupported mqtt message format " +
+                             f"(expected 1 or 2, but found {self.m5})")
+        self.size = body_len + len(data) + 1
+        body = super().pack()[:body_len]
         final = mqtt_checksum_add(body + data)
         return final
 

@@ -51,7 +51,7 @@ class AnkerMQTTBaseClient:
         try:
             pkt, tail = MqttMsg.parse(msg.payload, key=self._key)
         except Exception as E:
-            hexStr =' '.join([f'0x{byte:02x}' for byte in msg.payload])
+            hexStr = ' '.join([f'0x{byte:02x}' for byte in msg.payload])
             log.error(f"Failed to decode mqtt message\n Exception: {E}\n Message : {hexStr}")
             return
 
@@ -111,10 +111,11 @@ class AnkerMQTTBaseClient:
             m5=2,
             m6=5,
             m7=ord('F'),
-            packet_type=MqttPktType.Single,
+            packet_type=packet_type,
             packet_num=0,
             time=0,
             device_guid=guid,
+            padding=b'', # fixed by .pack()
             data=data,
         )
 
