@@ -11,7 +11,7 @@ services:
 
         # bind to localhost by default
         environment:
-            - FLASK_HOST=127.0.0.1
+            - FLASK_HOST=0.0.0.0
             - FLASK_PORT=4470
         volumes:
             - ankerctl_vol:/root/.config/ankerctl
