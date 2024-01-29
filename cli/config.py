@@ -7,7 +7,7 @@ from pathlib import Path
 from platformdirs import PlatformDirs
 
 from libflagship.megajank import pppp_decode_initstring
-from libflagship.httpapi import AnkerHTTPAppApiV1, AnkerHTTPPassportApiV1
+from libflagship.httpapi import AnkerHTTPApi, AnkerHTTPAppApiV1, AnkerHTTPPassportApiV1, AnkerHTTPPassportApiV2
 from libflagship.util import unhex
 
 from .model import Serialize, Account, Printer, Config
@@ -128,6 +128,18 @@ def load_config_from_api(auth_token, region, insecure):
         log.info(f"Adding printer [{station_sn}]")
 
     return config
+
+
+def fetch_config_by_login(email, password, region, insecure, captcha_id=None, captcha_anwer=None):
+    log.info("Initializing API..")
+    if not region:
+        region = AnkerHTTPApi.guess_region()
+        log.info(f"Using region '{region.upper()}'")
+    ppapi = AnkerHTTPPassportApiV2(region=region, verify=not insecure)
+
+    log.info("Logging in..")
+    login = ppapi.login(email, password, captcha_id=captcha_id, captcha_anwer=captcha_anwer)
+    return login
 
 
 def attempt_config_upgrade(config, profile, insecure):

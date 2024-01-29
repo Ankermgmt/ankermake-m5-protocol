@@ -3,6 +3,8 @@
 import json
 import click
 import platform
+import getpass
+import webbrowser
 import logging as log
 from os import path, environ
 from rich import print  # you need python3
@@ -382,6 +384,65 @@ def config_decode(env, fd):
     print(json.dumps(cache, indent=4))
 
 
+@config.command("login")
+@click.argument("region", required=False, metavar="[REGION (EU/US)]")
+@click.argument("email", required=False)
+@click.argument("password", required=False)
+@pass_env
+def config_login(env, email, region, password):
+    """
+    Fetch configuration by logging in with provided credentials.
+    """
+
+    with env.config.open() as cfg:
+        if cfg:
+            if email is None:
+                email = cfg.account.email
+            if region is None:
+                region = cfg.account.region
+
+    if email is None:
+        email = input("Please enter your email address: ").strip()
+
+    if password is None:
+        password = getpass.getpass("Please enter your password: ")
+
+    if region:
+        region = region.lower()
+    while region not in ["", "eu", "us"]:
+        region = input("Please enter your region (EU/US), empty to guess: ").strip().lower()
+
+    login = None
+    captcha_id = None
+    captcha_anwer = None
+    # retry until login was successful
+    while login is None:
+        try:
+            login = cli.config.fetch_config_by_login(email, password, region, env.insecure,
+                                                     captcha_id=captcha_id, captcha_anwer=captcha_anwer)
+        except libflagship.httpapi.APIError as E:
+            # FIXME: The following code seems a bit too complex for putting it right here
+            fail = True
+            if len(E.args) > 1 and "data" in E.args[1]:
+                data = E.args[1]["data"]
+                if "captcha_id" in data:
+                    log.warning(f"Login requires solving a captcha")
+                    captcha_id = data["captcha_id"]
+                    captcha_img = data["item"]
+                    if webbrowser.open(captcha_img, new=2):
+                        fail = False
+                        captcha_anwer = input("Please enter the captcha answer: ").strip()
+                    else:
+                        log.critical(f"Cannot open webbrowser for displaying captcha, aborting.")
+                        return
+            if fail:
+                log.critical(f"Unknown login error: {E}")
+                return
+
+    if login is not None:
+        import_config_from_data(env, login)
+
+
 @config.command("import")
 @click.argument("fd", required=False, type=click.File("r"), metavar="path/to/login.json")
 @pass_env
@@ -417,6 +478,10 @@ def config_import(env, fd):
 
     # extract auth token
     cache = libflagship.logincache.load(fd.read())["data"]
+    import_config_from_data(env, cache)
+
+
+def import_config_from_data(env, cache):
     auth_token = cache["auth_token"]
 
     # extract account region

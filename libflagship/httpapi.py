@@ -2,7 +2,9 @@ import logging as log
 import requests
 import functools
 import json
-import hashlib
+import time
+import socket
+from libflagship.megajank import ecdh_encrypt_login_password
 
 
 class APIError(Exception):
@@ -34,7 +36,7 @@ def unwrap_api(func):
                 log.debug(f"JSON result: {json.dumps(jsn, indent=4)}")
                 return data
             else:
-                raise APIError("API error", json)
+                raise APIError("API error", jsn)
         else:
             raise APIError(f"API request failed: {data.status_code} {data.reason}")
 
@@ -45,18 +47,26 @@ class AnkerHTTPApi:
 
     scope = None
 
+    hosts = {
+        "eu": "make-app-eu.ankermake.com",
+        "us": "make-app.ankermake.com",
+    }
+
     def __init__(self, auth_token=None, verify=True, region=None, base_url=None):
         self._auth = auth_token
         self._verify = verify
         if base_url:
             self._base = base_url
         else:
-            if region == "eu":
-                self._base = "https://make-app-eu.ankermake.com"
-            elif region == "us":
-                self._base = "https://make-app.ankermake.com"
+            if region in self.hosts:
+                host = self.hosts[region]
             else:
                 raise APIError("must specify either base_url or region {'eu', 'us'}")
+            self._base = f"https://{host}"
+
+    @classmethod
+    def guess_region(cls):
+        return _find_closest_host(cls.hosts)
 
     @unwrap_api
     def _get(self, url, headers=None):
@@ -97,6 +107,38 @@ class AnkerHTTPPassportApiV1(AnkerHTTPApi):
     @require_auth_token
     def profile(self):
         return self._get("/profile", headers={"X-Auth-Token": self._auth})
+
+
+class AnkerHTTPPassportApiV2(AnkerHTTPApi):
+
+    scope = "/v2/passport"
+
+    def login(self, email, password, captcha_id=None, captcha_anwer=None):
+        public_key, encryped_pwd = ecdh_encrypt_login_password(password.encode())
+        # some or all of these headers seem to be needed for a successfuly login
+        headers={
+            "App_name": "anker_make",
+            "App_version": "",
+            "Model_type": "PC",
+            "Os_type": "windows",
+            "Os_version": "10sp1",
+        }
+        data={
+            "client_secret_info": {
+                "public_key": public_key,
+            },
+            "email": email,
+            "password": encryped_pwd,
+        }
+
+        # add captcha data if specified
+        if captcha_id is not None:
+            data["captcha_id"] = captcha_id
+        if captcha_anwer is not None:
+            data["answer"] = captcha_anwer
+
+        # perform the request
+        return self._post("/login", headers=headers, data=data)
 
 
 class AnkerHTTPHubApiV1(AnkerHTTPApi):
@@ -144,3 +186,25 @@ class AnkerHTTPHubApiV2(AnkerHTTPApi):
             "sec_code": sec_code,
             "sec_ts": sec_ts,
         })
+
+
+def _find_closest_host(hosts):
+    """ get key of closest host in the provided dictionary """
+    host_names = list(hosts.values())
+    connect_times = [_measure_host_connect_time(h) for h in host_names]
+    host_index = connect_times.index(min(connect_times))
+    host_name = host_names[host_index]
+
+    # find the key associated with `host_name`
+    host_keys = list(hosts.keys())
+    position = host_names.index(host_name)
+    return host_keys[position]
+
+
+def _measure_host_connect_time(host, port=443):
+    """ see https://stackoverflow.com/a/6160222 """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        time_before = time.time()
+        s.connect((host, port))
+        result = time.time() - time_before
+    return result
