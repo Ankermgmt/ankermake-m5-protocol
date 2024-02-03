@@ -396,10 +396,16 @@ def config_login(env, email, region, password):
 
     with env.config.open() as cfg:
         if cfg:
-            if email is None:
-                email = cfg.account.email
             if region is None:
                 region = cfg.account.region
+                log.info(f"Region: {region.upper()}")
+            if email is None:
+                email = cfg.account.email
+                log.info(f"Email address: {email}")
+            # prepare to rescue any printer IP addresses already configured
+            printer_ips = dict([[p.sn, p.ip_addr] for p in cfg.printers])
+        else:
+            printer_ips = dict()
 
     if email is None:
         email = input("Please enter your email address: ").strip()
@@ -413,34 +419,47 @@ def config_login(env, email, region, password):
         region = input("Please enter your region (EU/US), empty to guess: ").strip().lower()
 
     login = None
-    captcha_id = None
-    captcha_anwer = None
+    tries = 3
+    captcha = {"id": None, "answer": None}
     # retry until login was successful
-    while login is None:
+    while not login and tries > 0:
+        tries -= 1
         try:
             login = cli.config.fetch_config_by_login(email, password, region, env.insecure,
-                                                     captcha_id=captcha_id, captcha_anwer=captcha_anwer)
+                                                     captcha_id=captcha["id"], captcha_anwer=captcha["answer"])
+            break
         except libflagship.httpapi.APIError as E:
-            # FIXME: The following code seems a bit too complex for putting it right here
-            fail = True
+            # check if the error is actually a request to solve a captcha
             if len(E.args) > 1 and "data" in E.args[1]:
                 data = E.args[1]["data"]
                 if "captcha_id" in data:
-                    log.warning(f"Login requires solving a captcha")
-                    captcha_id = data["captcha_id"]
-                    captcha_img = data["item"]
-                    if webbrowser.open(captcha_img, new=2):
-                        fail = False
-                        captcha_anwer = input("Please enter the captcha answer: ").strip()
-                    else:
-                        log.critical(f"Cannot open webbrowser for displaying captcha, aborting.")
-                        return
-            if fail:
-                log.critical(f"Unknown login error: {E}")
-                return
+                    captcha = {
+                        "id": data["captcha_id"],
+                        "img": data["item"]
+                    }
 
-    if login is not None:
-        import_config_from_data(env, login)
+        # ask the user to resolve the captcha
+        if captcha["id"]:
+            log.warning(f"Login requires solving a captcha")
+            if webbrowser.open(captcha["img"], new=2):
+                captcha["anwer"] = input("Please enter the captcha answer: ").strip()
+            else:
+                log.critical(f"Cannot open webbrowser for displaying captcha, aborting.")
+                tries = 0
+        else:
+            log.critical(f"Unknown login error: {E}")
+            tries = 0
+
+    if login:
+        log.info(f"Login successful, importing configuration from server..")
+
+        # load remaining configuration items from the server
+        cli.config.import_config_from_server(env.config, login, env.insecure)
+
+        # reapply the rescued printer IP addresses
+        cli.config.update_empty_printer_ips(env.config, printer_ips)
+
+        log.info("Finished import")
 
 
 @config.command("import")
@@ -476,27 +495,11 @@ def config_import(env, fd):
 
     log.info("Loading cache..")
 
-    # extract auth token
+    # load the login configuration from the provided file
     cache = libflagship.logincache.load(fd.read())["data"]
-    import_config_from_data(env, cache)
 
-
-def import_config_from_data(env, cache):
-    auth_token = cache["auth_token"]
-
-    # extract account region
-    region = libflagship.logincache.guess_region(cache["ab_code"])
-
-    try:
-        config = cli.config.load_config_from_api(auth_token, region, env.insecure)
-    except libflagship.httpapi.APIError as E:
-        log.critical(f"Config import failed: {E} "
-                    "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
-    except Exception as E:
-        log.critical(f"Config import failed: {E}")
-
-    # save config to json file named `ankerctl/default.json`
-    env.config.save("default", config)
+    # import the rmaining configuration from the server
+    cli.config.import_config_from_server(env.config, cache, env.insecure)
 
     log.info("Finished import")
 

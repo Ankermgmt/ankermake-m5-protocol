@@ -7,8 +7,11 @@ from pathlib import Path
 from platformdirs import PlatformDirs
 
 from libflagship.megajank import pppp_decode_initstring
-from libflagship.httpapi import AnkerHTTPApi, AnkerHTTPAppApiV1, AnkerHTTPPassportApiV1, AnkerHTTPPassportApiV2
+from libflagship.httpapi import AnkerHTTPApi, AnkerHTTPAppApiV1, \
+                                AnkerHTTPPassportApiV1, AnkerHTTPPassportApiV2, \
+                                APIError
 from libflagship.util import unhex
+from libflagship import logincache
 
 from .model import Serialize, Account, Printer, Config
 
@@ -140,6 +143,34 @@ def fetch_config_by_login(email, password, region, insecure, captcha_id=None, ca
     log.info("Logging in..")
     login = ppapi.login(email, password, captcha_id=captcha_id, captcha_anwer=captcha_anwer)
     return login
+
+
+def import_config_from_server(configmgr, login_data, insecure):
+    # extract auth token
+    auth_token = login_data["auth_token"]
+
+    # extract account region
+    region = logincache.guess_region(login_data["ab_code"])
+
+    try:
+        config = load_config_from_api(auth_token, region, insecure)
+    except APIError as E:
+        log.critical(f"Config import failed: {E} "
+                     "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
+    except Exception as E:
+        log.critical(f"Config import failed: {E}")
+
+    # save config to json file named `ankerctl/default.json`
+    configmgr.save("default", config)
+
+
+def update_empty_printer_ips(configmgr, printer_ips):
+    with configmgr.modify() as cfg:
+        # update empty printer IP addresses to the provided ones
+        for printer in cfg.printers:
+            if not printer.ip_addr and printer.sn in printer_ips:
+                log.debug(f"Updating IP address of printer [{printer.sn}] to {printer_ips[printer.sn]}")
+                printer.ip_addr = printer_ips[printer.sn]
 
 
 def attempt_config_upgrade(config, profile, insecure):
