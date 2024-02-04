@@ -167,6 +167,48 @@ def app_api_version():
     return {"api": "0.1", "server": "1.9.0", "text": "OctoPrint 1.9.0"}
 
 
+@app.post("/api/ankerctl/config/updateip")
+def app_api_ankerctl_config_update_ip_addresses():
+    """
+    Handles the uploading of configuration file to Flask server
+
+    Returns:
+        A HTML redirect response
+    """
+    if request.method != "POST":
+        return web.util.flash_redirect(url_for('app_root'),
+                                       f"Wrong request method {request.method}", "danger")
+
+    message = None
+    category = "info"
+    url = url_for("app_root")
+    config = app.config["config"]
+    found_printers = cli.pppp.pppp_find_printer_ip_addresses()
+
+    if found_printers:
+        # update printer IP addresses
+        log.debug(f"Checking configured printer IP addresses:")
+        updated_printers = cli.config.update_printer_ip_addresses(config, found_printers)
+
+        # determine the message to display to the user
+        if updated_printers is not None:
+            if updated_printers:
+                category = "success"
+                message = f"Successfully update IP addresses of printer(s) {', '.join(updated_printers)}"
+                url = url_for("app_api_ankerctl_server_internal_reload")
+            else:
+                message = f"No IP addresses were updated."
+        else:
+            category = "danger"
+            message = f"Internal error."
+    else:
+        category = "danger"
+        message = "No printers responded within timeout. " \
+                  "Are you connected to the same network as the printer?"
+
+    return web.util.flash_redirect(url, message, category)
+
+
 @app.post("/api/ankerctl/config/upload")
 def app_api_ankerctl_config_upload():
     """
@@ -183,7 +225,7 @@ def app_api_ankerctl_config_upload():
 
     try:
         web.config.config_import(file, app.config["config"])
-        return web.util.flash_redirect(url_for('app_api_ankerctl_server_reload'),
+        return web.util.flash_redirect(url_for('app_api_ankerctl_server_internal_reload'),
                                        "AnkerMake Config Imported!", "success")
     except web.config.ConfigImportError as err:
         log.exception(f"Config import failed: {err}")
@@ -201,22 +243,43 @@ def app_api_ankerctl_server_reload():
     Returns:
         A HTML redirect response
     """
+    # clear any pending flash messages
+    if "_flashes" in session:
+        session["_flashes"].clear()
+
+    config = app.config["config"]
+
+    with config.open() as cfg:
+        if not cfg:
+            return web.util.flash_redirect(url_for('app_root'), "No printers found in config", "warning")
+
+    return app_api_ankerctl_server_internal_reload("Ankerctl reloaded successfully")
+
+
+@app.get("/api/ankerctl/server/intreload")
+def app_api_ankerctl_server_internal_reload(success_message: str=None):
+    """
+    Internal variant for reloading the Flask server.
+
+    This version shall be used as the forwarding target of actions displaying
+    flash messages. The current function will not clear and overwrite such
+    messages.
+
+    Returns:
+        A HTML redirect response
+    """
     config = app.config["config"]
 
     with config.open() as cfg:
         app.config["login"] = bool(cfg)
-        if not cfg:
-            return web.util.flash_redirect(url_for('app_root'), "No printers found in config", "warning")
-        if "_flashes" in session:
-            session["_flashes"].clear()
 
-        try:
-            app.svc.restart_all(await_ready=False)
-        except Exception as err:
-            log.exception(err)
-            return web.util.flash_redirect(url_for('app_root'), f"Ankerctl could not be reloaded: {err}", "danger")
+    try:
+        app.svc.restart_all(await_ready=False)
+    except Exception as err:
+        log.exception(err)
+        return web.util.flash_redirect(url_for('app_root'), f"Ankerctl could not be reloaded: {err}", "danger")
 
-        return web.util.flash_redirect(url_for('app_root'), "Ankerctl reloaded successfully", "success")
+    return web.util.flash_redirect(url_for('app_root'), success_message, "success")
 
 
 @app.post("/api/files/local")

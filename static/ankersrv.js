@@ -5,12 +5,17 @@ $(function () {
     $("#copyYear").text(new Date().getFullYear());
 
     /**
-     * Redirect page when modal dialog is shown
+     * Handle modal being shown
      */
-    var popupModal = document.getElementById("popupModal");
+    var popupModalDom = document.getElementById("popupModal");
 
-    popupModal.addEventListener("shown.bs.modal", function (e) {
-        window.location.href = $("#reload").data("href");
+    popupModalDom.addEventListener("shown.bs.modal", function (e) {
+        const trigger = e.relatedTarget;
+        const modalInner = $("#modal-inner");
+        modalInner.text(trigger.dataset.msg);
+        if (trigger.dataset.href) {
+            window.location.href = trigger.dataset.href;
+        }
     });
 
     /**

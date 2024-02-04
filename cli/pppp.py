@@ -8,7 +8,7 @@ from tqdm import tqdm
 import cli.util
 
 from libflagship.pktdump import PacketWriter
-from libflagship.pppp import Duid, P2PCmdType, FileTransfer
+from libflagship.pppp import Duid, P2PCmdType, FileTransfer, PktLanSearch, PktPunchPkt
 from libflagship.ppppapi import AnkerPPPPApi, PPPPState
 
 
@@ -70,3 +70,26 @@ def pppp_send_file(api, fui, data):
             api.aabb_request(chunk, frametype=FileTransfer.DATA, pos=pos)
             pos += len(chunk)
             bar.update(len(chunk))
+
+
+def pppp_find_printer_ip_addresses(dumpfile=None):
+        # broadcast a search packet to all printers on the network
+    api = pppp_open_broadcast(dumpfile=dumpfile)
+    api.send(PktLanSearch())
+
+    # collect replies from all available printers
+    found_printers = dict()
+    wait_time = 1.0      # wait 1.0 second for responses
+    timeout = time.monotonic() + wait_time
+    while wait_time > 0:
+        try:
+            resp = api.recv(timeout=wait_time)
+        except TimeoutError:
+            pass
+        else:
+            if isinstance(resp, PktPunchPkt):
+                duid_str = str(resp.duid)
+                found_printers[duid_str] = api.addr[0]
+        wait_time = timeout - time.monotonic()
+
+    return found_printers

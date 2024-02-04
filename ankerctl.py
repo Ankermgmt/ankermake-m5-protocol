@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import time
 import json
 import click
 import platform
@@ -23,7 +22,7 @@ import libflagship.seccode
 
 from libflagship.util import enhex
 from libflagship.mqtt import MqttMsgType
-from libflagship.pppp import PktLanSearch, P2PCmdType, P2PSubCmdType, FileTransfer
+from libflagship.pppp import P2PCmdType, P2PSubCmdType, FileTransfer
 from libflagship.ppppapi import FileUploadInfo, PPPPError
 
 
@@ -215,7 +214,7 @@ def pppp(): pass
 
 
 @pppp.command("lan-search")
-@click.option("--store", "-n", is_flag=True, help="Store found IP address(es) in configuration file")
+@click.option("--store", "-s", is_flag=True, help="Store found IP address(es) in configuration file")
 @pass_env
 def pppp_lan_search(env, store):
     """
@@ -223,44 +222,17 @@ def pppp_lan_search(env, store):
 
     Works by broadcasting a LAN_SEARCH packet, and waiting for a reply.
     """
-    # broadcast a search packet to all printers on the network
-    api = cli.pppp.pppp_open_broadcast(dumpfile=env.pppp_dump)
-    api.send(PktLanSearch())
-
-    # collect replies from all available printers
-    found_printers = dict()
-    wait_time = 1.0      # wait 1.0 second for responses
-    timeout = time.monotonic() + wait_time
-    while wait_time > 0:
-        try:
-            resp = api.recv(timeout=wait_time)
-        except TimeoutError:
-            if not found_printers:
-                log.error("No printers responded within timeout. Are you connected to the same network as the printer?")
-        else:
-            if isinstance(resp, libflagship.pppp.PktPunchPkt):
-                duid_str = str(resp.duid)
-                found_printers[duid_str] = api.addr[0]
-                log.info(f"Printer [{duid_str}] is online at {str(api.addr[0])}")
-        wait_time = timeout - time.monotonic()
+    found_printers = cli.pppp.pppp_find_printer_ip_addresses(dumpfile=env.pppp_dump)
+    if found_printers:
+        for duid, ip in found_printers.items():
+            log.info(f"Printer [{duid}] is online at {ip}")
+    else:
+        log.error("No printers responded within timeout. Are you connected to the same network as the printer?")
 
     # if requested, update stored printer IP addresses
     if store and found_printers:
         log.info(f"Checking configured printer IP addresses:")
-        with env.config.modify() as cfg:
-            if not cfg or not cfg.printers:
-                log.error("No printers configured. Run 'config login' or 'config import' to populate.")
-                return
-            for p in cfg.printers:
-                prefix = f"  Printer [{p.p2p_duid}]:"
-                if p.p2p_duid in found_printers:
-                    if p.ip_addr != found_printers[p.p2p_duid]:
-                        log.info(f"{prefix} Updating IP address from {p.ip_addr} to {found_printers[p.p2p_duid]}")
-                        p.ip_addr = found_printers[p.p2p_duid]
-                    else:
-                        log.info(f"{prefix} IP address {p.ip_addr} is already up-to-date")
-                else:
-                    log.warning(f"{prefix} No network response received, check connection!")
+        cli.config.update_printer_ip_addresses(env.config, found_printers)
 
 
 @pppp.command("print-file")
