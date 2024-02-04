@@ -27,7 +27,7 @@ class BaseConfigManager:
     def _borrow(self, value, write, default=None):
         pr = self.load(value, default)
         yield pr
-        if write:
+        if write and pr is not None:
             self.save(value, pr)
 
     @property
