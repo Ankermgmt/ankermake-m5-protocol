@@ -115,6 +115,7 @@ class AnkerMQTTBaseClient:
             packet_num=0,
             time=0,
             device_guid=guid,
+            padding=(b"\x00" * 11),
             data=data,
         )
 
