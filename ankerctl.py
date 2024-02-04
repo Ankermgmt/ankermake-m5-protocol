@@ -17,6 +17,7 @@ import cli.mqtt
 import cli.util
 import cli.pppp
 import cli.checkver  # check python version
+import cli.countrycodes
 
 import libflagship.httpapi
 import libflagship.logincache
@@ -385,39 +386,40 @@ def config_decode(env, fd):
 
 
 @config.command("login")
-@click.argument("region", required=False, metavar="[REGION (EU/US)]")
+@click.argument("country", required=False, metavar="[COUNTRY (2 letter code)]")
 @click.argument("email", required=False)
 @click.argument("password", required=False)
 @pass_env
-def config_login(env, email, region, password):
+def config_login(env, country, email, password):
     """
     Fetch configuration by logging in with provided credentials.
     """
 
-    with env.config.open() as cfg:
-        if cfg:
-            if region is None:
-                region = cfg.account.region
-                log.info(f"Region: {region.upper()}")
-            if email is None:
-                email = cfg.account.email
-                log.info(f"Email address: {email}")
-            # prepare to rescue any printer IP addresses already configured
-            printer_ips = dict([[p.sn, p.ip_addr] for p in cfg.printers])
-        else:
-            printer_ips = dict()
+    try:
+        with env.config.open() as cfg:
+            if cfg.account:
+                if country is None and cfg.account.country:
+                    country = cfg.account.country
+                    log.info(f"Country: {country.upper()}")
+                if email is None:
+                    email = cfg.account.email
+                    log.info(f"Email address: {email}")
+    except KeyError:
+        pass
 
+    # interactive user input (only if arguments not given on command line)
     if email is None:
         email = input("Please enter your email address: ").strip()
 
     if password is None:
         password = getpass.getpass("Please enter your password: ")
 
-    if region:
-        region = region.lower()
-    while region not in ["", "eu", "us"]:
-        region = input("Please enter your region (EU/US), empty to guess: ").strip().lower()
+    if country:
+        country = country.upper()
+    while not cli.countrycodes.code_to_country(country):
+        country = input("Please enter your country (2 digit code): ").strip().upper()
 
+    region = libflagship.logincache.guess_region(country)
     login = None
     tries = 3
     captcha = {"id": None, "answer": None}
@@ -426,12 +428,12 @@ def config_login(env, email, region, password):
         tries -= 1
         try:
             login = cli.config.fetch_config_by_login(email, password, region, env.insecure,
-                                                     captcha_id=captcha["id"], captcha_anwer=captcha["answer"])
+                                                     captcha_id=captcha["id"], captcha_answer=captcha["answer"])
             break
         except libflagship.httpapi.APIError as E:
             # check if the error is actually a request to solve a captcha
-            if len(E.args) > 1 and "data" in E.args[1]:
-                data = E.args[1]["data"]
+            if E.json and "data" in E.json:
+                data = E.json["data"]
                 if "captcha_id" in data:
                     captcha = {
                         "id": data["captcha_id"],
@@ -442,7 +444,7 @@ def config_login(env, email, region, password):
         if captcha["id"]:
             log.warning(f"Login requires solving a captcha")
             if webbrowser.open(captcha["img"], new=2):
-                captcha["anwer"] = input("Please enter the captcha answer: ").strip()
+                captcha["answer"] = input("Please enter the captcha answer: ").strip()
             else:
                 log.critical(f"Cannot open webbrowser for displaying captcha, aborting.")
                 tries = 0
@@ -455,9 +457,6 @@ def config_login(env, email, region, password):
 
         # load remaining configuration items from the server
         cli.config.import_config_from_server(env.config, login, env.insecure)
-
-        # reapply the rescued printer IP addresses
-        cli.config.update_empty_printer_ips(env.config, printer_ips)
 
         log.info("Finished import")
 
@@ -498,7 +497,7 @@ def config_import(env, fd):
     # load the login configuration from the provided file
     cache = libflagship.logincache.load(fd.read())["data"]
 
-    # import the rmaining configuration from the server
+    # import the remaining configuration from the server
     cli.config.import_config_from_server(env.config, cache, env.insecure)
 
     log.info("Finished import")
@@ -523,6 +522,7 @@ def config_show(env):
         print(f"    auth_token: {cfg.account.auth_token[:10]}...<REDACTED>")
         print(f"    email:      {cfg.account.email}")
         print(f"    region:     {cfg.account.region.upper()}")
+        print(f"    country:    {cfg.account.country.upper()}")
         print()
 
         log.info("Printers:")

@@ -8,6 +8,94 @@
         <div class="row g-3">
             <div class="col-lg-6">
                 <form
+                    action="{{ url_for('app_api_ankerctl_config_login') }}"
+                    method="POST"
+                    class="mb-3"
+                    id="config-login-form"
+                >
+                    <div class="card">
+                        <div class="card-header fs-4">
+                            Fetch Config From AnkerMake Server
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row mb-3 g-3">
+                                <div class="input-group">
+                                    <div class="input-group-text">Email</div>
+                                    <input
+                                        class="form-control"
+                                        type="email"
+                                        id="loginEmail"
+                                        name="login_email"
+                                        required
+                                        aria-required="true"
+                                        value="{{ config_existing_email }}"
+                                    />
+                                </div>
+                            </div>
+                            <div class="row mb-3 g-3">
+                                <div class="input-group">
+                                    <div class="input-group-text">Password</div>
+                                    <input
+                                        class="form-control"
+                                        type="password"
+                                        id="loginPassword"
+                                        name="login_password"
+                                        required
+                                        aria-required="true"
+                                    />
+                                </div>
+                            </div>
+                            <div class="row mb-3 g-3" id="captchaRow">
+                                <div class="input-group">
+                                    <div class="input-group-text text-danger-emphasis">Please solve CAPTCHA:</div>
+                                    <img id="loginCaptchaImg" />
+                                    <div class="input-group-text print-info-label">
+                                        {{ macro.bi_icon("arrow-right") }}
+                                    </div>
+                                    <input
+                                        type="hidden"
+                                        id="loginCaptchaId"
+                                        name="login_captcha_id"
+                                        autocomplete="off"
+                                        value=""
+                                    />
+                                    <input
+                                        class="form-control"
+                                        id="loginCaptchaText"
+                                        name="login_captcha_text"
+                                        autocomplete="off"
+                                        value=""
+                                    />
+                                </div>
+                            </div>
+                            <div class="row g-3 justify-content-between">
+                                <div class="col-md-8">
+                                    <div class="input-group">
+                                        <div class="input-group-text">Country</div>
+                                        <select
+                                            class="form-select"
+                                            id="loginCountry"
+                                            name="login_country"
+                                            aria-label="Region"
+                                            data-countrycodes="{{ country_codes }}"
+                                            data-country="{{ current_country }}">
+                                            <option value="">Please select your country...</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 justify-content-end d-flex">
+                                    <button class="btn btn-secondary submit" type="submit" id="login">
+                                        {{ macro.bi_icon("box-arrow-in-right", "Fetch") }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <form
                     action="{{ url_for('app_api_ankerctl_config_upload') }}"
                     method="POST"
                     enctype="multipart/form-data"

@@ -8,7 +8,17 @@ from libflagship.megajank import ecdh_encrypt_login_password
 
 
 class APIError(Exception):
-    pass
+
+    def __init__(self, *args, **kwargs):
+        if "json" in kwargs:
+            self.json = kwargs["json"]
+            del kwargs["json"]
+            args = list(args)
+            args.append(self.json)
+        else:
+            self.json = None
+
+        super().__init__(*args)
 
 
 def require_auth_token(func):
@@ -31,12 +41,12 @@ def unwrap_api(func):
         data = func(self, *args, **kwargs)
         if data.ok:
             jsn = data.json()
+            log.debug(f"JSON result: {json.dumps(jsn, indent=4)}")
             if jsn["code"] == 0:
                 data = jsn.get("data")
-                log.debug(f"JSON result: {json.dumps(jsn, indent=4)}")
                 return data
             else:
-                raise APIError("API error", jsn)
+                raise APIError("API error", json=jsn)
         else:
             raise APIError(f"API request failed: {data.status_code} {data.reason}")
 
@@ -113,7 +123,7 @@ class AnkerHTTPPassportApiV2(AnkerHTTPApi):
 
     scope = "/v2/passport"
 
-    def login(self, email, password, captcha_id=None, captcha_anwer=None):
+    def login(self, email, password, captcha_id=None, captcha_answer=None):
         public_key, encryped_pwd = ecdh_encrypt_login_password(password.encode())
         # some or all of these headers seem to be needed for a successfuly login
         headers={
@@ -134,9 +144,10 @@ class AnkerHTTPPassportApiV2(AnkerHTTPApi):
         # add captcha data if specified
         if captcha_id is not None:
             data["captcha_id"] = captcha_id
-        if captcha_anwer is not None:
-            data["answer"] = captcha_anwer
+        if captcha_answer is not None:
+            data["answer"] = captcha_answer
 
+        print(f"data = {data}")
         # perform the request
         return self._post("/login", headers=headers, data=data)
 
