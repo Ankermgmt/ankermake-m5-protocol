@@ -5,12 +5,34 @@ $(function () {
     $("#copyYear").text(new Date().getFullYear());
 
     /**
-     * Redirect page when modal dialog is shown
+     * Handle modal being shown
      */
-    var popupModal = document.getElementById("popupModal");
+    var popupModalDom = document.getElementById("popupModal");
+    var popupModalBS = new bootstrap.Modal(popupModalDom);
 
-    popupModal.addEventListener("shown.bs.modal", function (e) {
-        window.location.href = $("#reload").data("href");
+    popupModalDom.addEventListener("shown.bs.modal", function (e) {
+        const trigger = e.relatedTarget;
+        const modalInner = $("#modal-inner");
+        modalInner.text(trigger.dataset.msg);
+        if (trigger.dataset.href) {
+            window.location.href = trigger.dataset.href;
+        }
+    });
+
+    /**
+     * Opens modal if gcode upload file is present
+     */
+    const gcodeUpload = $("#gcode-upload");
+    gcodeUpload.on("click", function (event) {
+        var fileInput = $("#gcode_file");
+        if (fileInput.prop("value").trim() !== "") {
+            const relatedTarget = {
+                dataset: {
+                    msg: gcodeUpload.data("msg"),
+                },
+            };
+            popupModalBS.show(relatedTarget);
+        }
     });
 
     /**
@@ -18,7 +40,7 @@ $(function () {
      */
     if (navigator.clipboard) {
         /* Clipboard support present: link clipboard icons to source object */
-        $("[data-clipboard-src]").each(function(i, elm) {
+        $("[data-clipboard-src]").each(function (i, elm) {
             $(elm).on("click", function () {
                 const src = $(elm).attr("data-clipboard-src");
                 const value = $(src).text();
@@ -29,7 +51,79 @@ $(function () {
     } else {
         /* Clipboard support missing: remove clipboard icons to minimize confusion */
         $("[data-clipboard-src]").remove();
-    };
+    }
+
+    /**
+     * Converts a string to its boolean value.
+     *
+     * @function
+     * @param {string} string - The string to be converted.
+     * @returns {boolean} - True if the input string is "true", "yes", or "1"; otherwise, false.
+     */
+    function stringToBoolean(string) {
+        if (!string) return false;
+        switch (string.toLowerCase().trim()) {
+            case "true":
+            case "yes":
+            case "1":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // Get URL parameter for fullscreen and apply it if needed, this emulates fullscreen
+    let urlParams = new URLSearchParams(window.location.search);
+    let fullscreenParam = stringToBoolean(urlParams.get("fullscreen"));
+    if (fullscreenParam) {
+        setFullscreenClasses(true, true);
+    }
+
+    // Toggle fullscreen when the full screen button in the video element is clicked
+    $("#video-fs").on("click", function () {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            let vp = document.getElementById("vmain");
+            vp.requestFullscreen();
+        }
+    });
+
+    /**
+     * Sets or unsets the required classes for fullscreen functionality.
+     *
+     * @function
+     * @param {boolean} fullscreen - Whether to set or unset the classes (true to set, false to unset).
+     * @param {boolean} emulate - Whether to emulate the fullscreen mode or not.
+     */
+    function setFullscreenClasses(fullscreen = false, emulate = false) {
+        $(".fullscreen-emulate").removeClass("fullscreen-emulate-active");
+        $(".fullscreen-emulate-d-none").removeClass("fullscreen-emulate-d-none-active");
+        if (fullscreen) {
+            if (emulate) {
+                $(".fullscreen-emulate").addClass("fullscreen-emulate-active");
+                $(".fullscreen-emulate-d-none").addClass("fullscreen-emulate-d-none-active");
+            }
+            $("#vmain .col-xl-8").removeClass("col-xl-8").addClass("col-xl-9");
+            $("#vmain .col-xl-4").removeClass("col-xl-4").addClass("col-xl-3");
+        } else {
+            $("#vmain .col-xl-9").removeClass("col-xl-9").addClass("col-xl-8");
+            $("#vmain .col-xl-3").removeClass("col-xl-3").addClass("col-xl-4");
+        }
+    }
+
+    /**
+     * Event listener for fullscreen change event.
+     * Adds or removes appropriate CSS classes to adjust the video element size.
+     */
+    document.addEventListener("fullscreenchange", function () {
+        /* Make more room for video element in fullscreen mode */
+        if (document.fullscreenElement) {
+            setFullscreenClasses(true);
+        } else {
+            setFullscreenClasses(false);
+        }
+    });
 
     /**
      * Initializes bootstrap alerts and sets a timeout for when they should automatically close
@@ -97,13 +191,13 @@ $(function () {
         constructor({
             name,
             url,
-            badge=null,
-            open=null,
-            close=null,
-            error=null,
-            message=null,
-            binary=false,
-            reconnect=1000,
+            badge = null,
+            open = null,
+            close = null,
+            error = null,
+            message = null,
+            binary = false,
+            reconnect = 1000,
         }) {
             this.name = name;
             this.url = url;
@@ -305,5 +399,4 @@ $(function () {
         sockets.ctrl.ws.send(JSON.stringify({ quality: 1 }));
         return false;
     });
-
 });

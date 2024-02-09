@@ -68,6 +68,21 @@ code {
     background-color: #292929;
 }
 
+#video-fs {
+    position: absolute;
+    bottom: 1ex;
+    right: 1ex;
+}
+
+#vmain:fullscreen {
+    padding-top: 1rem;
+    background-color: var(--bs-body-bg);
+}
+
+#vmain:fullscreen video {
+    aspect-ratio: 4 / 3;
+}
+
 /* Layout */
 
 #printProgress {
@@ -101,4 +116,24 @@ code {
 .img-thumbnail {
     border: 0 none;
     padding: 0;
+}
+
+/* Emulated Fullscreen */
+#vmain.fullscreen-emulate-active {
+    max-width: 100vw;
+    max-height: 100vh;
+}
+
+#vmain.fullscreen-emulate-active #vplayer {
+    aspect-ratio: 4 / 3;
+    height: 100vh;
+    margin: 0 auto;
+}
+
+body.fullscreen-emulate-active {
+    background-color: rgba(0,0,0,0);
+}
+
+.fullscreen-emulate-d-none-active {
+    display: none;
 }

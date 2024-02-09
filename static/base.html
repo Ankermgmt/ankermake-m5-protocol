@@ -11,15 +11,15 @@
         {{ macro.static_css("ankersrv.css") }}
         {%- block head %}{% endblock head %}
     </head>
-    <body>
+    <body class="fullscreen-emulate">
         <!-- Header -->
-        <div class="bg-dark bg-gradient mb-3">
+        <div class="bg-dark bg-gradient mb-3 fullscreen-emulate-d-none">
             <header class="container d-flex align-items-center py-2">
                 <a href="/" class="d-flex me-md-auto text-decoration-none">
                     <img src="{{ url_for('static', filename='img/logo.svg') }}" class="me-2" alt="logo">
                     <span class="text-body-emphasis align-self-baseline fs-4">ankerctl</span>
                 </a>
-                <ul class="nav nav-pills align-items-baseline" id="tab" role="tablist">
+                <ul class="nav nav-pills align-items-baseline btn-group" id="tab" role="tablist">
                     {% block menu %}{% endblock %}
                 </ul>
             </header>
@@ -30,7 +30,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body">
-                        <p>Restarting ankerctl...</p>
+                        <p id="modal-inner"></p>
                         <div class="progress">
                             <div class="progress-bar progress-bar-striped progress-bar-animated w-100"
                                  role="progressbar"
@@ -71,7 +71,7 @@
         </div>
 
         <!-- Footer -->
-        <footer class="container">
+        <footer class="container fullscreen-emulate-d-none">
             <div class="my-3 p-3 text-center bg-body-tertiary rounded-3">
                 {% block footer %}
                 {% include "footer.html" %}
