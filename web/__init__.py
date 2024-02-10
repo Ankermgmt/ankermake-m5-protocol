@@ -8,6 +8,7 @@ Methods:
 
 Routes:
     - /ws/mqtt: Handles receiving and sending messages on the 'mqttqueue' stream service through websocket
+    - /ws/pppp-state: Provides the status of the 'pppp' stream service through websocket
     - /ws/video: Handles receiving and sending messages on the 'videoqueue' stream service through websocket
     - /ws/ctrl: Handles controlling of light and video quality through websocket
     - /video: Handles the video streaming/downloading feature in the Flask app
@@ -79,10 +80,35 @@ def video(sock):
     """
     Handles receiving and sending messages on the 'videoqueue' stream service through websocket
     """
-    if not app.config["login"]:
+    if not app.config["login"] or not app.config["video_supported"]:
         return
     for msg in app.svc.stream("videoqueue"):
         sock.send(msg.data)
+
+
+@sock.route("/ws/pppp-state")
+def pppp_state(sock):
+    """
+    Handles a status request for the 'pppp' stream service through websocket
+    """
+    if not app.config["login"]:
+        return
+
+    pppp_connected = False
+
+    # A timeout of 3 sec should be finr, as the printer continuously sends
+    # PktAlive messages every second on an established connnection.
+    for chan, msg in app.svc.stream("pppp", timeout=3.0):
+        if not pppp_connected:
+            with app.svc.borrow("pppp") as pppp:
+                if pppp.connected:
+                    pppp_connected = True
+                    # this is the only message ever sent on this connection
+                    # to signal that the pppp connection is up
+                    sock.send(json.dumps({"status": "connected"}))
+                    log.info(f"PPPP connection established")
+
+    log.warning(f"PPPP connection lost")
 
 
 @sock.route("/ws/ctrl")
@@ -114,7 +140,7 @@ def video_download():
     Handles the video streaming/downloading feature in the Flask app
     """
     def generate():
-        if not app.config["login"]:
+        if not app.config["login"] or not app.config["video_supported"]:
             return
         for msg in app.svc.stream("videoqueue"):
             yield msg.data
@@ -152,6 +178,7 @@ def app_root():
             configure=app.config["login"],
             login_file_path=web.platform.login_path(user_os),
             anker_config=anker_config,
+            video_supported=app.config["video_supported"],
             printer=printer
         )
 
@@ -269,17 +296,24 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         - None
     """
     with config.open() as cfg:
-        if cfg and printer_index >= len(cfg.printers):
+        video_supported = False
+        if cfg:
+            if printer_index < len(cfg.printers):
+                # no webcam in the AnkerMake M5C (Model "V8110")
+                video_supported = cfg.printers[printer_index].model != "V8110"
+        else:
             log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
         app.config["config"] = config
         app.config["login"] = bool(cfg)
         app.config["printer_index"] = printer_index
+        app.config["video_supported"] = video_supported
         app.config["port"] = port
         app.config["host"] = host
         app.config["insecure"] = insecure
         app.config.update(kwargs)
         app.svc.register("pppp", web.service.pppp.PPPPService())
-        app.svc.register("videoqueue", web.service.video.VideoQueue())
+        if video_supported:
+            app.svc.register("videoqueue", web.service.video.VideoQueue())
         app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
         app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
         app.run(host=host, port=port)

@@ -70,7 +70,12 @@ class PPPPService(Service):
         except ConnectionResetError:
             raise ServiceRestartSignal()
 
-        if not msg or msg.type != Type.DRW:
+        if not msg:
+            return
+
+        if msg.type != Type.DRW:
+            # forward messages other than Type.DRW without further processing
+            self.notify((getattr(msg, "chan", None), msg))
             return
 
         ch = self._api.chans[msg.chan]

@@ -210,7 +210,7 @@ $(function () {
             $("#progress").text("0%");
             $("#nozzle-temp").text("0°C");
             $("#set-nozzle-temp").attr("value", "0°C");
-            $("#bed-temp").text("$0°C");
+            $("#bed-temp").text("0°C");
             $("#set-bed-temp").attr("value", "0°C");
             $("#print-speed").text("0mm/s");
             $("#print-layer").text("0 / 0");
@@ -223,7 +223,7 @@ $(function () {
     sockets.video = new AutoWebSocket({
         name: "Video socket",
         url: `ws://${location.host}/ws/video`,
-        badge: "#badge-pppp",
+        badge: "#badge-video",
         binary: true,
 
         open: function () {
@@ -265,13 +265,26 @@ $(function () {
         badge: "#badge-ctrl",
     });
 
+    sockets.pppp_state = new AutoWebSocket({
+        name: "PPPP socket",
+        url: `ws://${location.host}/ws/pppp-state`,
+        badge: "#badge-pppp",
+    });
+
     /* Only connect websockets if #player element exists in DOM (i.e., if we
      * have a configuration). Otherwise we are constantly trying to make
      * connections that will never succeed. */
-    if ($("#player").length) {
+    if ($("#badge-mqtt").length) {
         sockets.mqtt.connect();
-        sockets.video.connect();
+    }
+    if ($("#badge-ctrl").length) {
         sockets.ctrl.connect();
+    }
+    if ($("#badge-pppp").length) {
+        sockets.pppp_state.connect();
+    }
+    if ($("#player").length) {
+        sockets.video.connect();
     }
 
     /**
