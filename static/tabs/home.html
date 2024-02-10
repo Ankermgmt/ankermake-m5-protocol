@@ -7,6 +7,7 @@
     <div class="container">
         <div class="row g-3">
             <div class="col-md-12 col-lg-6 col-xl-8">
+                {% if video_supported %}
                 <!-- Video Container -->
                 <video
                     class="w-100 d-block rounded-3 bg-body-tertiary"
@@ -17,6 +18,16 @@
                     poster="{{ url_for('static', filename='img/load-screen.svg') }}"
                 >
                 </video>
+                {% else %}
+                <div class="card">
+                    <div class="card-body text-center">
+                        <p class="display-1">
+                            {{ macro.bi_icon("camera-video-off") }}
+                        </p>
+                        <p class="display-6">Camera not available</p>
+                    </div>
+                </div>
+                {% endif %}
             </div>
             <div class="col-md-12 col-lg-6 col-xl-4">
                 <div class="card">
@@ -30,9 +41,13 @@
                         </div>
                         <span id="badge-mqtt" class="badge">MQTT</span>
                         <span id="badge-pppp" class="badge">PPPP</span>
+                        {% if video_supported %}
+                        <span id="badge-video" class="badge">VIDEO</span>
+                        {% endif %}
                         <span id="badge-ctrl" class="badge">CTRL</span>
                     </div>
                     {% endif %}
+                    {% if video_supported %}
                     <div class="card-header fs-6">Video Controls</div>
                     <div class="card-body">
                         <div class="row g-3 mb-3">
@@ -60,6 +75,7 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
                     <div class="card-header fs-6">Temperature</div>
                     <div class="card-body">
                         <div class="row g-3">

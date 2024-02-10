@@ -1,10 +1,10 @@
 # AnkerMake M5 Protocol
 
-Welcome! This repository contains `ankerctl`, a command-line interface and web UI for monitoring, controlling and interfacing with AnkerMake M5 3D printers.
+Welcome! This repository contains `ankerctl`, a command-line interface and web UI for monitoring, controlling and interfacing with AnkerMake M5 and M5C 3D printers.
 
 **NOTE:** This is our first major release and while we have tested thoroughly there may be bugs. If you encounter one please open a [Github Issue](https://github.com/Ankermgmt/ankermake-m5-protocol/issues/new/choose)
 
-The `ankerctl` program uses [`libflagship`](documentation/developer-docs/libflagship.md), a library for communicating with the numerous different protocols required for connecting to an AnkerMake M5 printer. The `libflagship` library is also maintained in this repo, under [`libflagship/`](libflagship/).
+The `ankerctl` program uses [`libflagship`](documentation/developer-docs/libflagship.md), a library for communicating with the numerous different protocols required for connecting to an AnkerMake M5 or M5C printer. The `libflagship` library is also maintained in this repo, under [`libflagship/`](libflagship/).
 
 ![Screenshot of ankerctl](/documentation/web-interface.png "Screenshot of ankerctl web interface")
 
@@ -14,7 +14,7 @@ The `ankerctl` program uses [`libflagship`](documentation/developer-docs/libflag
 
  - Print directly from PrusaSlicer and its derivatives (SuperSlicer, Bamboo Studio, OrcaSlicer, etc.)
 
- - Connect to AnkerMake M5 and AnkerMake APIs without using closed-source Anker software.
+ - Connect to AnkerMake M5/M5C and AnkerMake APIs without using closed-source Anker software.
 
  - Send raw gcode commands to the printer (and see the response).
 
@@ -22,7 +22,7 @@ The `ankerctl` program uses [`libflagship`](documentation/developer-docs/libflag
 
  - Send print jobs (gcode files) to the printer.
 
- - Stream camera image/video to your computer.
+ - Stream camera image/video to your computer (AnkerMake M5 only).
 
  - Easily monitor print status.
 
@@ -177,7 +177,7 @@ Some examples:
 
 This project is **<u>NOT</u>** endorsed, affiliated with, or supported by AnkerMake. All information found herein is gathered entirely from reverse engineering using publicly available knowledge and resources.
 
-The goal of this project is to make the AnkerMake M5 usable and accessible using only Free and Open Source Software (FOSS).
+The goal of this project is to make the AnkerMake M5 and M5C usable and accessible using only Free and Open Source Software (FOSS).
 
 This project is [licensed under the GNU GPLv3](LICENSE), and copyright © 2023 Christian Iversen.
 
