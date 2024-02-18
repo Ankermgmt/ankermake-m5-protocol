@@ -36,6 +36,9 @@ class PPPPService(Service):
                 raise ServiceStoppedError("No config available")
             printer = cfg.printers[app.config["printer_index"]]
 
+        if not printer.ip_addr:
+            raise ServiceStoppedError("Printer IP address not available")
+
         api = AnkerPPPPAsyncApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
         if app.config["pppp_dump"]:
             dumpfile = app.config["pppp_dump"]

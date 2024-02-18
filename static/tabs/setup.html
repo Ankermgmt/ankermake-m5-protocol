@@ -40,6 +40,34 @@
                     </div>
                 </form>
 
+                {% if printer %}
+                <form
+                    action="{{ url_for('app_api_ankerctl_config_update_ip_addresses') }}"
+                    method="POST"
+                    class="mb-3"
+                    id="config-update-printer-ips"
+                    data-bs-toggle="modal" data-bs-target="#popupModal"
+                    data-msg="Detecting printer IP addresses..."
+                >
+                    <div class="card">
+                        <div class="card">
+                            <div class="card-header fs-4">
+                                Update Printer IP Addresses
+                            </div>
+                            <div class="card-body">
+                                <p>
+                                    Make sure your printers are connected to your Wifi and
+                                    are located in the same network as Ankerctl.
+                                </p>
+                                <button class="btn btn-secondary submit" type="submit">
+                                    {{ macro.bi_icon("arrow-clockwise", "Update Printer IP Addresses") }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+
                 <div class="card">
                     <div class="card">
                         <div class="card-header fs-4">
@@ -52,6 +80,7 @@
                             </p>
                             <button id="reload" type="button" class="btn btn-danger"
                                     data-bs-toggle="modal" data-bs-target="#popupModal"
+                                    data-msg="Restarting ankerctl..."
                                     data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
                                 {{ macro.bi_icon("bootstrap-reboot", "Reload Services") }}
                             </button>

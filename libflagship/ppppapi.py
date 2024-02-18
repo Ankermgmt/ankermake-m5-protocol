@@ -254,9 +254,11 @@ class AnkerPPPPBaseApi(Thread):
         return cls.open(duid, host, PPPP_WAN_PORT)
 
     @classmethod
-    def open_broadcast(cls):
+    def open_broadcast(cls, bind_addr=None):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        if bind_addr is not None:
+            sock.bind((bind_addr, 0))
         addr = ("255.255.255.255", PPPP_LAN_PORT)
         return cls(sock, duid=None, addr=addr)
 

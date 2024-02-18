@@ -27,7 +27,7 @@ class BaseConfigManager:
     def _borrow(self, value, write, default=None):
         pr = self.load(value, default)
         yield pr
-        if write:
+        if write and pr is not None:
             self.save(value, pr)
 
     @property
@@ -128,6 +128,37 @@ def load_config_from_api(auth_token, region, insecure):
         log.info(f"Adding printer [{station_sn}]")
 
     return config
+
+
+def update_printer_ip_addresses(config, printer_ips: list) -> list:
+    """
+    Checks configured printer IP addresses against the given set of addresses
+    and updates the IP address in the configuration if they differ.
+
+    Returns:
+    - List of names of updated printers, None upon an error
+    """
+    updated_printers = list()
+
+    with config.modify() as cfg:
+        if not cfg or not cfg.printers:
+            log.error("No printers configured. Run 'config login' or 'config import' to populate.")
+            return None
+
+        for p in cfg.printers:
+            prefix = f"  Printer [{p.p2p_duid}]:"
+            if p.p2p_duid in printer_ips:
+                if p.ip_addr != printer_ips[p.p2p_duid]:
+                    old_ip = p.ip_addr if p.ip_addr else "<empty>"
+                    log.info(f"{prefix} Updating IP address from {old_ip} to {printer_ips[p.p2p_duid]}")
+                    p.ip_addr = printer_ips[p.p2p_duid]
+                    updated_printers.append(p.name)
+                else:
+                    log.info(f"{prefix} IP address {p.ip_addr} is already up-to-date")
+            else:
+                log.warning(f"{prefix} No network response received, check connection!")
+
+    return updated_printers
 
 
 def attempt_config_upgrade(config, profile, insecure):
