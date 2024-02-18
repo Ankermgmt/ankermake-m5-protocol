@@ -522,7 +522,7 @@ def config_show(env):
         print(f"    auth_token: {cfg.account.auth_token[:10]}...<REDACTED>")
         print(f"    email:      {cfg.account.email}")
         print(f"    region:     {cfg.account.region.upper()}")
-        print(f"    country:    {cfg.account.country.upper()}")
+        print(f"    country:    {'<REDACTED>' if cfg.account.country else ''}")
         print()
 
         log.info("Printers:")

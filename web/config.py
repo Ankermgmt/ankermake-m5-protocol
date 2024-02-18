@@ -56,7 +56,7 @@ def config_show(config: object):
   auth_token: {config.account.auth_token[:10]}...[REDACTED]
   email:      {config.account.email}
   region:     {config.account.region.upper()}
-  country:    {config.account.country.upper()}
+  country:    {'[REDACTED]' if config.account.country else ''}
 
 """
     config_output += "Printers:\n"
