@@ -222,11 +222,12 @@ def pppp_lan_search(env, store):
 
     Works by broadcasting a LAN_SEARCH packet, and waiting for a reply.
     """
-    found_printers = cli.pppp.pppp_find_printer_ip_addresses(dumpfile=env.pppp_dump)
-    if found_printers:
-        for duid, ip in found_printers.items():
-            log.info(f"Printer [{duid}] is online at {ip}")
-    else:
+    found_printers = dict()
+    for duid, ip in cli.pppp.pppp_find_printer_ip_addresses(dumpfile=env.pppp_dump):
+        log.info(f"Printer [{duid}] is online at {ip}")
+        found_printers[duid] = ip
+
+    if not found_printers:
         log.error("No printers responded within timeout. Are you connected to the same network as the printer?")
 
     # if requested, update stored printer IP addresses

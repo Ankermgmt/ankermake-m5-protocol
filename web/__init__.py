@@ -183,7 +183,7 @@ def app_api_ankerctl_config_update_ip_addresses():
     category = "info"
     url = url_for("app_root")
     config = app.config["config"]
-    found_printers = cli.pppp.pppp_find_printer_ip_addresses()
+    found_printers = dict(list(cli.pppp.pppp_find_printer_ip_addresses()))
 
     if found_printers:
         # update printer IP addresses

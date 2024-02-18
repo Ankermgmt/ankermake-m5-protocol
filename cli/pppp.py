@@ -1,6 +1,8 @@
+import os
 import time
 import uuid
 import logging as log
+import ifaddr
 
 from datetime import datetime, timedelta
 from tqdm import tqdm
@@ -46,11 +48,57 @@ def pppp_open(config, printer_index, timeout=None, dumpfile=None):
         return api
 
 
-def pppp_open_broadcast(dumpfile=None):
-    api = AnkerPPPPApi.open_broadcast()
+def pppp_open_broadcast(bind_addr=None, dumpfile=None):
+    api = AnkerPPPPApi.open_broadcast(bind_addr=bind_addr)
     api.state = PPPPState.Connected
     _pppp_dumpfile(api, dumpfile)
     return api
+
+
+def _pppp_get_interface_ip_addresses():
+    adapters = ifaddr.get_adapters()
+    for adapter in adapters:
+        for ip in adapter.ips:
+            # just consider IPv4 addresses (but exclude loopback)
+            if isinstance(ip.ip, str) and not ip.ip.startswith("127."):
+                yield ip.ip
+
+
+def _pppp_query_printers(bind_addr=None, dumpfile=None):
+    try:
+        api = pppp_open_broadcast(bind_addr=bind_addr, dumpfile=dumpfile)
+    except OSError:
+        if bind_addr is not None:
+            # accept binding errors and skip this address
+            return
+        raise
+
+    api.send(PktLanSearch())
+
+    # collect replies from all available printers within 1.0 second
+    wait_time = 1.0
+    timeout = time.monotonic() + wait_time
+    while wait_time > 0:
+        try:
+            resp = api.recv(timeout=wait_time)
+        except TimeoutError:
+            pass
+        else:
+            if isinstance(resp, PktPunchPkt):
+                yield str(resp.duid), api.addr[0]
+        wait_time = timeout - time.monotonic()
+
+
+def pppp_find_printer_ip_addresses(dumpfile=None):
+    result = dict()
+    if os.name == "nt":
+        # Windows: We need to bind to each interface address
+        for ip in _pppp_get_interface_ip_addresses():
+            log.debug(f"Checking on interface with IP address {ip}")
+            yield from _pppp_query_printers(bind_addr=ip, dumpfile=dumpfile)
+    else:
+        # Non-Windows: Broadcast goes out on all interfaces
+        yield from _pppp_query_printers(dumpfile=dumpfile)
 
 
 def pppp_send_file(api, fui, data):
@@ -70,26 +118,3 @@ def pppp_send_file(api, fui, data):
             api.aabb_request(chunk, frametype=FileTransfer.DATA, pos=pos)
             pos += len(chunk)
             bar.update(len(chunk))
-
-
-def pppp_find_printer_ip_addresses(dumpfile=None):
-        # broadcast a search packet to all printers on the network
-    api = pppp_open_broadcast(dumpfile=dumpfile)
-    api.send(PktLanSearch())
-
-    # collect replies from all available printers
-    found_printers = dict()
-    wait_time = 1.0      # wait 1.0 second for responses
-    timeout = time.monotonic() + wait_time
-    while wait_time > 0:
-        try:
-            resp = api.recv(timeout=wait_time)
-        except TimeoutError:
-            pass
-        else:
-            if isinstance(resp, PktPunchPkt):
-                duid_str = str(resp.duid)
-                found_printers[duid_str] = api.addr[0]
-        wait_time = timeout - time.monotonic()
-
-    return found_printers
