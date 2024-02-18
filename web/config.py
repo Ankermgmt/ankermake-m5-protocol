@@ -8,24 +8,36 @@ Classes:
 
 Functions:
 - config_show(config): Takes a configuration object as input and returns a string
-                    representation of the configuration.
+                       representation of the configuration.
 - config_import(login_file, config): Loads the configuration from the API. login_file is a
-                                    file object containing the user's login information,
-                                    while config is a configuration object.
-Returns:
-- config_output: A formatted string containing the configuration information.
+                                     file object containing the user's login information,
+                                     while config is a configuration object.
+- config_login(email, password, country, captcha_id, captcha_answer, config):
+                                     Loads the login information as well as the
+                                     configration from the API.
 """
 import libflagship.httpapi
 import libflagship.logincache
 
 import cli.util
 import cli.config
+import cli.countrycodes
 
 
 class ConfigImportError(Exception):
     """
     Raised when there is an error with the config api.
     """
+    def __init__(self, *args, **kwargs):
+        if "captcha" in kwargs:
+            self.captcha = kwargs["captcha"]
+            del kwargs["captcha"]
+            args = list(args)
+            args.append(self.captcha)
+        else:
+            self.captcha = None
+
+        super().__init__(*args)
 
 
 def config_show(config: object):
@@ -44,6 +56,7 @@ def config_show(config: object):
   auth_token: {config.account.auth_token[:10]}...[REDACTED]
   email:      {config.account.email}
   region:     {config.account.region.upper()}
+  country:    {'[REDACTED]' if config.account.country else ''}
 
 """
     config_output += "Printers:\n"
@@ -81,24 +94,43 @@ def config_import(login_file: object, config: object):
     Returns:
     - config_output: A formatted string containing the configuration information.
     """
-    # extract auth token
+
+    # get the login data
     cache = libflagship.logincache.load(login_file.stream.read())["data"]
-    auth_token = cache["auth_token"]
 
+    # load remaining configuration items from the server
+    cli.config.import_config_from_server(config, cache, False)
+
+
+def config_login(email: str, password: str, country: str, captcha_id: str, captcha_answer: str, config: object):
+    """
+    Loads the login information and then the configuration from the API.
+
+    Args:
+    - email: The user's email address.
+    - password: The user's password.
+    - country: The 2-letter country code.
+    - captcha_id: The ID of the captcha, empty if no captcha to solve
+    - captcha_answer: The textual answer to the captcha
+    - config: A configuration object.
+    """
     # extract account region
-    region = libflagship.logincache.guess_region(cache["ab_code"])
+    region = libflagship.logincache.guess_region(country)
 
     try:
-        new_config = cli.config.load_config_from_api(auth_token, region, False)
-    except libflagship.httpapi.APIError as err:
-        raise ConfigImportError(
-            f"Config import failed: {err}. \
-                Auth token might be expired: make sure Ankermake Slicer can connect, then try again")
-    except Exception as err:
-        raise ConfigImportError(f"Config import failed: {err}")
-
-    try:
-        config.save("default", new_config)
+        login = cli.config.fetch_config_by_login(email, password, region, False, captcha_id, captcha_answer)
+    except libflagship.httpapi.APIError as E:
+        # check if the error is actually a request to solve a captcha
+        if E.json and "data" in E.json:
+            data = E.json["data"]
+            if "captcha_id" in data:
+                raise ConfigImportError(str(E), captcha={
+                    "id": data["captcha_id"],
+                    "img": data["item"]
+                })
+        raise ConfigImportError(str(E))
     except Exception as E:
-        raise ConfigImportError(f"Config import failed: {E}")
-    return new_config
+        raise ConfigImportError(f"Login failed: {E}")
+
+    # load remaining configuration items from the server
+    cli.config.import_config_from_server(config, login, False)

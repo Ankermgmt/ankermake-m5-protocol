@@ -3,6 +3,8 @@
 import json
 import click
 import platform
+import getpass
+import webbrowser
 import logging as log
 from os import path, environ
 from rich import print  # you need python3
@@ -15,6 +17,7 @@ import cli.mqtt
 import cli.util
 import cli.pppp
 import cli.checkver  # check python version
+import cli.countrycodes
 
 import libflagship.httpapi
 import libflagship.logincache
@@ -382,6 +385,82 @@ def config_decode(env, fd):
     print(json.dumps(cache, indent=4))
 
 
+@config.command("login")
+@click.argument("country", required=False, metavar="[COUNTRY (2 letter code)]")
+@click.argument("email", required=False)
+@click.argument("password", required=False)
+@pass_env
+def config_login(env, country, email, password):
+    """
+    Fetch configuration by logging in with provided credentials.
+    """
+
+    try:
+        with env.config.open() as cfg:
+            if cfg.account:
+                if country is None and cfg.account.country:
+                    country = cfg.account.country
+                    log.info(f"Country: {country.upper()}")
+                if email is None:
+                    email = cfg.account.email
+                    log.info(f"Email address: {email}")
+    except KeyError:
+        pass
+
+    # interactive user input (only if arguments not given on command line)
+    if email is None:
+        email = input("Please enter your email address: ").strip()
+
+    if password is None:
+        password = getpass.getpass("Please enter your password: ")
+
+    if country:
+        country = country.upper()
+    while not cli.countrycodes.code_to_country(country):
+        country = input("Please enter your country (2 digit code): ").strip().upper()
+
+    region = libflagship.logincache.guess_region(country)
+    login = None
+    tries = 3
+    captcha = {"id": None, "answer": None}
+    # retry until login was successful
+    while not login and tries > 0:
+        tries -= 1
+        try:
+            login = cli.config.fetch_config_by_login(email, password, region, env.insecure,
+                                                     captcha_id=captcha["id"], captcha_answer=captcha["answer"])
+            break
+        except libflagship.httpapi.APIError as E:
+            # check if the error is actually a request to solve a captcha
+            if E.json and "data" in E.json:
+                data = E.json["data"]
+                if "captcha_id" in data:
+                    captcha = {
+                        "id": data["captcha_id"],
+                        "img": data["item"]
+                    }
+
+        # ask the user to resolve the captcha
+        if captcha["id"]:
+            log.warning(f"Login requires solving a captcha")
+            if webbrowser.open(captcha["img"], new=2):
+                captcha["answer"] = input("Please enter the captcha answer: ").strip()
+            else:
+                log.critical(f"Cannot open webbrowser for displaying captcha, aborting.")
+                tries = 0
+        else:
+            log.critical(f"Unknown login error: {E}")
+            tries = 0
+
+    if login:
+        log.info(f"Login successful, importing configuration from server..")
+
+        # load remaining configuration items from the server
+        cli.config.import_config_from_server(env.config, login, env.insecure)
+
+        log.info("Finished import")
+
+
 @config.command("import")
 @click.argument("fd", required=False, type=click.File("r"), metavar="path/to/login.json")
 @pass_env
@@ -415,23 +494,11 @@ def config_import(env, fd):
 
     log.info("Loading cache..")
 
-    # extract auth token
+    # load the login configuration from the provided file
     cache = libflagship.logincache.load(fd.read())["data"]
-    auth_token = cache["auth_token"]
 
-    # extract account region
-    region = libflagship.logincache.guess_region(cache["ab_code"])
-
-    try:
-        config = cli.config.load_config_from_api(auth_token, region, env.insecure)
-    except libflagship.httpapi.APIError as E:
-        log.critical(f"Config import failed: {E} "
-                    "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
-    except Exception as E:
-        log.critical(f"Config import failed: {E}")
-
-    # save config to json file named `ankerctl/default.json`
-    env.config.save("default", config)
+    # import the remaining configuration from the server
+    cli.config.import_config_from_server(env.config, cache, env.insecure)
 
     log.info("Finished import")
 
@@ -455,6 +522,7 @@ def config_show(env):
         print(f"    auth_token: {cfg.account.auth_token[:10]}...<REDACTED>")
         print(f"    email:      {cfg.account.email}")
         print(f"    region:     {cfg.account.region.upper()}")
+        print(f"    country:    {'<REDACTED>' if cfg.account.country else ''}")
         print()
 
         log.info("Printers:")
