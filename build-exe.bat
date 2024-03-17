@@ -1,0 +1,1 @@
+pyinstaller -F --add-data templates:templates --add-data web:web --add-data static:static --add-data ssl:ssl --add-data cli:cli --add-data libflagship:libflagship --add-data specification:specification  --icon .\packaging\logo.ico .\ankerctl.py
