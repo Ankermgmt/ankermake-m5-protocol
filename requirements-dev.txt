@@ -1,2 +1,6 @@
 -r requirements.txt
 git+https://github.com/chrivers/transwarp.git
+pyinstaller
+make
+mako
+lxml
