@@ -89,7 +89,7 @@ class _MqttMsg:
     packet_num : u16le # maybe for fragmented messages?set to 1 for unfragmented messages.
     time       : u32le # `gettimeofday()` in whole seconds
     device_guid: bytes # device guid, as hex string
-    padding    : bytes = field(repr=False, kw_only=True, default='\x00' * 11) # padding bytes, allways zero
+    padding    : bytes # padding bytes, unknown usage
     data       : bytes # payload data
 
     @classmethod
@@ -105,7 +105,7 @@ class _MqttMsg:
         packet_num, p = u16le.parse(p)
         time, p = u32le.parse(p)
         device_guid, p = String.parse(p, 37)
-        padding, p = Zeroes.parse(p, 11)
+        padding, p = Bytes.parse(p, 11)
         data, p = Tail.parse(p)
         return cls(signature=signature, size=size, m3=m3, m4=m4, m5=m5, m6=m6, m7=m7, packet_type=packet_type, packet_num=packet_num, time=time, device_guid=device_guid, padding=padding, data=data), p
 
@@ -121,7 +121,7 @@ class _MqttMsg:
         p += u16le.pack(self.packet_num)
         p += u32le.pack(self.time)
         p += String.pack(self.device_guid, 37)
-        p += Zeroes.pack(self.padding, 11)
+        p += Bytes.pack(self.padding, 11)
         p += Tail.pack(self.data)
         return p
 

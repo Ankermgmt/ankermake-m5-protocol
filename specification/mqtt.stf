@@ -50,8 +50,8 @@ struct _MqttMsg
     # device guid, as hex string
     device_guid: string<37>
 
-    # padding bytes, allways zero
-    padding:     zeroes<11>
+    # padding bytes, unknown usage
+    padding:     bytes<11>
 
     # payload data
     data: tail
