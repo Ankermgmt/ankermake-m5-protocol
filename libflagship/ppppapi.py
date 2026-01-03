@@ -347,8 +347,14 @@ class AnkerPPPPBaseApi(Thread):
         if self.state in {PPPPState.Idle, PPPPState.Disconnected}:
             raise ConnectionError(f"Tried to recv packet in state {self.state}")
 
+        prev_timeout = self.sock.gettimeout()
         self.sock.settimeout(timeout)
-        data, self.addr = self.sock.recvfrom(4096)
+        try:
+            data, self.addr = self.sock.recvfrom(4096)
+        except BlockingIOError as e:
+            raise TimeoutError("recv would block") from e
+        finally:
+            self.sock.settimeout(prev_timeout)
         if self.dumper:
             self.dumper.rx(data, self.addr)
         msg = Message.parse(data)[0]

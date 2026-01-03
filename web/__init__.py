@@ -8,6 +8,7 @@ Methods:
 
 Routes:
     - /ws/mqtt: Handles receiving and sending messages on the 'mqttqueue' stream service through websocket
+    - /ws/pppp-state: Provides the status of the 'pppp' stream service through websocket
     - /ws/video: Handles receiving and sending messages on the 'videoqueue' stream service through websocket
     - /ws/ctrl: Handles controlling of light and video quality through websocket
     - /video: Handles the video streaming/downloading feature in the Flask app
@@ -27,6 +28,7 @@ Services:
 """
 import json
 import logging as log
+import time
 
 from secrets import token_urlsafe as token
 from flask import Flask, flash, request, render_template, Response, session, url_for
@@ -83,6 +85,57 @@ def video(sock):
         return
     for msg in app.svc.stream("videoqueue"):
         sock.send(msg.data)
+
+
+@sock.route("/ws/pppp-state")
+def pppp_state(sock):
+    """
+    Provides the status of the 'pppp' stream service through websocket
+    """
+    if not app.config["login"]:
+        log.info("Websocket connection rejected: not logged in")
+        return
+
+    log.info("Starting PPPP state websocket handler")
+
+    pppp = None
+    pppp_connected = False
+    last_keepalive = 0.0
+
+    try:
+        # Start PPPP service, but don't block the websocket waiting for it.
+        pppp = app.svc.get("pppp", ready=False)
+
+        while True:
+            now = time.time()
+            current_connected = bool(getattr(pppp, "connected", False))
+
+            if current_connected and not pppp_connected:
+                sock.send(json.dumps({"status": "connected"}))
+                pppp_connected = True
+                last_keepalive = now
+            elif pppp_connected and not current_connected:
+                sock.send(json.dumps({"status": "disconnected"}))
+                break
+            elif pppp_connected and now - last_keepalive >= 10.0:
+                # Keepalive to detect client disconnects.
+                sock.send(json.dumps({"status": "connected"}))
+                last_keepalive = now
+
+            time.sleep(1.0)
+    except Exception as e:
+        if "WebSocket is already closed" in str(e):
+            log.info("WebSocket connection closed by client")
+        else:
+            log.warning(f"Error in PPPP state websocket handler: {e}")
+            log.info("Stack trace:", exc_info=True)
+    finally:
+        if pppp is not None:
+            try:
+                app.svc.put("pppp")
+            except Exception:
+                pass
+        log.info("PPPP state websocket handler ending")
 
 
 @sock.route("/ws/ctrl")

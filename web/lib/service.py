@@ -203,7 +203,10 @@ class Service(Thread):
         try:
             yield self
         finally:
-            self.handlers.remove(handler)
+            try:
+                self.handlers.remove(handler)
+            except ValueError:
+                pass
 
     def await_ready(self):
         while True:
