@@ -424,10 +424,11 @@ class AnkerPPPPApi(AnkerPPPPBaseApi):
     def recv_aabb(self, chan=1):
         fd = self.chans[chan]
 
-        data = fd.read(12)
-        aabb = Aabb.parse(data)[0]
-        p = data + fd.read(aabb.len + 2)
-        aabb, data = Aabb.parse_with_crc(p)[:2]
+        with fd.lock:
+            data = fd.read(12)
+            aabb = Aabb.parse(data)[0]
+            p = data + fd.read(aabb.len + 2)
+            aabb, data = Aabb.parse_with_crc(p)[:2]
         return aabb, data
 
     def recv_aabb_reply(self, chan=1, check=True):

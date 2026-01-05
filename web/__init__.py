@@ -284,14 +284,11 @@ def app_api_files_local():
 
     no_act = not cli.util.parse_http_bool(request.form["print"])
 
-    if no_act:
-        cli.util.http_abort(409, "Upload-only not supported by Ankermake M5")
-
     fd = request.files["file"]
 
     with app.svc.borrow("filetransfer") as ft:
         try:
-            ft.send_file(fd, user_name)
+            ft.send_file(fd, user_name, start_print=not no_act)
         except ConnectionError as E:
             log.error(f"Connection error: {E}")
             # This message will be shown in i.e. PrusaSlicer, so attempt to
