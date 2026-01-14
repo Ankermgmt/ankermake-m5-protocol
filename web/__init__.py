@@ -28,16 +28,18 @@ Services:
 """
 import json
 import logging as log
+import os
 import time
 
 from secrets import token_urlsafe as token
 from flask import Flask, flash, request, render_template, Response, session, url_for
 from flask_sock import Sock
+from simple_websocket.errors import ConnectionClosed
 from user_agents import parse as user_agent_parse
 
 from libflagship import ROOT_DIR
 
-from web.lib.service import ServiceManager
+from web.lib.service import ServiceManager, RunState, ServiceStoppedError
 
 import web.config
 import web.platform
@@ -45,6 +47,7 @@ import web.util
 
 import cli.util
 import cli.config
+from cli.model import UPLOAD_RATE_MBPS_CHOICES
 
 
 app = Flask(__name__, root_path=ROOT_DIR, static_folder="static", template_folder="static")
@@ -54,6 +57,8 @@ app.config.from_prefixed_env()
 app.svc = ServiceManager()
 
 sock = Sock(app)
+
+PRINTERS_WITHOUT_CAMERA = ["V8110"]
 
 
 # autopep8: off
@@ -81,7 +86,10 @@ def video(sock):
     """
     Handles receiving and sending messages on the 'videoqueue' stream service through websocket
     """
-    if not app.config["login"]:
+    if not app.config["login"] or not app.config.get("video_supported"):
+        return
+    vq = app.svc.svcs.get("videoqueue")
+    if not vq or not getattr(vq, "video_enabled", False):
         return
     for msg in app.svc.stream("videoqueue"):
         sock.send(msg.data)
@@ -123,12 +131,11 @@ def pppp_state(sock):
                 last_keepalive = now
 
             time.sleep(1.0)
+    except ConnectionClosed:
+        log.info("WebSocket connection closed by client")
     except Exception as e:
-        if "WebSocket is already closed" in str(e):
-            log.info("WebSocket connection closed by client")
-        else:
-            log.warning(f"Error in PPPP state websocket handler: {e}")
-            log.info("Stack trace:", exc_info=True)
+        log.warning(f"Error in PPPP state websocket handler: {e}")
+        log.info("Stack trace:", exc_info=True)
     finally:
         if pppp is not None:
             try:
@@ -136,6 +143,17 @@ def pppp_state(sock):
             except Exception:
                 pass
         log.info("PPPP state websocket handler ending")
+
+
+@sock.route("/ws/upload")
+def upload(sock):
+    """
+    Provides upload progress updates through websocket
+    """
+    if not app.config["login"]:
+        return
+    for data in app.svc.stream("filetransfer"):
+        sock.send(json.dumps(data))
 
 
 @sock.route("/ws/ctrl")
@@ -148,6 +166,12 @@ def ctrl(sock):
 
     # send a response on connect, to let the client know the connection is ready
     sock.send(json.dumps({"ankerctl": 1}))
+    vq = app.svc.svcs.get("videoqueue")
+    if vq:
+        profile_id = getattr(vq, "saved_video_profile_id", None)
+        if profile_id is None:
+            profile_id = web.service.video.VIDEO_PROFILE_DEFAULT_ID
+        sock.send(json.dumps({"video_profile": profile_id}))
 
     while True:
         msg = json.loads(sock.receive())
@@ -156,9 +180,22 @@ def ctrl(sock):
             with app.svc.borrow("videoqueue") as vq:
                 vq.api_light_state(msg["light"])
 
-        if "quality" in msg:
+        if "video_profile" in msg:
+            with app.svc.borrow("videoqueue") as vq:
+                vq.api_video_profile(msg["video_profile"])
+        elif "quality" in msg:
             with app.svc.borrow("videoqueue") as vq:
                 vq.api_video_mode(msg["quality"])
+        if "video_enabled" in msg:
+            vq = app.svc.svcs.get("videoqueue")
+            if vq:
+                vq.set_video_enabled(msg["video_enabled"])
+                if msg["video_enabled"]:
+                    if vq.state == RunState.Stopped:
+                        vq.start()
+                else:
+                    if vq.state == RunState.Running:
+                        vq.stop()
 
 
 @app.get("/video")
@@ -167,8 +204,18 @@ def video_download():
     Handles the video streaming/downloading feature in the Flask app
     """
     def generate():
-        if not app.config["login"]:
+        if not app.config["login"] or not app.config.get("video_supported"):
             return
+        vq = app.svc.svcs.get("videoqueue")
+        if vq:
+            if not getattr(vq, "video_enabled", False):
+                return
+            if vq.state == RunState.Stopped:
+                try:
+                    vq.start()
+                    vq.await_ready()
+                except ServiceStoppedError:
+                    return
         for msg in app.svc.stream("videoqueue"):
             yield msg.data
 
@@ -188,9 +235,11 @@ def app_root():
         if cfg:
             anker_config = str(web.config.config_show(cfg))
             printer = cfg.printers[app.config["printer_index"]]
+            upload_rate_mbps = getattr(cfg, "upload_rate_mbps", None)
         else:
             anker_config = "No printers found, please load your login config..."
             printer = None
+            upload_rate_mbps = None
 
         if ":" in request.host:
             request_host, request_port = request.host.split(":", 1)
@@ -205,7 +254,13 @@ def app_root():
             configure=app.config["login"],
             login_file_path=web.platform.login_path(user_os),
             anker_config=anker_config,
-            printer=printer
+            video_supported=app.config.get("video_supported", False),
+            upload_rate_mbps=upload_rate_mbps,
+            upload_rate_env=os.getenv("UPLOAD_RATE_MBPS"),
+            upload_rate_choices=UPLOAD_RATE_MBPS_CHOICES,
+            printer=printer,
+            video_profiles=web.service.video.VIDEO_PROFILES,
+            video_profile_default=web.service.video.VIDEO_PROFILE_DEFAULT_ID,
         )
 
 
@@ -258,10 +313,15 @@ def app_api_ankerctl_server_reload():
 
     with config.open() as cfg:
         app.config["login"] = bool(cfg)
+        app.config["video_supported"] = any(
+            printer.model not in PRINTERS_WITHOUT_CAMERA for printer in (cfg.printers if cfg else [])
+        )
         if not cfg:
             return web.util.flash_redirect(url_for('app_root'), "No printers found in config", "warning")
         if "_flashes" in session:
             session["_flashes"].clear()
+        if cfg and not app.svc.svcs:
+            register_services(app)
 
         try:
             app.svc.restart_all(await_ready=False)
@@ -285,10 +345,12 @@ def app_api_files_local():
     no_act = not cli.util.parse_http_bool(request.form["print"])
 
     fd = request.files["file"]
+    with app.config["config"].open() as cfg:
+        rate_limit_mbps = cli.util.resolve_upload_rate_mbps(cfg)
 
     with app.svc.borrow("filetransfer") as ft:
         try:
-            ft.send_file(fd, user_name, start_print=not no_act)
+            ft.send_file(fd, user_name, rate_limit_mbps=rate_limit_mbps, start_print=not no_act)
         except ConnectionError as E:
             log.error(f"Connection error: {E}")
             # This message will be shown in i.e. PrusaSlicer, so attempt to
@@ -303,6 +365,34 @@ def app_api_files_local():
             )
 
     return {}
+
+
+@app.post("/api/ankerctl/config/upload-rate")
+def app_api_ankerctl_config_upload_rate():
+    config = app.config["config"]
+    if "upload_rate_mbps" not in request.form:
+        return {"error": "upload_rate_mbps missing"}, 400
+
+    try:
+        rate_limit_mbps = int(request.form["upload_rate_mbps"])
+    except ValueError:
+        return {"error": "upload_rate_mbps must be an integer"}, 400
+
+    if rate_limit_mbps not in UPLOAD_RATE_MBPS_CHOICES:
+        return {"error": f"upload_rate_mbps must be one of {', '.join(map(str, UPLOAD_RATE_MBPS_CHOICES))}"}, 400
+
+    with config.modify() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        cfg.upload_rate_mbps = rate_limit_mbps
+
+    return {"status": "ok", "upload_rate_mbps": rate_limit_mbps}
+def register_services(app):
+    app.svc.register("pppp", web.service.pppp.PPPPService())
+    if app.config.get("video_supported"):
+        app.svc.register("videoqueue", web.service.video.VideoQueue())
+    app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
+    app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
 
 
 def webserver(config, printer_index, host, port, insecure=False, **kwargs):
@@ -321,15 +411,17 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
     with config.open() as cfg:
         if cfg and printer_index >= len(cfg.printers):
             log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
+        video_supported = False
+        if cfg and printer_index < len(cfg.printers):
+            video_supported = cfg.printers[printer_index].model not in PRINTERS_WITHOUT_CAMERA
         app.config["config"] = config
         app.config["login"] = bool(cfg)
         app.config["printer_index"] = printer_index
         app.config["port"] = port
         app.config["host"] = host
         app.config["insecure"] = insecure
+        app.config["video_supported"] = video_supported
         app.config.update(kwargs)
-        app.svc.register("pppp", web.service.pppp.PPPPService())
-        app.svc.register("videoqueue", web.service.video.VideoQueue())
-        app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
-        app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
+        if cfg:
+            register_services(app)
         app.run(host=host, port=port)

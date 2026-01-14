@@ -44,13 +44,33 @@
     --bs-btn-hover-border-color: var(--ared1);
 }
 
+.video-profile-btn.active,
+.video-profile-btn.active:hover,
+.video-profile-btn.active:focus {
+    --bs-btn-bg: var(--agreen2);
+    --bs-btn-border-color: var(--agreen1);
+    --bs-btn-color: #000000;
+    --bs-btn-active-bg: var(--agreen2);
+    --bs-btn-active-border-color: var(--agreen1);
+    --bs-btn-active-color: #000000;
+}
+
 .progress-bar {
     --bs-progress-bar-color: white;
     --bs-progress-bar-bg: var(--agreen2);
 }
 
-#progress {
+#progress,
+#upload-progress {
     text-shadow: 0 0 7px black, 0 0 7px black;
+}
+
+.collapse-toggle .bi {
+    transition: transform 0.2s ease;
+}
+
+.collapse-toggle[aria-expanded="true"] .bi {
+    transform: rotate(180deg);
 }
 
 footer .btn {
@@ -72,6 +92,10 @@ code {
 
 #printProgress {
     height: 40px;
+}
+
+#uploadProgress {
+    height: 28px;
 }
 
 .icon {

@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from libflagship.util import unhex, enhex
 
 
+DEFAULT_UPLOAD_RATE_MBPS = 10
+UPLOAD_RATE_MBPS_CHOICES = (5, 10, 25, 50, 100)
+
+
 class Serialize:
 
     @classmethod
@@ -72,6 +76,13 @@ class Account(Serialize):
 class Config(Serialize):
     account: Account
     printers: list[Printer]
+    upload_rate_mbps: int = DEFAULT_UPLOAD_RATE_MBPS
+
+    @classmethod
+    def from_dict(cls, data):
+        if "upload_rate_mbps" not in data:
+            data = {**data, "upload_rate_mbps": DEFAULT_UPLOAD_RATE_MBPS}
+        return super().from_dict(data)
 
     def __bool__(self):
         return bool(self.account)

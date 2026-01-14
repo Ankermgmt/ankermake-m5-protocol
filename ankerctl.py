@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import uuid
 import click
 import platform
 import logging as log
@@ -235,8 +236,10 @@ def pppp_lan_search(env):
 @pppp.command("print-file")
 @click.argument("file", required=True, type=click.File("rb"), metavar="<file>")
 @click.option("--no-act", "-n", is_flag=True, help="Test upload only (do not print)")
+@click.option("--upload-rate-mbps", type=int, default=None,
+              help="Upload rate limit in Mbps (choices: 5, 10, 25, 50, 100)")
 @pass_env
-def pppp_print_file(env, file, no_act):
+def pppp_print_file(env, file, no_act, upload_rate_mbps):
     """
     Transfer print job to printer, and start printing.
 
@@ -247,11 +250,19 @@ def pppp_print_file(env, file, no_act):
     env.load_config()
     api = cli.pppp.pppp_open(env.config, env.printer_index, dumpfile=env.pppp_dump)
 
+    user_id = "-"
+    with env.config.open() as cfg:
+        rate_limit_mbps = cli.util.resolve_upload_rate_mbps(cfg, override=upload_rate_mbps)
+        if cfg and cfg.account and cfg.account.user_id:
+            user_id = cfg.account.user_id
+
     data = file.read()
-    fui = FileUploadInfo.from_file(file.name, user_name="ankerctl", user_id="-", machine_id="-")
+    file_uuid = uuid.uuid4().hex.upper()
+    fui = FileUploadInfo.from_data(data, file.name, user_name="ankerctl", user_id=user_id, machine_id=file_uuid)
     log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")
+    log.info(f"Using upload rate limit: {rate_limit_mbps} Mbps")
     try:
-        cli.pppp.pppp_send_file(api, fui, data)
+        cli.pppp.pppp_send_file(api, fui, data, rate_limit_mbps=rate_limit_mbps)
         if no_act:
             log.info("File upload complete")
         else:
@@ -360,17 +371,23 @@ def config_decode(env, fd):
         useros = platform.system()
 
         darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
-        winfileloc1 = path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json')
-        winfileloc2 = path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json')
+        winfilelocs = [
+            path.expandvars(r'%APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info'),
+            path.expandvars(r'%APPDATA%\eufyMake Studio Profile\cache\offline\user_info'),
+            path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json'),
+            path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json'),
+        ]
 
         try:
             if useros == 'Darwin':
                 fd = open(darfileloc, 'r')
             elif useros == 'Windows':
-                if path.isfile(winfileloc1):
-                    fd = open(winfileloc1, 'r')
+                for winfileloc in winfilelocs:
+                    if path.isfile(winfileloc):
+                        fd = open(winfileloc, 'r')
+                        break
                 else:
-                    fd = open(winfileloc2, 'r')
+                    raise FileNotFoundError
             else:
                 log.critical("This platform does not support autodetection. Please specify file location")
         except FileNotFoundError:
@@ -397,17 +414,23 @@ def config_import(env, fd):
         useros = platform.system()
 
         darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
-        winfileloc1 = path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json')
-        winfileloc2 = path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json')
+        winfilelocs = [
+            path.expandvars(r'%APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info'),
+            path.expandvars(r'%APPDATA%\eufyMake Studio Profile\cache\offline\user_info'),
+            path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json'),
+            path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json'),
+        ]
 
         try:
             if useros == 'Darwin':
                 fd = open(darfileloc, 'r')
             elif useros == 'Windows':
-                if path.isfile(winfileloc1):
-                    fd = open(winfileloc1, 'r')
+                for winfileloc in winfilelocs:
+                    if path.isfile(winfileloc):
+                        fd = open(winfileloc, 'r')
+                        break
                 else:
-                    fd = open(winfileloc2, 'r')
+                    raise FileNotFoundError
             else:
                 log.critical("This platform does not support autodetection. Please specify file location")
         except FileNotFoundError:
@@ -455,6 +478,7 @@ def config_show(env):
         print(f"    auth_token: {cfg.account.auth_token[:10]}...<REDACTED>")
         print(f"    email:      {cfg.account.email}")
         print(f"    region:     {cfg.account.region.upper()}")
+        print(f"    upload_rate_mbps: {getattr(cfg, 'upload_rate_mbps', 'unset')}")
         print()
 
         log.info("Printers:")

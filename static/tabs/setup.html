@@ -58,6 +58,32 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card mt-3">
+                    <div class="card-header fs-4">
+                        Upload Speed
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-12">
+                                <select class="form-select" id="upload-rate">
+                                    {% for rate in upload_rate_choices %}
+                                    <option value="{{ rate }}" {% if upload_rate_mbps == rate %}selected{% endif %}>
+                                        {{ rate }} Mbps
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if upload_rate_env %}
+                                <div class="form-text text-warning">
+                                    Env override active: UPLOAD_RATE_MBPS={{ upload_rate_env }}
+                                </div>
+                                {% else %}
+                                <div class="form-text">Persisted in config; env can override.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="col-lg-6">
                 <div class="card">

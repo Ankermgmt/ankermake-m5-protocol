@@ -58,11 +58,11 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
    python3 ankerctl.py config import
    ```
 
-   When run without filename on Windows and MacOS, the default location of `login.json` will be tried if no filename is specified.
+   When run without filename on Windows and MacOS, the default location of `login.json` (or `user_info` on Windows) will be tried if no filename is specified.
 
    Otherwise, you can specify the file path for `login.json`. Example for Linux:
    ```sh
-   ./ankerctl.py config import ~/.wine/drive_c/users/username/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json
+   ./ankerctl.py config import ~/.wine/drive_c/users/username/AppData/Roaming/eufyMake Studio Profile/cache/offline/user_info
    ```
    MacOS
    ```sh
@@ -70,7 +70,7 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
    ```
    Windows
    ```sh
-   python3 ankerctl.py config import %APPDATA%\AnkerMake\AnkerMake_64bit_fp\login.json
+   python3 ankerctl.py config import %APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info
    ```
 
    Type `ankerctl.py config import -h` for more details on the import options. Support for logging in with username and password is not yet supported. To learn more about the method used to extract the login information and add printers, see the [MQTT Overview](documentation/developer-docs/mqtt-overview.md) and [Example Files](documentation/developer-docs/example-file-usage) documentation.

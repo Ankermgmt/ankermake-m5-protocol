@@ -46,7 +46,11 @@ def main():
     useros = platform.system()
 
     darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
-    winfileloc = path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json')
+    winfilelocs = [
+        path.expandvars(r'%APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info'),
+        path.expandvars(r'%APPDATA%\eufyMake Studio Profile\cache\offline\user_info'),
+        path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json'),
+    ]
 
     args = parse_args()
 
@@ -55,7 +59,12 @@ def main():
         if useros == 'Darwin':
             print_login(open(darfileloc))
         elif useros == 'Windows':
-            print_login(open(winfileloc))
+            for winfileloc in winfilelocs:
+                if path.isfile(winfileloc):
+                    print_login(open(winfileloc))
+                    break
+            else:
+                exit("Could not find login.json/user_info on Windows; specify -f <filename>")
         else:
             exit("This platform does not support autodetection. Please specify file location with -f <filename>")
 

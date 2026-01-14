@@ -1,8 +1,12 @@
 import sys
+import os
+import time
 import click
 import json
+import logging as log
 from flask import make_response, abort
 
+from cli.model import DEFAULT_UPLOAD_RATE_MBPS, UPLOAD_RATE_MBPS_CHOICES
 
 def require_python_version(major, minor):
     vi = sys.version_info
@@ -125,3 +129,48 @@ def http_abort(code, message):
     response = make_response(f"{message}")
     response.status_code = code
     abort(response)
+
+
+class RateLimiter:
+    def __init__(self, rate_mbps):
+        self.rate_mbps = rate_mbps
+        self.bytes_per_sec = rate_mbps * 125000
+        self.start_time = time.monotonic()
+        self.sent_bytes = 0
+
+    def throttle(self, chunk_size):
+        self.sent_bytes += chunk_size
+        elapsed = time.monotonic() - self.start_time
+        expected = self.sent_bytes / self.bytes_per_sec
+        if expected > elapsed:
+            time.sleep(expected - elapsed)
+
+
+def _parse_upload_rate_mbps(value):
+    if value is None:
+        return None
+    try:
+        rate = int(value)
+    except (TypeError, ValueError):
+        return None
+    if rate in UPLOAD_RATE_MBPS_CHOICES:
+        return rate
+    return None
+
+
+def resolve_upload_rate_mbps(config=None, override=None, env_var="UPLOAD_RATE_MBPS"):
+    if override is not None:
+        rate = _parse_upload_rate_mbps(override)
+        if rate is None:
+            raise ValueError(f"Unsupported upload rate: {override}")
+        return rate
+
+    env_value = os.getenv(env_var)
+    env_rate = _parse_upload_rate_mbps(env_value)
+    if env_value is not None and env_rate is None:
+        log.warning(f"Ignoring unsupported {env_var}={env_value!r}")
+    if env_rate is not None:
+        return env_rate
+    if config is not None and hasattr(config, "upload_rate_mbps"):
+        return config.upload_rate_mbps
+    return DEFAULT_UPLOAD_RATE_MBPS

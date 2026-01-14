@@ -6,11 +6,11 @@
 
 1. Install the [AnkerMake slicer](https://www.ankermake.com/software) on a supported Operating System.  Make sure you open it and login via the “Account” dropdown in the top toolbar.
 
-2. Retreive the ```login.json``` file from the supported operating system:
+2. Retreive the ```login.json``` file (Windows: ```user_info```) from the supported operating system:
 
   Windows Default Location:
   ```sh
-  %APPDATA%\AnkerMake\AnkerMake_64bit_fp\login.json
+  %APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info
   ```
    
   MacOS Default Location:
@@ -26,7 +26,7 @@
 
 1. Install the [AnkerMake slicer](https://www.ankermake.com/software) on Linux via emulation such as Wine.  Make sure you open it and login via the “Account” dropdown in the top toolbar.
    
-2. Retreive the ```login.json``` file ```~/.wine/drive_c/users/$USER/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json```
+2. Retreive the ```login.json``` file (Windows: ```user_info```) ```~/.wine/drive_c/users/$USER/AppData/Roaming/eufyMake Studio Profile/cache/offline/user_info```
 
 3. Take said ```login.json``` file and store it in a location your docker instance will be able to access it from.
 

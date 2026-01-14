@@ -79,12 +79,53 @@ $(function () {
     }
 
     /**
+     * Convert bytes to a human readable string.
+     * @param {number} bytes
+     * @returns {string}
+     */
+    function formatBytes(bytes) {
+        if (!bytes) {
+            return "0 B";
+        }
+        const units = ["B", "KB", "MB", "GB", "TB"];
+        let size = bytes;
+        let unit = 0;
+        while (size >= 1024 && unit < units.length - 1) {
+            size /= 1024;
+            unit++;
+        }
+        const precision = size >= 10 || unit === 0 ? 0 : 1;
+        return `${size.toFixed(precision)} ${units[unit]}`;
+    }
+
+    /**
      * Calculates the AnkerMake M5 Speed ratio ("X-factor")
      * @param {number} speed - The speed value in mm/s
      * @return {number} The speed factor in units of "X" (50mm/s)
      */
     function getSpeedFactor(speed) {
         return `X${speed / 50}`;
+    }
+
+    /**
+     * Highlight active video profile button.
+     * @param {string} profileId
+     */
+    function setVideoProfileActive(profileId) {
+        if (!profileId) {
+            return;
+        }
+        const profileKey = String(profileId).toLowerCase();
+        const buttons = $(".video-profile-btn");
+        if (!buttons.length) {
+            return;
+        }
+        buttons.each(function () {
+            const btn = $(this);
+            const isActive = btn.data("video-profile") === profileKey;
+            btn.toggleClass("active", isActive);
+            btn.attr("aria-pressed", isActive ? "true" : "false");
+        });
     }
 
     /**
@@ -99,6 +140,7 @@ $(function () {
             url,
             badge=null,
             open=null,
+            opened=null,
             close=null,
             error=null,
             message=null,
@@ -110,11 +152,14 @@ $(function () {
             this.badge = badge;
             this.reconnect = reconnect;
             this.open = open;
+            this.opened = opened;
             this.close = close;
             this.error = error;
             this.message = message;
             this.binary = binary;
             this.ws = null;
+            this.is_open = false;
+            this.autoReconnect = reconnect !== false;
         }
 
         _open() {
@@ -126,7 +171,10 @@ $(function () {
         _close() {
             $(this.badge).removeClass("text-bg-warning text-bg-success").addClass("text-bg-danger");
             console.log(`${this.name} close`);
-            setTimeout(() => this.connect(), this.reconnect);
+            this.is_open = false;
+            if (this.autoReconnect) {
+                setTimeout(() => this.connect(), this.reconnect);
+            }
             if (this.close)
                 this.close(this.ws);
         }
@@ -134,12 +182,18 @@ $(function () {
         _error() {
             console.log(`${this.name} error`);
             this.ws.close();
+            this.is_open = false;
             if (this.error)
                 this.error(this.ws);
         }
 
         _message(event) {
-            $(this.badge).removeClass("text-bg-danger text-bg-warning").addClass("text-bg-success");
+            if (!this.is_open) {
+                $(this.badge).removeClass("text-bg-danger text-bg-warning").addClass("text-bg-success");
+                this.is_open = true;
+                if (this.opened)
+                    this.opened(event);
+            }
             if (this.message)
                 this.message(event);
         }
@@ -155,6 +209,33 @@ $(function () {
         }
     }
 
+    const uploadBar = $("#upload-progressbar");
+    const uploadLabel = $("#upload-progress");
+    const uploadMeta = $("#upload-progress-meta");
+    let uploadName = "";
+    let uploadSize = 0;
+
+    function setUploadProgress(percent) {
+        if (!uploadBar.length) {
+            return;
+        }
+        const pct = Math.max(0, Math.min(100, percent));
+        uploadBar.attr("aria-valuenow", pct);
+        uploadBar.attr("style", `width: ${pct}%`);
+        uploadLabel.text(`${pct}%`);
+    }
+
+    function resetUploadProgress(message) {
+        if (!uploadBar.length) {
+            return;
+        }
+        uploadBar.removeClass("bg-danger");
+        setUploadProgress(0);
+        uploadMeta.text(message || "Idle");
+        uploadName = "";
+        uploadSize = 0;
+    }
+
     /**
      * Auto web sockets
      */
@@ -162,7 +243,7 @@ $(function () {
 
     sockets.mqtt = new AutoWebSocket({
         name: "mqtt socket",
-        url: `ws://${location.host}/ws/mqtt`,
+        url: `${location.protocol.replace("http","ws")}//${location.host}/ws/mqtt`,
         badge: "#badge-mqtt",
 
         message: function (ev) {
@@ -222,9 +303,10 @@ $(function () {
      */
     sockets.video = new AutoWebSocket({
         name: "Video socket",
-        url: `ws://${location.host}/ws/video`,
-        badge: "#badge-pppp",
+        url: `${location.protocol.replace("http","ws")}//${location.host}/ws/video`,
+        badge: "#badge-video",
         binary: true,
+        reconnect: 2000,
 
         open: function () {
             this.jmuxer = new JMuxer({
@@ -256,23 +338,155 @@ $(function () {
 
             /* Clear video source (to show loading animation) */
             $("#player").attr("src", "");
+            $("#video-resolution").text("Current: -");
+
+            $(this.badge).removeClass("text-bg-warning text-bg-success").addClass("text-bg-danger");
         },
     });
 
+    const videoPlayer = document.getElementById("player");
+    const updateVideoResolution = () => {
+        if (!videoPlayer) {
+            return;
+        }
+        const width = videoPlayer.videoWidth;
+        const height = videoPlayer.videoHeight;
+        if (width && height) {
+            $("#video-resolution").text(`Current: ${width}x${height}`);
+        }
+    };
+    if (videoPlayer) {
+        videoPlayer.addEventListener("loadedmetadata", updateVideoResolution);
+        videoPlayer.addEventListener("loadeddata", updateVideoResolution);
+    }
+
     sockets.ctrl = new AutoWebSocket({
         name: "Control socket",
-        url: `ws://${location.host}/ws/ctrl`,
+        url: `${location.protocol.replace("http","ws")}//${location.host}/ws/ctrl`,
         badge: "#badge-ctrl",
+        message: function (event) {
+            let data = null;
+            try {
+                data = JSON.parse(event.data);
+            } catch (err) {
+                return;
+            }
+            if (data.video_profile) {
+                setVideoProfileActive(data.video_profile);
+            }
+        },
     });
 
-    /* Only connect websockets if #player element exists in DOM (i.e., if we
-     * have a configuration). Otherwise we are constantly trying to make
-     * connections that will never succeed. */
-    if ($("#player").length) {
+    sockets.pppp_state = new AutoWebSocket({
+        name: "PPPP socket",
+        url: `${location.protocol.replace("http","ws")}//${location.host}/ws/pppp-state`,
+        badge: "#badge-pppp",
+        reconnect: 5000,
+
+        message: function(event) {
+            const data = JSON.parse(event.data);
+            if (data.status === "connected") {
+                $(this.badge).removeClass("text-bg-danger text-bg-warning").addClass("text-bg-success");
+            } else if (data.status === "disconnected") {
+                $(this.badge).removeClass("text-bg-success text-bg-warning").addClass("text-bg-danger");
+                if (this.ws) {
+                    this.ws.close();
+                    this.ws = null;
+                }
+            }
+        },
+    });
+
+    sockets.upload = new AutoWebSocket({
+        name: "Upload socket",
+        url: `${location.protocol.replace("http","ws")}//${location.host}/ws/upload`,
+        reconnect: 2000,
+        message: function (event) {
+            let data = null;
+            try {
+                data = JSON.parse(event.data);
+            } catch (err) {
+                return;
+            }
+            if (!data) {
+                return;
+            }
+            if (data.name) {
+                uploadName = data.name;
+            }
+            if (typeof data.size === "number") {
+                uploadSize = data.size;
+            }
+            if (data.status === "start") {
+                uploadBar.removeClass("bg-danger");
+                setUploadProgress(0);
+                const sizeText = uploadSize ? ` (${formatBytes(uploadSize)})` : "";
+                uploadMeta.text(uploadName ? `Starting upload: ${uploadName}${sizeText}` : "Starting upload");
+            } else if (data.status === "progress") {
+                const total = data.size || uploadSize;
+                const sent = data.sent || 0;
+                const percent = total ? Math.round((sent / total) * 100) : 0;
+                setUploadProgress(percent);
+                const metaName = uploadName ? `Uploading ${uploadName}` : "Uploading";
+                const metaSize = total ? ` (${formatBytes(sent)} / ${formatBytes(total)})` : "";
+                uploadMeta.text(`${metaName}${metaSize}`);
+            } else if (data.status === "done") {
+                uploadBar.removeClass("bg-danger");
+                setUploadProgress(100);
+                const total = data.size || uploadSize;
+                const sizeText = total ? ` (${formatBytes(total)})` : "";
+                uploadMeta.text(uploadName ? `Upload complete: ${uploadName}${sizeText}` : "Upload complete");
+            } else if (data.status === "error") {
+                uploadBar.addClass("bg-danger");
+                setUploadProgress(0);
+                const errorText = data.error ? `: ${data.error}` : "";
+                uploadMeta.text(`Upload failed${errorText}`);
+            }
+        },
+        close: function () {
+            resetUploadProgress("Idle");
+        },
+    });
+
+    if ($("#badge-mqtt").length) {
         sockets.mqtt.connect();
-        sockets.video.connect();
+    }
+    if ($("#badge-ctrl").length) {
         sockets.ctrl.connect();
     }
+    if ($("#badge-pppp").length) {
+        sockets.pppp_state.connect();
+    }
+    if ($("#upload-progressbar").length) {
+        sockets.upload.connect();
+    }
+
+    sockets.video.autoReconnect = false;
+
+    let videoEnabled = false;
+
+    $("#video-toggle").on("click", function() {
+        videoEnabled = !videoEnabled;
+        if (videoEnabled) {
+            $("#vplayer").show();
+            $(this).html('<i class="bi bi-camera-video-off"></i> Disable Video');
+            sockets.ctrl.ws.send(JSON.stringify({ video_enabled: true }));
+            sockets.video.autoReconnect = true;
+            if (!sockets.video.ws) {
+                sockets.video.connect();
+            }
+        } else {
+            $("#vplayer").hide();
+            $(this).html('<i class="bi bi-camera-video"></i> Enable Video');
+            sockets.ctrl.ws.send(JSON.stringify({ video_enabled: false }));
+            sockets.video.autoReconnect = false;
+            if (sockets.video.ws) {
+                sockets.video.ws.close();
+                sockets.video.ws = null;
+            }
+            $("#video-resolution").text("Current: -");
+        }
+    });
 
     /**
      * On click of element with id "light-on", sends JSON data to wsctrl to turn light on
@@ -291,19 +505,35 @@ $(function () {
     });
 
     /**
-     * On click of element with id "quality-low", sends JSON data to wsctrl to set video quality to low
+     * On click of video profile buttons, sends JSON data to wsctrl to set video profile
      */
-    $("#quality-low").on("click", function () {
-        sockets.ctrl.ws.send(JSON.stringify({ quality: 0 }));
+    $(".video-profile-btn").on("click", function () {
+        const profile = $(this).data("video-profile");
+        setVideoProfileActive(profile);
+        if (sockets.ctrl.ws) {
+            sockets.ctrl.ws.send(JSON.stringify({ video_profile: profile }));
+        }
         return false;
     });
 
-    /**
-     * On click of element with id "quality-high", sends JSON data to wsctrl to set video quality to high
-     */
-    $("#quality-high").on("click", function () {
-        sockets.ctrl.ws.send(JSON.stringify({ quality: 1 }));
-        return false;
+    $("#upload-rate").on("change", function () {
+        const rate = $(this).val();
+        const form_data = new URLSearchParams();
+        form_data.append("upload_rate_mbps", rate);
+
+        (async () => {
+            const resp = await fetch("/api/ankerctl/config/upload-rate", {
+                method: "POST",
+                body: form_data,
+            });
+            if (resp.ok) {
+                flash_message(`Upload rate set to ${rate} Mbps`, "success");
+            } else {
+                const data = await resp.json().catch(() => ({}));
+                const msg = data.error ? data.error : `HTTP ${resp.status}`;
+                flash_message(`Failed to update upload rate: ${msg}`, "danger");
+            }
+        })();
     });
 
 });

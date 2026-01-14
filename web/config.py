@@ -44,6 +44,7 @@ def config_show(config: object):
   auth_token: {config.account.auth_token[:10]}...[REDACTED]
   email:      {config.account.email}
   region:     {config.account.region.upper()}
+  upload_rate_mbps: {getattr(config, "upload_rate_mbps", "unset")}
 
 """
     config_output += "Printers:\n"

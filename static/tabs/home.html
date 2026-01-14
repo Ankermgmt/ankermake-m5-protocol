@@ -7,16 +7,34 @@
     <div class="container">
         <div class="row g-3">
             <div class="col-md-12 col-lg-6 col-xl-8">
+                {% if video_supported %}
                 <!-- Video Container -->
-                <video
-                    class="w-100 d-block rounded-3 bg-body-tertiary"
-                    playsinline
-                    autoplay
-                    muted
-                    id="player"
-                    poster="{{ url_for('static', filename='img/load-screen.svg') }}"
-                >
-                </video>
+                <div id="vplayer" style="display: none;">
+                    <video
+                        class="w-100 d-block rounded-3 bg-body-tertiary"
+                        playsinline
+                        autoplay
+                        muted
+                        id="player"
+                        poster="{{ url_for('static', filename='img/load-screen.svg') }}"
+                    >
+                    </video>
+                </div>
+                <div id="video-toggle-container" class="text-center mb-3">
+                    <button class="btn btn-primary" id="video-toggle">
+                        {{ macro.bi_icon("camera-video") }} Enable Video
+                    </button>
+                </div>
+                {% else %}
+                <div class="card">
+                    <div class="card-body text-center">
+                        <p class="display-1">
+                            {{ macro.bi_icon("camera-video-off") }}
+                        </p>
+                        <p class="display-6">Camera not available</p>
+                    </div>
+                </div>
+                {% endif %}
             </div>
             <div class="col-md-12 col-lg-6 col-xl-4">
                 <div class="card">
@@ -30,39 +48,121 @@
                         </div>
                         <span id="badge-mqtt" class="badge">MQTT</span>
                         <span id="badge-pppp" class="badge">PPPP</span>
+                        {% if video_supported %}
+                        <span id="badge-video" class="badge">VIDEO</span>
+                        {% endif %}
                         <span id="badge-ctrl" class="badge">CTRL</span>
                     </div>
                     {% endif %}
-                    <div class="card-header fs-6">Video Controls</div>
-                    <div class="card-body">
-                        <div class="row g-3 mb-3">
-                            <div class="col-6">
-                                <button class="w-100 btn btn-secondary" id="light-on">
-                                    {{ macro.bi_icon("lightbulb", "Light on") }}
-                                </button>
-                            </div>
-                            <div class="col-6">
-                                <button class="w-100 btn btn-secondary" id="light-off">
-                                    {{ macro.bi_icon("lightbulb-off", "Light off") }}
-                                </button>
-                            </div>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <button class="w-100 btn btn-secondary" id="quality-low">
-                                    {{ macro.bi_icon("badge-sd", "SD Quality") }}
-                                </button>
-                            </div>
-                            <div class="col-6">
-                                <button class="w-100 btn btn-secondary" id="quality-high">
-                                    {{ macro.bi_icon("badge-hd", "HD Quality") }}
-                                </button>
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <span class="fs-6">Upload Progress</span>
+                        <button
+                            class="btn btn-sm btn-outline-secondary collapse-toggle"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#upload-progress-section"
+                            aria-expanded="true"
+                            aria-controls="upload-progress-section"
+                        >
+                            {{ macro.bi_icon("chevron-down") }}
+                        </button>
+                    </div>
+                    <div class="collapse show" id="upload-progress-section">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="progress position-relative" id="uploadProgress">
+                                        <div
+                                            class="progress-bar progress-bar-striped progress-bar-animated fs-6"
+                                            role="progressbar"
+                                            id="upload-progressbar"
+                                            title="Upload Progress"
+                                            aria-valuenow="0"
+                                            aria-valuemin="0"
+                                            aria-valuemax="100"
+                                            style="width: 0%"
+                                        >
+                                            <span id="upload-progress" class="position-absolute w-100 fw-bold">
+                                                0%
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="form-text mt-2" id="upload-progress-meta">Idle</div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="card-header fs-6">Temperature</div>
+                    {% if video_supported %}
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <span class="fs-6">Video Controls</span>
+                        <button
+                            class="btn btn-sm btn-outline-secondary collapse-toggle"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#video-controls-section"
+                            aria-expanded="true"
+                            aria-controls="video-controls-section"
+                        >
+                            {{ macro.bi_icon("chevron-down") }}
+                        </button>
+                    </div>
+                    <div class="collapse show" id="video-controls-section">
+                        <div class="card-body">
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <button class="w-100 btn btn-secondary" id="light-on">
+                                        {{ macro.bi_icon("lightbulb", "Light on") }}
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="w-100 btn btn-secondary" id="light-off">
+                                        {{ macro.bi_icon("lightbulb-off", "Light off") }}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Live View Quality</label>
+                                    <div class="row g-3">
+                                        {% for profile in video_profiles %}
+                                        {% if profile.live %}
+                                        <div class="col-6">
+                                            <button
+                                                type="button"
+                                                class="w-100 btn btn-secondary video-profile-btn{% if video_profile_default == profile.id %} active{% endif %}"
+                                                data-video-profile="{{ profile.id }}"
+                                                aria-pressed="{% if video_profile_default == profile.id %}true{% else %}false{% endif %}"
+                                            >
+                                                {{ profile.label }}
+                                            </button>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <div class="form-text" id="video-resolution">Current: -</div>
+                                    <div class="form-text">Live view supports SD/HD; snapshots can be higher.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="card-header fs-6">Print Progress</div>
                     <div class="card-body">
-                        <div class="row g-3">
+                        <div class="row mb-3 g-3">
+                            <div class="col-12">
+                                <div class="input-group">
+                                    <div class="input-group-text print-info-label" id="printName">Name</div>
+                                    <span
+                                        id="print-name"
+                                        class="form-control"
+                                        title="Print Name"
+                                        aria-describedby="printName"
+                                    >
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3 g-3">
                             <div class="col-md-6">
                                 <div class="input-group">
                                     <div class="input-group-text mx-auto" id="nozzleGroup">
@@ -115,23 +215,6 @@
                                         disabled
                                         readonly
                                     />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-header fs-6">Print Progress</div>
-                    <div class="card-body">
-                        <div class="row mb-3 g-3">
-                            <div class="col-12">
-                                <div class="input-group">
-                                    <div class="input-group-text print-info-label" id="printName">Name</div>
-                                    <span
-                                        id="print-name"
-                                        class="form-control"
-                                        title="Print Name"
-                                        aria-describedby="printName"
-                                    >
-                                    </span>
                                 </div>
                             </div>
                         </div>
