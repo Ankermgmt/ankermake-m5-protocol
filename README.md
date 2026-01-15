@@ -133,6 +133,35 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
  > If your `login.json` file was not automatically found, you’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. 
    Once the `login.json` has been uploaded, the page will refresh and the web interface is usable.
 
+### Notifications (Apprise)
+
+ankerctl can send notifications through an external Apprise API server. Configure it in the Setup tab under Notifications, or via environment variables when running in Docker.
+
+Example environment variables:
+```sh
+APPRISE_ENABLED=true
+APPRISE_SERVER_URL=http://apprise:8000
+APPRISE_KEY=ankerctl
+APPRISE_TAG=critical
+
+APPRISE_EVENT_PRINT_STARTED=true
+APPRISE_EVENT_PRINT_FINISHED=true
+APPRISE_EVENT_PRINT_FAILED=true
+APPRISE_EVENT_GCODE_UPLOADED=true
+APPRISE_EVENT_PRINT_PROGRESS=true
+
+APPRISE_PROGRESS_INTERVAL=25
+APPRISE_PROGRESS_INCLUDE_IMAGE=false
+```
+
+Manual test checklist:
+1. Open Setup -> Notifications, enter the server URL + key, enable notifications, and click Save.
+2. Click Send test and confirm the message arrives.
+3. Upload a G-code file and verify the upload notification.
+4. Start a print and confirm start/progress/finish (or failure) notifications.
+
+If "Include image" is enabled and a preview URL is available, the notification includes an attachment; otherwise it falls back to text only.
+
 ### Printing Directly from PrusaSlicer
 
 ankerctl can allow slicers like PrusaSlicer (and its derivatives) to send print jobs to the printer using the slicer’s built in communications tools. The web server must be running in order to send jobs to the printer. 

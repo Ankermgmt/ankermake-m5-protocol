@@ -98,6 +98,33 @@ $(function () {
         return `${size.toFixed(precision)} ${units[unit]}`;
     }
 
+    function flash_message(message, category = "info", timeout = 7500) {
+        const messages = $("#messages");
+        if (!messages.length) {
+            console.log(`[${category}] ${message}`);
+            return;
+        }
+        const alert = $("<div>");
+        alert.addClass(`alert alert-${category} alert-dismissible fade show`);
+        alert.attr("data-timeout", timeout);
+        alert.attr("role", "alert");
+
+        const closeBtn = $("<button>");
+        closeBtn.attr("type", "button");
+        closeBtn.addClass("btn-close btn-sm btn-close-white");
+        closeBtn.attr("data-bs-dismiss", "alert");
+        closeBtn.attr("aria-label", "Close");
+
+        alert.append(closeBtn);
+        alert.append(document.createTextNode(message));
+        messages.append(alert);
+
+        const bsalert = new bootstrap.Alert(alert[0]);
+        setTimeout(() => {
+            bsalert.close();
+        }, timeout);
+    }
+
     /**
      * Calculates the AnkerMake M5 Speed ratio ("X-factor")
      * @param {number} speed - The speed value in mm/s
@@ -515,6 +542,147 @@ $(function () {
         }
         return false;
     });
+
+    const appriseForm = $("#apprise-form");
+    if (appriseForm.length) {
+        const appriseFields = {
+            enabled: $("#apprise-enabled"),
+            serverUrl: $("#apprise-server-url"),
+            key: $("#apprise-key"),
+            tag: $("#apprise-tag"),
+            progressInterval: $("#apprise-progress-interval"),
+            progressIncludeImage: $("#apprise-progress-image"),
+            events: {
+                print_started: $("#apprise-event-print-started"),
+                print_finished: $("#apprise-event-print-finished"),
+                print_failed: $("#apprise-event-print-failed"),
+                gcode_uploaded: $("#apprise-event-gcode-uploaded"),
+                print_progress: $("#apprise-event-print-progress"),
+            },
+        };
+        const appriseButtons = {
+            save: $("#apprise-save"),
+            test: $("#apprise-test"),
+        };
+
+        const setAppriseBusy = (busy) => {
+            appriseButtons.save.prop("disabled", busy);
+            appriseButtons.test.prop("disabled", busy);
+        };
+
+        const buildAppriseConfig = () => {
+            const interval = parseInt(appriseFields.progressInterval.val(), 10);
+            return {
+                enabled: appriseFields.enabled.is(":checked"),
+                server_url: appriseFields.serverUrl.val().trim(),
+                key: appriseFields.key.val().trim(),
+                tag: appriseFields.tag.val().trim(),
+                events: {
+                    print_started: appriseFields.events.print_started.is(":checked"),
+                    print_finished: appriseFields.events.print_finished.is(":checked"),
+                    print_failed: appriseFields.events.print_failed.is(":checked"),
+                    gcode_uploaded: appriseFields.events.gcode_uploaded.is(":checked"),
+                    print_progress: appriseFields.events.print_progress.is(":checked"),
+                },
+                progress: {
+                    interval_percent: Number.isNaN(interval) ? 25 : interval,
+                    include_image: appriseFields.progressIncludeImage.is(":checked"),
+                },
+            };
+        };
+
+        const applyAppriseSettings = (apprise) => {
+            const settings = apprise || {};
+            const events = settings.events || {};
+            const progress = settings.progress || {};
+            appriseFields.enabled.prop("checked", Boolean(settings.enabled));
+            appriseFields.serverUrl.val(settings.server_url || "");
+            appriseFields.key.val(settings.key || "");
+            appriseFields.tag.val(settings.tag || "");
+            appriseFields.events.print_started.prop("checked", Boolean(events.print_started));
+            appriseFields.events.print_finished.prop("checked", Boolean(events.print_finished));
+            appriseFields.events.print_failed.prop("checked", Boolean(events.print_failed));
+            appriseFields.events.gcode_uploaded.prop("checked", Boolean(events.gcode_uploaded));
+            appriseFields.events.print_progress.prop("checked", Boolean(events.print_progress));
+            if (progress.interval_percent !== undefined && progress.interval_percent !== null) {
+                appriseFields.progressInterval.val(progress.interval_percent);
+            } else {
+                appriseFields.progressInterval.val("");
+            }
+            appriseFields.progressIncludeImage.prop("checked", Boolean(progress.include_image));
+        };
+
+        const loadAppriseSettings = async () => {
+            setAppriseBusy(true);
+            try {
+                const resp = await fetch("/api/notifications/settings");
+                if (resp.ok) {
+                    const data = await resp.json();
+                    applyAppriseSettings(data.apprise || {});
+                } else {
+                    const data = await resp.json().catch(() => ({}));
+                    const msg = data.error ? data.error : `HTTP ${resp.status}`;
+                    flash_message(`Failed to load notifications: ${msg}`, "danger");
+                }
+            } catch (err) {
+                flash_message(`Failed to load notifications: ${err}`, "danger");
+            } finally {
+                setAppriseBusy(false);
+            }
+        };
+
+        appriseButtons.save.on("click", async function () {
+            setAppriseBusy(true);
+            const payload = { apprise: buildAppriseConfig() };
+            try {
+                const resp = await fetch("/api/notifications/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                if (resp.ok) {
+                    const data = await resp.json().catch(() => ({}));
+                    if (data.apprise) {
+                        applyAppriseSettings(data.apprise);
+                    }
+                    flash_message("Notification settings saved", "success");
+                } else {
+                    const data = await resp.json().catch(() => ({}));
+                    const msg = data.error ? data.error : `HTTP ${resp.status}`;
+                    flash_message(`Failed to save notifications: ${msg}`, "danger");
+                }
+            } catch (err) {
+                flash_message(`Failed to save notifications: ${err}`, "danger");
+            } finally {
+                setAppriseBusy(false);
+            }
+        });
+
+        appriseButtons.test.on("click", async function () {
+            setAppriseBusy(true);
+            const payload = { apprise: buildAppriseConfig() };
+            try {
+                const resp = await fetch("/api/notifications/test", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (resp.ok) {
+                    flash_message(data.message || "Test notification sent", "success");
+                } else {
+                    const msg = data.error ? data.error : `HTTP ${resp.status}`;
+                    flash_message(`Test notification failed: ${msg}`, "danger");
+                }
+            } catch (err) {
+                flash_message(`Test notification failed: ${err}`, "danger");
+            } finally {
+                setAppriseBusy(false);
+            }
+        });
+
+        loadAppriseSettings();
+    }
 
     $("#upload-rate").on("change", function () {
         const rate = $(this).val();

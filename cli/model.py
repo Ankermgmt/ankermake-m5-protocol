@@ -1,11 +1,62 @@
 import json
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from libflagship.util import unhex, enhex
 
 
 DEFAULT_UPLOAD_RATE_MBPS = 10
 UPLOAD_RATE_MBPS_CHOICES = (5, 10, 25, 50, 100)
+
+
+def default_apprise_config():
+    return {
+        "enabled": False,
+        "server_url": "",
+        "key": "",
+        "tag": "",
+        "events": {
+            "print_started": True,
+            "print_finished": True,
+            "print_failed": True,
+            "gcode_uploaded": True,
+            "print_progress": True,
+        },
+        "progress": {
+            "interval_percent": 25,
+            "include_image": False,
+        },
+        "templates": {
+            "print_started": "Print started: {filename}",
+            "print_finished": "Print finished: {filename} ({duration})",
+            "print_failed": "Print failed: {filename} ({reason})",
+            "gcode_uploaded": "Upload complete: {filename} ({size})",
+            "print_progress": "Progress: {percent}% - {filename}",
+        },
+    }
+
+
+def default_notifications_config():
+    return {
+        "apprise": default_apprise_config(),
+    }
+
+
+def merge_dict_defaults(data, defaults):
+    if not isinstance(data, dict):
+        return defaults
+
+    merged = {}
+    for key, default_value in defaults.items():
+        if isinstance(default_value, dict):
+            merged[key] = merge_dict_defaults(data.get(key), default_value)
+        else:
+            merged[key] = data.get(key, default_value)
+
+    for key, value in data.items():
+        if key not in merged:
+            merged[key] = value
+
+    return merged
 
 
 class Serialize:
@@ -77,11 +128,19 @@ class Config(Serialize):
     account: Account
     printers: list[Printer]
     upload_rate_mbps: int = DEFAULT_UPLOAD_RATE_MBPS
+    notifications: dict = field(default_factory=default_notifications_config)
 
     @classmethod
     def from_dict(cls, data):
         if "upload_rate_mbps" not in data:
             data = {**data, "upload_rate_mbps": DEFAULT_UPLOAD_RATE_MBPS}
+        data = {
+            **data,
+            "notifications": merge_dict_defaults(
+                data.get("notifications"),
+                default_notifications_config(),
+            ),
+        }
         return super().from_dict(data)
 
     def __bool__(self):

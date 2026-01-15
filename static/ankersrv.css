@@ -126,3 +126,28 @@ code {
     border: 0 none;
     padding: 0;
 }
+
+.setup-nav {
+    position: sticky;
+    top: 1rem;
+    z-index: 1;
+}
+
+.setup-nav .list-group-item {
+    white-space: nowrap;
+}
+
+.setup-section {
+    scroll-margin-top: 1.5rem;
+}
+
+@media (max-width: 991.98px) {
+    .setup-nav {
+        position: static;
+        overflow-x: auto;
+    }
+
+    .setup-nav.list-group-horizontal {
+        flex-wrap: nowrap;
+    }
+}

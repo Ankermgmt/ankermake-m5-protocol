@@ -6,92 +6,214 @@
 >
     <div class="container">
         <div class="row g-3">
-            <div class="col-lg-6">
-                <form
-                    action="{{ url_for('app_api_ankerctl_config_upload') }}"
-                    method="POST"
-                    enctype="multipart/form-data"
-                    class="mb-3"
-                    id="config-upload-form"
-                >
-                    <div class="card">
-                        <div class="card-header fs-4">
-                            Upload AnkerMake Login File
-                        </div>
-
-                        <div class="card-body input-group">
-                            <input
-                                class="form-control"
-                                type="file"
-                                id="loginFile"
-                                name="login_file"
-                                required
-                                aria-required="true"
-                            />
-                            <button class="btn btn-secondary submit" type="submit" id="upload">
-                                {{ macro.bi_icon("cloud-arrow-up-fill", "Upload") }}
-                            </button>
-                        </div>
-
-                        <div class="card-footer mt-2">
-                            Location: <code id="loginFilePath" class="fw-lighter">{{ login_file_path }}</code>
-                            {{ macro.clipboard_button("#loginFilePath") }}
-                        </div>
-                    </div>
-                </form>
-
-                <div class="card">
-                    <div class="card">
-                        <div class="card-header fs-4">
-                            Reload Ankerctl Services
-                        </div>
-                        <div class="card-body">
-                            <p>
-                                If you are experiencing issues with printing or viewing the video feed reloading
-                                the Ankerctl services will often resolve these issues.
-                            </p>
-                            <button id="reload" type="button" class="btn btn-danger"
-                                    data-bs-toggle="modal" data-bs-target="#popupModal"
-                                    data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
-                                {{ macro.bi_icon("bootstrap-reboot", "Reload Services") }}
-                            </button>
-                        </div>
-                    </div>
+            <div class="col-lg-3">
+                <div class="list-group list-group-horizontal setup-nav flex-lg-column">
+                    <a class="list-group-item list-group-item-action" href="#setup-printer">Printer</a>
+                    <a class="list-group-item list-group-item-action" href="#setup-notifications">Notifications</a>
                 </div>
+            </div>
+            <div class="col-lg-9">
+                <div id="setup-printer" class="setup-section">
+                    <div class="row g-3">
+                        <div class="col-xl-7">
+                            <form
+                                action="{{ url_for('app_api_ankerctl_config_upload') }}"
+                                method="POST"
+                                enctype="multipart/form-data"
+                                class="mb-3"
+                                id="config-upload-form"
+                            >
+                                <div class="card">
+                                    <div class="card-header fs-4">
+                                        Upload AnkerMake Login File
+                                    </div>
 
-                <div class="card mt-3">
-                    <div class="card-header fs-4">
-                        Upload Speed
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3 align-items-center">
-                            <div class="col-12">
-                                <select class="form-select" id="upload-rate">
-                                    {% for rate in upload_rate_choices %}
-                                    <option value="{{ rate }}" {% if upload_rate_mbps == rate %}selected{% endif %}>
-                                        {{ rate }} Mbps
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                {% if upload_rate_env %}
-                                <div class="form-text text-warning">
-                                    Env override active: UPLOAD_RATE_MBPS={{ upload_rate_env }}
+                                    <div class="card-body input-group">
+                                        <input
+                                            class="form-control"
+                                            type="file"
+                                            id="loginFile"
+                                            name="login_file"
+                                            required
+                                            aria-required="true"
+                                        />
+                                        <button class="btn btn-secondary submit" type="submit" id="upload">
+                                            {{ macro.bi_icon("cloud-arrow-up-fill", "Upload") }}
+                                        </button>
+                                    </div>
+
+                                    <div class="card-footer mt-2">
+                                        Location: <code id="loginFilePath" class="fw-lighter">{{ login_file_path }}</code>
+                                        {{ macro.clipboard_button("#loginFilePath") }}
+                                    </div>
                                 </div>
-                                {% else %}
-                                <div class="form-text">Persisted in config; env can override.</div>
-                                {% endif %}
+                            </form>
+
+                            <div class="card">
+                                <div class="card">
+                                    <div class="card-header fs-4">
+                                        Reload Ankerctl Services
+                                    </div>
+                                    <div class="card-body">
+                                        <p>
+                                            If you are experiencing issues with printing or viewing the video feed reloading
+                                            the Ankerctl services will often resolve these issues.
+                                        </p>
+                                        <button id="reload" type="button" class="btn btn-danger"
+                                                data-bs-toggle="modal" data-bs-target="#popupModal"
+                                                data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
+                                            {{ macro.bi_icon("bootstrap-reboot", "Reload Services") }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-3">
+                                <div class="card-header fs-4">
+                                    Upload Speed
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3 align-items-center">
+                                        <div class="col-12">
+                                            <select class="form-select" id="upload-rate">
+                                                {% for rate in upload_rate_choices %}
+                                                <option value="{{ rate }}" {% if upload_rate_mbps == rate %}selected{% endif %}>
+                                                    {{ rate }} Mbps
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                            {% if upload_rate_env %}
+                                            <div class="form-text text-warning">
+                                                Env override active: UPLOAD_RATE_MBPS={{ upload_rate_env }}
+                                            </div>
+                                            {% else %}
+                                            <div class="form-text">Persisted in config; env can override.</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-5">
+                            <div class="card">
+                                <div class="card-header fs-4">
+                                    AnkerMake M5 Config
+                                </div>
+                                <div class="card-body p-0">
+                                    <pre class="p-3 m-0" id="ankerctl-settings">{{ anker_config }}</pre>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header fs-4">
-                        AnkerMake M5 Config
-                    </div>
-                    <div class="card-body p-0">
-                        <pre class="p-3 m-0" id="ankerctl-settings">{{ anker_config }}</pre>
+
+                <div id="setup-notifications" class="setup-section mt-4">
+                    <div class="card">
+                        <div class="card-header fs-4">
+                            Notifications
+                        </div>
+                        <div class="card-body">
+                            <form id="apprise-form" class="vstack gap-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="apprise-enabled" />
+                                    <label class="form-check-label" for="apprise-enabled">Enable Apprise notifications</label>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-lg-7">
+                                        <label class="form-label" for="apprise-server-url">Apprise server URL</label>
+                                        <input
+                                            class="form-control"
+                                            type="text"
+                                            id="apprise-server-url"
+                                            placeholder="http://apprise:8000"
+                                        />
+                                    </div>
+                                    <div class="col-lg-5 col-md-6">
+                                        <label class="form-label" for="apprise-tag">Tag (filter)</label>
+                                        <input class="form-control" type="text" id="apprise-tag" placeholder="optional" />
+                                        <div class="form-text">Only URLs with this tag will receive notifications.</div>
+                                    </div>
+                                </div>
+
+                                <details class="mt-2">
+                                    <summary class="text-muted small">Advanced: Apprise key</summary>
+                                    <div class="row g-3 mt-1">
+                                        <div class="col-lg-4 col-md-6">
+                                            <label class="form-label" for="apprise-key">Key</label>
+                                            <input class="form-control" type="text" id="apprise-key" placeholder="ankerctl" />
+                                            <div class="form-text">Used for <code>/notify/&lt;key&gt;</code> on the Apprise server.</div>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <div>
+                                    <div class="fw-semibold">Events</div>
+                                    <div class="row g-2 mt-1">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="apprise-event-print-started" />
+                                                <label class="form-check-label" for="apprise-event-print-started">Print started</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="apprise-event-print-finished" />
+                                                <label class="form-check-label" for="apprise-event-print-finished">Print finished</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="apprise-event-print-failed" />
+                                                <label class="form-check-label" for="apprise-event-print-failed">Print failed</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="apprise-event-gcode-uploaded" />
+                                                <label class="form-check-label" for="apprise-event-gcode-uploaded">Upload complete</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="apprise-event-print-progress" />
+                                                <label class="form-check-label" for="apprise-event-print-progress">Print progress</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="apprise-progress-interval">Progress interval (%)</label>
+                                        <input
+                                            class="form-control"
+                                            type="number"
+                                            min="1"
+                                            max="100"
+                                            step="1"
+                                            id="apprise-progress-interval"
+                                        />
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="form-check form-switch mt-4">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="apprise-progress-image" />
+                                            <label class="form-check-label" for="apprise-progress-image">Include image when available</label>
+                                        </div>
+                                        <div class="form-text">Snapshot attachments are optional and may require additional support.</div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-primary" type="button" id="apprise-save">Save</button>
+                                    <button class="btn btn-secondary" type="button" id="apprise-test">Send test</button>
+                                </div>
+                                <div class="form-text">
+                                    Apprise posts to <code>/notify/&lt;key&gt;</code>. Leave tag empty to notify all URLs under the key.
+                                </div>
+                                <div class="form-text">Environment variables (<code>APPRISE_*</code>) override these values.</div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>

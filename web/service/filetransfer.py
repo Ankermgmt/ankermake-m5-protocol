@@ -11,11 +11,17 @@ from libflagship.ppppapi import FileUploadInfo, PPPPError
 import cli.util
 import cli.pppp
 
+from libflagship.notifications.events import EVENT_GCODE_UPLOADED
+from ..notifications import AppriseNotifier, format_bytes
+
 
 class FileTransferService(Service):
 
     REPLY_TIMEOUT = 10.0
     PROGRESS_INTERVAL = 0.25
+
+    def worker_init(self):
+        self._notifier = AppriseNotifier(app.config["config"])
 
     def worker_run(self, timeout):
         self.idle(timeout=timeout)
@@ -104,5 +110,15 @@ class FileTransferService(Service):
                 "size": fui.size,
                 "sent": fui.size,
             })
+            self._notify_apprise_upload(upload_name, fui.size, start_print)
         finally:
             api.stop()
+
+    def _notify_apprise_upload(self, filename, size_bytes, start_print):
+        payload = {
+            "filename": filename,
+            "size": format_bytes(size_bytes),
+            "size_bytes": size_bytes,
+            "start_print": bool(start_print),
+        }
+        self._notifier.send(EVENT_GCODE_UPLOADED, payload=payload)

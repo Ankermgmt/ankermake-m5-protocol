@@ -38,6 +38,7 @@ from simple_websocket.errors import ConnectionClosed
 from user_agents import parse as user_agent_parse
 
 from libflagship import ROOT_DIR
+from libflagship.notifications import AppriseClient
 
 from web.lib.service import ServiceManager, RunState, ServiceStoppedError
 
@@ -47,7 +48,12 @@ import web.util
 
 import cli.util
 import cli.config
-from cli.model import UPLOAD_RATE_MBPS_CHOICES
+from cli.model import (
+    UPLOAD_RATE_MBPS_CHOICES,
+    default_apprise_config,
+    default_notifications_config,
+    merge_dict_defaults,
+)
 
 
 app = Flask(__name__, root_path=ROOT_DIR, static_folder="static", template_folder="static")
@@ -59,6 +65,28 @@ app.svc = ServiceManager()
 sock = Sock(app)
 
 PRINTERS_WITHOUT_CAMERA = ["V8110"]
+
+
+def _deep_update(base, updates):
+    if not isinstance(base, dict):
+        base = {}
+    if not isinstance(updates, dict):
+        return base
+    for key, value in updates.items():
+        if isinstance(value, dict) and isinstance(base.get(key), dict):
+            base[key] = _deep_update(base.get(key), value)
+        else:
+            base[key] = value
+    return base
+
+
+def _resolve_notifications(cfg):
+    return merge_dict_defaults(getattr(cfg, "notifications", None), default_notifications_config())
+
+
+def _resolve_apprise(cfg):
+    notifications = _resolve_notifications(cfg)
+    return merge_dict_defaults(notifications.get("apprise"), default_apprise_config())
 
 
 # autopep8: off
@@ -387,6 +415,66 @@ def app_api_ankerctl_config_upload_rate():
         cfg.upload_rate_mbps = rate_limit_mbps
 
     return {"status": "ok", "upload_rate_mbps": rate_limit_mbps}
+
+
+@app.get("/api/notifications/settings")
+def app_api_notifications_settings():
+    config = app.config["config"]
+    with config.open() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        apprise_config = _resolve_apprise(cfg)
+
+    return {"apprise": apprise_config}
+
+
+@app.post("/api/notifications/settings")
+def app_api_notifications_settings_update():
+    config = app.config["config"]
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return {"error": "Invalid JSON payload"}, 400
+
+    apprise_payload = payload.get("apprise") if "apprise" in payload else payload
+    if not isinstance(apprise_payload, dict):
+        return {"error": "Invalid apprise payload"}, 400
+
+    with config.modify() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        notifications = _resolve_notifications(cfg)
+        apprise_config = _resolve_apprise(cfg)
+        apprise_config = _deep_update(apprise_config, apprise_payload)
+        notifications["apprise"] = apprise_config
+        cfg.notifications = notifications
+
+    return {"status": "ok", "apprise": apprise_config}
+
+
+@app.post("/api/notifications/test")
+def app_api_notifications_test():
+    config = app.config["config"]
+    payload = request.get_json(silent=True)
+    apprise_payload = None
+    if isinstance(payload, dict):
+        apprise_payload = payload.get("apprise") if "apprise" in payload else payload
+        if apprise_payload is not None and not isinstance(apprise_payload, dict):
+            return {"error": "Invalid apprise payload"}, 400
+
+    with config.open() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        apprise_config = _resolve_apprise(cfg)
+
+    if apprise_payload is not None:
+        apprise_config = _deep_update(apprise_config, apprise_payload)
+
+    client = AppriseClient(apprise_config)
+    ok, message = client.test_connection()
+    if ok:
+        return {"status": "ok", "message": message}
+    return {"error": message}, 400
+
 def register_services(app):
     app.svc.register("pppp", web.service.pppp.PPPPService())
     if app.config.get("video_supported"):

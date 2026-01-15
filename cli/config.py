@@ -10,7 +10,14 @@ from libflagship.megajank import pppp_decode_initstring
 from libflagship.httpapi import AnkerHTTPAppApiV1, AnkerHTTPPassportApiV1
 from libflagship.util import unhex
 
-from .model import Serialize, Account, Printer, Config
+from .model import (
+    Serialize,
+    Account,
+    Printer,
+    Config,
+    default_notifications_config,
+    merge_dict_defaults,
+)
 
 
 class BaseConfigManager:
@@ -130,6 +137,27 @@ def load_config_from_api(auth_token, region, insecure):
     return config
 
 
+def merge_config_preferences(existing, new_config):
+    if new_config is None:
+        return new_config
+
+    if existing is not None and hasattr(existing, "upload_rate_mbps"):
+        new_config.upload_rate_mbps = existing.upload_rate_mbps
+
+    if existing is not None and hasattr(existing, "notifications"):
+        new_config.notifications = merge_dict_defaults(
+            existing.notifications,
+            default_notifications_config(),
+        )
+    else:
+        new_config.notifications = merge_dict_defaults(
+            getattr(new_config, "notifications", None),
+            default_notifications_config(),
+        )
+
+    return new_config
+
+
 def attempt_config_upgrade(config, profile, insecure):
     path = config.config_path("default")
     data = json.load(path.open())
@@ -140,5 +168,7 @@ def attempt_config_upgrade(config, profile, insecure):
     )
 
     # save config to json file named `ankerctl/default.json`
+    existing = config.load("default", None)
+    cfg = merge_config_preferences(existing, cfg)
     config.save("default", cfg)
     log.info("Finished import")
