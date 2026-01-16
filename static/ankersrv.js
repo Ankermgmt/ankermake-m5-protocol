@@ -551,6 +551,7 @@ $(function () {
             key: $("#apprise-key"),
             tag: $("#apprise-tag"),
             progressInterval: $("#apprise-progress-interval"),
+            progressMax: $("#apprise-progress-max"),
             snapshotQuality: $("#apprise-snapshot-quality"),
             progressIncludeImage: $("#apprise-progress-image"),
             events: {
@@ -573,6 +574,7 @@ $(function () {
 
         const buildAppriseConfig = () => {
             const interval = parseInt(appriseFields.progressInterval.val(), 10);
+            const progressMax = parseInt(appriseFields.progressMax.val(), 10);
             const snapshotQuality = appriseFields.snapshotQuality.val().trim().toLowerCase();
             return {
                 enabled: appriseFields.enabled.is(":checked"),
@@ -590,6 +592,7 @@ $(function () {
                     interval_percent: Number.isNaN(interval) ? 25 : interval,
                     include_image: appriseFields.progressIncludeImage.is(":checked"),
                     snapshot_quality: snapshotQuality || "hd",
+                    max_value: Number.isNaN(progressMax) ? 0 : progressMax,
                 },
             };
         };
@@ -614,6 +617,11 @@ $(function () {
             }
             appriseFields.progressIncludeImage.prop("checked", Boolean(progress.include_image));
             appriseFields.snapshotQuality.val(progress.snapshot_quality || "hd");
+            if (progress.max_value) {
+                appriseFields.progressMax.val(progress.max_value);
+            } else {
+                appriseFields.progressMax.val("");
+            }
         };
 
         const loadAppriseSettings = async () => {

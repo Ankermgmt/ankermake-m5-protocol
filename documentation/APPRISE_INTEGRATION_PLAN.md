@@ -35,7 +35,8 @@
       "progress": {
         "interval_percent": 25,
         "include_image": false,
-        "snapshot_quality": "hd"
+        "snapshot_quality": "hd",
+        "max_value": 0
       },
       "templates": {
         "print_started": "Print started: {filename}",
@@ -67,6 +68,7 @@ APPRISE_EVENT_PRINT_PROGRESS=true
 APPRISE_PROGRESS_INTERVAL=25
 APPRISE_PROGRESS_INCLUDE_IMAGE=false
 APPRISE_SNAPSHOT_QUALITY=hd
+APPRISE_PROGRESS_MAX=0
 ```
 
 ## Integration points (repo layout)

@@ -135,6 +135,10 @@ class AppriseClient:
         if snapshot_quality is not None:
             settings["progress"]["snapshot_quality"] = snapshot_quality
 
+        progress_max = _read_int_env(env, "APPRISE_PROGRESS_MAX")
+        if progress_max is not None:
+            settings["progress"]["max_value"] = progress_max
+
         return settings
 
     @property

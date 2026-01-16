@@ -61,11 +61,22 @@ class MqttQueue(Service):
             return None
 
     @staticmethod
-    def _normalize_progress(value):
+    def _normalize_progress(value, max_value=None):
         try:
             number = float(value)
         except (TypeError, ValueError):
             return None
+        if max_value is not None:
+            try:
+                max_value = float(max_value)
+            except (TypeError, ValueError):
+                max_value = None
+        if max_value is not None and max_value > 0:
+            if number < 0:
+                number = 0
+            if number > max_value:
+                number = max_value
+            return int((number / max_value) * 100)
         is_fractional = isinstance(value, float)
         if isinstance(value, str) and "." in value:
             is_fractional = True
@@ -80,19 +91,19 @@ class MqttQueue(Service):
                 number = 100
         return int(number)
 
-    @staticmethod
-    def _extract_progress(payload):
+    def _extract_progress(self, payload):
         if not isinstance(payload, dict):
             return None
+        max_value = self._notifier.progress_max()
         if "progress" in payload:
-            return MqttQueue._normalize_progress(payload.get("progress"))
+            return MqttQueue._normalize_progress(payload.get("progress"), max_value=max_value)
         for key, value in payload.items():
             if isinstance(key, str) and "progress" in key.lower():
-                progress = MqttQueue._normalize_progress(value)
+                progress = MqttQueue._normalize_progress(value, max_value=max_value)
                 if progress is not None:
                     return progress
             if isinstance(value, dict) and "progress" in value:
-                progress = MqttQueue._normalize_progress(value.get("progress"))
+                progress = MqttQueue._normalize_progress(value.get("progress"), max_value=max_value)
                 if progress is not None:
                     return progress
         return None

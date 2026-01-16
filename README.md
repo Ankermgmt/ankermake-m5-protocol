@@ -153,6 +153,7 @@ APPRISE_EVENT_PRINT_PROGRESS=true
 APPRISE_PROGRESS_INTERVAL=25
 APPRISE_PROGRESS_INCLUDE_IMAGE=false
 APPRISE_SNAPSHOT_QUALITY=hd
+APPRISE_PROGRESS_MAX=0
 ```
 
 Manual test checklist:
@@ -162,6 +163,7 @@ Manual test checklist:
 4. Start a print and confirm start/progress/finish (or failure) notifications.
 
 If "Include image" is enabled, ankerctl attempts to attach a live camera snapshot (requires `ffmpeg`). When that fails it falls back to the preview URL if available, otherwise to text only.
+Set `APPRISE_PROGRESS_MAX` to override the raw progress scale (examples: `1000` or `10000`). Use `0` to keep auto detection.
 
 ### Printing Directly from PrusaSlicer
 

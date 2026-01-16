@@ -121,6 +121,19 @@ class AppriseNotifier:
             interval = 100
         return interval
 
+    def progress_max(self):
+        progress = self.settings().get("progress", {})
+        max_value = None
+        if isinstance(progress, dict):
+            max_value = progress.get("max_value")
+        try:
+            max_value = int(max_value)
+        except (TypeError, ValueError):
+            return None
+        if max_value <= 0:
+            return None
+        return max_value
+
     def include_image(self):
         progress = self.settings().get("progress", {})
         if isinstance(progress, dict):

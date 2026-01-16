@@ -25,6 +25,7 @@ def default_apprise_config():
             "interval_percent": 25,
             "include_image": False,
             "snapshot_quality": "hd",
+            "max_value": 0,
         },
         "templates": {
             "print_started": "Print started: {filename}",
