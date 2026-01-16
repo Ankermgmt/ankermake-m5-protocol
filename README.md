@@ -152,6 +152,7 @@ APPRISE_EVENT_PRINT_PROGRESS=true
 
 APPRISE_PROGRESS_INTERVAL=25
 APPRISE_PROGRESS_INCLUDE_IMAGE=false
+APPRISE_SNAPSHOT_QUALITY=hd
 ```
 
 Manual test checklist:
@@ -160,7 +161,7 @@ Manual test checklist:
 3. Upload a G-code file and verify the upload notification.
 4. Start a print and confirm start/progress/finish (or failure) notifications.
 
-If "Include image" is enabled and a preview URL is available, the notification includes an attachment; otherwise it falls back to text only.
+If "Include image" is enabled, ankerctl attempts to attach a live camera snapshot (requires `ffmpeg`). When that fails it falls back to the preview URL if available, otherwise to text only.
 
 ### Printing Directly from PrusaSlicer
 

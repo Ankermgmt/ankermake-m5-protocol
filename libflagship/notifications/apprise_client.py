@@ -131,6 +131,10 @@ class AppriseClient:
         if include_image is not None:
             settings["progress"]["include_image"] = include_image
 
+        snapshot_quality = env.get("APPRISE_SNAPSHOT_QUALITY")
+        if snapshot_quality is not None:
+            settings["progress"]["snapshot_quality"] = snapshot_quality
+
         return settings
 
     @property

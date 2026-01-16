@@ -195,12 +195,19 @@
                                             id="apprise-progress-interval"
                                         />
                                     </div>
-                                    <div class="col-md-8">
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="apprise-snapshot-quality">Snapshot quality</label>
+                                        <select class="form-select" id="apprise-snapshot-quality">
+                                            <option value="hd">HD (720p)</option>
+                                            <option value="fhd">FHD (1080p)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
                                         <div class="form-check form-switch mt-4">
                                             <input class="form-check-input" type="checkbox" role="switch" id="apprise-progress-image" />
                                             <label class="form-check-label" for="apprise-progress-image">Include image when available</label>
                                         </div>
-                                        <div class="form-text">Snapshot attachments are optional and may require additional support.</div>
+                                        <div class="form-text">Snapshots use the live camera when available.</div>
                                     </div>
                                 </div>
 

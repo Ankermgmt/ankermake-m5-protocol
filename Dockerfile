@@ -25,6 +25,10 @@ WORKDIR /app
 
 RUN mkdir -p /root/.config/
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy the script and libraries
 COPY ankerctl.py /app/
 COPY web /app/web/

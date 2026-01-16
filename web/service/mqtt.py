@@ -307,6 +307,9 @@ class MqttQueue(Service):
 
     def _send_event(self, event, payload, include_image=False):
         attachments = None
-        if include_image and self._notifier.include_image() and self._preview_url:
-            attachments = [self._preview_url]
+        cleanup_paths = []
+        if include_image:
+            attachments, cleanup_paths = self._notifier.build_attachments(preview_url=self._preview_url)
         self._notifier.send(event, payload=payload, attachments=attachments)
+        if cleanup_paths:
+            self._notifier.cleanup_attachments(cleanup_paths)
