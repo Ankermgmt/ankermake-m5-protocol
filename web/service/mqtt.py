@@ -60,6 +60,45 @@ class MqttQueue(Service):
             return None
 
     @staticmethod
+    def _normalize_progress(value):
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return None
+        is_fractional = isinstance(value, float)
+        if isinstance(value, str) and "." in value:
+            is_fractional = True
+        if number < 0:
+            return 0
+        if 0 < number <= 1 and is_fractional:
+            number *= 100
+        elif number > 100:
+            if number <= 1000:
+                number /= 10
+            elif number <= 10000:
+                number /= 100
+            else:
+                number = 100
+        return int(number)
+
+    @staticmethod
+    def _extract_progress(payload):
+        if not isinstance(payload, dict):
+            return None
+        if "progress" in payload:
+            return MqttQueue._normalize_progress(payload.get("progress"))
+        for key, value in payload.items():
+            if isinstance(key, str) and "progress" in key.lower():
+                progress = MqttQueue._normalize_progress(value)
+                if progress is not None:
+                    return progress
+            if isinstance(value, dict) and "progress" in value:
+                progress = MqttQueue._normalize_progress(value.get("progress"))
+                if progress is not None:
+                    return progress
+        return None
+
+    @staticmethod
     def _extract_filename(payload):
         for key in ("name", "fileName", "filename", "file_name", "gcode", "gcode_name", "model_name"):
             value = payload.get(key)
@@ -136,10 +175,9 @@ class MqttQueue(Service):
         ) and "progress" not in payload:
             return
 
-        progress = self._safe_int(payload.get("progress"))
+        progress = self._extract_progress(payload)
         if progress is None:
             return
-
         if progress < 0:
             progress = 0
         if progress > 100:
