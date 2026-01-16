@@ -193,6 +193,9 @@ class MqttQueue(Service):
         if progress > 100:
             progress = 100
 
+        prev_task_id = self._last_task_id
+        prev_filename = self._last_filename
+
         task_id = self._extract_task_id(payload)
         if task_id:
             if self._last_task_id and task_id != self._last_task_id and self._print_active:
@@ -216,7 +219,10 @@ class MqttQueue(Service):
                 self._last_filename = filename
 
         if self._last_progress is not None and progress < self._last_progress and progress <= 1:
-            self._reset_print_state()
+            same_task = task_id and prev_task_id and task_id == prev_task_id
+            same_file = filename and prev_filename and filename == prev_filename
+            if not (same_task or same_file):
+                self._reset_print_state()
 
         failure_reason = self._extract_failure_reason(payload)
         if failure_reason and self._print_active and not self._failure_sent:
