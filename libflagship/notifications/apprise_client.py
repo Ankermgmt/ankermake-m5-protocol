@@ -1,5 +1,7 @@
 import logging as log
 import os
+import tempfile
+from urllib.parse import urlparse
 
 import requests
 
@@ -71,6 +73,19 @@ def _normalize_attachments(attachments):
     else:
         normalized = [attachments]
     return normalized or None
+
+
+def _is_url(value):
+    return isinstance(value, str) and value.startswith(("http://", "https://"))
+
+
+def _attachment_name_from_url(url):
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return "attachment"
+    name = os.path.basename(parsed.path)
+    return name or "attachment"
 
 
 class AppriseClient:
@@ -185,15 +200,25 @@ class AppriseClient:
         if not url:
             return False, "Apprise server URL or key missing"
 
-        payload = {"title": title, "body": body}
-        attach = _normalize_attachments(attachments)
-        if attach:
-            payload["attach"] = attach
         tag = self._settings.get("tag")
         if isinstance(tag, str):
             tag = tag.strip()
         if tag:
-            payload["tag"] = tag
+            tag_value = tag
+        else:
+            tag_value = None
+
+        attach = _normalize_attachments(attachments)
+        if attach:
+            attach_result = self._post_with_attachments(url, title, body, tag_value, attach)
+            if attach_result is not None:
+                return attach_result
+
+        payload = {"title": title, "body": body}
+        if tag_value:
+            payload["tag"] = tag_value
+        if attach:
+            payload["attach"] = attach
         try:
             response = requests.post(url, json=payload, timeout=self._timeout)
         except requests.RequestException as err:
@@ -201,6 +226,74 @@ class AppriseClient:
             return False, str(err)
 
         return self._parse_response(response)
+
+    def _post_with_attachments(self, url, title, body, tag, attachments):
+        files = {}
+        file_handles = []
+        temp_paths = []
+        attach_index = 1
+
+        try:
+            for item in attachments:
+                if not isinstance(item, str):
+                    continue
+                if _is_url(item):
+                    try:
+                        response = requests.get(item, stream=True, timeout=self._timeout)
+                        response.raise_for_status()
+                    except requests.RequestException as err:
+                        log.warning(f"Apprise attachment download failed: {item} ({err})")
+                        continue
+
+                    suffix = os.path.splitext(urlparse(item).path)[1]
+                    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                    try:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                temp_file.write(chunk)
+                    finally:
+                        temp_file.close()
+                        response.close()
+
+                    temp_paths.append(temp_file.name)
+                    filename = _attachment_name_from_url(item)
+                    fp = open(temp_file.name, "rb")
+                    file_handles.append(fp)
+                    files[f"attach{attach_index}"] = (filename, fp)
+                    attach_index += 1
+                else:
+                    path = os.path.expanduser(item)
+                    if not os.path.isfile(path):
+                        log.warning(f"Apprise attachment not found: {item}")
+                        continue
+                    fp = open(path, "rb")
+                    file_handles.append(fp)
+                    files[f"attach{attach_index}"] = (os.path.basename(path), fp)
+                    attach_index += 1
+
+            if not files:
+                return None
+
+            data = {"title": title, "body": body}
+            if tag:
+                data["tag"] = tag
+
+            response = requests.post(url, data=data, files=files, timeout=self._timeout)
+            return self._parse_response(response)
+        except requests.RequestException as err:
+            log.warning(f"Apprise request failed: {err}")
+            return False, str(err)
+        finally:
+            for fp in file_handles:
+                try:
+                    fp.close()
+                except Exception:
+                    pass
+            for path in temp_paths:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
 
     def _parse_response(self, response):
         data = None

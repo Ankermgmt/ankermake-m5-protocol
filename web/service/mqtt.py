@@ -125,6 +125,7 @@ class MqttQueue(Service):
             "preview_image_url",
             "image_url",
             "imageUrl",
+            "img",
             "img_url",
             "imgUrl",
             "url",
