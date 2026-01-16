@@ -100,7 +100,7 @@ class MqttQueue(Service):
 
     @staticmethod
     def _extract_filename(payload):
-        for key in ("name", "fileName", "filename", "file_name", "gcode", "gcode_name", "model_name"):
+        for key in ("name", "fileName", "filename", "file_name", "gcode", "gcode_name"):
             value = payload.get(key)
             if isinstance(value, str) and value.strip():
                 return value.strip()
@@ -186,8 +186,13 @@ class MqttQueue(Service):
         filename = self._extract_filename(payload)
         if filename:
             if self._last_filename and filename != self._last_filename and self._print_active:
-                self._reset_print_state()
-            self._last_filename = filename
+                if progress <= 1:
+                    self._reset_print_state()
+                    self._last_filename = filename
+                else:
+                    filename = self._last_filename
+            else:
+                self._last_filename = filename
 
         if self._last_progress is not None and progress < self._last_progress and progress <= 1:
             self._reset_print_state()
