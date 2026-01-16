@@ -37,6 +37,7 @@ class MqttQueue(Service):
         self._last_progress = None
         self._last_progress_bucket = None
         self._last_filename = None
+        self._last_task_id = None
         self._failure_sent = False
         self._preview_url = None
 
@@ -153,6 +154,14 @@ class MqttQueue(Service):
         return None
 
     @staticmethod
+    def _extract_task_id(payload):
+        for key in ("task_id", "taskId", "taskID", "taskid"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        return None
+
+    @staticmethod
     def _extract_status_text(payload):
         for key in ("status", "state", "printStatus", "statusType", "result"):
             value = payload.get(key)
@@ -172,7 +181,7 @@ class MqttQueue(Service):
         if command_type not in (
             MqttMsgType.ZZ_MQTT_CMD_PRINT_SCHEDULE,
             MqttMsgType.ZZ_MQTT_CMD_EVENT_NOTIFY,
-        ) and "progress" not in payload:
+        ):
             return
 
         progress = self._extract_progress(payload)
@@ -182,6 +191,17 @@ class MqttQueue(Service):
             progress = 0
         if progress > 100:
             progress = 100
+
+        task_id = self._extract_task_id(payload)
+        if task_id:
+            if self._last_task_id and task_id != self._last_task_id and self._print_active:
+                if progress <= 1:
+                    self._reset_print_state()
+                    self._last_task_id = task_id
+                else:
+                    task_id = self._last_task_id
+            else:
+                self._last_task_id = task_id
 
         filename = self._extract_filename(payload)
         if filename:
