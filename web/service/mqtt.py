@@ -74,9 +74,7 @@ class MqttQueue(Service):
         if 0 < number <= 1 and is_fractional:
             number *= 100
         elif number > 100:
-            if number <= 1000:
-                number /= 10
-            elif number <= 10000:
+            if number <= 10000:
                 number /= 100
             else:
                 number = 100
