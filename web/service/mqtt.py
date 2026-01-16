@@ -164,7 +164,7 @@ class MqttQueue(Service):
             self._print_active = False
             return
 
-        if progress > 0 and not self._print_active:
+        if 0 < progress < 100 and not self._print_active:
             self._print_active = True
             self._print_started_at = time.monotonic()
             self._failure_sent = False
