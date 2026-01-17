@@ -341,9 +341,13 @@ class MqttQueue(Service):
     def send_gcode(self, gcode):
         if not gcode:
             return
-        cmd = {
-            "commandType": MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value,
-            "cmdData": gcode,
-            "cmdLen": len(gcode),
-        }
-        self.client.command(cmd)
+
+        lines = [line.strip() for line in gcode.split('\n') if line.strip()]
+        for line in lines:
+            cmd = {
+                "commandType": MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value,
+                "cmdData": line,
+                "cmdLen": len(line),
+            }
+            self.client.command(cmd)
+            time.sleep(0.1)
