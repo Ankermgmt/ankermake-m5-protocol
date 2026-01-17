@@ -1,5 +1,6 @@
 import json
 import logging as log
+import time
 
 from queue import Empty
 from multiprocessing import Queue
@@ -7,7 +8,7 @@ from multiprocessing import Queue
 from ..lib.service import Service, ServiceRestartSignal, RunState
 from .. import app
 
-from libflagship.pppp import P2PSubCmdType, Xzyh
+from libflagship.pppp import P2PSubCmdType, P2PCmdType, Xzyh
 
 
 VIDEO_PROFILES = [
@@ -52,6 +53,7 @@ VIDEO_PROFILE_DEFAULT_ID = "hd" if "hd" in VIDEO_PROFILES_BY_ID else VIDEO_PROFI
 class VideoQueue(Service):
     def __init__(self):
         self.video_enabled = False
+        self.last_frame_at = None
         super().__init__()
 
     def api_start_live(self):
@@ -112,12 +114,16 @@ class VideoQueue(Service):
         if not isinstance(msg, Xzyh):
             return
 
+        if msg.cmd == P2PCmdType.APP_CMD_VIDEO_FRAME:
+            self.last_frame_at = time.monotonic()
+
         self.notify(msg)
 
     def worker_init(self):
         self.saved_light_state = None
         self.saved_video_mode = None
         self.saved_video_profile_id = None
+        self.last_frame_at = None
         self.pppp = None
 
     def worker_start(self):
@@ -170,6 +176,8 @@ class VideoQueue(Service):
             return True
 
         self.video_enabled = enabled
+        if not enabled:
+            self.last_frame_at = None
         if enabled:
             if self.state == RunState.Stopped:
                 self.start()

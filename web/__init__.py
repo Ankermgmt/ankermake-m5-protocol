@@ -86,7 +86,11 @@ def _resolve_notifications(cfg):
 
 def _resolve_apprise(cfg):
     notifications = _resolve_notifications(cfg)
-    return merge_dict_defaults(notifications.get("apprise"), default_apprise_config())
+    apprise = merge_dict_defaults(notifications.get("apprise"), default_apprise_config())
+    progress = apprise.get("progress")
+    if isinstance(progress, dict):
+        progress.pop("max_value", None)
+    return apprise
 
 
 # autopep8: off
@@ -469,8 +473,17 @@ def app_api_notifications_test():
     if apprise_payload is not None:
         apprise_config = _deep_update(apprise_config, apprise_payload)
 
+    # Use explicit settings for snapshot generation test
+    from web.notifications import AppriseNotifier
+    notifier = AppriseNotifier(config, settings=apprise_config)
+    attachments, cleanup = notifier.build_attachments()
+
     client = AppriseClient(apprise_config)
-    ok, message = client.test_connection()
+    # Manually send via _post to bypass event checks for testing
+    ok, message = client._post("Ankerctl Test", "Test notification sent from ankerctl settings page.", attachments=attachments)
+
+    notifier.cleanup_attachments(cleanup)
+
     if ok:
         return {"status": "ok", "message": message}
     return {"error": message}, 400

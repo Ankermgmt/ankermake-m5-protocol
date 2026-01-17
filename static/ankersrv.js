@@ -551,8 +551,9 @@ $(function () {
             key: $("#apprise-key"),
             tag: $("#apprise-tag"),
             progressInterval: $("#apprise-progress-interval"),
-            progressMax: $("#apprise-progress-max"),
             snapshotQuality: $("#apprise-snapshot-quality"),
+            snapshotFallback: $("#apprise-snapshot-fallback"),
+            snapshotLight: $("#apprise-snapshot-light"),
             progressIncludeImage: $("#apprise-progress-image"),
             events: {
                 print_started: $("#apprise-event-print-started"),
@@ -574,7 +575,6 @@ $(function () {
 
         const buildAppriseConfig = () => {
             const interval = parseInt(appriseFields.progressInterval.val(), 10);
-            const progressMax = parseInt(appriseFields.progressMax.val(), 10);
             const snapshotQuality = appriseFields.snapshotQuality.val().trim().toLowerCase();
             return {
                 enabled: appriseFields.enabled.is(":checked"),
@@ -592,7 +592,8 @@ $(function () {
                     interval_percent: Number.isNaN(interval) ? 25 : interval,
                     include_image: appriseFields.progressIncludeImage.is(":checked"),
                     snapshot_quality: snapshotQuality || "hd",
-                    max_value: Number.isNaN(progressMax) ? 0 : progressMax,
+                    snapshot_fallback: appriseFields.snapshotFallback.is(":checked"),
+                    snapshot_light: appriseFields.snapshotLight.is(":checked"),
                 },
             };
         };
@@ -617,11 +618,8 @@ $(function () {
             }
             appriseFields.progressIncludeImage.prop("checked", Boolean(progress.include_image));
             appriseFields.snapshotQuality.val(progress.snapshot_quality || "hd");
-            if (progress.max_value) {
-                appriseFields.progressMax.val(progress.max_value);
-            } else {
-                appriseFields.progressMax.val("");
-            }
+            appriseFields.snapshotFallback.prop("checked", progress.snapshot_fallback !== false);
+            appriseFields.snapshotLight.prop("checked", Boolean(progress.snapshot_light));
         };
 
         const loadAppriseSettings = async () => {

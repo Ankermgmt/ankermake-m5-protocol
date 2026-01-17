@@ -184,7 +184,7 @@
                                 </div>
 
                                 <div class="row g-3 align-items-end">
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <label class="form-label" for="apprise-progress-interval">Progress interval (%)</label>
                                         <input
                                             class="form-control"
@@ -195,31 +195,27 @@
                                             id="apprise-progress-interval"
                                         />
                                     </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label" for="apprise-progress-max">Progress max value</label>
-                                        <input
-                                            class="form-control"
-                                            type="number"
-                                            min="0"
-                                            step="1"
-                                            id="apprise-progress-max"
-                                            placeholder="auto"
-                                        />
-                                        <div class="form-text">0 = auto; use 1000 or 10000 if progress is scaled.</div>
-                                    </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <label class="form-label" for="apprise-snapshot-quality">Snapshot quality</label>
                                         <select class="form-select" id="apprise-snapshot-quality">
                                             <option value="hd">HD (720p)</option>
                                             <option value="fhd">FHD (1080p)</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <div class="form-check form-switch mt-4">
                                             <input class="form-check-input" type="checkbox" role="switch" id="apprise-progress-image" />
                                             <label class="form-check-label" for="apprise-progress-image">Include image when available</label>
                                         </div>
-                                        <div class="form-text">Snapshots use the live camera when available.</div>
+                                        <div class="form-check form-switch mt-2">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="apprise-snapshot-light" />
+                                            <label class="form-check-label" for="apprise-snapshot-light">Light on snapshot</label>
+                                        </div>
+                                        <div class="form-check form-switch mt-2">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="apprise-snapshot-fallback" />
+                                            <label class="form-check-label" for="apprise-snapshot-fallback">Fallback to preview image</label>
+                                        </div>
+                                        <div class="form-text">Live snapshots are preferred; fallback uses the GCODE preview.</div>
                                     </div>
                                 </div>
 

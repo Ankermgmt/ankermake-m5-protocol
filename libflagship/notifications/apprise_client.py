@@ -135,6 +135,15 @@ class AppriseClient:
         if snapshot_quality is not None:
             settings["progress"]["snapshot_quality"] = snapshot_quality
 
+        snapshot_fallback = _read_bool_env(env, "APPRISE_SNAPSHOT_FALLBACK")
+        if snapshot_fallback is not None:
+            settings["progress"]["snapshot_fallback"] = snapshot_fallback
+
+        snapshot_light = _read_bool_env(env, "APPRISE_SNAPSHOT_LIGHT")
+        if snapshot_light is not None:
+            settings["progress"]["snapshot_light"] = snapshot_light
+
+        settings["progress"].pop("max_value", None)
         progress_max = _read_int_env(env, "APPRISE_PROGRESS_MAX")
         if progress_max is not None:
             settings["progress"]["max_value"] = progress_max

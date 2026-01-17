@@ -36,6 +36,7 @@ class MqttQueue(Service):
         self._print_started_at = None
         self._last_progress = None
         self._last_progress_bucket = None
+        self._last_interval = None
         self._last_filename = None
         self._last_task_id = None
         self._failure_sent = False
@@ -282,6 +283,14 @@ class MqttQueue(Service):
         if progress <= 0 or progress >= 100:
             return
         interval = self._notifier.progress_interval()
+
+        if self._last_interval and self._last_interval != interval:
+            if self._last_progress_bucket is not None:
+                # Convert previous bucket index to new interval scale
+                progress_covered = self._last_progress_bucket * self._last_interval
+                self._last_progress_bucket = progress_covered // interval
+        self._last_interval = interval
+
         bucket = progress // interval
         if bucket <= 0:
             return
