@@ -771,8 +771,8 @@ $(function () {
     $("#print-pause").on("click", function() { sendPrinterGCode("M25"); return false; });
     $("#print-resume").on("click", function() { sendPrinterGCode("M24"); return false; });
     $("#print-stop").on("click", function() {
-        if(confirm("Are you sure you want to stop the print?")) {
-            sendPrinterGCode("M524");
+        if(confirm("Are you sure you want to stop the print? This will also turn off heaters.")) {
+            sendPrinterGCode("M25\nM104 S0\nM140 S0\nM106 S0\nM524\nM77");
         }
         return false;
     });
