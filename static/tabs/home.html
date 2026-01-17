@@ -25,6 +25,81 @@
                         {{ macro.bi_icon("camera-video") }} Enable Video
                     </button>
                 </div>
+
+                <!-- Printer Control Card -->
+                <div class="card mb-3">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <span class="fs-6">Printer Control</span>
+                        <div>
+                            <button class="btn btn-sm btn-outline-danger" id="control-home-all" title="Home All">
+                                {{ macro.bi_icon("house-fill") }} Home All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- XY Control -->
+                            <div class="col-md-6 text-center">
+                                <div class="fw-bold mb-3 small text-muted">XY Axis (Bed / Extruder)</div>
+                                <div class="d-inline-block position-relative" style="width: 160px; height: 160px;">
+                                    <!-- Y+ (Bed Back) -->
+                                    <button class="btn btn-secondary position-absolute top-0 start-50 translate-middle-x" id="move-y-plus" style="width: 50px; height: 45px;" title="Bed Back">
+                                        {{ macro.bi_icon("chevron-up") }}
+                                    </button>
+                                    <!-- Y- (Bed Front) -->
+                                    <button class="btn btn-secondary position-absolute bottom-0 start-50 translate-middle-x" id="move-y-minus" style="width: 50px; height: 45px;" title="Bed Front">
+                                        {{ macro.bi_icon("chevron-down") }}
+                                    </button>
+                                    <!-- X- (Extruder Left) -->
+                                    <button class="btn btn-secondary position-absolute top-50 start-0 translate-middle-y" id="move-x-minus" style="width: 50px; height: 45px;" title="Extruder Left">
+                                        {{ macro.bi_icon("chevron-left") }}
+                                    </button>
+                                    <!-- X+ (Extruder Right) -->
+                                    <button class="btn btn-secondary position-absolute top-50 end-0 translate-middle-y" id="move-x-plus" style="width: 50px; height: 45px;" title="Extruder Right">
+                                        {{ macro.bi_icon("chevron-right") }}
+                                    </button>
+                                    <!-- Home XY -->
+                                    <button class="btn btn-primary position-absolute top-50 start-50 translate-middle" id="control-home-xy" style="width: 50px; height: 45px;" title="Home XY">
+                                        {{ macro.bi_icon("house") }}
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Z Control -->
+                            <div class="col-md-6 text-center">
+                                <div class="fw-bold mb-3 small text-muted">Z Axis (Height)</div>
+                                <div class="d-inline-flex flex-column gap-2 align-items-center justify-content-center" style="height: 160px;">
+                                    <!-- Z+ (Extruder Up) -->
+                                    <button class="btn btn-secondary" id="move-z-plus" style="width: 60px; height: 50px;" title="Extruder Up">
+                                        {{ macro.bi_icon("chevron-double-up") }}
+                                    </button>
+                                    <!-- Home Z -->
+                                    <button class="btn btn-primary" id="control-home-z" style="width: 60px; height: 45px;" title="Home Z">
+                                        {{ macro.bi_icon("house") }}
+                                    </button>
+                                    <!-- Z- (Extruder Down) -->
+                                    <button class="btn btn-secondary" id="move-z-minus" style="width: 60px; height: 50px;" title="Extruder Down">
+                                        {{ macro.bi_icon("chevron-double-down") }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Step Distance Selector -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="btn-group w-100" role="group" aria-label="Step Distance">
+                                    <input type="radio" class="btn-check" name="step-dist" id="step-1" value="1" checked>
+                                    <label class="btn btn-outline-primary" for="step-1">1mm</label>
+                                    <input type="radio" class="btn-check" name="step-dist" id="step-10" value="10">
+                                    <label class="btn btn-outline-primary" for="step-10">10mm</label>
+                                    <input type="radio" class="btn-check" name="step-dist" id="step-20" value="20">
+                                    <label class="btn btn-outline-primary" for="step-20">20mm</label>
+                                    <input type="radio" class="btn-check" name="step-dist" id="step-50" value="50">
+                                    <label class="btn btn-outline-primary" for="step-50">50mm</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 {% else %}
                 <div class="card">
                     <div class="card-body text-center">

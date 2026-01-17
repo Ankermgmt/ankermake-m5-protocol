@@ -714,4 +714,30 @@ $(function () {
         })();
     });
 
+    /**
+     * Printer Control Logic
+     */
+    function sendPrinterGCode(gcode) {
+        if (!gcode) return;
+        console.log("Sending GCode:", gcode);
+        fetch("/api/printer/gcode", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ gcode: gcode })
+        }).catch(err => console.error("Failed to send GCode:", err));
+    }
+
+    const getStepDist = () => $('input[name="step-dist"]:checked').val() || "1";
+
+    $("#move-x-plus").on("click", function() { sendPrinterGCode(`G91\nG0 X${getStepDist()} F3000\nG90`); return false; });
+    $("#move-x-minus").on("click", function() { sendPrinterGCode(`G91\nG0 X-${getStepDist()} F3000\nG90`); return false; });
+    $("#move-y-plus").on("click", function() { sendPrinterGCode(`G91\nG0 Y${getStepDist()} F3000\nG90`); return false; });
+    $("#move-y-minus").on("click", function() { sendPrinterGCode(`G91\nG0 Y-${getStepDist()} F3000\nG90`); return false; });
+    $("#move-z-plus").on("click", function() { sendPrinterGCode(`G91\nG0 Z${getStepDist()} F600\nG90`); return false; });
+    $("#move-z-minus").on("click", function() { sendPrinterGCode(`G91\nG0 Z-${getStepDist()} F600\nG90`); return false; });
+
+    $("#control-home-xy").on("click", function() { sendPrinterGCode("G28 X Y"); return false; });
+    $("#control-home-z").on("click", function() { sendPrinterGCode("G28 Z"); return false; });
+    $("#control-home-all").on("click", function() { sendPrinterGCode("G28"); return false; });
+
 });

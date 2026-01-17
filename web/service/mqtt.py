@@ -337,3 +337,13 @@ class MqttQueue(Service):
         self._notifier.send(event, payload=payload, attachments=attachments)
         if cleanup_paths:
             self._notifier.cleanup_attachments(cleanup_paths)
+
+    def send_gcode(self, gcode):
+        if not gcode:
+            return
+        cmd = {
+            "commandType": MqttMsgType.ZZ_MQTT_CMD_GCODE_COMMAND.value,
+            "cmdData": gcode,
+            "cmdLen": len(gcode),
+        }
+        self.client.command(cmd)

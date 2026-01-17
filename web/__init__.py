@@ -488,6 +488,19 @@ def app_api_notifications_test():
         return {"status": "ok", "message": message}
     return {"error": message}, 400
 
+@app.post("/api/printer/gcode")
+def app_api_printer_gcode():
+    payload = request.get_json(silent=True)
+    if not payload or "gcode" not in payload:
+        return {"error": "Missing gcode"}, 400
+
+    gcode = payload["gcode"]
+    with app.svc.borrow("mqttqueue") as mqtt:
+        mqtt.send_gcode(gcode)
+
+    return {"status": "ok"}
+
+
 def register_services(app):
     app.svc.register("pppp", web.service.pppp.PPPPService())
     if app.config.get("video_supported"):
