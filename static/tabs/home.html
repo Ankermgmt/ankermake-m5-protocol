@@ -252,17 +252,16 @@
                                         0°C
                                     </span>
                                     <input
-                                        type="text"
+                                        type="number"
                                         id="set-nozzle-temp"
                                         name="set-nozzle-temp"
                                         class="form-control text-center"
-                                        value="0°C"
+                                        value="0"
                                         title="Target Nozzle Temperature"
                                         aria-label="Target Nozzle Temperature"
                                         aria-describedby="nozzleGroup"
-                                        disabled
-                                        readonly
                                     />
+                                    <span class="input-group-text">°C</span>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -279,18 +278,31 @@
                                         0°C
                                     </span>
                                     <input
-                                        type="text"
+                                        type="number"
                                         id="set-bed-temp"
                                         name="set-bed-temp"
                                         class="form-control text-center"
-                                        value="0°C"
+                                        value="0"
                                         title="Target Bed Temperature"
                                         aria-label="Target Bed Temperature"
                                         aria-describedby="bedGroup"
-                                        disabled
-                                        readonly
                                     />
+                                    <span class="input-group-text">°C</span>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3 g-2 justify-content-center">
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-sm btn-outline-info preheat-preset" data-nozzle="200" data-bed="60">PLA</button>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-sm btn-outline-info preheat-preset" data-nozzle="240" data-bed="80">PETG</button>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-sm btn-outline-info preheat-preset" data-nozzle="250" data-bed="100">ABS</button>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-sm btn-outline-danger preheat-preset" data-nozzle="0" data-bed="0">Cooldown</button>
                             </div>
                         </div>
                         <div class="row mb-3 g-3">

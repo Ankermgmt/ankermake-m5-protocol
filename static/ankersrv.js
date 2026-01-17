@@ -289,13 +289,17 @@ $(function () {
                 const current = getTemp(data.currentTemp);
                 const target = getTemp(data.targetTemp);
                 $("#nozzle-temp").text(`${current}°C`);
-                $("#set-nozzle-temp").attr("value", `${target}°C`);
+                if (!$("#set-nozzle-temp").is(":focus")) {
+                    $("#set-nozzle-temp").val(target);
+                }
             } else if (data.commandType == 1004) {
                 // Returns Bed Temp
                 const current = getTemp(data.currentTemp);
                 const target = getTemp(data.targetTemp);
                 $("#bed-temp").text(`${current}°C`);
-                $("#set-bed-temp").attr("value", `${target}°C`);
+                if (!$("#set-bed-temp").is(":focus")) {
+                    $("#set-bed-temp").val(target);
+                }
             } else if (data.commandType == 1006) {
                 // Returns Print Speed
                 const X = getSpeedFactor(data.value);
@@ -739,6 +743,30 @@ $(function () {
     $("#control-home-xy").on("click", function() { sendPrinterGCode("G28 X Y"); return false; });
     $("#control-home-z").on("click", function() { sendPrinterGCode("G28 Z"); return false; });
     $("#control-home-all").on("click", function() { sendPrinterGCode("G28"); return false; });
+
+    /**
+     * Temperature Control Logic
+     */
+    $("#set-nozzle-temp").on("change", function() {
+        const temp = $(this).val();
+        if (temp !== "") {
+            sendPrinterGCode(`M104 S${temp}`);
+        }
+    });
+
+    $("#set-bed-temp").on("change", function() {
+        const temp = $(this).val();
+        if (temp !== "") {
+            sendPrinterGCode(`M140 S${temp}`);
+        }
+    });
+
+    $(".preheat-preset").on("click", function() {
+        const nozzle = $(this).attr("data-nozzle");
+        const bed = $(this).attr("data-bed");
+        sendPrinterGCode(`M104 S${nozzle}\nM140 S${bed}`);
+        return false;
+    });
 
     $("#print-pause").on("click", function() { sendPrinterGCode("M25"); return false; });
     $("#print-resume").on("click", function() { sendPrinterGCode("M24"); return false; });
