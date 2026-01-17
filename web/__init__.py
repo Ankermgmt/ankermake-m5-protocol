@@ -501,6 +501,23 @@ def app_api_printer_gcode():
     return {"status": "ok"}
 
 
+@app.post("/api/printer/control")
+def app_api_printer_control():
+    payload = request.get_json(silent=True)
+    if not payload or "value" not in payload:
+        return {"error": "Missing value"}, 400
+
+    try:
+        value = int(payload["value"])
+    except (ValueError, TypeError):
+        return {"error": "Value must be an integer"}, 400
+
+    with app.svc.borrow("mqttqueue") as mqtt:
+        mqtt.send_print_control(value)
+
+    return {"status": "ok"}
+
+
 def register_services(app):
     app.svc.register("pppp", web.service.pppp.PPPPService())
     if app.config.get("video_supported"):

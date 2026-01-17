@@ -351,3 +351,10 @@ class MqttQueue(Service):
             }
             self.client.command(cmd)
             time.sleep(0.1)
+
+    def send_print_control(self, value):
+        cmd = {
+            "commandType": MqttMsgType.ZZ_MQTT_CMD_PRINT_CONTROL.value,
+            "value": int(value)
+        }
+        self.client.command(cmd)

@@ -731,6 +731,15 @@ $(function () {
         }).catch(err => console.error("Failed to send GCode:", err));
     }
 
+    function sendPrintControl(value) {
+        console.log("Sending Print Control:", value);
+        fetch("/api/printer/control", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ value: value })
+        }).catch(err => console.error("Failed to send print control:", err));
+    }
+
     const getStepDist = () => $('input[name="step-dist"]:checked').val() || "1";
 
     $("#move-x-plus").on("click", function() { sendPrinterGCode(`G91\nG0 X${getStepDist()} F3000\nG90`); return false; });
@@ -772,6 +781,7 @@ $(function () {
     $("#print-resume").on("click", function() { sendPrinterGCode("M24"); return false; });
     $("#print-stop").on("click", function() {
         if(confirm("Are you sure you want to stop the print? This will also turn off heaters.")) {
+            sendPrintControl(0);
             sendPrinterGCode("M25\nM104 S0\nM140 S0\nM106 S0\nM524\nM77");
         }
         return false;
