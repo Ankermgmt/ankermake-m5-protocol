@@ -740,4 +740,13 @@ $(function () {
     $("#control-home-z").on("click", function() { sendPrinterGCode("G28 Z"); return false; });
     $("#control-home-all").on("click", function() { sendPrinterGCode("G28"); return false; });
 
+    $("#print-pause").on("click", function() { sendPrinterGCode("M25"); return false; });
+    $("#print-resume").on("click", function() { sendPrinterGCode("M24"); return false; });
+    $("#print-stop").on("click", function() {
+        if(confirm("Are you sure you want to stop the print?")) {
+            sendPrinterGCode("M524");
+        }
+        return false;
+    });
+
 });
