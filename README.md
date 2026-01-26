@@ -73,7 +73,16 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
    python3 ankerctl.py config import %APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info
    ```
 
-   Type `ankerctl.py config import -h` for more details on the import options. Support for logging in with username and password is not yet supported. To learn more about the method used to extract the login information and add printers, see the [MQTT Overview](documentation/developer-docs/mqtt-overview.md) and [Example Files](documentation/developer-docs/example-file-usage) documentation.
+   Type `ankerctl.py config import -h` for more details on the import options. To learn more about the method used to extract the login information and add printers, see the [MQTT Overview](documentation/developer-docs/mqtt-overview.md) and [Example Files](documentation/developer-docs/example-file-usage) documentation.
+
+   Alternatively, you can log in directly with email/password:
+
+   ```sh
+   ./ankerctl.py config login DE
+   ```
+
+   You will be prompted for email and password. If AnkerMake requires a CAPTCHA (usually after multiple failed attempts),
+   the CLI will open it in your browser and ask for the answer.
 
    The output when successfully importing a config is similar to this:
 
@@ -107,7 +116,8 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
 2. Now that the printer information is known to `ankerctl`, the tool is ready to use. There’s a lot of available commands and utilities, use a command followed by `-h` to learn what your options are and get more in specific usage instructions.
 
 > **NOTE:**
-> As an alternative to using "config import" on the command line, it is possible to upload `login.json` through the web interface. Either method will work fine.
+> As an alternative to using "config import" on the command line, it is possible to upload `login.json` through the web interface.
+> You can also use email/password login in the web UI (Setup tab). Either method will work fine.
 
 ## Usage
 
