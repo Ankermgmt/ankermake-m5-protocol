@@ -12,6 +12,9 @@ Functions:
 - config_import(login_file, config): Loads the configuration from the API. login_file is a
                                     file object containing the user's login information,
                                     while config is a configuration object.
+- config_login(email, password, country, captcha_id, captcha_answer, config):
+                                    Loads the login information as well as the
+                                    configration from the API.
 Returns:
 - config_output: A formatted string containing the configuration information.
 """
@@ -20,12 +23,23 @@ import libflagship.logincache
 
 import cli.util
 import cli.config
+import cli.countrycodes
 
 
 class ConfigImportError(Exception):
     """
     Raised when there is an error with the config api.
     """
+    def __init__(self, *args, **kwargs):
+        if "captcha" in kwargs:
+            self.captcha = kwargs["captcha"]
+            del kwargs["captcha"]
+            args = list(args)
+            args.append(self.captcha)
+        else:
+            self.captcha = None
+
+        super().__init__(*args)
 
 
 def config_show(config: object):
@@ -44,6 +58,7 @@ def config_show(config: object):
   auth_token: {config.account.auth_token[:10]}...[REDACTED]
   email:      {config.account.email}
   region:     {config.account.region.upper()}
+  country:    {'[REDACTED]' if config.account.country else ''}
   upload_rate_mbps: {getattr(config, "upload_rate_mbps", "unset")}
 
 """
@@ -82,33 +97,31 @@ def config_import(login_file: object, config: object):
     Returns:
     - config_output: A formatted string containing the configuration information.
     """
-    # extract auth token
+    # get the login data
     cache = libflagship.logincache.load(login_file.stream.read())["data"]
-    auth_token = cache["auth_token"]
 
-    # extract account region
-    region = libflagship.logincache.guess_region(cache["ab_code"])
+    # load remaining configuration items from the server
+    cli.config.import_config_from_server(config, cache, False)
 
-    existing = None
+
+def config_login(email: str, password: str, country: str, captcha_id: str, captcha_answer: str, config: object):
+    """
+    Loads the login information and then the configuration from the API.
+    """
+    region = libflagship.logincache.guess_region(country)
+
     try:
-        with config.open() as cfg:
-            existing = cfg
-    except Exception:
-        existing = None
-
-    try:
-        new_config = cli.config.load_config_from_api(auth_token, region, False)
+        login = cli.config.fetch_config_by_login(email, password, region, False, captcha_id, captcha_answer)
     except libflagship.httpapi.APIError as err:
-        raise ConfigImportError(
-            f"Config import failed: {err}. \
-                Auth token might be expired: make sure Ankermake Slicer can connect, then try again")
+        if err.json and "data" in err.json:
+            data = err.json["data"]
+            if "captcha_id" in data:
+                raise ConfigImportError(str(err), captcha={
+                    "id": data["captcha_id"],
+                    "img": data["item"]
+                })
+        raise ConfigImportError(str(err))
     except Exception as err:
-        raise ConfigImportError(f"Config import failed: {err}")
+        raise ConfigImportError(f"Login failed: {err}")
 
-    new_config = cli.config.merge_config_preferences(existing, new_config)
-
-    try:
-        config.save("default", new_config)
-    except Exception as E:
-        raise ConfigImportError(f"Config import failed: {E}")
-    return new_config
+    cli.config.import_config_from_server(config, login, False)

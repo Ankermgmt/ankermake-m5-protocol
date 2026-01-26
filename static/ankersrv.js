@@ -698,6 +698,62 @@ $(function () {
         loadAppriseSettings();
     }
 
+    (function(selectElement) {
+        if (!selectElement.length) return;
+        const countryCodes = selectElement.data("countrycodes");
+        const currentCountry = selectElement.data("country");
+        countryCodes.forEach((item) => {
+            const selected = (currentCountry == item.c) ? " selected" : "";
+            $(`<option value="${item.c}"${selected}>${item.n}</option>`).appendTo(selectElement);
+        });
+    })($("#loginCountry"));
+
+    $("#captchaRow").hide();
+    $("#loginCaptchaId").val("");
+
+    $("#config-login-form").on("submit", function(e) {
+        e.preventDefault();
+
+        (async () => {
+            const form = $("#config-login-form");
+            const url = form.attr("action");
+
+            const form_data = new URLSearchParams();
+            for (const pair of new FormData(form.get(0))) {
+                form_data.append(pair[0], pair[1]);
+            }
+
+            const resp = await fetch(url, {
+                method: 'POST',
+                body: form_data
+            });
+
+            if (resp.status < 300) {
+                const data = await resp.json();
+                const input = $("#loginCaptchaText");
+                if ("redirect" in data) {
+                    document.location = data["redirect"];
+                }
+                else if ("error" in data) {
+                    flash_message(data["error"], "danger");
+                    input.get(0).focus();
+                }
+                else if ("captcha_id" in data) {
+                    input.val("");
+                    input.attr("aria-required", "true");
+                    input.prop("required");
+                    input.get(0).focus();
+                    $("#loginCaptchaId").val(data["captcha_id"]);
+                    $("#loginCaptchaImg").attr("src", data["captcha_url"]);
+                    $("#captchaRow").show();
+                }
+            }
+            else {
+                flash_message(`HTTP Error ${resp.status}: ${resp.statusText}`, "danger")
+            }
+        })();
+    });
+
     $("#upload-rate").on("change", function () {
         const rate = $(this).val();
         const form_data = new URLSearchParams();
@@ -740,6 +796,12 @@ $(function () {
         }).catch(err => console.error("Failed to send print control:", err));
     }
 
+    const PRINT_CONTROL = {
+        STOP: 0,
+        PAUSE: 1,
+        RESUME: 2,
+    };
+
     const getStepDist = () => $('input[name="step-dist"]:checked').val() || "1";
 
     $("#move-x-plus").on("click", function() { sendPrinterGCode(`G91\nG0 X${getStepDist()} F3000\nG90`); return false; });
@@ -777,11 +839,19 @@ $(function () {
         return false;
     });
 
-    $("#print-pause").on("click", function() { sendPrinterGCode("M25"); return false; });
-    $("#print-resume").on("click", function() { sendPrinterGCode("M24"); return false; });
+    $("#print-pause").on("click", function() {
+        sendPrintControl(PRINT_CONTROL.PAUSE);
+        sendPrinterGCode("M25");
+        return false;
+    });
+    $("#print-resume").on("click", function() {
+        sendPrintControl(PRINT_CONTROL.RESUME);
+        sendPrinterGCode("M24");
+        return false;
+    });
     $("#print-stop").on("click", function() {
         if(confirm("Are you sure you want to stop the print? This will also turn off heaters.")) {
-            sendPrintControl(0);
+            sendPrintControl(PRINT_CONTROL.STOP);
             sendPrinterGCode("M25\nM104 S0\nM140 S0\nM106 S0\nM524\nM77");
         }
         return false;

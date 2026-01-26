@@ -16,6 +16,7 @@ Routes:
     - /api/version: Returns the version details of api and server as dictionary
     - /api/ankerctl/config/upload: Handles the uploading of configuration file \
         to Flask server and returns a HTML redirect response
+    - /api/ankerctl/config/login: Performs email/password login and saves configuration
     - /api/ankerctl/server/reload: Reloads the Flask server and returns a HTML redirect response
     - /api/files/local: Handles the uploading of files to Flask server and returns a dictionary containing file details
 
@@ -32,12 +33,14 @@ import os
 import time
 
 from secrets import token_urlsafe as token
-from flask import Flask, flash, request, render_template, Response, session, url_for
+from flask import Flask, flash, request, render_template, Response, session, url_for, jsonify
 from flask_sock import Sock
 from simple_websocket.errors import ConnectionClosed
 from user_agents import parse as user_agent_parse
 
 from libflagship import ROOT_DIR
+import libflagship.httpapi
+import libflagship.logincache
 from libflagship.notifications import AppriseClient
 
 from web.lib.service import ServiceManager, RunState, ServiceStoppedError
@@ -48,6 +51,7 @@ import web.util
 
 import cli.util
 import cli.config
+import cli.countrycodes
 from cli.model import (
     UPLOAD_RATE_MBPS_CHOICES,
     default_apprise_config,
@@ -266,12 +270,16 @@ def app_root():
 
         if cfg:
             anker_config = str(web.config.config_show(cfg))
+            config_existing_email = cfg.account.email
             printer = cfg.printers[app.config["printer_index"]]
             upload_rate_mbps = getattr(cfg, "upload_rate_mbps", None)
+            country = cfg.account.country
         else:
             anker_config = "No printers found, please load your login config..."
+            config_existing_email = ""
             printer = None
             upload_rate_mbps = None
+            country = ""
 
         if ":" in request.host:
             request_host, request_port = request.host.split(":", 1)
@@ -286,6 +294,9 @@ def app_root():
             configure=app.config["login"],
             login_file_path=web.platform.login_path(user_os),
             anker_config=anker_config,
+            config_existing_email=config_existing_email,
+            country_codes=json.dumps(cli.countrycodes.country_codes),
+            current_country=country,
             video_supported=app.config.get("video_supported", False),
             upload_rate_mbps=upload_rate_mbps,
             upload_rate_env=os.getenv("UPLOAD_RATE_MBPS"),
@@ -331,6 +342,44 @@ def app_api_ankerctl_config_upload():
     except Exception as err:
         log.exception(f"Config import failed: {err}")
         return web.util.flash_redirect(url_for('app_root'), f"Unexpected Error occurred: {err}", "danger")
+
+
+@app.post("/api/ankerctl/config/login")
+def app_api_ankerctl_config_login():
+    if request.method != "POST":
+        flash(f"Invalid request method '{request.method}", "danger")
+        return jsonify({"redirect": url_for('app_root')})
+
+    form_data = request.form.to_dict()
+
+    for key in ["login_email", "login_password", "login_country"]:
+        if key not in form_data:
+            return jsonify({"error": f"Error: Missing form entry '{key}'"})
+
+    if not cli.countrycodes.code_to_country(form_data["login_country"]):
+        return jsonify({"error": f"Error: Invalid country code '{form_data['login_country']}'"})
+
+    try:
+        web.config.config_login(
+            form_data['login_email'],
+            form_data['login_password'],
+            form_data['login_country'],
+            form_data.get('login_captcha_id', ''),
+            form_data.get('login_captcha_text', ''),
+            app.config["config"],
+        )
+        flash("AnkerMake Config Imported!", "success")
+        return jsonify({"redirect": url_for('app_api_ankerctl_server_reload')})
+    except web.config.ConfigImportError as err:
+        if err.captcha:
+            return jsonify({"captcha_id": err.captcha["id"], "captcha_url": err.captcha["img"]})
+        log.exception(f"Config import failed: {err}")
+        flash(f"Error: {err}", "danger")
+        return jsonify({"redirect": url_for('app_root')})
+    except Exception as err:
+        log.exception(f"Config import failed: {err}")
+        flash(f"Unexpected error occurred: {err}", "danger")
+        return jsonify({"redirect": url_for('app_root')})
 
 
 @app.get("/api/ankerctl/server/reload")

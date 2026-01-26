@@ -115,6 +115,13 @@ class Account(Serialize):
     region: str
     user_id: str
     email: str
+    country: str = ""
+
+    @classmethod
+    def from_dict(cls, data):
+        if "country" not in data:
+            data = {**data, "country": ""}
+        return super().from_dict(data)
 
     @property
     def mqtt_username(self):
