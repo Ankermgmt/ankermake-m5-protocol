@@ -145,36 +145,58 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
 
 ### Notifications (Apprise)
 
-ankerctl can send notifications through an external Apprise API server. Configure it in the Setup tab under Notifications, or via environment variables when running in Docker.
+ankerctl supports push notifications via [Apprise](https://github.com/caronc/apprise), a universal notification library that supports 90+ notification services (Discord, Telegram, Slack, Pushover, email, and many more).
 
-Example environment variables:
+**Setup Options:**
+1. **Web UI** (recommended): Configure in the Setup tab under Notifications
+2. **Environment Variables**: Useful for Docker deployments (see below)
+
+ankerctl requires an external Apprise API server (not the CLI tool). You can:
+- Run the [Apprise API Docker container](https://github.com/caronc/apprise-api)
+- Use a hosted Apprise API instance
+
+**Configuration via Environment Variables:**
+
 ```sh
+# Connection settings
 APPRISE_ENABLED=true
-APPRISE_SERVER_URL=http://apprise:8000
-APPRISE_KEY=ankerctl
-APPRISE_TAG=critical
+APPRISE_SERVER_URL=http://apprise:8000  # Your Apprise API server URL
+APPRISE_KEY=ankerctl                     # Apprise notification key/ID
+APPRISE_TAG=critical                     # Optional: Apprise tag filter
 
-APPRISE_EVENT_PRINT_STARTED=true
-APPRISE_EVENT_PRINT_FINISHED=true
-APPRISE_EVENT_PRINT_FAILED=true
-APPRISE_EVENT_GCODE_UPLOADED=true
-APPRISE_EVENT_PRINT_PROGRESS=true
+# Event toggles (set to true/false)
+APPRISE_EVENT_PRINT_STARTED=true         # Notify when print starts
+APPRISE_EVENT_PRINT_FINISHED=true        # Notify when print completes
+APPRISE_EVENT_PRINT_FAILED=true          # Notify when print fails
+APPRISE_EVENT_GCODE_UPLOADED=true        # Notify when G-code uploaded
+APPRISE_EVENT_PRINT_PROGRESS=true        # Notify on print progress updates
 
-APPRISE_PROGRESS_INTERVAL=25
-APPRISE_PROGRESS_INCLUDE_IMAGE=false
-APPRISE_SNAPSHOT_QUALITY=hd
-APPRISE_SNAPSHOT_FALLBACK=true
-APPRISE_PROGRESS_MAX=0
+# Progress notification settings
+APPRISE_PROGRESS_INTERVAL=25             # Progress interval (e.g., every 25%)
+APPRISE_PROGRESS_INCLUDE_IMAGE=false     # Attach camera snapshot to progress notifications
+APPRISE_SNAPSHOT_QUALITY=hd              # Snapshot quality: 'sd' or 'hd'
+APPRISE_SNAPSHOT_FALLBACK=true           # Use G-code preview if live snapshot fails
+APPRISE_PROGRESS_MAX=0                   # Override progress scale (0=auto)
 ```
 
-Manual test checklist:
-1. Open Setup -> Notifications, enter the server URL + key, enable notifications, and click Save.
-2. Click Send test and confirm the message arrives.
-3. Upload a G-code file and verify the upload notification.
-4. Start a print and confirm start/progress/finish (or failure) notifications.
+**Testing Your Setup:**
 
-If "Include image" is enabled, ankerctl attempts to attach a live camera snapshot (requires `ffmpeg`). Enable "Fallback to preview image" (or set `APPRISE_SNAPSHOT_FALLBACK=true`) to attach the GCODE preview when live snapshots fail.
-Set `APPRISE_PROGRESS_MAX` (env-only) to override the raw progress scale (examples: `1000` or `10000`). Use `0` to keep auto detection.
+1. Open Setup → Notifications in the web UI
+2. Enter your Apprise server URL and key
+3. Enable notifications and select desired events
+4. Click **Send test** and verify the notification arrives
+5. Test with real events:
+   - Upload a G-code file → verify upload notification
+   - Start a print → verify start/progress/finish notifications
+
+**Image Attachments:**
+
+When "Include image" is enabled for progress/finish notifications, ankerctl will:
+1. Attempt to capture a live camera snapshot (requires `ffmpeg` installed)
+2. If live capture fails and "Fallback to preview image" is enabled, attach the G-code preview image instead
+3. If both fail, send text-only notification
+
+**Note:** Live snapshots require an active PPPP connection and working video stream.
 
 ### Printing Directly from PrusaSlicer
 

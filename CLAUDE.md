@@ -207,10 +207,50 @@ PRINTER_INDEX    # Select printer (default: 0)
 FLASK_HOST       # Web server host (default: 127.0.0.1)
 FLASK_PORT       # Web server port (default: 4470)
 
-# Apprise Notification Settings
-APPRISE_ENABLED, APPRISE_SERVER_URL, APPRISE_KEY, APPRISE_TAG
-APPRISE_EVENT_PRINT_STARTED, APPRISE_EVENT_PRINT_FINISHED, etc.
+# Apprise Notification Settings (all optional)
+APPRISE_ENABLED=true                 # Enable/disable Apprise notifications
+APPRISE_SERVER_URL=http://host:8000 # Apprise API server URL
+APPRISE_KEY=ankerctl                 # Apprise notification key
+APPRISE_TAG=critical                 # Optional tag filter
+
+# Event toggles
+APPRISE_EVENT_PRINT_STARTED=true
+APPRISE_EVENT_PRINT_FINISHED=true
+APPRISE_EVENT_PRINT_FAILED=true
+APPRISE_EVENT_GCODE_UPLOADED=true
+APPRISE_EVENT_PRINT_PROGRESS=true
+
+# Progress settings
+APPRISE_PROGRESS_INTERVAL=25         # Progress interval (%)
+APPRISE_PROGRESS_INCLUDE_IMAGE=false # Attach snapshots
+APPRISE_SNAPSHOT_QUALITY=hd          # 'sd' or 'hd'
+APPRISE_SNAPSHOT_FALLBACK=true       # Fallback to G-code preview
+APPRISE_PROGRESS_MAX=0               # Override progress scale (0=auto)
 ```
+
+### Apprise Notification System
+
+ankerctl includes a complete notification system via [Apprise API](https://github.com/caronc/apprise-api):
+
+**Architecture:**
+- **Client:** `libflagship/notifications/apprise_client.py` - HTTP client for Apprise API
+- **Events:** `libflagship/notifications/events.py` - Event constants
+- **Notifier:** `web/notifications.py` - Main notifier class with attachment support
+- **Hooks:** `web/service/mqtt.py` - Event hooks in MQTT service for print events
+
+**Supported Events:**
+- Print started/finished/failed
+- G-code file uploaded
+- Print progress (configurable interval)
+
+**Attachments:**
+- Live camera snapshots (requires `ffmpeg` + active PPPP connection)
+- G-code preview images (fallback when live snapshot unavailable)
+
+**Configuration:**
+- Web UI: Setup → Notifications tab
+- Environment variables (Docker deployments)
+- Stored in `default.json` under `notifications.apprise`
 
 ## Key Patterns and Idioms
 
