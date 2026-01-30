@@ -67,9 +67,12 @@ class VideoQueue(Service):
 
     def api_light_state(self, light):
         self.saved_light_state = light
+        if not self.pppp:
+            return False
         self.pppp.api_command(P2PSubCmdType.LIGHT_STATE_SWITCH, data={
             "open": light,
         })
+        return True
 
     def api_video_mode(self, mode):
         try:
