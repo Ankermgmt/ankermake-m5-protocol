@@ -229,6 +229,12 @@ class AppriseNotifier:
             log.warning(f"Apprise notify failed: {message}")
         return ok, message
 
+    def is_event_enabled(self, event):
+        client = self.client()
+        if not client or not client.is_enabled():
+            return False
+        return client.is_event_enabled(event)
+
     def _await_video_frame(self, vq, timeout=_FRAME_WAIT_TIMEOUT, max_age=_FRAME_MAX_AGE):
         if not hasattr(vq, "last_frame_at"):
             return True

@@ -282,6 +282,8 @@ class MqttQueue(Service):
             return
         if progress <= 0 or progress >= 100:
             return
+        if not self._notifier.is_event_enabled(EVENT_PRINT_PROGRESS):
+            return
         interval = self._notifier.progress_interval()
 
         if self._last_interval and self._last_interval != interval:
@@ -332,7 +334,7 @@ class MqttQueue(Service):
     def _send_event(self, event, payload, include_image=False):
         attachments = None
         cleanup_paths = []
-        if include_image:
+        if include_image and self._notifier.is_event_enabled(event):
             attachments, cleanup_paths = self._notifier.build_attachments(preview_url=self._preview_url)
         self._notifier.send(event, payload=payload, attachments=attachments)
         if cleanup_paths:
