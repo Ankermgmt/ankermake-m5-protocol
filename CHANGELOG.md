@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+ - Apprise notification integration with full web UI configuration
+   - Event hooks for print start/finish/fail/progress and file uploads
+   - Snapshot attachments for notifications (with fallback to preview image)
+   - Configurable progress interval and event toggles
+   - Support for environment variable overrides (`APPRISE_*`)
+ - Email/password login flow as alternative to `login.json` import
+   - CAPTCHA handling via browser when required
+   - Support for different country regions
+ - Native print stop command via MQTT (`ZZ_MQTT_CMD_PRINT_CONTROL`)
+ - Print control visibility toggle in web UI (configurable via `PRINT_CONTROLS_VISIBLE`)
+ - Test script for print control commands (`examples/test_print_control.py`)
+ - Comprehensive CLAUDE.md guide for AI assistants and developers
+
+### Fixed
+ - **PPPP single-reader architecture** - Critical fix for "two readers one socket" bug that caused packet loss and unstable video/command connections
+ - Thread-safety in PPPP AABB reply reader with locking to prevent `EOFError` crashes
+ - UDP socket timeout leak in PPPP recv/send operations
+ - Race conditions in `Service.tap()` handler removal
+ - WebSocket URL fixes for `/ws/video` and `/ws/ctrl` (missing `//`)
+ - Camera light control null check to prevent errors before PPPP connection established
+ - Video frame forwarding from XZYH to VideoQueue
+ - File transfer EOF/OSError handling (now properly reported as ConnectionError)
+ - Stop button reliability with improved multi-GCode command handling
+ - PPPP service worker start logic to prevent "No pppp connection" errors during uploads
+
+### Performance
+ - Skip expensive notification operations when events are disabled
+ - Optimized progress notification emission to respect interval settings
+
 ## [1.0.1] - 2024-01-15
 
  - Fixes MQTT connection errors post AnkerMake Firmware Upgrades
