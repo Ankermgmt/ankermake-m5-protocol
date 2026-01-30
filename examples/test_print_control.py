@@ -7,7 +7,6 @@ import argparse
 import json
 import time
 from datetime import datetime
-from rich import print
 
 from libflagship.util import enhex, unhex
 from libflagship.mqtt import MqttMsg
