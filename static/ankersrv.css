@@ -151,3 +151,6 @@ code {
         flex-wrap: nowrap;
     }
 }
+.print-controls-hidden #print-controls {
+    display: none !important;
+}

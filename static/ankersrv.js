@@ -777,6 +777,7 @@ $(function () {
     /**
      * Printer Control Logic
      */
+    const PRINT_CONTROLS_VISIBLE = false;
     function sendPrinterGCode(gcode) {
         if (!gcode) return;
         console.log("Sending GCode:", gcode);
@@ -839,22 +840,27 @@ $(function () {
         return false;
     });
 
-    $("#print-pause").on("click", function() {
-        sendPrintControl(PRINT_CONTROL.PAUSE);
-        sendPrinterGCode("M25");
-        return false;
-    });
-    $("#print-resume").on("click", function() {
-        sendPrintControl(PRINT_CONTROL.RESUME);
-        sendPrinterGCode("M24");
-        return false;
-    });
-    $("#print-stop").on("click", function() {
-        if(confirm("Are you sure you want to stop the print? This will also turn off heaters.")) {
-            sendPrintControl(PRINT_CONTROL.STOP);
-            sendPrinterGCode("M25\nM104 S0\nM140 S0\nM106 S0\nM524\nM77");
-        }
-        return false;
-    });
+    if (PRINT_CONTROLS_VISIBLE) {
+        document.body.classList.remove("print-controls-hidden");
+        $("#print-pause").on("click", function() {
+            sendPrintControl(PRINT_CONTROL.PAUSE);
+            sendPrinterGCode("M25");
+            return false;
+        });
+        $("#print-resume").on("click", function() {
+            sendPrintControl(PRINT_CONTROL.RESUME);
+            sendPrinterGCode("M24");
+            return false;
+        });
+        $("#print-stop").on("click", function() {
+            if(confirm("Are you sure you want to stop the print? This will also turn off heaters.")) {
+                sendPrintControl(PRINT_CONTROL.STOP);
+                sendPrinterGCode("M25\nM104 S0\nM140 S0\nM106 S0\nM524\nM77");
+            }
+            return false;
+        });
+    } else {
+        document.body.classList.add("print-controls-hidden");
+    }
 
 });
