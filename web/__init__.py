@@ -638,6 +638,12 @@ _PROTECTED_GET_PATHS = {
     "/api/ankerctl/server/reload",
 }
 
+# POST endpoints needed for initial printer setup (config import / login)
+_SETUP_PATHS = {
+    "/api/ankerctl/config/upload",
+    "/api/ankerctl/config/login",
+}
+
 
 @app.before_request
 def _check_api_key():
@@ -645,6 +651,7 @@ def _check_api_key():
 
     Read-only requests (GET) are allowed without auth so the WebUI
     stays accessible.  The API key is only required for mutations.
+    Setup endpoints are exempted when no printer is configured yet.
     """
     api_key = app.config.get("api_key")
     if not api_key:
@@ -657,6 +664,10 @@ def _check_api_key():
 
     # Allow read-only (GET/HEAD/OPTIONS) unless the path is explicitly protected
     if request.method in ("GET", "HEAD", "OPTIONS") and request.path not in _PROTECTED_GET_PATHS:
+        return None
+
+    # Allow setup endpoints when no printer is configured yet
+    if not app.config.get("login") and request.path in _SETUP_PATHS:
         return None
 
     # --- From here on, auth is required ---
