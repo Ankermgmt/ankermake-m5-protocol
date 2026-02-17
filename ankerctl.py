@@ -557,9 +557,15 @@ def config_set_password(env, key):
 
     If no KEY is given, a random one is generated.
     The key acts as an OctoPrint-compatible X-Api-Key.
+    Allowed characters: [a-zA-Z0-9_-], minimum 16 characters.
     """
     if key is None:
         key = secrets.token_hex(16)
+    else:
+        ok, err = cli.config.validate_api_key(key)
+        if not ok:
+            log.critical(err)
+            return
 
     env.config.set_api_key(key)
     log.info(f"API key set: {key}")

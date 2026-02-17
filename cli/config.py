@@ -2,6 +2,7 @@ import logging as log
 import contextlib
 import json
 import os
+import re
 from datetime import datetime
 
 from pathlib import Path
@@ -110,10 +111,27 @@ class AnkerConfigManager(BaseConfigManager):
             path.unlink()
 
 
+API_KEY_MIN_LENGTH = 16
+API_KEY_PATTERN = re.compile(r'^[a-zA-Z0-9_-]+$')
+
+
+def validate_api_key(key):
+    """Validate API key format. Returns (ok, error_message)."""
+    if len(key) < API_KEY_MIN_LENGTH:
+        return False, f"API key must be at least {API_KEY_MIN_LENGTH} characters (got {len(key)})"
+    if not API_KEY_PATTERN.match(key):
+        return False, "API key may only contain letters, digits, dashes and underscores [a-zA-Z0-9_-]"
+    return True, None
+
+
 def resolve_api_key(config):
     """Resolve API key: ENV var takes precedence over config file."""
     env_key = os.getenv("ANKERCTL_API_KEY")
     if env_key:
+        ok, err = validate_api_key(env_key)
+        if not ok:
+            log.critical(f"ANKERCTL_API_KEY environment variable is invalid: {err}")
+            raise SystemExit(1)
         return env_key
     return config.get_api_key()
 

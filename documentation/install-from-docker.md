@@ -59,3 +59,19 @@ Or build directly:
 ```sh
 docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g)
 ```
+
+### Enabling API Key Authentication
+
+By default, the web server is open (no authentication). To enable API key authentication, set the `ANKERCTL_API_KEY` environment variable in `docker-compose.yaml`:
+
+```yaml
+environment:
+    - FLASK_HOST=127.0.0.1
+    - FLASK_PORT=4470
+    - ANKERCTL_API_KEY=your-secret-key-here
+```
+
+When set, all API endpoints require authentication via one of:
+
+- **Slicer:** Set the API key as `X-Api-Key` header (OctoPrint-compatible)
+- **Browser:** Append `?apikey=your-secret-key-here` to the URL once — a session cookie will be set automatically

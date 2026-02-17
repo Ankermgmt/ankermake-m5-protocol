@@ -143,6 +143,36 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
  > If your `login.json` file was not automatically found, you’ll be prompted to upload your `login.json` file and the given the default path it should be found in your corresponding Operating System. 
    Once the `login.json` has been uploaded, the page will refresh and the web interface is usable.
 
+### Authentication (API Key)
+
+ankerctl supports optional API key authentication. When enabled, all web and API endpoints require a valid key.
+
+**Enable via CLI:**
+
+```sh
+# Generate a random API key
+./ankerctl.py config set-password
+
+# Or set a specific key
+./ankerctl.py config set-password my-secret-key
+
+# Remove key (disable authentication)
+./ankerctl.py config remove-password
+```
+
+**Enable via Docker (environment variable):**
+
+```yaml
+environment:
+    - ANKERCTL_API_KEY=my-secret-key
+```
+
+**Using the key:**
+
+- **Slicer (PrusaSlicer, OrcaSlicer, etc.):** Enter the key as the API Key in the printer settings (sent as `X-Api-Key` header)
+- **Browser:** Append `?apikey=your-key` to the URL once — a session cookie is set automatically
+- **No key set** = no authentication (backwards compatible, default behavior)
+
 ### Notifications (Apprise)
 
 ankerctl supports push notifications via [Apprise](https://github.com/caronc/apprise), a universal notification library that supports 90+ notification services (Discord, Telegram, Slack, Pushover, email, and many more).
@@ -215,6 +245,9 @@ Some examples:
 ```sh
 # run the webserver to control over webgui
 ./ankerctl.py webserver run
+
+# set an API key for web authentication
+./ankerctl.py config set-password
 
 # attempt to detect printers on local network
 ./ankerctl.py pppp lan-search

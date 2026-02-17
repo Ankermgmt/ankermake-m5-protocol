@@ -1,189 +1,102 @@
 # Umsetzungsplan — Security Fixes für ankerctl
 
-Basierend auf dem [Security Audit](./SECURITY_AUDIT.md). Geordnet nach Priorität.
+Basierend auf dem [Security Audit](./SECURITY_AUDIT.md). Alle Phasen umgesetzt.
 
 ---
 
-## Phase 1 — Quick Wins (Aufwand: je < 30 Min)
+## Phase 1 — Quick Wins ✅
 
-Minimale Codeänderungen, sofort umsetzbar.
-
-### 1.1 Config-Verzeichnis absichern (K2)
-
-**Datei:** `cli/config.py` → `BaseConfigManager.__init__`
-
-`Path.mkdir(mode=...)` ändert nicht die Berechtigungen eines bereits existierenden Verzeichnisses. Daher expliziter `os.chmod()` nach dem `mkdir`:
-
-```diff
-  dirs.user_config_path.mkdir(exist_ok=True, parents=True)
-+ import os
-+ os.chmod(dirs.user_config_path, 0o700)
-```
+| # | Maßnahme | Datei | Änderung |
+|---|----------|-------|----------|
+| 1.1 | Config-Verzeichnis `0700` (K2) | `cli/config.py` | `os.chmod(dirs.user_config_path, 0o700)` nach `mkdir()` |
+| 1.2 | `secrets` statt `random` (H1) | `libflagship/seccode.py` | `secrets.randbelow(90000000) + 10000000` |
+| 1.3 | Mutable Default fixen (M5) | `libflagship/httpapi.py` | `invalid_dsks=None` + Body-Initialisierung |
+| 1.4 | Upload-Limit (M4) | `web/__init__.py` | `UPLOAD_MAX_MB` ENV (Default: 2 GB) |
 
 ---
 
-### 1.2 `random` → `secrets` (H1)
+## Phase 2 — Kleine Fixes ✅
 
-**Datei:** `libflagship/seccode.py`
-
-```diff
-- import random
-+ import secrets
-
-  def gen_rand_seed(mac):
--     rnd = random.randint(10000000, 99999999)
-+     rnd = secrets.randbelow(90000000) + 10000000
-```
-
-> **Hinweis:** Das Ergebnis bleibt identisch (Wertebereich `[10000000, 99999999]`). Nur die Quelle der Zufallszahlen wird kryptographisch sicher. Keine Auswirkung auf Protokollkompatibilität.
+| # | Maßnahme | Datei | Änderung |
+|---|----------|-------|----------|
+| 2.1 | MQTT-Checksum (M3) | `libflagship/megajank.py` | `raise ValueError` statt `print` + Fallthrough |
+| 2.2 | Fehlermeldungen (M2) | `web/__init__.py` | Generische UI-Meldungen, `log.exception()` serverseitig |
+| 2.3 | WebSocket-Validierung (H2) | `web/__init__.py` | `isinstance()`-Prüfung für `light`, `quality`, `video_profile`, `video_enabled` |
+| 2.4 | Docker non-root (M1) | `Dockerfile`, `docker-compose.yaml` | User `ankerctl`, UID/GID konfigurierbar, Volume-Pfad angepasst |
+| 2.5 | Code-Duplikation (N1) | `ankerctl.py` | `_find_login_file()` extrahiert |
 
 ---
 
-### 1.3 Mutable Default-Argument fixen (M5)
+## Phase 3 — API-Key Authentifizierung ✅
 
-**Datei:** `libflagship/httpapi.py`
+Optionaler API-Key für den Webserver. Kein Key = kein Auth (abwärtskompatibel).
 
-```diff
-- def equipment_get_dsk_keys(self, station_sns, invalid_dsks={}):
-+ def equipment_get_dsk_keys(self, station_sns, invalid_dsks=None):
-+     if invalid_dsks is None:
-+         invalid_dsks = {}
-```
+### 3.1 — API-Key Speicherung
 
----
+**Datei:** `cli/config.py`
 
-### 1.4 Upload-Größenlimit (M4)
-
-**Datei:** `web/__init__.py`
-
-GCode-Dateien für komplexe Modelle können mehrere hundert MB groß werden. Ein zu niedriges Limit (z.B. 500 MB) könnte den Betrieb stören. Empfehlung: **konfigurierbares Limit** über Environment-Variable mit großzügigem Default als reine DoS-Absicherung.
+API-Key wird als separate Config-Datei `api_key.json` gespeichert (unabhängig von `default.json`):
 
 ```python
-import os
-max_upload_mb = int(os.getenv("UPLOAD_MAX_MB", "2048"))  # Default: 2 GB
-app.config['MAX_CONTENT_LENGTH'] = max_upload_mb * 1024 * 1024
+config.get_api_key()       # → str | None
+config.set_api_key(key)    # → speichert in api_key.json
+config.remove_api_key()    # → löscht api_key.json
 ```
 
-> Alternativ: Kein Limit setzen, wenn K1 (Authentifizierung) umgesetzt ist, da dann nur authentifizierte Benutzer hochladen können.
+**Precedence:** `ANKERCTL_API_KEY` ENV → Config-Datei → kein Auth
 
----
-
-## Phase 2 — Kleine Fixes (Aufwand: je 1–2 Std)
-
-### 2.1 MQTT-Checksum-Fehler behandeln (M3)
-
-**Datei:** `libflagship/megajank.py`
-
-```diff
-  def mqtt_checksum_remove(payload):
-      if xor_bytes(payload) != 0:
--         # raise ...
--         print(f"MALFORMED MESSAGE: {payload}")
--     return payload[:-1]
-+         raise ValueError(f"MQTT checksum mismatch")
-+     return payload[:-1]
-```
-
----
-
-### 2.2 Fehlermeldungen bereinigen (M2)
-
-**Dateien:** `web/__init__.py`
-
-Interne Exception-Details durch generische Meldungen ersetzen. `{err}` nur an `log.error()` weitergeben, nicht an die HTTP-Response.
-
----
-
-### 2.3 WebSocket-Eingabevalidierung (H2)
-
-**Datei:** `web/__init__.py`, `/ws/ctrl`-Handler
-
-Prüfungen hinzufügen:
-- `light`: boolescher Wert
-- `quality`/`video_profile`: Integer aus definiertem Wertebereich
-- `video_enabled`: boolescher Wert
-
----
-
-### 2.4 Docker non-root User (M1)
-
-**Datei:** `Dockerfile`
-
-```diff
-+ RUN useradd -m -s /bin/bash ankerctl
-+ USER ankerctl
-  ENTRYPOINT ["/app/ankerctl.py"]
-```
-
----
-
-### 2.5 Duplizierte File-Detection refactoren (N1)
+### 3.2 — CLI-Befehle
 
 **Datei:** `ankerctl.py`
 
-Login-JSON-Autodetect in gemeinsame Funktion extrahieren, von `config_decode` und `config_import` aufrufen.
-
----
-
-## Phase 3 — Optionales Passwort / API-Key (K1)
-
-**Aufwand:** ca. 1 Tag
-
-Das Kernfeature: Optionales Passwort, das als OctoPrint-kompatibler API-Key fungiert.
-
-### 3.1 Config-Erweiterung
-
-**Datei:** `cli/model.py`
-
-Feld `api_password: Optional[str] = None` zum Config-Model hinzufügen.
-
-### 3.2 CLI-Befehl zum Setzen/Entfernen
-
-**Datei:** `ankerctl.py`
-
-```
-./ankerctl.py config set-password
-./ankerctl.py config remove-password
+```bash
+./ankerctl.py config set-password              # Generiert Key mit secrets.token_hex(16)
+./ankerctl.py config set-password MEIN_KEY      # Eigener Key
+./ankerctl.py config remove-password            # Löscht Key, Auth deaktiviert
 ```
 
-### 3.3 Flask-Middleware für API-Key-Prüfung
+### 3.3 — Flask-Middleware
 
 **Datei:** `web/__init__.py`
 
-`@app.before_request`-Handler:
-1. Passwort aus Config laden
-2. Kein Passwort gesetzt → Zugriff erlauben (Abwärtskompatibilität)
-3. Passwort gesetzt:
-   - `X-Api-Key`-Header prüfen (für Slicer)
-   - Gültige Session prüfen (für Web-UI)
-   - Sonst → 401 Unauthorized
+`@app.before_request`-Handler mit folgender Prüfkette:
 
-### 3.4 Web-UI Login-Seite
+```
+Kein API-Key konfiguriert?  →  Zugriff erlaubt
+  ↓
+/static/* Request?           →  Zugriff erlaubt (Assets brauchen kein Auth)
+  ↓
+X-Api-Key Header korrekt?   →  Zugriff erlaubt (Slicer)
+  ↓
+?apikey= URL-Parameter?     →  Session-Cookie setzen, Redirect auf saubere URL
+  ↓
+Session-Cookie gültig?      →  Zugriff erlaubt (Browser)
+  ↓
+                              →  401 Unauthorized (JSON)
+```
 
-**Datei:** `static/` (Template)
-
-Einfache Passwort-Eingabe, die ein Session-Cookie setzt. Wird angezeigt, wenn Passwort konfiguriert ist und keine gültige Session besteht.
-
-### 3.5 SameSite-Cookie
+### 3.5 — Cookie-Sicherheit
 
 ```python
-app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
-app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'   # CSRF-Schutz
+app.config['SESSION_COOKIE_HTTPONLY'] = True         # XSS-Schutz
+```
+
+### Docker-Nutzung
+
+API-Key per Environment-Variable in `docker-compose.yaml`:
+
+```yaml
+environment:
+    - ANKERCTL_API_KEY=mein-geheimer-key
 ```
 
 ---
 
 ## Übersicht
 
-| Phase | Maßnahme | Schweregrad | Aufwand |
-|-------|----------|-------------|---------|
-| 1.1 | Config-Verzeichnis `0700` | KRITISCH | ~5 Min |
-| 1.2 | `secrets` statt `random` | HOCH | ~5 Min |
-| 1.3 | Mutable Default fixen | MITTEL | ~5 Min |
-| 1.4 | Upload-Limit | MITTEL | ~5 Min |
-| 2.1 | MQTT-Checksum | MITTEL | ~30 Min |
-| 2.2 | Fehlermeldungen | MITTEL | ~1 Std |
-| 2.3 | WebSocket-Validierung | HOCH | ~1 Std |
-| 2.4 | Docker non-root | MITTEL | ~30 Min |
-| 2.5 | Code-Duplikation | NIEDRIG | ~30 Min |
-| 3.x | Optionales Passwort (API-Key) | KRITISCH | ~1 Tag |
+| Phase | Maßnahmen | Status |
+|-------|-----------|--------|
+| 1 | Config `0700`, `secrets`, Mutable Default, Upload-Limit | ✅ |
+| 2 | MQTT-Checksum, Fehlermeldungen, WebSocket-Validierung, Docker non-root, Dedup | ✅ |
+| 3 | API-Key Auth, CLI, Middleware, SameSite-Cookie, Docker ENV | ✅ |

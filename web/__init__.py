@@ -145,7 +145,7 @@ def pppp_state(sock):
     Provides the status of the 'pppp' stream service through websocket
     """
     if not app.config["login"]:
-        log.info("Websocket connection rejected: not logged in")
+        log.info("Websocket connection rejected: no printer configured (use 'config import' or 'config login')")
         return
 
     log.info("Starting PPPP state websocket handler")
