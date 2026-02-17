@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import secrets
 import uuid
 import click
 import platform
@@ -352,10 +353,38 @@ def http_calc_sec_code(duid, mac):
     print(f"sec_code: {sec_code}")
 
 
+def _find_login_file():
+    """Auto-detect login.json / user_info file from default install locations."""
+    useros = platform.system()
+
+    darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
+    winfilelocs = [
+        path.expandvars(r'%APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info'),
+        path.expandvars(r'%APPDATA%\eufyMake Studio Profile\cache\offline\user_info'),
+        path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json'),
+        path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json'),
+    ]
+
+    try:
+        if useros == 'Darwin':
+            return open(darfileloc, 'r')
+        elif useros == 'Windows':
+            for winfileloc in winfilelocs:
+                if path.isfile(winfileloc):
+                    return open(winfileloc, 'r')
+            raise FileNotFoundError
+        else:
+            log.critical("This platform does not support autodetection. Please specify file location")
+    except FileNotFoundError:
+        log.critical("Failed to import file - check if you are logged into Ankerslicer")
+
+    return None
+
+
 @main.group("config", help="View and update configuration")
 @click.pass_context
 def config(ctx):
-    if ctx.invoked_subcommand in {"import", "decode"}:
+    if ctx.invoked_subcommand in {"import", "decode", "set-password", "remove-password"}:
         return
 
     env = ctx.obj
@@ -371,30 +400,7 @@ def config_decode(env, fd):
     """
 
     if fd is None:
-        useros = platform.system()
-
-        darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
-        winfilelocs = [
-            path.expandvars(r'%APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info'),
-            path.expandvars(r'%APPDATA%\eufyMake Studio Profile\cache\offline\user_info'),
-            path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json'),
-            path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json'),
-        ]
-
-        try:
-            if useros == 'Darwin':
-                fd = open(darfileloc, 'r')
-            elif useros == 'Windows':
-                for winfileloc in winfilelocs:
-                    if path.isfile(winfileloc):
-                        fd = open(winfileloc, 'r')
-                        break
-                else:
-                    raise FileNotFoundError
-            else:
-                log.critical("This platform does not support autodetection. Please specify file location")
-        except FileNotFoundError:
-            log.critical("Failed to import file - check if you are logged into Ankerslicer")
+        fd = _find_login_file()
 
     log.info("Loading file..")
 
@@ -414,30 +420,7 @@ def config_import(env, fd):
     """
 
     if fd is None:
-        useros = platform.system()
-
-        darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
-        winfilelocs = [
-            path.expandvars(r'%APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info'),
-            path.expandvars(r'%APPDATA%\eufyMake Studio Profile\cache\offline\user_info'),
-            path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json'),
-            path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json'),
-        ]
-
-        try:
-            if useros == 'Darwin':
-                fd = open(darfileloc, 'r')
-            elif useros == 'Windows':
-                for winfileloc in winfilelocs:
-                    if path.isfile(winfileloc):
-                        fd = open(winfileloc, 'r')
-                        break
-                else:
-                    raise FileNotFoundError
-            else:
-                log.critical("This platform does not support autodetection. Please specify file location")
-        except FileNotFoundError:
-            log.critical("Failed to import file - check if you are logged into Ankerslicer")
+        fd = _find_login_file()
 
     log.info("Loading cache..")
 
@@ -563,6 +546,35 @@ def config_show(env):
             print(f"    api_hosts: {', '.join(p.api_hosts)}")
             print(f"    p2p_hosts: {', '.join(p.p2p_hosts)}")
             print()
+
+
+@config.command("set-password")
+@click.argument("key", required=False)
+@pass_env
+def config_set_password(env, key):
+    """
+    Set an API key for web server authentication.
+
+    If no KEY is given, a random one is generated.
+    The key acts as an OctoPrint-compatible X-Api-Key.
+    """
+    if key is None:
+        key = secrets.token_hex(16)
+
+    env.config.set_api_key(key)
+    log.info(f"API key set: {key}")
+    log.info("Use this key as X-Api-Key header in your slicer,")
+    log.info("or pass it as ?apikey= URL parameter in your browser.")
+
+
+@config.command("remove-password")
+@pass_env
+def config_remove_password(env):
+    """
+    Remove the API key and disable authentication.
+    """
+    env.config.remove_api_key()
+    log.info("API key removed. Authentication disabled.")
 
 
 @main.group("webserver", help="Built-in webserver support")

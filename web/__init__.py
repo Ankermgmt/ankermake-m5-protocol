@@ -66,6 +66,14 @@ app.secret_key = token(24)
 app.config.from_prefixed_env()
 app.svc = ServiceManager()
 
+# Configurable upload size limit (default: 2 GB)
+max_upload_mb = int(os.getenv("UPLOAD_MAX_MB", "2048"))
+app.config['MAX_CONTENT_LENGTH'] = max_upload_mb * 1024 * 1024
+
+# Session cookie security
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+
 sock = Sock(app)
 
 PRINTERS_WITHOUT_CAMERA = ["V8110"]
@@ -213,16 +221,29 @@ def ctrl(sock):
         msg = json.loads(sock.receive())
 
         if "light" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_light_state(msg["light"])
+            if isinstance(msg["light"], bool):
+                with app.svc.borrow("videoqueue") as vq:
+                    vq.api_light_state(msg["light"])
+            else:
+                log.warning(f"Invalid 'light' value (expected bool): {msg['light']!r}")
 
         if "video_profile" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_video_profile(msg["video_profile"])
+            if isinstance(msg["video_profile"], int):
+                with app.svc.borrow("videoqueue") as vq:
+                    vq.api_video_profile(msg["video_profile"])
+            else:
+                log.warning(f"Invalid 'video_profile' value (expected int): {msg['video_profile']!r}")
         elif "quality" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_video_mode(msg["quality"])
+            if isinstance(msg["quality"], int):
+                with app.svc.borrow("videoqueue") as vq:
+                    vq.api_video_mode(msg["quality"])
+            else:
+                log.warning(f"Invalid 'quality' value (expected int): {msg['quality']!r}")
+
         if "video_enabled" in msg:
+            if not isinstance(msg["video_enabled"], bool):
+                log.warning(f"Invalid 'video_enabled' value (expected bool): {msg['video_enabled']!r}")
+                continue
             vq = app.svc.svcs.get("videoqueue")
             if vq:
                 vq.set_video_enabled(msg["video_enabled"])
@@ -338,10 +359,10 @@ def app_api_ankerctl_config_upload():
                                        "AnkerMake Config Imported!", "success")
     except web.config.ConfigImportError as err:
         log.exception(f"Config import failed: {err}")
-        return web.util.flash_redirect(url_for('app_root'), f"Error: {err}", "danger")
+        return web.util.flash_redirect(url_for('app_root'), "Config import failed. Check server logs for details.", "danger")
     except Exception as err:
         log.exception(f"Config import failed: {err}")
-        return web.util.flash_redirect(url_for('app_root'), f"Unexpected Error occurred: {err}", "danger")
+        return web.util.flash_redirect(url_for('app_root'), "An unexpected error occurred. Check server logs for details.", "danger")
 
 
 @app.post("/api/ankerctl/config/login")
@@ -373,12 +394,12 @@ def app_api_ankerctl_config_login():
     except web.config.ConfigImportError as err:
         if err.captcha:
             return jsonify({"captcha_id": err.captcha["id"], "captcha_url": err.captcha["img"]})
-        log.exception(f"Config import failed: {err}")
-        flash(f"Error: {err}", "danger")
+        log.exception(f"Config login failed: {err}")
+        flash("Login failed. Check server logs for details.", "danger")
         return jsonify({"redirect": url_for('app_root')})
     except Exception as err:
-        log.exception(f"Config import failed: {err}")
-        flash(f"Unexpected error occurred: {err}", "danger")
+        log.exception(f"Config login failed: {err}")
+        flash("An unexpected error occurred. Check server logs for details.", "danger")
         return jsonify({"redirect": url_for('app_root')})
 
 
@@ -440,9 +461,7 @@ def app_api_files_local():
                 503,
                 "Cannot connect to printer!\n" \
                 "\n" \
-                "Please verify that printer is online, and on the same network as ankerctl.\n" \
-                "\n" \
-                f"Exception information: {E}"
+                "Please verify that printer is online, and on the same network as ankerctl."
             )
 
     return {}
@@ -588,6 +607,14 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
     Returns:
         - None
     """
+    # Resolve API key: ENV var takes precedence over config file
+    api_key = cli.config.resolve_api_key(config)
+    app.config["api_key"] = api_key
+    if api_key:
+        log.info(f"API key authentication enabled (key: {api_key[:4]}...{api_key[-4:]})")
+    else:
+        log.info("No API key set. Authentication disabled.")
+
     with config.open() as cfg:
         if cfg and printer_index >= len(cfg.printers):
             log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
@@ -605,3 +632,42 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         if cfg:
             register_services(app)
         app.run(host=host, port=port)
+
+
+@app.before_request
+def _check_api_key():
+    """Middleware: enforce API key authentication when configured."""
+    api_key = app.config.get("api_key")
+    if not api_key:
+        # No key configured → allow all requests (backwards compatible)
+        return None
+
+    # Allow static assets without auth
+    if request.path.startswith("/static/"):
+        return None
+
+    # Check X-Api-Key header (slicer / programmatic access)
+    if request.headers.get("X-Api-Key") == api_key:
+        return None
+
+    # Check ?apikey= URL parameter → set session cookie and redirect
+    url_key = request.args.get("apikey")
+    if url_key == api_key:
+        session["authenticated"] = True
+        # Remove apikey from URL to avoid it staying in browser history
+        from urllib.parse import urlencode, urlparse, parse_qs
+        parsed = urlparse(request.url)
+        params = parse_qs(parsed.query)
+        params.pop("apikey", None)
+        clean_url = request.path
+        if params:
+            clean_url += "?" + urlencode(params, doseq=True)
+        from flask import redirect
+        return redirect(clean_url)
+
+    # Check session cookie (browser)
+    if session.get("authenticated"):
+        return None
+
+    # Unauthorized
+    return jsonify({"error": "Unauthorized. Provide API key via X-Api-Key header or ?apikey= parameter."}), 401

@@ -40,3 +40,22 @@ To start `ankerctl` using docker compose, run:
 docker compose pull
 docker compose up
 ```
+
+### Customizing UID/GID
+
+The Docker container runs as a non-root user `ankerctl` (UID/GID 1000 by default).
+If your host user has different IDs, customize them in `docker-compose.yaml`:
+
+```yaml
+build:
+    context: .
+    args:
+        UID: 1001   # your host UID (run: id -u)
+        GID: 1001   # your host GID (run: id -g)
+```
+
+Or build directly:
+
+```sh
+docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g)
+```

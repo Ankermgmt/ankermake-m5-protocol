@@ -3,7 +3,12 @@ services:
         image: django01982/ankerctl:local
         container_name: ankerctl
         restart: unless-stopped
-        build: .
+        build:
+            context: .
+            args:
+                # Override to match host user (e.g. UID=$(id -u) GID=$(id -g))
+                UID: 1000
+                GID: 1000
 
         # host-mode networking is required for pppp communication with the
         # printer, since it is an asymmetrical udp protocol.
@@ -13,8 +18,10 @@ services:
         environment:
             - FLASK_HOST=127.0.0.1
             - FLASK_PORT=4470
+            # Uncomment to enable API key authentication:
+            # - ANKERCTL_API_KEY=your-secret-key-here
         volumes:
-            - ankerctl_vol:/root/.config/ankerctl
+            - ankerctl_vol:/home/ankerctl/.config/ankerctl
 
 volumes:
     ankerctl_vol:

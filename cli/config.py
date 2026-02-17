@@ -1,6 +1,7 @@
 import logging as log
 import contextlib
 import json
+import os
 from datetime import datetime
 
 from pathlib import Path
@@ -36,6 +37,7 @@ class BaseConfigManager:
         else:
             self._classes = []
         dirs.user_config_path.mkdir(exist_ok=True, parents=True)
+        os.chmod(dirs.user_config_path, 0o700)
 
     @contextlib.contextmanager
     def _borrow(self, value, write, default=None):
@@ -89,6 +91,31 @@ class AnkerConfigManager(BaseConfigManager):
 
     def open(self):
         return self._borrow("default", write=False, default=Config(account=None, printers=[]))
+
+    def get_api_key(self):
+        """Load the API key from config. Returns None if not set."""
+        data = self.load("api_key", None)
+        if isinstance(data, dict):
+            return data.get("key")
+        return None
+
+    def set_api_key(self, key):
+        """Save the API key to config."""
+        self.save("api_key", {"key": key})
+
+    def remove_api_key(self):
+        """Remove the API key from config."""
+        path = self.config_path("api_key")
+        if path.exists():
+            path.unlink()
+
+
+def resolve_api_key(config):
+    """Resolve API key: ENV var takes precedence over config file."""
+    env_key = os.getenv("ANKERCTL_API_KEY")
+    if env_key:
+        return env_key
+    return config.get_api_key()
 
 
 def configmgr(profile="default"):

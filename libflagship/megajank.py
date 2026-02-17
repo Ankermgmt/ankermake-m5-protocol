@@ -34,8 +34,7 @@ def mqtt_aes_decrypt(cmsg, key, iv=b"3DPrintAnkerMake"):
 
 def mqtt_checksum_remove(payload):
     if xor_bytes(payload) != 0:
-        # raise ...
-        print(f"MALFORMED MESSAGE: {payload}")
+        raise ValueError(f"MQTT checksum mismatch in message ({len(payload)} bytes)")
     return payload[:-1]
 
 
