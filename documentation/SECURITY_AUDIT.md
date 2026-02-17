@@ -46,7 +46,8 @@ Der Flask-Webserver bot keinerlei Authentifizierung. Alle Endpunkte – Druckers
 **Umsetzung:**
 - Optionaler API-Key (`config set-password` / `ANKERCTL_API_KEY` ENV)
 - Kein Key → offen (Abwärtskompatibilität)
-- Key gesetzt → `X-Api-Key` Header (Slicer), `?apikey=` URL-Parameter (Browser/Session), Session-Cookie
+- Key gesetzt → **Lesen (GET) bleibt offen**, nur Schreibzugriffe (POST) geschützt
+- Auth via `X-Api-Key` Header (Slicer), `?apikey=` URL-Parameter (Browser/Session), Session-Cookie
 - `SameSite=Strict` + `HttpOnly` auf Session-Cookies (CSRF-Schutz)
 
 ---

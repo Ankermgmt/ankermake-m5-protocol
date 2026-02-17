@@ -633,10 +633,19 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
             register_services(app)
         app.run(host=host, port=port)
 
+# GET endpoints that modify state and require auth despite being GET
+_PROTECTED_GET_PATHS = {
+    "/api/ankerctl/server/reload",
+}
+
 
 @app.before_request
 def _check_api_key():
-    """Middleware: enforce API key authentication when configured."""
+    """Middleware: enforce API key on write operations (POST/PUT/DELETE).
+
+    Read-only requests (GET) are allowed without auth so the WebUI
+    stays accessible.  The API key is only required for mutations.
+    """
     api_key = app.config.get("api_key")
     if not api_key:
         # No key configured → allow all requests (backwards compatible)
@@ -645,6 +654,12 @@ def _check_api_key():
     # Allow static assets without auth
     if request.path.startswith("/static/"):
         return None
+
+    # Allow read-only (GET/HEAD/OPTIONS) unless the path is explicitly protected
+    if request.method in ("GET", "HEAD", "OPTIONS") and request.path not in _PROTECTED_GET_PATHS:
+        return None
+
+    # --- From here on, auth is required ---
 
     # Check X-Api-Key header (slicer / programmatic access)
     if request.headers.get("X-Api-Key") == api_key:

@@ -62,13 +62,17 @@ config.remove_api_key()    # → löscht api_key.json
 `@app.before_request`-Handler mit folgender Prüfkette:
 
 ```
-Kein API-Key konfiguriert?  →  Zugriff erlaubt
+Kein API-Key konfiguriert?  →  Zugriff erlaubt (alles offen)
   ↓
-/static/* Request?           →  Zugriff erlaubt (Assets brauchen kein Auth)
+/static/* Request?           →  Zugriff erlaubt
+  ↓
+GET/HEAD/OPTIONS Request?    →  Zugriff erlaubt (WebUI lesend offen)
+  ↓
+(POST/PUT/DELETE oder geschützter GET wie /server/reload)
   ↓
 X-Api-Key Header korrekt?   →  Zugriff erlaubt (Slicer)
   ↓
-?apikey= URL-Parameter?     →  Session-Cookie setzen, Redirect auf saubere URL
+?apikey= URL-Parameter?     →  Session-Cookie setzen, Redirect
   ↓
 Session-Cookie gültig?      →  Zugriff erlaubt (Browser)
   ↓

@@ -172,6 +172,7 @@ environment:
 - **Slicer (PrusaSlicer, OrcaSlicer, etc.):** Enter the key as the API Key in the printer settings (sent as `X-Api-Key` header)
 - **Browser:** Append `?apikey=your-key` to the URL once — a session cookie is set automatically
 - **No key set** = no authentication (backwards compatible, default behavior)
+- The **WebUI is always readable** (status, video, etc.) — the key is only required for write operations (uploading files, sending gcode, controlling the printer)
 
 ### Notifications (Apprise)
 
