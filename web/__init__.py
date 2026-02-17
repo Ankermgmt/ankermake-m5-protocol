@@ -355,6 +355,7 @@ def app_api_ankerctl_config_upload():
 
     try:
         web.config.config_import(file, app.config["config"])
+        session["authenticated"] = True
         return web.util.flash_redirect(url_for('app_api_ankerctl_server_reload'),
                                        "AnkerMake Config Imported!", "success")
     except web.config.ConfigImportError as err:
@@ -390,6 +391,7 @@ def app_api_ankerctl_config_login():
             app.config["config"],
         )
         flash("AnkerMake Config Imported!", "success")
+        session["authenticated"] = True
         return jsonify({"redirect": url_for('app_api_ankerctl_server_reload')})
     except web.config.ConfigImportError as err:
         if err.captcha:
