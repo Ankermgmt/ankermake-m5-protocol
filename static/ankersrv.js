@@ -891,6 +891,68 @@ $(function () {
             .finally(() => btn.prop("disabled", false));
     });
 
+    /**
+     * GCode Console
+     */
+    function gcodeLog(msg) {
+        const log = $("#gcode-log");
+        const ts = new Date().toLocaleTimeString();
+        log.append(`[${ts}] ${msg}\n`);
+        log.scrollTop(log[0].scrollHeight);
+    }
+
+    function sendGCodeWithLog(gcode) {
+        if (!gcode || !gcode.trim()) return;
+        gcodeLog(`» ${gcode.trim().replace(/\n/g, " | ")}`);
+        fetch("/api/printer/gcode", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ gcode: gcode })
+        })
+            .then(resp => resp.json().then(data => ({ ok: resp.ok, status: resp.status, data })))
+            .then(({ ok, status, data }) => {
+                if (ok) {
+                    gcodeLog("✓ Sent successfully");
+                } else {
+                    gcodeLog(`✗ Error ${status}: ${data.error || "Unknown error"}`);
+                }
+            })
+            .catch(err => gcodeLog(`✗ Failed: ${err.message}`));
+    }
+
+    // File upload
+    $("#gcode-file-send").on("click", function () {
+        const fileInput = document.getElementById("gcode-file");
+        if (!fileInput.files.length) {
+            gcodeLog("✗ No file selected");
+            return;
+        }
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const content = e.target.result;
+            const lines = content.split("\n").filter(l => l.trim() && !l.trim().startsWith(";"));
+            gcodeLog(`Sending ${lines.length} commands from ${file.name}...`);
+            sendGCodeWithLog(content);
+        };
+        reader.readAsText(file);
+    });
+
+    // Custom text input
+    $("#gcode-text-send").on("click", function () {
+        const input = $("#gcode-input");
+        sendGCodeWithLog(input.val());
+        input.val("");
+    });
+
+    // Enter key in textarea sends
+    $("#gcode-input").on("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            $("#gcode-text-send").click();
+        }
+    });
+
     if (PRINT_CONTROLS_VISIBLE) {
         document.body.classList.remove("print-controls-hidden");
         $("#print-pause").on("click", function () {
