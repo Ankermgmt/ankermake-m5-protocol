@@ -18,7 +18,7 @@ $(function () {
      */
     if (navigator.clipboard) {
         /* Clipboard support present: link clipboard icons to source object */
-        $("[data-clipboard-src]").each(function(i, elm) {
+        $("[data-clipboard-src]").each(function (i, elm) {
             $(elm).on("click", function () {
                 const src = $(elm).attr("data-clipboard-src");
                 const value = $(src).text();
@@ -165,14 +165,14 @@ $(function () {
         constructor({
             name,
             url,
-            badge=null,
-            open=null,
-            opened=null,
-            close=null,
-            error=null,
-            message=null,
-            binary=false,
-            reconnect=1000,
+            badge = null,
+            open = null,
+            opened = null,
+            close = null,
+            error = null,
+            message = null,
+            binary = false,
+            reconnect = 1000,
         }) {
             this.name = name;
             this.url = url;
@@ -270,7 +270,7 @@ $(function () {
 
     sockets.mqtt = new AutoWebSocket({
         name: "mqtt socket",
-        url: `${location.protocol.replace("http","ws")}//${location.host}/ws/mqtt`,
+        url: `${location.protocol.replace("http", "ws")}//${location.host}/ws/mqtt`,
         badge: "#badge-mqtt",
 
         message: function (ev) {
@@ -334,7 +334,7 @@ $(function () {
      */
     sockets.video = new AutoWebSocket({
         name: "Video socket",
-        url: `${location.protocol.replace("http","ws")}//${location.host}/ws/video`,
+        url: `${location.protocol.replace("http", "ws")}//${location.host}/ws/video`,
         badge: "#badge-video",
         binary: true,
         reconnect: 2000,
@@ -393,7 +393,7 @@ $(function () {
 
     sockets.ctrl = new AutoWebSocket({
         name: "Control socket",
-        url: `${location.protocol.replace("http","ws")}//${location.host}/ws/ctrl`,
+        url: `${location.protocol.replace("http", "ws")}//${location.host}/ws/ctrl`,
         badge: "#badge-ctrl",
         message: function (event) {
             let data = null;
@@ -410,11 +410,11 @@ $(function () {
 
     sockets.pppp_state = new AutoWebSocket({
         name: "PPPP socket",
-        url: `${location.protocol.replace("http","ws")}//${location.host}/ws/pppp-state`,
+        url: `${location.protocol.replace("http", "ws")}//${location.host}/ws/pppp-state`,
         badge: "#badge-pppp",
         reconnect: 5000,
 
-        message: function(event) {
+        message: function (event) {
             const data = JSON.parse(event.data);
             if (data.status === "connected") {
                 $(this.badge).removeClass("text-bg-danger text-bg-warning").addClass("text-bg-success");
@@ -430,7 +430,7 @@ $(function () {
 
     sockets.upload = new AutoWebSocket({
         name: "Upload socket",
-        url: `${location.protocol.replace("http","ws")}//${location.host}/ws/upload`,
+        url: `${location.protocol.replace("http", "ws")}//${location.host}/ws/upload`,
         reconnect: 2000,
         message: function (event) {
             let data = null;
@@ -496,7 +496,7 @@ $(function () {
 
     let videoEnabled = false;
 
-    $("#video-toggle").on("click", function() {
+    $("#video-toggle").on("click", function () {
         videoEnabled = !videoEnabled;
         if (videoEnabled) {
             $("#vplayer").show();
@@ -698,7 +698,7 @@ $(function () {
         loadAppriseSettings();
     }
 
-    (function(selectElement) {
+    (function (selectElement) {
         if (!selectElement.length) return;
         const countryCodes = selectElement.data("countrycodes");
         const currentCountry = selectElement.data("country");
@@ -711,7 +711,7 @@ $(function () {
     $("#captchaRow").hide();
     $("#loginCaptchaId").val("");
 
-    $("#config-login-form").on("submit", function(e) {
+    $("#config-login-form").on("submit", function (e) {
         e.preventDefault();
 
         (async () => {
@@ -777,7 +777,7 @@ $(function () {
     /**
      * Printer Control Logic
      */
-    const PRINT_CONTROLS_VISIBLE = false;
+    const PRINT_CONTROLS_VISIBLE = document.body.dataset.printControls === "true";
     function sendPrinterGCode(gcode) {
         if (!gcode) return;
         console.log("Sending GCode:", gcode);
@@ -805,16 +805,16 @@ $(function () {
 
     const getStepDist = () => $('input[name="step-dist"]:checked').val() || "1";
 
-    $("#move-x-plus").on("click", function() { sendPrinterGCode(`G91\nG0 X${getStepDist()} F3000\nG90`); return false; });
-    $("#move-x-minus").on("click", function() { sendPrinterGCode(`G91\nG0 X-${getStepDist()} F3000\nG90`); return false; });
-    $("#move-y-plus").on("click", function() { sendPrinterGCode(`G91\nG0 Y${getStepDist()} F3000\nG90`); return false; });
-    $("#move-y-minus").on("click", function() { sendPrinterGCode(`G91\nG0 Y-${getStepDist()} F3000\nG90`); return false; });
-    $("#move-z-plus").on("click", function() { sendPrinterGCode(`G91\nG0 Z${getStepDist()} F600\nG90`); return false; });
-    $("#move-z-minus").on("click", function() { sendPrinterGCode(`G91\nG0 Z-${getStepDist()} F600\nG90`); return false; });
+    $("#move-x-plus").on("click", function () { sendPrinterGCode(`G91\nG0 X${getStepDist()} F3000\nG90`); return false; });
+    $("#move-x-minus").on("click", function () { sendPrinterGCode(`G91\nG0 X-${getStepDist()} F3000\nG90`); return false; });
+    $("#move-y-plus").on("click", function () { sendPrinterGCode(`G91\nG0 Y${getStepDist()} F3000\nG90`); return false; });
+    $("#move-y-minus").on("click", function () { sendPrinterGCode(`G91\nG0 Y-${getStepDist()} F3000\nG90`); return false; });
+    $("#move-z-plus").on("click", function () { sendPrinterGCode(`G91\nG0 Z${getStepDist()} F600\nG90`); return false; });
+    $("#move-z-minus").on("click", function () { sendPrinterGCode(`G91\nG0 Z-${getStepDist()} F600\nG90`); return false; });
 
-    $("#control-home-xy").on("click", function() { sendPrinterGCode("G28 X Y"); return false; });
-    $("#control-home-z").on("click", function() { sendPrinterGCode("G28 Z"); return false; });
-    $("#control-home-all").on("click", function() { sendPrinterGCode("G28"); return false; });
+    $("#control-home-xy").on("click", function () { sendPrinterGCode("G28 X Y"); return false; });
+    $("#control-home-z").on("click", function () { sendPrinterGCode("G28 Z"); return false; });
+    $("#control-home-all").on("click", function () { sendPrinterGCode("G28"); return false; });
 
     /**
      * Auto-Leveling
@@ -842,21 +842,21 @@ $(function () {
     /**
      * Temperature Control Logic
      */
-    $("#set-nozzle-temp").on("change", function() {
+    $("#set-nozzle-temp").on("change", function () {
         const temp = $(this).val();
         if (temp !== "") {
             sendPrinterGCode(`M104 S${temp}`);
         }
     });
 
-    $("#set-bed-temp").on("change", function() {
+    $("#set-bed-temp").on("change", function () {
         const temp = $(this).val();
         if (temp !== "") {
             sendPrinterGCode(`M140 S${temp}`);
         }
     });
 
-    $(".preheat-preset").on("click", function() {
+    $(".preheat-preset").on("click", function () {
         const nozzle = $(this).attr("data-nozzle");
         const bed = $(this).attr("data-bed");
         sendPrinterGCode(`M104 S${nozzle}\nM140 S${bed}`);
@@ -865,18 +865,18 @@ $(function () {
 
     if (PRINT_CONTROLS_VISIBLE) {
         document.body.classList.remove("print-controls-hidden");
-        $("#print-pause").on("click", function() {
+        $("#print-pause").on("click", function () {
             sendPrintControl(PRINT_CONTROL.PAUSE);
             sendPrinterGCode("M25");
             return false;
         });
-        $("#print-resume").on("click", function() {
+        $("#print-resume").on("click", function () {
             sendPrintControl(PRINT_CONTROL.RESUME);
             sendPrinterGCode("M24");
             return false;
         });
-        $("#print-stop").on("click", function() {
-            if(confirm("Are you sure you want to stop the print? This will also turn off heaters.")) {
+        $("#print-stop").on("click", function () {
+            if (confirm("Are you sure you want to stop the print? This will also turn off heaters.")) {
                 sendPrintControl(PRINT_CONTROL.STOP);
                 sendPrinterGCode("M25\nM104 S0\nM140 S0\nM106 S0\nM524\nM77");
             }

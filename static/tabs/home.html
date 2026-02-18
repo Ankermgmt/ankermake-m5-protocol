@@ -1,23 +1,13 @@
-<div
-    class="tab-pane fade{% if configure %} show active{% endif %}"
-    id="home"
-    role="tabpanel"
-    aria-labelledby="home-tab"
->
+<div class="tab-pane fade{% if configure %} show active{% endif %}" id="home" role="tabpanel"
+    aria-labelledby="home-tab">
     <div class="container">
         <div class="row g-3">
             <div class="col-md-12 col-lg-6 col-xl-8">
                 {% if video_supported %}
                 <!-- Video Container -->
                 <div id="vplayer" style="display: none;">
-                    <video
-                        class="w-100 d-block rounded-3 bg-body-tertiary"
-                        playsinline
-                        autoplay
-                        muted
-                        id="player"
-                        poster="{{ url_for('static', filename='img/load-screen.svg') }}"
-                    >
+                    <video class="w-100 d-block rounded-3 bg-body-tertiary" playsinline autoplay muted id="player"
+                        poster="{{ url_for('static', filename='img/load-screen.svg') }}">
                     </video>
                 </div>
                 <div id="video-toggle-container" class="text-center mb-3">
@@ -43,23 +33,31 @@
                                 <div class="fw-bold mb-3 small text-muted">XY Axis (Bed / Extruder)</div>
                                 <div class="d-inline-block position-relative" style="width: 160px; height: 160px;">
                                     <!-- Y+ (Bed Back) -->
-                                    <button class="btn btn-secondary position-absolute top-0 start-50 translate-middle-x" id="move-y-plus" style="width: 50px; height: 45px;" title="Bed Back">
+                                    <button
+                                        class="btn btn-secondary position-absolute top-0 start-50 translate-middle-x"
+                                        id="move-y-plus" style="width: 50px; height: 45px;" title="Bed Back">
                                         {{ macro.bi_icon("chevron-up") }}
                                     </button>
                                     <!-- Y- (Bed Front) -->
-                                    <button class="btn btn-secondary position-absolute bottom-0 start-50 translate-middle-x" id="move-y-minus" style="width: 50px; height: 45px;" title="Bed Front">
+                                    <button
+                                        class="btn btn-secondary position-absolute bottom-0 start-50 translate-middle-x"
+                                        id="move-y-minus" style="width: 50px; height: 45px;" title="Bed Front">
                                         {{ macro.bi_icon("chevron-down") }}
                                     </button>
                                     <!-- X- (Extruder Left) -->
-                                    <button class="btn btn-secondary position-absolute top-50 start-0 translate-middle-y" id="move-x-minus" style="width: 50px; height: 45px;" title="Extruder Left">
+                                    <button
+                                        class="btn btn-secondary position-absolute top-50 start-0 translate-middle-y"
+                                        id="move-x-minus" style="width: 50px; height: 45px;" title="Extruder Left">
                                         {{ macro.bi_icon("chevron-left") }}
                                     </button>
                                     <!-- X+ (Extruder Right) -->
-                                    <button class="btn btn-secondary position-absolute top-50 end-0 translate-middle-y" id="move-x-plus" style="width: 50px; height: 45px;" title="Extruder Right">
+                                    <button class="btn btn-secondary position-absolute top-50 end-0 translate-middle-y"
+                                        id="move-x-plus" style="width: 50px; height: 45px;" title="Extruder Right">
                                         {{ macro.bi_icon("chevron-right") }}
                                     </button>
                                     <!-- Home XY -->
-                                    <button class="btn btn-primary position-absolute top-50 start-50 translate-middle" id="control-home-xy" style="width: 50px; height: 45px;" title="Home XY">
+                                    <button class="btn btn-primary position-absolute top-50 start-50 translate-middle"
+                                        id="control-home-xy" style="width: 50px; height: 45px;" title="Home XY">
                                         {{ macro.bi_icon("house") }}
                                     </button>
                                 </div>
@@ -67,17 +65,21 @@
                             <!-- Z Control -->
                             <div class="col-md-6 text-center">
                                 <div class="fw-bold mb-3 small text-muted">Z Axis (Height)</div>
-                                <div class="d-inline-flex flex-column gap-2 align-items-center justify-content-center" style="height: 160px;">
+                                <div class="d-inline-flex flex-column gap-2 align-items-center justify-content-center"
+                                    style="height: 160px;">
                                     <!-- Z+ (Extruder Up) -->
-                                    <button class="btn btn-secondary" id="move-z-plus" style="width: 60px; height: 50px;" title="Extruder Up">
+                                    <button class="btn btn-secondary" id="move-z-plus"
+                                        style="width: 60px; height: 50px;" title="Extruder Up">
                                         {{ macro.bi_icon("chevron-double-up") }}
                                     </button>
                                     <!-- Home Z -->
-                                    <button class="btn btn-primary" id="control-home-z" style="width: 60px; height: 45px;" title="Home Z">
+                                    <button class="btn btn-primary" id="control-home-z"
+                                        style="width: 60px; height: 45px;" title="Home Z">
                                         {{ macro.bi_icon("house") }}
                                     </button>
                                     <!-- Z- (Extruder Down) -->
-                                    <button class="btn btn-secondary" id="move-z-minus" style="width: 60px; height: 50px;" title="Extruder Down">
+                                    <button class="btn btn-secondary" id="move-z-minus"
+                                        style="width: 60px; height: 50px;" title="Extruder Down">
                                         {{ macro.bi_icon("chevron-double-down") }}
                                     </button>
                                 </div>
@@ -87,7 +89,8 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="btn-group w-100" role="group" aria-label="Step Distance">
-                                    <input type="radio" class="btn-check" name="step-dist" id="step-1" value="1" checked>
+                                    <input type="radio" class="btn-check" name="step-dist" id="step-1" value="1"
+                                        checked>
                                     <label class="btn btn-outline-primary" for="step-1">1mm</label>
                                     <input type="radio" class="btn-check" name="step-dist" id="step-10" value="10">
                                     <label class="btn btn-outline-primary" for="step-10">10mm</label>
@@ -131,14 +134,9 @@
                     {% endif %}
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <span class="fs-6">Upload Progress</span>
-                        <button
-                            class="btn btn-sm btn-outline-secondary collapse-toggle"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#upload-progress-section"
-                            aria-expanded="true"
-                            aria-controls="upload-progress-section"
-                        >
+                        <button class="btn btn-sm btn-outline-secondary collapse-toggle" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#upload-progress-section" aria-expanded="true"
+                            aria-controls="upload-progress-section">
                             {{ macro.bi_icon("chevron-down") }}
                         </button>
                     </div>
@@ -147,16 +145,9 @@
                             <div class="row g-3">
                                 <div class="col-12">
                                     <div class="progress position-relative" id="uploadProgress">
-                                        <div
-                                            class="progress-bar progress-bar-striped progress-bar-animated fs-6"
-                                            role="progressbar"
-                                            id="upload-progressbar"
-                                            title="Upload Progress"
-                                            aria-valuenow="0"
-                                            aria-valuemin="0"
-                                            aria-valuemax="100"
-                                            style="width: 0%"
-                                        >
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated fs-6"
+                                            role="progressbar" id="upload-progressbar" title="Upload Progress"
+                                            aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
                                             <span id="upload-progress" class="position-absolute w-100 fw-bold">
                                                 0%
                                             </span>
@@ -170,14 +161,9 @@
                     {% if video_supported %}
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <span class="fs-6">Video Controls</span>
-                        <button
-                            class="btn btn-sm btn-outline-secondary collapse-toggle"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#video-controls-section"
-                            aria-expanded="true"
-                            aria-controls="video-controls-section"
-                        >
+                        <button class="btn btn-sm btn-outline-secondary collapse-toggle" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#video-controls-section" aria-expanded="true"
+                            aria-controls="video-controls-section">
                             {{ macro.bi_icon("chevron-down") }}
                         </button>
                     </div>
@@ -202,12 +188,10 @@
                                         {% for profile in video_profiles %}
                                         {% if profile.live %}
                                         <div class="col-6">
-                                            <button
-                                                type="button"
+                                            <button type="button"
                                                 class="w-100 btn btn-secondary video-profile-btn{% if video_profile_default == profile.id %} active{% endif %}"
                                                 data-video-profile="{{ profile.id }}"
-                                                aria-pressed="{% if video_profile_default == profile.id %}true{% else %}false{% endif %}"
-                                            >
+                                                aria-pressed="{% if video_profile_default == profile.id %}true{% else %}false{% endif %}">
                                                 {{ profile.label }}
                                             </button>
                                         </div>
@@ -227,12 +211,8 @@
                             <div class="col-12">
                                 <div class="input-group">
                                     <div class="input-group-text print-info-label" id="printName">Name</div>
-                                    <span
-                                        id="print-name"
-                                        class="form-control"
-                                        title="Print Name"
-                                        aria-describedby="printName"
-                                    >
+                                    <span id="print-name" class="form-control" title="Print Name"
+                                        aria-describedby="printName">
                                     </span>
                                 </div>
                             </div>
@@ -243,19 +223,12 @@
                                     <div class="input-group-text d-none d-sm-block">
                                         <i class="icon icon-hotend"></i>
                                     </div>
-                                    <span
-                                        id="nozzle-temp"
-                                        class="form-control text-center bg-body-tertiary px-1"
-                                        title="Current Nozzle"
-                                    >
+                                    <span id="nozzle-temp" class="form-control text-center bg-body-tertiary px-1"
+                                        title="Current Nozzle">
                                         0°C
                                     </span>
-                                    <input
-                                        type="number"
-                                        id="set-nozzle-temp"
-                                        class="form-control text-center px-1"
-                                        value="0"
-                                    />
+                                    <input type="number" id="set-nozzle-temp" class="form-control text-center px-1"
+                                        value="0" />
                                     <span class="input-group-text">°C</span>
                                 </div>
                             </div>
@@ -264,35 +237,32 @@
                                     <div class="input-group-text d-none d-sm-block">
                                         <i class="icon icon-bed"></i>
                                     </div>
-                                    <span
-                                        id="bed-temp"
-                                        class="form-control text-center bg-body-tertiary px-1"
-                                        title="Current Bed"
-                                    >
+                                    <span id="bed-temp" class="form-control text-center bg-body-tertiary px-1"
+                                        title="Current Bed">
                                         0°C
                                     </span>
-                                    <input
-                                        type="number"
-                                        id="set-bed-temp"
-                                        class="form-control text-center px-1"
-                                        value="0"
-                                    />
+                                    <input type="number" id="set-bed-temp" class="form-control text-center px-1"
+                                        value="0" />
                                     <span class="input-group-text">°C</span>
                                 </div>
                             </div>
                         </div>
                         <div class="row mb-3 g-2 justify-content-center">
                             <div class="col-auto">
-                                <button type="button" class="btn btn-sm btn-outline-info preheat-preset" data-nozzle="200" data-bed="60">PLA</button>
+                                <button type="button" class="btn btn-sm btn-outline-info preheat-preset"
+                                    data-nozzle="200" data-bed="60">PLA</button>
                             </div>
                             <div class="col-auto">
-                                <button type="button" class="btn btn-sm btn-outline-info preheat-preset" data-nozzle="240" data-bed="80">PETG</button>
+                                <button type="button" class="btn btn-sm btn-outline-info preheat-preset"
+                                    data-nozzle="240" data-bed="80">PETG</button>
                             </div>
                             <div class="col-auto">
-                                <button type="button" class="btn btn-sm btn-outline-info preheat-preset" data-nozzle="250" data-bed="100">ABS</button>
+                                <button type="button" class="btn btn-sm btn-outline-info preheat-preset"
+                                    data-nozzle="250" data-bed="100">ABS</button>
                             </div>
                             <div class="col-auto">
-                                <button type="button" class="btn btn-sm btn-outline-danger preheat-preset" data-nozzle="0" data-bed="0">Cooldown</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger preheat-preset"
+                                    data-nozzle="0" data-bed="0">Cooldown</button>
                             </div>
                         </div>
                         <div class="row mb-3 g-3">
@@ -301,12 +271,8 @@
                                     <div class="input-group-text print-info-label" id="timeElapsed">
                                         <i class="icon icon-time-passed"></i>
                                     </div>
-                                    <span
-                                        id="time-elapsed"
-                                        class="form-control text-center"
-                                        title="Time Elapsed"
-                                        aria-describedby="timeElapsed"
-                                    >
+                                    <span id="time-elapsed" class="form-control text-center" title="Time Elapsed"
+                                        aria-describedby="timeElapsed">
                                         00:00:00
                                     </span>
                                 </div>
@@ -316,12 +282,8 @@
                                     <div class="input-group-text print-info-label" id="timeRemain">
                                         <i class="icon icon-time-remaining"></i>
                                     </div>
-                                    <span
-                                        id="time-remain"
-                                        class="form-control text-center"
-                                        title="Time Remaining"
-                                        aria-describedby="timeRemain"
-                                    >
+                                    <span id="time-remain" class="form-control text-center" title="Time Remaining"
+                                        aria-describedby="timeRemain">
                                         00:00:00
                                     </span>
                                 </div>
@@ -330,16 +292,9 @@
                         <div class="row mb-3 g-3">
                             <div class="col-12">
                                 <div class="progress position-relative" id="printProgress">
-                                    <div
-                                        class="progress-bar progress-bar-striped progress-bar-animated fs-5"
-                                        role="progressbar"
-                                        id="progressbar"
-                                        title="Progress Bar"
-                                        aria-valuenow="0"
-                                        aria-valuemin="0"
-                                        aria-valuemax="100"
-                                        style="width: 0%"
-                                    >
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated fs-5"
+                                        role="progressbar" id="progressbar" title="Progress Bar" aria-valuenow="0"
+                                        aria-valuemin="0" aria-valuemax="100" style="width: 0%">
                                         <span id="progress" class="position-absolute w-100 fw-bold">
                                             0%
                                         </span>
@@ -347,13 +302,15 @@
                                 </div>
                             </div>
                         </div>
+                        {% if print_controls_enabled %}
                         <div class="row mb-3 g-3">
                             <div class="col-12 text-center">
                                 <div class="btn-group" role="group">
                                     <button type="button" class="btn btn-warning" id="print-pause" title="Pause Print">
                                         {{ macro.bi_icon("pause-fill") }} Pause
                                     </button>
-                                    <button type="button" class="btn btn-success" id="print-resume" title="Resume Print">
+                                    <button type="button" class="btn btn-success" id="print-resume"
+                                        title="Resume Print">
                                         {{ macro.bi_icon("play-fill") }} Resume
                                     </button>
                                     <button type="button" class="btn btn-danger" id="print-stop" title="Stop Print">
@@ -362,18 +319,15 @@
                                 </div>
                             </div>
                         </div>
+                        {% endif %}
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="input-group">
                                     <div class="input-group-text print-info-label" id="printLayer">
                                         {{ macro.bi_icon("layers-half") }}
                                     </div>
-                                    <span
-                                        id="print-layer"
-                                        class="form-control text-center"
-                                        title="Print Layers"
-                                        aria-describedby="printLayer"
-                                    >
+                                    <span id="print-layer" class="form-control text-center" title="Print Layers"
+                                        aria-describedby="printLayer">
                                         0/0
                                     </span>
                                 </div>
@@ -383,12 +337,8 @@
                                     <div class="input-group-text print-info-label" id="printSpeed">
                                         {{ macro.bi_icon("speedometer") }}
                                     </div>
-                                    <span
-                                        id="print-speed"
-                                        class="form-control text-center small"
-                                        title="Print Speed"
-                                        aria-describedby="printSpeed"
-                                    >
+                                    <span id="print-speed" class="form-control text-center small" title="Print Speed"
+                                        aria-describedby="printSpeed">
                                         0mm/s
                                     </span>
                                 </div>
