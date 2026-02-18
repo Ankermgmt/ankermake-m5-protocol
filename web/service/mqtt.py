@@ -16,6 +16,8 @@ from libflagship.notifications.events import (
 import cli.mqtt
 from ..notifications import AppriseNotifier, format_duration
 from .history import PrintHistory
+from .timelapse import TimelapseService
+from .homeassistant import HomeAssistantService
 
 
 class MqttQueue(Service):
@@ -24,6 +26,19 @@ class MqttQueue(Service):
         self._notifier = AppriseNotifier(app.config["config"])
         config_root = str(app.config["config"].config_root)
         self._history = PrintHistory(db_path=f"{config_root}/history.db")
+        self._timelapse = TimelapseService()
+
+        # Home Assistant MQTT Discovery
+        printer_sn = None
+        printer_name = None
+        with app.config["config"].open() as cfg:
+            if cfg and cfg.printers:
+                printer = cfg.printers[app.config["printer_index"]]
+                printer_sn = getattr(printer, "sn", None)
+                printer_name = getattr(printer, "name", None) or "AnkerMake M5"
+        self._ha = HomeAssistantService(printer_sn=printer_sn, printer_name=printer_name)
+        self._ha.start()
+
         self._reset_print_state()
 
     def worker_start(self):
@@ -33,6 +48,7 @@ class MqttQueue(Service):
             app.config["insecure"]
         )
         self._reset_print_state()
+        self._ha.update_state(mqtt_connected=True)
 
     def _reset_print_state(self):
         self._print_active = False
@@ -53,6 +69,14 @@ class MqttQueue(Service):
     def history(self):
         return self._history
 
+    @property
+    def timelapse(self):
+        return self._timelapse
+
+    @property
+    def ha(self):
+        return self._ha
+
     def worker_run(self, timeout):
         for msg, body in self.client.fetch(timeout=timeout):
             log.info(f"TOPIC [{msg.topic}]")
@@ -60,9 +84,11 @@ class MqttQueue(Service):
 
             for obj in body:
                 self.notify(obj)
+                self._forward_to_ha(obj)
                 self._handle_notification(obj)
 
     def worker_stop(self):
+        self._ha.update_state(mqtt_connected=False)
         del self.client
 
     @staticmethod
@@ -191,6 +217,78 @@ class MqttQueue(Service):
                 return value.strip().lower()
         return None
 
+    def _forward_to_ha(self, payload):
+        """Forward relevant MQTT data to the Home Assistant service."""
+        if not isinstance(payload, dict) or not self._ha.enabled:
+            return
+
+        command_type = payload.get("commandType")
+        ha_updates = {}
+
+        # Nozzle temperature (command 1003 = 0x03eb)
+        if command_type == MqttMsgType.ZZ_MQTT_CMD_NOZZLE_TEMP:
+            current = self._safe_int(payload.get("currentTemp") or payload.get("value"))
+            target = self._safe_int(payload.get("targetTemp") or payload.get("target"))
+            if current is not None:
+                # Temps may come in 1/100th degree units
+                ha_updates["nozzle_temp"] = current // 100 if current > 1000 else current
+            if target is not None:
+                ha_updates["nozzle_temp_target"] = target // 100 if target > 1000 else target
+
+        # Bed temperature (command 1004 = 0x03ec)
+        elif command_type == MqttMsgType.ZZ_MQTT_CMD_HOTBED_TEMP:
+            current = self._safe_int(payload.get("currentTemp") or payload.get("value"))
+            target = self._safe_int(payload.get("targetTemp") or payload.get("target"))
+            if current is not None:
+                ha_updates["bed_temp"] = current // 100 if current > 1000 else current
+            if target is not None:
+                ha_updates["bed_temp_target"] = target // 100 if target > 1000 else target
+
+        # Print speed (command 1006 = 0x03ee)
+        elif command_type == MqttMsgType.ZZ_MQTT_CMD_PRINT_SPEED:
+            speed = self._safe_int(payload.get("value") or payload.get("speed"))
+            if speed is not None:
+                ha_updates["print_speed"] = speed
+
+        # Layer info (command 1052 = 0x041c)
+        elif command_type == MqttMsgType.ZZ_MQTT_CMD_MODEL_LAYER:
+            layer = payload.get("value") or payload.get("layer") or payload.get("currentLayer")
+            total_layers = payload.get("totalLayer") or payload.get("total")
+            if layer is not None:
+                layer_str = str(layer)
+                if total_layers is not None:
+                    layer_str = f"{layer}/{total_layers}"
+                ha_updates["print_layer"] = layer_str
+
+        # Print schedule / event notify — extract progress, filename, times
+        elif command_type in (
+            MqttMsgType.ZZ_MQTT_CMD_PRINT_SCHEDULE,
+            MqttMsgType.ZZ_MQTT_CMD_EVENT_NOTIFY,
+        ):
+            progress = self._extract_progress(payload)
+            if progress is not None:
+                ha_updates["print_progress"] = progress
+
+            filename = self._extract_filename(payload)
+            if filename:
+                ha_updates["print_filename"] = filename
+
+            elapsed = self._extract_time(payload, ("totalTime", "elapsed", "elapsedTime"))
+            remaining = self._extract_time(payload, ("time", "remainTime", "remaining", "remainingTime"))
+            if elapsed is not None:
+                ha_updates["time_elapsed"] = elapsed
+            if remaining is not None:
+                ha_updates["time_remaining"] = remaining
+
+            # Derive print status
+            if self._print_active:
+                ha_updates["print_status"] = "printing"
+            elif progress is not None and progress >= 100:
+                ha_updates["print_status"] = "complete"
+
+        if ha_updates:
+            self._ha.update_state(**ha_updates)
+
     def _handle_notification(self, payload):
         if not isinstance(payload, dict):
             return
@@ -252,6 +350,8 @@ class MqttQueue(Service):
                 self._build_payload(payload, progress, failure_reason=failure_reason),
             )
             self._history.record_fail(filename=self._last_filename, reason=failure_reason)
+            self._timelapse.fail_capture()
+            self._ha.update_state(print_status="failed")
             self._failure_sent = True
             self._print_active = False
             return
@@ -266,6 +366,8 @@ class MqttQueue(Service):
                 self._build_payload(payload, progress),
             )
             self._history.record_start(filename or "unknown")
+            self._timelapse.start_capture(filename or "unknown")
+            self._ha.update_state(print_status="printing")
 
         status_text = self._extract_status_text(payload)
         if self._print_active and status_text:
@@ -276,6 +378,8 @@ class MqttQueue(Service):
                     include_image=True,
                 )
                 self._history.record_finish(filename=self._last_filename)
+                self._timelapse.finish_capture()
+                self._ha.update_state(print_status="complete", print_progress=100)
                 self._reset_print_state()
                 return
 
@@ -286,6 +390,8 @@ class MqttQueue(Service):
                 include_image=True,
             )
             self._history.record_finish(filename=self._last_filename)
+            self._timelapse.finish_capture()
+            self._ha.update_state(print_status="complete", print_progress=100)
             self._reset_print_state()
             return
 

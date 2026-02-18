@@ -2,7 +2,7 @@
 
 This file contains the implementation plan for the remaining phases of the `ankerctl` feature roadmap, specifically Phase 6.
 
-6 features across 6 phases. Phases 1–5 are **COMPLETE**. Phase 6 is **PENDING**.
+6 features across 6 phases. All phases are **COMPLETE**.
 
 ---
 
@@ -37,52 +37,43 @@ This file contains the implementation plan for the remaining phases of the `anke
 
 ---
 
-## Phase 6 — Home Assistant MQTT Discovery (PENDING)
+## Phase 6 — Home Assistant MQTT Discovery (COMPLETED)
 
-### Goal
- Integrate with Home Assistant via MQTT Discovery, allowing the printer to appear as a device with sensors, camera, and controls in HA.
+### Implementation
 
-### New files
+- **New file:** `web/service/homeassistant.py` — HA MQTT Discovery service
+- **Modified:** `web/service/mqtt.py` — forwards printer data to HA service
+- **Modified:** `.env.example` — new HA environment variables
 
-#### [NEW] [web/service/homeassistant.py](file:///home/django01/Development/ankermake-m5-protocol/ankermake-m5-protocol/web/service/homeassistant.py)
+### Architecture
 
-HA MQTT Discovery service:
+- Connects to an external MQTT broker (HA's Mosquitto), separate from the printer's internal MQTT
+- Publishes HA MQTT Discovery config payloads for automatic entity creation
+- State published as retained JSON to `ankerctl/<printer_sn>/state`
+- Uses LWT (Last Will and Testament) for automatic offline detection
+- Light switch is bidirectional: HA can control the printer light
 
-- Connect to HA MQTT broker (separate from printer MQTT)
-- Publish discovery config messages to `<discovery_prefix>/sensor|camera|switch|binary_sensor/<node_id>/<object_id>/config`
-- Periodically publish state updates to `ankerctl/<printer_sn>/state`
-- Entities: see table below
-- On shutdown: publish empty config to remove entities (or set `availability` to offline)
+### Entities
 
-**Entities:**
+| Entity ID | HA Type | Source |
+|-----------|---------|--------|
+| `print_progress` | `sensor` (%) | Command 0x03e9 |
+| `print_status` | `sensor` (enum) | Derived |
+| `nozzle_temp` | `sensor` (°C) | Command 0x03eb |
+| `nozzle_temp_target` | `sensor` (°C) | Command 0x03eb |
+| `bed_temp` | `sensor` (°C) | Command 0x03ec |
+| `bed_temp_target` | `sensor` (°C) | Command 0x03ec |
+| `print_speed` | `sensor` (mm/s) | Command 0x03ee |
+| `print_layer` | `sensor` | Command 0x041c |
+| `print_filename` | `sensor` | Command 0x03e9 |
+| `time_elapsed` | `sensor` (s) | Command 0x03e9 |
+| `time_remaining` | `sensor` (s) | Command 0x03e9 |
+| `camera` | `camera` | MQTT image topic |
+| `light` | `switch` | Command topic |
+| `mqtt_connected` | `binary_sensor` | Internal |
+| `pppp_connected` | `binary_sensor` | Internal |
 
-| Entity ID | HA Type | MQTT commandType |
-|-----------|---------|-----------------|
-| `print_progress` | `sensor` (%) | 1001 |
-| `print_status` | `sensor` (enum) | derived |
-| `nozzle_temp` | `sensor` (°C) | 1003 |
-| `nozzle_temp_target` | `sensor` (°C) | 1003 |
-| `bed_temp` | `sensor` (°C) | 1004 |
-| `bed_temp_target` | `sensor` (°C) | 1004 |
-| `print_speed` | `sensor` (mm/s) | 1006 |
-| `print_layer` | `sensor` | 1052 |
-| `print_filename` | `sensor` | 1001 |
-| `time_elapsed` | `sensor` | 1001 |
-| `time_remaining` | `sensor` | 1001 |
-| `camera` | `camera` | MJPEG stream URL |
-| `light` | `switch` | GCode M106/M107 |
-| `mqtt_connected` | `binary_sensor` | internal |
-| `pppp_connected` | `binary_sensor` | internal |
-
-#### [MODIFY] [web/service/mqtt.py](file:///home/django01/Development/ankermake-m5-protocol/ankermake-m5-protocol/web/service/mqtt.py)
-
-Forward parsed MQTT data to HA service for state publishing.
-
-#### [MODIFY] [__init__.py](file:///home/django01/Development/ankermake-m5-protocol/ankermake-m5-protocol/web/__init__.py)
-
-Register HA service, conditionally started based on env vars.
-
-### New env vars
+### Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
