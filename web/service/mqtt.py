@@ -360,3 +360,10 @@ class MqttQueue(Service):
             "value": int(value)
         }
         self.client.command(cmd)
+
+    def send_auto_leveling(self):
+        cmd = {
+            "commandType": MqttMsgType.ZZ_MQTT_CMD_AUTO_LEVELING.value,
+            "value": 0
+        }
+        self.client.command(cmd)

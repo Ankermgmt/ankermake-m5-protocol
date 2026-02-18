@@ -817,6 +817,29 @@ $(function () {
     $("#control-home-all").on("click", function() { sendPrinterGCode("G28"); return false; });
 
     /**
+     * Auto-Leveling
+     */
+    $("#auto-level-btn").on("click", async function () {
+        if (!confirm("Start Auto-Leveling? Make sure the print bed is clear.")) return;
+        const btn = $(this);
+        btn.prop("disabled", true).html('<i class="bi bi-hourglass-split"></i> Leveling...');
+        try {
+            const resp = await fetch("/api/printer/autolevel", { method: "POST" });
+            if (resp.ok) {
+                flash_message("Auto-Leveling started — the printer will now probe the bed.", "success");
+            } else {
+                const data = await resp.json().catch(() => ({}));
+                const msg = data.error ? data.error : `HTTP ${resp.status}`;
+                flash_message(`Auto-Leveling failed: ${msg}`, "danger");
+            }
+        } catch (err) {
+            flash_message(`Auto-Leveling failed: ${err}`, "danger");
+        } finally {
+            btn.prop("disabled", false).html('<i class="bi bi-rulers"></i> Start Auto-Level');
+        }
+    });
+
+    /**
      * Temperature Control Logic
      */
     $("#set-nozzle-temp").on("change", function() {
