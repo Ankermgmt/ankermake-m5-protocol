@@ -635,7 +635,7 @@ def app_api_settings_mqtt_update():
             getattr(cfg, "home_assistant", {}),
             cli.model.default_home_assistant_config()
         )
-        new_config = web.__init__._deep_update(current, ha_payload)
+        new_config = _deep_update(current, ha_payload)
         cfg.home_assistant = new_config
 
     # Reload service
@@ -759,6 +759,8 @@ def app_api_history():
     limit = request.args.get("limit", 50, type=int)
     offset = request.args.get("offset", 0, type=int)
     with app.svc.borrow("mqttqueue") as mqtt:
+        if not mqtt:
+            return {"entries": [], "total": 0}
         entries = mqtt.history.get_history(limit=limit, offset=offset)
         total = mqtt.history.get_count()
     return {"entries": entries, "total": total}
