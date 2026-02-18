@@ -296,6 +296,7 @@ $(function () {
                 if (!$("#set-nozzle-temp").is(":focus")) {
                     $("#set-nozzle-temp").val(target);
                 }
+                pushTempData("nozzle", current, target);
             } else if (data.commandType == 1004) {
                 // Returns Bed Temp
                 const current = getTemp(data.currentTemp);
@@ -304,6 +305,7 @@ $(function () {
                 if (!$("#set-bed-temp").is(":focus")) {
                     $("#set-bed-temp").val(target);
                 }
+                pushTempData("bed", current, target);
             } else if (data.commandType == 1006) {
                 // Returns Print Speed
                 const X = getSpeedFactor(data.value);
@@ -975,6 +977,114 @@ $(function () {
     } else {
         document.body.classList.add("print-controls-hidden");
     }
+
+    /**
+     * Temperature Graph — client‑side ring buffer + Chart.js
+     */
+    const TEMP_BUFFER_MAX = 3600;  // 1h at 1 sample/sec
+    let tempWindowSec = 300;       // default 5m
+    const tempData = [];           // [{t: Date, nC, nT, bC, bT}]
+    let lastTempPush = 0;
+    let _pendingNozzle = { c: null, t: null };
+    let _pendingBed = { c: null, t: null };
+
+    function pushTempData(type, current, target) {
+        if (type === "nozzle") { _pendingNozzle = { c: current, t: target }; }
+        else if (type === "bed") { _pendingBed = { c: current, t: target }; }
+
+        const now = Date.now();
+        if (now - lastTempPush < 1000) return; // 1s throttle
+        lastTempPush = now;
+
+        if (_pendingNozzle.c === null && _pendingBed.c === null) return;
+
+        tempData.push({
+            t: new Date(),
+            nC: _pendingNozzle.c, nT: _pendingNozzle.t,
+            bC: _pendingBed.c, bT: _pendingBed.t,
+        });
+        if (tempData.length > TEMP_BUFFER_MAX) tempData.shift();
+    }
+
+    // Initialize Chart.js (only if available)
+    let tempChart = null;
+    const chartCanvas = document.getElementById("temp-chart");
+
+    if (typeof Chart !== "undefined" && chartCanvas) {
+        const ctx = chartCanvas.getContext("2d");
+        tempChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: "Nozzle",
+                        borderColor: "#ff6384",
+                        backgroundColor: "rgba(255,99,132,0.1)",
+                        data: [], fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2,
+                    },
+                    {
+                        label: "Nozzle Target",
+                        borderColor: "#ff6384",
+                        borderDash: [5, 5],
+                        data: [], fill: false, tension: 0, pointRadius: 0, borderWidth: 1,
+                    },
+                    {
+                        label: "Bed",
+                        borderColor: "#36a2eb",
+                        backgroundColor: "rgba(54,162,235,0.1)",
+                        data: [], fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2,
+                    },
+                    {
+                        label: "Bed Target",
+                        borderColor: "#36a2eb",
+                        borderDash: [5, 5],
+                        data: [], fill: false, tension: 0, pointRadius: 0, borderWidth: 1,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    x: {
+                        ticks: { color: "#aaa", maxTicksLimit: 8 },
+                        grid: { color: "rgba(255,255,255,0.05)" },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: "°C", color: "#aaa" },
+                        ticks: { color: "#aaa" },
+                        grid: { color: "rgba(255,255,255,0.08)" },
+                    },
+                },
+                plugins: {
+                    legend: { labels: { color: "#ccc", usePointStyle: true } },
+                },
+            },
+        });
+
+        // Refresh chart every 2s
+        setInterval(function () {
+            if (!tempChart || tempData.length === 0) return;
+            const cutoff = Date.now() - tempWindowSec * 1000;
+            const visible = tempData.filter(d => d.t.getTime() >= cutoff);
+            tempChart.data.labels = visible.map(d => d.t.toLocaleTimeString());
+            tempChart.data.datasets[0].data = visible.map(d => d.nC);
+            tempChart.data.datasets[1].data = visible.map(d => d.nT);
+            tempChart.data.datasets[2].data = visible.map(d => d.bC);
+            tempChart.data.datasets[3].data = visible.map(d => d.bT);
+            tempChart.update();
+        }, 2000);
+    }
+
+    // Time window selector
+    $(".temp-window").on("click", function () {
+        $(".temp-window").removeClass("active");
+        $(this).addClass("active");
+        tempWindowSec = parseInt($(this).data("window"), 10) || 300;
+    });
 
     /**
      * Print History Tab

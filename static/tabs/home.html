@@ -356,6 +356,30 @@
                     </div>
                 </div>
             </div>
+            <!-- Temperature Graph -->
+            <div class="card mt-3">
+                <div class="card-header fs-6 d-flex justify-content-between align-items-center"
+                    data-bs-toggle="collapse" data-bs-target="#temp-graph-section" role="button" aria-expanded="false"
+                    aria-controls="temp-graph-section">
+                    {{ macro.bi_icon("thermometer-half") }} Temperature Graph
+                    {{ macro.bi_icon("chevron-down") }}
+                </div>
+                <div class="collapse" id="temp-graph-section">
+                    <div class="card-body">
+                        <div class="btn-group btn-group-sm mb-2 w-100" role="group" aria-label="Time window">
+                            <button type="button" class="btn btn-outline-secondary temp-window active"
+                                data-window="300">5m</button>
+                            <button type="button" class="btn btn-outline-secondary temp-window"
+                                data-window="900">15m</button>
+                            <button type="button" class="btn btn-outline-secondary temp-window"
+                                data-window="1800">30m</button>
+                            <button type="button" class="btn btn-outline-secondary temp-window"
+                                data-window="3600">1h</button>
+                        </div>
+                        <canvas id="temp-chart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
             <!-- GCode Console -->
             <div class="card mt-3">
                 <div class="card-header fs-6 d-flex justify-content-between align-items-center"
