@@ -14,12 +14,11 @@ services:
         # printer, since it is an asymmetrical udp protocol.
         network_mode: host
 
-        # bind to localhost by default
-        environment:
-            - FLASK_HOST=127.0.0.1
-            - FLASK_PORT=4470
-            # Uncomment to enable API key authentication:
-            # - ANKERCTL_API_KEY=your-secret-key-here
+        # Load environment variables from .env file.
+        # Copy .env.example to .env and adjust values as needed.
+        env_file:
+            - .env
+
         volumes:
             - ankerctl_vol:/home/ankerctl/.config/ankerctl
 

@@ -9,3 +9,4 @@ secrets/
 captures
 captures/
 dump/
+.env

@@ -163,8 +163,8 @@ ankerctl supports optional API key authentication. When enabled, all web and API
 **Enable via Docker (environment variable):**
 
 ```yaml
-environment:
-    - ANKERCTL_API_KEY=my-secret-key
+# In .env (see .env.example)
+ANKERCTL_API_KEY=my-secret-key
 ```
 
 **Using the key:**
@@ -173,6 +173,41 @@ environment:
 - **Browser:** Append `?apikey=your-key` to the URL once — a session cookie is set automatically
 - **No key set** = no authentication (backwards compatible, default behavior)
 - The **WebUI is always readable** (status, video, etc.) — the key is only required for write operations (uploading files, sending gcode, controlling the printer)
+
+### Environment Variables
+
+ankerctl is configured via environment variables. For Docker deployments, copy `.env.example` to `.env` and adjust the values — Docker Compose loads them automatically.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| **Server** | | |
+| `FLASK_HOST` | `127.0.0.1` | IP address the web server binds to |
+| `FLASK_PORT` | `4470` | Port the web server listens on |
+| **Upload** | | |
+| `UPLOAD_MAX_MB` | `2048` | Maximum upload file size in MB |
+| `UPLOAD_RATE_MBPS` | `2` | Upload speed to printer in Mbit/s (2, 4, 6, or 8) |
+| **Security** | | |
+| `ANKERCTL_API_KEY` | *(unset)* | API key for write-operation authentication |
+| **Feature Flags** | | |
+| `ANKERCTL_PRINT_CONTROLS` | *(unset)* | Show Pause/Resume/Stop buttons (experimental) |
+| **Apprise Notifications** | | |
+| `APPRISE_ENABLED` | `false` | Enable Apprise notifications |
+| `APPRISE_SERVER_URL` | *(unset)* | Apprise API server URL |
+| `APPRISE_KEY` | *(unset)* | Apprise notification key/ID |
+| `APPRISE_TAG` | *(unset)* | Apprise tag filter |
+| `APPRISE_EVENT_PRINT_STARTED` | `true` | Notify on print start |
+| `APPRISE_EVENT_PRINT_FINISHED` | `true` | Notify on print finish |
+| `APPRISE_EVENT_PRINT_FAILED` | `true` | Notify on print failure |
+| `APPRISE_EVENT_GCODE_UPLOADED` | `true` | Notify on G-code upload |
+| `APPRISE_EVENT_PRINT_PROGRESS` | `true` | Notify on progress updates |
+| `APPRISE_PROGRESS_INTERVAL` | `25` | Progress notification interval (%) |
+| `APPRISE_PROGRESS_INCLUDE_IMAGE` | `false` | Attach camera snapshot to progress |
+| `APPRISE_PROGRESS_MAX` | `0` | Override progress scale (0 = auto) |
+| `APPRISE_SNAPSHOT_QUALITY` | `hd` | Snapshot quality: `sd` or `hd` |
+| `APPRISE_SNAPSHOT_FALLBACK` | `true` | Use G-code preview if live fails |
+| `APPRISE_SNAPSHOT_LIGHT` | `false` | Turn on printer light for snapshot |
+
+> **Tip:** See [`.env.example`](.env.example) for a ready-to-use template with all variables and comments.
 
 ### Notifications (Apprise)
 
