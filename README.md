@@ -214,6 +214,12 @@ ankerctl is configured via environment variables. For Docker deployments, copy `
 | **Print History** | | |
 | `PRINT_HISTORY_RETENTION_DAYS` | `90` | Number of days to keep history entries |
 | `PRINT_HISTORY_MAX_ENTRIES` | `500` | Maximum number of history entries to keep |
+| **Timelapse** | | |
+| `TIMELAPSE_ENABLED` | `false` | Enable automatic timelapse capture (requires ffmpeg) |
+| `TIMELAPSE_INTERVAL_SEC` | `30` | Seconds between snapshot captures |
+| `TIMELAPSE_MAX_VIDEOS` | `10` | Maximum number of timelapse videos to keep |
+| `TIMELAPSE_SAVE_PERSISTENT` | `true` | Save assembled videos persistently |
+| `TIMELAPSE_CAPTURES_DIR` | `/captures` | Directory for timelapse video storage |
 
 > **Tip:** See [`.env.example`](.env.example) for a ready-to-use template with all variables and comments.
 

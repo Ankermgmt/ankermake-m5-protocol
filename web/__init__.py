@@ -685,6 +685,35 @@ def app_api_history_clear():
     return {"status": "ok"}
 
 
+@app.get("/api/timelapses")
+def app_api_timelapses():
+    """List available timelapse videos."""
+    with app.svc.borrow("mqttqueue") as mqtt:
+        videos = mqtt.timelapse.list_videos()
+    return {"videos": videos, "enabled": mqtt.timelapse.enabled}
+
+
+@app.get("/api/timelapse/<filename>")
+def app_api_timelapse_download(filename):
+    """Download a timelapse video."""
+    from flask import send_file
+    with app.svc.borrow("mqttqueue") as mqtt:
+        path = mqtt.timelapse.get_video_path(filename)
+    if not path:
+        return {"error": "Video not found"}, 404
+    return send_file(path, mimetype="video/mp4", as_attachment=True, download_name=filename)
+
+
+@app.delete("/api/timelapse/<filename>")
+def app_api_timelapse_delete(filename):
+    """Delete a timelapse video."""
+    with app.svc.borrow("mqttqueue") as mqtt:
+        deleted = mqtt.timelapse.delete_video(filename)
+    if not deleted:
+        return {"error": "Video not found"}, 404
+    return {"status": "ok"}
+
+
 def register_services(app):
     app.svc.register("pppp", web.service.pppp.PPPPService())
     if app.config.get("video_supported"):

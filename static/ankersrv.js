@@ -1158,4 +1158,61 @@ $(function () {
             });
     });
 
+    /**
+     * Timelapse Gallery
+     */
+    function formatSize(bytes) {
+        if (!bytes) return "-";
+        const mb = bytes / (1024 * 1024);
+        return mb >= 1 ? `${mb.toFixed(1)} MB` : `${(bytes / 1024).toFixed(0)} KB`;
+    }
+
+    function loadTimelapses() {
+        fetch("/api/timelapses")
+            .then(r => r.json())
+            .then(data => {
+                if (!data.enabled) {
+                    $("#timelapse-card").hide();
+                    return;
+                }
+                $("#timelapse-card").show();
+                const list = $("#timelapse-list");
+                list.empty();
+                if (data.videos.length === 0) {
+                    list.html('<div class="list-group-item text-center text-muted py-4">No timelapse videos yet</div>');
+                    return;
+                }
+                data.videos.forEach(v => {
+                    const created = v.created_at ? new Date(v.created_at).toLocaleString() : "-";
+                    const item = $(`<div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${v.filename}</strong>
+                            <br><small class="text-muted">${created} · ${formatSize(v.size_bytes)}</small>
+                        </div>
+                        <div>
+                            <a href="/api/timelapse/${v.filename}" class="btn btn-sm btn-outline-primary me-1" download>
+                                <i class="bi bi-download"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger timelapse-delete" data-file="${v.filename}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>`);
+                    list.append(item);
+                });
+            })
+            .catch(err => console.error("Timelapse load failed:", err));
+    }
+
+    // Load timelapses when history tab is shown (alongside history)
+    $('button[data-bs-target="#history"]').on("shown.bs.tab", loadTimelapses);
+
+    // Delete timelapse
+    $(document).on("click", ".timelapse-delete", function () {
+        const file = $(this).data("file");
+        if (!confirm(`Delete timelapse ${file}?`)) return;
+        fetch(`/api/timelapse/${file}`, { method: "DELETE" })
+            .then(() => loadTimelapses());
+    });
+
 });
