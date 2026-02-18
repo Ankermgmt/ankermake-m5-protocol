@@ -128,6 +128,11 @@ Follow the instructions for a [git install](documentation/install-from-git.md) (
    Docker Installation Method:
 
    ```sh
+   # Build the image (match UID/GID to your host user)
+   docker build -t django01982/ankerctl:local --build-arg UID=$(id -u) --build-arg GID=$(id -g) .
+
+   # Copy .env.example to .env and adjust values, then start
+   cp .env.example .env
    docker compose up
    ```
 

@@ -3,12 +3,6 @@ services:
         image: django01982/ankerctl:local
         container_name: ankerctl
         restart: unless-stopped
-        build:
-            context: .
-            args:
-                # Override to match host user (e.g. UID=$(id -u) GID=$(id -g))
-                UID: 1000
-                GID: 1000
 
         # host-mode networking is required for pppp communication with the
         # printer, since it is an asymmetrical udp protocol.
