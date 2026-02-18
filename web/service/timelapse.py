@@ -18,7 +18,8 @@ _SNAPSHOT_TIMEOUT = 10
 class TimelapseService:
     """Captures periodic snapshots during a print and assembles a timelapse video."""
 
-    def __init__(self, config, captures_dir=None):
+    def __init__(self, config_manager, captures_dir=None):
+        self._config_manager = config_manager
         self._captures_dir = captures_dir or os.getenv("TIMELAPSE_CAPTURES_DIR", "/captures")
         os.makedirs(self._captures_dir, exist_ok=True)
 
@@ -28,20 +29,29 @@ class TimelapseService:
         self._current_dir = None
         self._current_filename = None
         self._frame_count = 0
-        
+
         # Set defaults to ensure attributes exist even if config is None
         self._enabled = False
         self._interval = _DEFAULT_INTERVAL_SEC
         self._max_videos = _DEFAULT_MAX_VIDEOS
         self._save_persistent = True
 
-        self.reload_config(config)
+        self.reload_config()
 
-    def reload_config(self, config):
-        """Update configuration from Config object."""
-        if not config or not config.timelapse:
+    def reload_config(self, config=None):
+        """Update configuration from Config object or ConfigManager."""
+        # If no config passed, use stored config_manager
+        if config is None:
+            config = self._config_manager
+
+        # If config is a ConfigManager (has .open() method), load the actual config
+        if config and hasattr(config, 'open'):
+            with config.open() as cfg:
+                config = cfg
+
+        if not config or not getattr(config, 'timelapse', None):
             return
-        
+
         cfg = config.timelapse
         self._enabled = cfg.get("enabled", False)
         self._interval = int(cfg.get("interval", _DEFAULT_INTERVAL_SEC))
@@ -135,7 +145,7 @@ class TimelapseService:
         if host in {"0.0.0.0", "::"}:
             host = "127.0.0.1"
         port = os.getenv("FLASK_PORT") or "4470"
-        url = f"http://{host}:{port}/video"
+        url = f"http://{host}:{port}/video?for_timelapse=1"
 
         frame_path = os.path.join(self._current_dir, f"frame_{self._frame_count:05d}.jpg")
         result = subprocess.run(

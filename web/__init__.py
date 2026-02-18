@@ -61,8 +61,9 @@ from cli.model import (
 
 
 app = Flask(__name__, root_path=ROOT_DIR, static_folder="static", template_folder="static")
-# secret_key is required for flash() to function
-app.secret_key = token(24)
+# secret_key is required for session cookies and flash() to function.
+# Use FLASK_SECRET_KEY env var for persistence across restarts; fall back to random.
+app.secret_key = os.getenv("FLASK_SECRET_KEY") or token(24)
 app.config.from_prefixed_env()
 app.svc = ServiceManager()
 
@@ -260,12 +261,14 @@ def video_download():
     """
     Handles the video streaming/downloading feature in the Flask app
     """
+    for_timelapse = request.args.get("for_timelapse") == "1"
+
     def generate():
         if not app.config["login"] or not app.config.get("video_supported"):
             return
         vq = app.svc.svcs.get("videoqueue")
         if vq:
-            if not getattr(vq, "video_enabled", False):
+            if not for_timelapse and not getattr(vq, "video_enabled", False):
                 return
             if vq.state == RunState.Stopped:
                 try:
@@ -592,7 +595,7 @@ def app_api_settings_timelapse_update():
             cli.model.default_timelapse_config()
         )
         # Deep update not strictly needed if structure is flat, but good practice
-        new_config = web.__init__._deep_update(current, tl_payload)
+        new_config = _deep_update(current, tl_payload)
         cfg.timelapse = new_config
 
     # Reload service
@@ -790,7 +793,7 @@ def app_api_timelapse_download(filename):
         path = mqtt.timelapse.get_video_path(filename)
     if not path:
         return {"error": "Video not found"}, 404
-    return send_file(path, mimetype="video/mp4", as_attachment=True, download_name=filename)
+    return send_file(path, mimetype="video/mp4", as_attachment=False, download_name=filename)
 
 
 @app.delete("/api/timelapse/<filename>")
@@ -879,6 +882,25 @@ def _check_api_key():
     if request.path.startswith("/static/"):
         return None
 
+    # Check ?apikey= URL parameter early (before GET shortcut) so it always
+    # sets the session cookie — even on unprotected GET requests.
+    url_key = request.args.get("apikey")
+    if url_key == api_key:
+        session["authenticated"] = True
+        # Strip ?apikey= from URL so it doesn't stay in browser history
+        from urllib.parse import urlencode, parse_qs, urlparse
+        from flask import redirect
+        params = parse_qs(urlparse(request.url).query)
+        params.pop("apikey", None)
+        clean_url = request.path
+        if params:
+            clean_url += "?" + urlencode(params, doseq=True)
+        return redirect(clean_url)
+
+    # Check X-Api-Key header (slicer / programmatic access)
+    if request.headers.get("X-Api-Key") == api_key:
+        return None
+
     # Allow read-only (GET/HEAD/OPTIONS) unless the path is explicitly protected
     if request.method in ("GET", "HEAD", "OPTIONS") and request.path not in _PROTECTED_GET_PATHS:
         return None
@@ -888,25 +910,6 @@ def _check_api_key():
         return None
 
     # --- From here on, auth is required ---
-
-    # Check X-Api-Key header (slicer / programmatic access)
-    if request.headers.get("X-Api-Key") == api_key:
-        return None
-
-    # Check ?apikey= URL parameter → set session cookie and redirect
-    url_key = request.args.get("apikey")
-    if url_key == api_key:
-        session["authenticated"] = True
-        # Remove apikey from URL to avoid it staying in browser history
-        from urllib.parse import urlencode, urlparse, parse_qs
-        parsed = urlparse(request.url)
-        params = parse_qs(parsed.query)
-        params.pop("apikey", None)
-        clean_url = request.path
-        if params:
-            clean_url += "?" + urlencode(params, doseq=True)
-        from flask import redirect
-        return redirect(clean_url)
 
     # Check session cookie (browser)
     if session.get("authenticated"):

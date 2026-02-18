@@ -1138,11 +1138,16 @@ $(function () {
             .catch(err => console.error("History load failed:", err));
     }
 
-    // Load on tab switch
-    $('button[data-bs-target="#history"]').on("shown.bs.tab", function () {
-        historyOffset = 0;
-        loadHistory(false);
-    });
+    // Load on tab switch — use native addEventListener because Cash.js splits
+    // "shown.bs.tab" at the dot and registers on event type "shown" instead of
+    // the full Bootstrap event type "shown.bs.tab".
+    const historyTabBtn = document.querySelector('button[data-bs-target="#history"]');
+    if (historyTabBtn) {
+        historyTabBtn.addEventListener("shown.bs.tab", function () {
+            historyOffset = 0;
+            loadHistory(false);
+        });
+    }
 
     $("#history-load-more").on("click", function () {
         historyOffset += HISTORY_LIMIT;
@@ -1171,41 +1176,45 @@ $(function () {
         fetch("/api/timelapses")
             .then(r => r.json())
             .then(data => {
-                if (!data.enabled) {
-                    $("#timelapse-card").hide();
-                    return;
-                }
-                $("#timelapse-card").show();
-                const list = $("#timelapse-list");
-                list.empty();
+                const banner = document.getElementById("timelapse-disabled-banner");
+                if (banner) banner.style.display = data.enabled ? "none" : "";
+
+                const gallery = $("#timelapse-gallery");
+                gallery.empty();
+
                 if (data.videos.length === 0) {
-                    list.html('<div class="list-group-item text-center text-muted py-4">No timelapse videos yet</div>');
+                    gallery.html('<div class="text-center text-muted py-4">No timelapse videos yet</div>');
                     return;
                 }
                 data.videos.forEach(v => {
                     const created = v.created_at ? new Date(v.created_at).toLocaleString() : "-";
-                    const item = $(`<div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>${v.filename}</strong>
-                            <br><small class="text-muted">${created} · ${formatSize(v.size_bytes)}</small>
+                    const item = $(`<div class="p-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <strong class="text-truncate me-2">${v.filename}</strong>
+                            <div class="flex-shrink-0">
+                                <a href="/api/timelapse/${v.filename}" class="btn btn-sm btn-outline-primary me-1" download title="Download">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger timelapse-delete" data-file="${v.filename}" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <a href="/api/timelapse/${v.filename}" class="btn btn-sm btn-outline-primary me-1" download>
-                                <i class="bi bi-download"></i>
-                            </a>
-                            <button class="btn btn-sm btn-outline-danger timelapse-delete" data-file="${v.filename}">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
+                        <video controls preload="none" class="w-100 rounded mb-1" style="max-height:360px;"
+                               src="/api/timelapse/${v.filename}"></video>
+                        <small class="text-muted">${created} · ${formatSize(v.size_bytes)}</small>
                     </div>`);
-                    list.append(item);
+                    gallery.append(item);
                 });
             })
             .catch(err => console.error("Timelapse load failed:", err));
     }
 
-    // Load timelapses when history tab is shown (alongside history)
-    $('button[data-bs-target="#history"]').on("shown.bs.tab", loadTimelapses);
+    // Load timelapses when the dedicated timelapse tab is shown
+    const timelapseTabBtn = document.querySelector('button[data-bs-target="#timelapse"]');
+    if (timelapseTabBtn) {
+        timelapseTabBtn.addEventListener("shown.bs.tab", loadTimelapses);
+    }
 
     // Delete timelapse
     $(document).on("click", ".timelapse-delete", function () {

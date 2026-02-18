@@ -1,0 +1,22 @@
+<div class="tab-pane fade" id="timelapse" role="tabpanel" aria-labelledby="timelapse-tab">
+    <div class="container-fluid mt-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div id="timelapse-disabled-banner" class="alert alert-warning mb-3" style="display:none;">
+                    {{ macro.bi_icon("exclamation-triangle") }}
+                    Timelapse is disabled. Enable it in <strong>Setup → Timelapse</strong>.
+                </div>
+                <div class="card">
+                    <div class="card-header fs-5">
+                        {{ macro.bi_icon("camera-reels") }} Timelapse Videos
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="timelapse-gallery">
+                            <div class="text-center text-muted py-4">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

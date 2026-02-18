@@ -10,6 +10,7 @@ ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
 {% include "tabs/home.html" %}
 {% include "tabs/gcode.html" %}
 {% include "tabs/history.html" %}
+{% include "tabs/timelapse.html" %}
 {% include "tabs/instructions.html" %}
 {% endif %}
 
@@ -28,6 +29,10 @@ ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
 
 {% call macro.menu_button(id="history-tab", target="history") %}
 {{ macro.bi_icon("clock-history", "History") }}
+{% endcall %}
+
+{% call macro.menu_button(id="timelapse-tab", target="timelapse") %}
+{{ macro.bi_icon("camera-reels", "Timelapse") }}
 {% endcall %}
 
 {% call macro.menu_button(id="instructions-tab", target="instructions") %}
