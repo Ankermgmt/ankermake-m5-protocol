@@ -607,6 +607,65 @@ def app_api_printer_autolevel():
     return {"status": "ok"}
 
 
+@app.get("/api/snapshot")
+def app_api_snapshot():
+    """Capture a JPEG snapshot from the camera and return it as a file download."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    if not app.config.get("video_supported"):
+        return {"error": "Video not supported on this platform"}, 400
+
+    if not shutil.which("ffmpeg"):
+        return {"error": "ffmpeg not installed"}, 500
+
+    vq = app.svc.svcs.get("videoqueue")
+    if not vq:
+        return {"error": "Video service not available"}, 503
+
+    host = os.getenv("FLASK_HOST") or "127.0.0.1"
+    if host in {"0.0.0.0", "::"}:
+        host = "127.0.0.1"
+    port = os.getenv("FLASK_PORT") or "4470"
+    url = f"http://{host}:{port}/video"
+
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+    temp_path = temp_file.name
+    temp_file.close()
+
+    try:
+        result = subprocess.run(
+            ["ffmpeg", "-loglevel", "error", "-nostdin", "-y",
+             "-f", "h264", "-i", url, "-frames:v", "1", temp_path],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10,
+        )
+        if result.returncode != 0:
+            # Retry without -f h264
+            result = subprocess.run(
+                ["ffmpeg", "-loglevel", "error", "-nostdin", "-y",
+                 "-i", url, "-frames:v", "1", temp_path],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10,
+            )
+        if result.returncode != 0 or not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
+            return {"error": "Snapshot capture failed"}, 500
+
+        from flask import send_file
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        return send_file(temp_path, mimetype="image/jpeg",
+                         as_attachment=True,
+                         download_name=f"ankerctl_snapshot_{timestamp}.jpg")
+    except (subprocess.TimeoutExpired, OSError) as err:
+        return {"error": f"Snapshot failed: {err}"}, 500
+    finally:
+        # Clean up after send_file has read the data
+        try:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+        except OSError:
+            pass
+
 def register_services(app):
     app.svc.register("pppp", web.service.pppp.PPPPService())
     if app.config.get("video_supported"):

@@ -170,14 +170,19 @@
                     <div class="collapse show" id="video-controls-section">
                         <div class="card-body">
                             <div class="row g-3 mb-3">
-                                <div class="col-6">
+                                <div class="col-4">
                                     <button class="w-100 btn btn-secondary" id="light-on">
                                         {{ macro.bi_icon("lightbulb", "Light on") }}
                                     </button>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-4">
                                     <button class="w-100 btn btn-secondary" id="light-off">
                                         {{ macro.bi_icon("lightbulb-off", "Light off") }}
+                                    </button>
+                                </div>
+                                <div class="col-4">
+                                    <button class="w-100 btn btn-secondary" id="snapshot-btn" title="Download Snapshot">
+                                        {{ macro.bi_icon("camera", "Snapshot") }}
                                     </button>
                                 </div>
                             </div>
@@ -259,6 +264,10 @@
                             <div class="col-auto">
                                 <button type="button" class="btn btn-sm btn-outline-info preheat-preset"
                                     data-nozzle="250" data-bed="100">ABS</button>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-sm btn-outline-info preheat-preset"
+                                    data-nozzle="230" data-bed="50">TPU</button>
                             </div>
                             <div class="col-auto">
                                 <button type="button" class="btn btn-sm btn-outline-danger preheat-preset"

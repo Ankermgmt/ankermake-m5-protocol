@@ -284,6 +284,10 @@ $(function () {
                 $("#progressbar").attr("aria-valuenow", progress);
                 $("#progressbar").attr("style", `width: ${progress}%`);
                 $("#progress").text(`${progress}%`);
+                // Update browser tab title with print progress
+                document.title = progress > 0 && progress < 100
+                    ? `\u{1F5A8}\uFE0F ${progress}% | ankerctl`
+                    : "ankerctl";
             } else if (data.commandType == 1003) {
                 // Returns Nozzle Temp
                 const current = getTemp(data.currentTemp);
@@ -326,6 +330,7 @@ $(function () {
             $("#set-bed-temp").attr("value", "0°C");
             $("#print-speed").text("0mm/s");
             $("#print-layer").text("0 / 0");
+            document.title = "ankerctl";
         },
     });
 
@@ -861,6 +866,29 @@ $(function () {
         const bed = $(this).attr("data-bed");
         sendPrinterGCode(`M104 S${nozzle}\nM140 S${bed}`);
         return false;
+    });
+
+    /**
+     * Snapshot Button
+     */
+    $("#snapshot-btn").on("click", function () {
+        const btn = $(this);
+        btn.prop("disabled", true);
+        fetch("/api/snapshot")
+            .then(resp => {
+                if (!resp.ok) throw new Error("Snapshot failed");
+                return resp.blob();
+            })
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `ankerctl_snapshot_${Date.now()}.jpg`;
+                a.click();
+                URL.revokeObjectURL(url);
+            })
+            .catch(err => alert("Snapshot failed: " + err.message))
+            .finally(() => btn.prop("disabled", false));
     });
 
     if (PRINT_CONTROLS_VISIBLE) {
