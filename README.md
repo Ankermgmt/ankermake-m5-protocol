@@ -211,6 +211,9 @@ ankerctl is configured via environment variables. For Docker deployments, copy `
 | `APPRISE_SNAPSHOT_QUALITY` | `hd` | Snapshot quality: `sd` or `hd` |
 | `APPRISE_SNAPSHOT_FALLBACK` | `true` | Use G-code preview if live fails |
 | `APPRISE_SNAPSHOT_LIGHT` | `false` | Turn on printer light for snapshot |
+| **Print History** | | |
+| `PRINT_HISTORY_RETENTION_DAYS` | `90` | Number of days to keep history entries |
+| `PRINT_HISTORY_MAX_ENTRIES` | `500` | Maximum number of history entries to keep |
 
 > **Tip:** See [`.env.example`](.env.example) for a ready-to-use template with all variables and comments.
 
