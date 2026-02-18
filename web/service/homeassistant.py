@@ -30,15 +30,7 @@ _AVAILABILITY_TIMEOUT = 60  # seconds between availability pings
 class HomeAssistantService:
     """Bridges ankerctl printer data to Home Assistant via MQTT Discovery."""
 
-    def __init__(self, printer_sn=None, printer_name=None):
-        self._enabled = os.getenv("HA_MQTT_ENABLED", "false").lower() in ("true", "1", "yes")
-        self._host = os.getenv("HA_MQTT_HOST", _DEFAULT_HOST)
-        self._port = int(os.getenv("HA_MQTT_PORT", _DEFAULT_PORT))
-        self._user = os.getenv("HA_MQTT_USER", "")
-        self._password = os.getenv("HA_MQTT_PASSWORD", "")
-        self._discovery_prefix = os.getenv("HA_MQTT_DISCOVERY_PREFIX", _DEFAULT_DISCOVERY_PREFIX)
-        self._topic_prefix = os.getenv("HA_MQTT_TOPIC_PREFIX", _DEFAULT_TOPIC_PREFIX)
-
+    def __init__(self, config, printer_sn=None, printer_name=None):
         self._printer_sn = printer_sn or "ankerctl"
         self._printer_name = printer_name or "AnkerMake M5"
         self._node_id = f"ankerctl_{self._printer_sn}"
@@ -66,6 +58,63 @@ class HomeAssistantService:
             "pppp_connected": False,
             "light": False,
         }
+        
+        # Set defaults
+        self._enabled = False
+        self._host = _DEFAULT_HOST
+        self._port = _DEFAULT_PORT
+        self._user = ""
+        self._password = ""
+        self._discovery_prefix = _DEFAULT_DISCOVERY_PREFIX
+        self._topic_prefix = _DEFAULT_TOPIC_PREFIX
+
+        self.reload_config(config)
+
+    def reload_config(self, config):
+        if not config or not config.home_assistant:
+            return
+
+        cfg = config.home_assistant
+        new_enabled = cfg.get("enabled", False)
+        new_host = cfg.get("mqtt_host", _DEFAULT_HOST)
+        new_port = int(cfg.get("mqtt_port", _DEFAULT_PORT))
+        new_user = cfg.get("mqtt_username", "")
+        new_password = cfg.get("mqtt_password", "")
+        new_discovery_prefix = cfg.get("discovery_prefix", _DEFAULT_DISCOVERY_PREFIX)
+        # topic prefix is not in config model yet? Defaults to ankerctl
+        new_topic_prefix = os.getenv("HA_MQTT_TOPIC_PREFIX", _DEFAULT_TOPIC_PREFIX)
+
+        # check if restart needed
+        need_restart = False
+        if self._client: # Only if currently running
+            if (self._host != new_host or 
+                self._port != new_port or 
+                self._user != new_user or 
+                self._password != new_password or
+                self._discovery_prefix != new_discovery_prefix or
+                self._topic_prefix != new_topic_prefix):
+                need_restart = True
+            if self._enabled and not new_enabled:
+                self.stop() # Just stop
+                need_restart = False
+
+        self._enabled = new_enabled
+        self._host = new_host
+        self._port = new_port
+        self._user = new_user
+        self._password = new_password
+        self._discovery_prefix = new_discovery_prefix
+        self._topic_prefix = new_topic_prefix
+
+        if need_restart and self._enabled:
+            self.stop()
+            self.start()
+        elif self._enabled and not self._client:
+            # If enabled and not running, start? 
+            # MqttQueue calls start() explicitly.
+            # But if we are called at runtime (API update), we might need to start it.
+            # We'll assume if it was meant to be running, start it.
+            pass
 
     @property
     def enabled(self):

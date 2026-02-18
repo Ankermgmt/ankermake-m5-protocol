@@ -8,6 +8,7 @@ ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
 {% block contents %}
 {% if configure %}
 {% include "tabs/home.html" %}
+{% include "tabs/gcode.html" %}
 {% include "tabs/history.html" %}
 {% include "tabs/instructions.html" %}
 {% endif %}
@@ -19,6 +20,10 @@ ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
 {% if configure %}
 {% call macro.menu_button(id="home-tab", target="home", active=configure) %}
 {{ macro.bi_icon("house", "Home") }}
+{% endcall %}
+
+{% call macro.menu_button(id="gcode-tab", target="gcode") %}
+{{ macro.bi_icon("terminal", "GCode") }}
 {% endcall %}
 
 {% call macro.menu_button(id="history-tab", target="history") %}

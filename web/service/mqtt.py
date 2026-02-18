@@ -26,7 +26,7 @@ class MqttQueue(Service):
         self._notifier = AppriseNotifier(app.config["config"])
         config_root = str(app.config["config"].config_root)
         self._history = PrintHistory(db_path=f"{config_root}/history.db")
-        self._timelapse = TimelapseService()
+        self._timelapse = TimelapseService(app.config["config"])
 
         # Home Assistant MQTT Discovery
         printer_sn = None
@@ -36,7 +36,7 @@ class MqttQueue(Service):
                 printer = cfg.printers[app.config["printer_index"]]
                 printer_sn = getattr(printer, "sn", None)
                 printer_name = getattr(printer, "name", None) or "AnkerMake M5"
-        self._ha = HomeAssistantService(printer_sn=printer_sn, printer_name=printer_name)
+        self._ha = HomeAssistantService(app.config["config"], printer_sn=printer_sn, printer_name=printer_name)
         self._ha.start()
 
         self._reset_print_state()
@@ -49,6 +49,7 @@ class MqttQueue(Service):
         )
         self._reset_print_state()
         self._ha.update_state(mqtt_connected=True)
+        self._last_query = 0
 
     def _reset_print_state(self):
         self._print_active = False
@@ -78,6 +79,12 @@ class MqttQueue(Service):
         return self._ha
 
     def worker_run(self, timeout):
+        # Poll status every 10 seconds if idle
+        now = time.time()
+        if now - self._last_query > 10.0:
+            self._send_status_query()
+            self._last_query = now
+
         for msg, body in self.client.fetch(timeout=timeout):
             log.info(f"TOPIC [{msg.topic}]")
             log.debug(enhex(msg.payload[:]))
@@ -90,6 +97,16 @@ class MqttQueue(Service):
     def worker_stop(self):
         self._ha.update_state(mqtt_connected=False)
         del self.client
+        
+    def _send_status_query(self):
+        cmd = {
+            "commandType": MqttMsgType.ZZ_MQTT_CMD_APP_QUERY_STATUS.value,
+            "value": 0
+        }
+        try:
+            self.client.query(cmd)
+        except Exception as e:
+            log.warning(f"Failed to query printer status: {e}")
 
     @staticmethod
     def _safe_int(value):

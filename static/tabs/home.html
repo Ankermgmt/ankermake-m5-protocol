@@ -113,6 +113,30 @@
                     </div>
                 </div>
                 {% endif %}
+                <!-- Temperature Graph -->
+                <div class="card mt-3">
+                    <div class="card-header fs-6 d-flex justify-content-between align-items-center"
+                        data-bs-toggle="collapse" data-bs-target="#temp-graph-section" role="button"
+                        aria-expanded="true" aria-controls="temp-graph-section">
+                        {{ macro.bi_icon("thermometer-half") }} Temperature Graph
+                        {{ macro.bi_icon("chevron-down") }}
+                    </div>
+                    <div class="collapse show" id="temp-graph-section">
+                        <div class="card-body">
+                            <div class="btn-group btn-group-sm mb-2 w-100" role="group" aria-label="Time window">
+                                <button type="button" class="btn btn-outline-secondary temp-window active"
+                                    data-window="300">5m</button>
+                                <button type="button" class="btn btn-outline-secondary temp-window"
+                                    data-window="900">15m</button>
+                                <button type="button" class="btn btn-outline-secondary temp-window"
+                                    data-window="1800">30m</button>
+                                <button type="button" class="btn btn-outline-secondary temp-window"
+                                    data-window="3600">1h</button>
+                            </div>
+                            <canvas id="temp-chart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="col-md-12 col-lg-6 col-xl-4">
                 <div class="card">
@@ -356,85 +380,8 @@
                     </div>
                 </div>
             </div>
-            <!-- Temperature Graph -->
-            <div class="card mt-3">
-                <div class="card-header fs-6 d-flex justify-content-between align-items-center"
-                    data-bs-toggle="collapse" data-bs-target="#temp-graph-section" role="button" aria-expanded="false"
-                    aria-controls="temp-graph-section">
-                    {{ macro.bi_icon("thermometer-half") }} Temperature Graph
-                    {{ macro.bi_icon("chevron-down") }}
-                </div>
-                <div class="collapse" id="temp-graph-section">
-                    <div class="card-body">
-                        <div class="btn-group btn-group-sm mb-2 w-100" role="group" aria-label="Time window">
-                            <button type="button" class="btn btn-outline-secondary temp-window active"
-                                data-window="300">5m</button>
-                            <button type="button" class="btn btn-outline-secondary temp-window"
-                                data-window="900">15m</button>
-                            <button type="button" class="btn btn-outline-secondary temp-window"
-                                data-window="1800">30m</button>
-                            <button type="button" class="btn btn-outline-secondary temp-window"
-                                data-window="3600">1h</button>
-                        </div>
-                        <canvas id="temp-chart" height="200"></canvas>
-                    </div>
-                </div>
-            </div>
-            <!-- GCode Console -->
-            <div class="card mt-3">
-                <div class="card-header fs-6 d-flex justify-content-between align-items-center"
-                    data-bs-toggle="collapse" data-bs-target="#gcode-console-section" role="button"
-                    aria-expanded="false" aria-controls="gcode-console-section">
-                    GCode Console
-                    {{ macro.bi_icon("chevron-down") }}
-                </div>
-                <div class="collapse" id="gcode-console-section">
-                    <div class="card-body">
-                        <!-- File Upload (primary) -->
-                        <div class="row mb-3 g-3">
-                            <div class="col-12">
-                                <label for="gcode-file" class="form-label fw-semibold">
-                                    {{ macro.bi_icon("file-earmark-code") }} Upload GCode File
-                                </label>
-                                <div class="input-group">
-                                    <input type="file" class="form-control" id="gcode-file" accept=".gcode,.gco,.g">
-                                    <button class="btn btn-primary" id="gcode-file-send" type="button">
-                                        {{ macro.bi_icon("send") }} Send
-                                    </button>
-                                </div>
-                                <div class="form-text">Upload a .gcode file to send commands line-by-line to the
-                                    printer.</div>
-                            </div>
-                        </div>
-                        <!-- Custom GCode (secondary, collapsible) -->
-                        <div class="row mb-3 g-3">
-                            <div class="col-12">
-                                <a class="text-decoration-none small" data-bs-toggle="collapse"
-                                    href="#gcode-custom-section" role="button" aria-expanded="false">
-                                    {{ macro.bi_icon("terminal") }} Custom GCode Input
-                                </a>
-                                <div class="collapse mt-2" id="gcode-custom-section">
-                                    <div class="input-group">
-                                        <textarea class="form-control font-monospace" id="gcode-input" rows="3"
-                                            placeholder="Enter GCode commands (one per line)..."></textarea>
-                                        <button class="btn btn-outline-primary" id="gcode-text-send" type="button">
-                                            {{ macro.bi_icon("send") }} Send
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Response Log -->
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label small text-muted">Response Log</label>
-                                <pre id="gcode-log" class="bg-dark text-light p-2 rounded font-monospace small"
-                                    style="max-height: 200px; overflow-y: auto; min-height: 60px;"></pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
+
         </div>
     </div>
 </div>

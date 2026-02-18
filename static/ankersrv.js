@@ -1215,4 +1215,137 @@ $(function () {
             .then(() => loadTimelapses());
     });
 
+    /**
+     * Timelapse Settings
+     */
+    const timelapseForm = $("#timelapse-form");
+    if (timelapseForm.length) {
+        const tlFields = {
+            enabled: $("#timelapse-enabled"),
+            interval: $("#timelapse-interval"),
+            maxVideos: $("#timelapse-max-videos"),
+            persistent: $("#timelapse-persistent"),
+        };
+        const tlSaveBtn = $("#timelapse-save");
+
+        const loadTimelapseSettings = async () => {
+            try {
+                const resp = await fetch("/api/settings/timelapse");
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const cfg = data.timelapse || {};
+                    tlFields.enabled.prop("checked", Boolean(cfg.enabled));
+                    tlFields.interval.val(cfg.interval || 30);
+                    tlFields.maxVideos.val(cfg.max_videos || 10);
+                    tlFields.persistent.prop("checked", cfg.save_persistent !== false);
+                }
+            } catch (err) {
+                console.error("Failed to load timelapse settings:", err);
+            }
+        };
+
+        tlSaveBtn.on("click", async function () {
+            const btn = $(this);
+            btn.prop("disabled", true);
+            const payload = {
+                timelapse: {
+                    enabled: tlFields.enabled.is(":checked"),
+                    interval: parseInt(tlFields.interval.val(), 10) || 30,
+                    max_videos: parseInt(tlFields.maxVideos.val(), 10) || 10,
+                    save_persistent: tlFields.persistent.is(":checked")
+                }
+            };
+            try {
+                const resp = await fetch("/api/settings/timelapse", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                if (resp.ok) {
+                    flash_message("Timelapse settings saved", "success");
+                    loadTimelapseSettings(); // Reload to confirm
+                } else {
+                    const data = await resp.json().catch(() => ({}));
+                    flash_message(`Failed to save: ${data.error || resp.statusText}`, "danger");
+                }
+            } catch (err) {
+                flash_message(`Error: ${err.message}`, "danger");
+            } finally {
+                btn.prop("disabled", false);
+            }
+        });
+
+        // Load on tab show or init
+        loadTimelapseSettings();
+    }
+
+    /**
+     * MQTT Settings
+     */
+    const mqttForm = $("#mqtt-form");
+    if (mqttForm.length) {
+        const mqttFields = {
+            enabled: $("#mqtt-enabled"),
+            host: $("#mqtt-host"),
+            port: $("#mqtt-port"),
+            user: $("#mqtt-user"),
+            password: $("#mqtt-password"),
+            prefix: $("#mqtt-prefix"),
+        };
+        const mqttSaveBtn = $("#mqtt-save");
+
+        const loadMqttSettings = async () => {
+            try {
+                const resp = await fetch("/api/settings/mqtt");
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const cfg = data.home_assistant || {};
+                    mqttFields.enabled.prop("checked", Boolean(cfg.enabled));
+                    mqttFields.host.val(cfg.mqtt_host || "");
+                    mqttFields.port.val(cfg.mqtt_port || 1883);
+                    mqttFields.user.val(cfg.mqtt_username || "");
+                    mqttFields.password.val(cfg.mqtt_password || "");
+                    mqttFields.prefix.val(cfg.discovery_prefix || "homeassistant");
+                }
+            } catch (err) {
+                console.error("Failed to load MQTT settings:", err);
+            }
+        };
+
+        mqttSaveBtn.on("click", async function () {
+            const btn = $(this);
+            btn.prop("disabled", true);
+            const payload = {
+                home_assistant: {
+                    enabled: mqttFields.enabled.is(":checked"),
+                    mqtt_host: mqttFields.host.val().trim(),
+                    mqtt_port: parseInt(mqttFields.port.val(), 10) || 1883,
+                    mqtt_username: mqttFields.user.val().trim(),
+                    mqtt_password: mqttFields.password.val().trim(),
+                    discovery_prefix: mqttFields.prefix.val().trim(),
+                }
+            };
+            try {
+                const resp = await fetch("/api/settings/mqtt", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                if (resp.ok) {
+                    flash_message("MQTT settings saved. Service restarting...", "success");
+                    setTimeout(loadMqttSettings, 1000);
+                } else {
+                    const data = await resp.json().catch(() => ({}));
+                    flash_message(`Failed to save: ${data.error || resp.statusText}`, "danger");
+                }
+            } catch (err) {
+                flash_message(`Error: ${err.message}`, "danger");
+            } finally {
+                btn.prop("disabled", false);
+            }
+        });
+
+        loadMqttSettings();
+    }
+
 });

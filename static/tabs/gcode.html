@@ -1,0 +1,57 @@
+<div class="tab-pane fade" id="gcode" role="tabpanel" aria-labelledby="gcode-tab">
+    <div class="container mb-4">
+        <div class="row g-3">
+            <div class="col-lg-8 offset-lg-2">
+                <div class="card">
+                    <div class="card-header fs-6">
+                        GCode Console
+                    </div>
+                    <div class="card-body">
+                        <!-- File Upload (primary) -->
+                        <div class="row mb-3 g-3">
+                            <div class="col-12">
+                                <label for="gcode-file" class="form-label fw-semibold">
+                                    {{ macro.bi_icon("file-earmark-code") }} Upload GCode File
+                                </label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="gcode-file" accept=".gcode,.gco,.g">
+                                    <button class="btn btn-primary" id="gcode-file-send" type="button">
+                                        {{ macro.bi_icon("send") }} Send
+                                    </button>
+                                </div>
+                                <div class="form-text">Upload a .gcode file to send commands line-by-line to the
+                                    printer.</div>
+                            </div>
+                        </div>
+                        <!-- Custom GCode (secondary, collapsible) -->
+                        <div class="row mb-3 g-3">
+                            <div class="col-12">
+                                <a class="text-decoration-none small" data-bs-toggle="collapse"
+                                    href="#gcode-custom-section" role="button" aria-expanded="false">
+                                    {{ macro.bi_icon("terminal") }} Custom GCode Input
+                                </a>
+                                <div class="collapse mt-2" id="gcode-custom-section">
+                                    <div class="input-group">
+                                        <textarea class="form-control font-monospace" id="gcode-input" rows="3"
+                                            placeholder="Enter GCode commands (one per line)..."></textarea>
+                                        <button class="btn btn-outline-primary" id="gcode-text-send" type="button">
+                                            {{ macro.bi_icon("send") }} Send
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Response Log -->
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label small text-muted">Response Log</label>
+                                <pre id="gcode-log" class="bg-dark text-light p-2 rounded font-monospace small"
+                                    style="max-height: 400px; overflow-y: auto; min-height: 200px;"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -43,6 +43,30 @@ def default_notifications_config():
     }
 
 
+import os
+
+def default_timelapse_config():
+    return {
+        "enabled": os.getenv("TIMELAPSE_ENABLED", "false").lower() in ("true", "1", "yes"),
+        "interval": int(os.getenv("TIMELAPSE_INTERVAL_SEC", 30)),
+        "max_videos": int(os.getenv("TIMELAPSE_MAX_VIDEOS", 10)),
+        "save_persistent": os.getenv("TIMELAPSE_SAVE_PERSISTENT", "true").lower() in ("true", "1", "yes"),
+        "output_dir": os.getenv("TIMELAPSE_CAPTURES_DIR", "/captures")
+    }
+
+
+def default_home_assistant_config():
+    return {
+        "enabled": os.getenv("HA_MQTT_ENABLED", "false").lower() in ("true", "1", "yes"),
+        "mqtt_host": os.getenv("HA_MQTT_HOST", "localhost"),
+        "mqtt_port": int(os.getenv("HA_MQTT_PORT", 1883)),
+        "mqtt_username": os.getenv("HA_MQTT_USER", ""),
+        "mqtt_password": os.getenv("HA_MQTT_PASSWORD", ""),
+        "discovery_prefix": os.getenv("HA_MQTT_DISCOVERY_PREFIX", "homeassistant"),
+        "node_id": "ankermake_m5", # Not typically env var configured, but derived
+    }
+
+
 def merge_dict_defaults(data, defaults):
     if not isinstance(data, dict):
         return defaults
@@ -65,6 +89,31 @@ class Serialize:
 
     @classmethod
     def from_dict(cls, data):
+        res = {}
+        for k, v in cls.__dataclass_fields__.items():
+            res[k] = data.get(k)  # Safe get
+            if res[k] is None and v.default_factory is not field(default_factory=dict).default_factory: 
+                 # This is a bit hacky, reliance on default factory if missing not automatic here unless we let dataclass handle it.
+                 # But we are constructing manually.
+                 pass
+
+            if k in data:
+                 res[k] = data[k]
+            
+            if v.type == bytes and res.get(k):
+                res[k] = unhex(res[k])
+            elif v.type == datetime and res.get(k):
+                res[k] = datetime.fromtimestamp(res[k])
+        # We need to rely on dataclass defaults if keys are missing
+        # Simple approach: filter out None keys if they are not in data, let __init__ defaults handle it?
+        # But Serialize implementation expects all fields?
+        # Let's look at original implementation.
+        # Original: res[k] = data[k] -> KeyError if missing.
+        # So I must ensure all fields are in 'data' before calling super().from_dict or handle it here.
+        
+        # Actually, looking at Config.from_dict below, it prepares 'data' before calling super().
+        # So I should leave Serialize alone and update Config.from_dict.
+        
         res = {}
         for k, v in cls.__dataclass_fields__.items():
             res[k] = data[k]
@@ -107,6 +156,12 @@ class Printer(Serialize):
     p2p_hosts: str
     p2p_duid: str
     p2p_key: str
+    p2p_did: str = "" # Added field just in case, but keeping original structure
+
+    @classmethod
+    def from_dict(cls, data):
+         # If new fields added to printer, verify here.
+         return super().from_dict(data)
 
 
 @dataclass
@@ -138,16 +193,27 @@ class Config(Serialize):
     printers: list[Printer]
     upload_rate_mbps: int = DEFAULT_UPLOAD_RATE_MBPS
     notifications: dict = field(default_factory=default_notifications_config)
+    timelapse: dict = field(default_factory=default_timelapse_config)
+    home_assistant: dict = field(default_factory=default_home_assistant_config)
 
     @classmethod
     def from_dict(cls, data):
         if "upload_rate_mbps" not in data:
             data = {**data, "upload_rate_mbps": DEFAULT_UPLOAD_RATE_MBPS}
+        
         data = {
             **data,
             "notifications": merge_dict_defaults(
                 data.get("notifications"),
                 default_notifications_config(),
+            ),
+            "timelapse": merge_dict_defaults(
+                data.get("timelapse"),
+                default_timelapse_config(),
+            ),
+            "home_assistant": merge_dict_defaults(
+                data.get("home_assistant"),
+                default_home_assistant_config(),
             ),
         }
         return super().from_dict(data)

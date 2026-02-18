@@ -18,14 +18,39 @@ _SNAPSHOT_TIMEOUT = 10
 class TimelapseService:
     """Captures periodic snapshots during a print and assembles a timelapse video."""
 
-    def __init__(self, captures_dir=None):
-        self._enabled = os.getenv("TIMELAPSE_ENABLED", "false").lower() in ("true", "1", "yes")
-        self._interval = int(os.getenv("TIMELAPSE_INTERVAL_SEC", _DEFAULT_INTERVAL_SEC))
-        self._max_videos = int(os.getenv("TIMELAPSE_MAX_VIDEOS", _DEFAULT_MAX_VIDEOS))
-        self._save_persistent = os.getenv("TIMELAPSE_SAVE_PERSISTENT", "true").lower() in ("true", "1", "yes")
-
+    def __init__(self, config, captures_dir=None):
         self._captures_dir = captures_dir or os.getenv("TIMELAPSE_CAPTURES_DIR", "/captures")
         os.makedirs(self._captures_dir, exist_ok=True)
+
+        self._lock = threading.Lock()
+        self._capture_thread = None
+        self._stop_event = threading.Event()
+        self._current_dir = None
+        self._current_filename = None
+        self._frame_count = 0
+        
+        # Set defaults to ensure attributes exist even if config is None
+        self._enabled = False
+        self._interval = _DEFAULT_INTERVAL_SEC
+        self._max_videos = _DEFAULT_MAX_VIDEOS
+        self._save_persistent = True
+
+        self.reload_config(config)
+
+    def reload_config(self, config):
+        """Update configuration from Config object."""
+        if not config or not config.timelapse:
+            return
+        
+        cfg = config.timelapse
+        self._enabled = cfg.get("enabled", False)
+        self._interval = int(cfg.get("interval", _DEFAULT_INTERVAL_SEC))
+        self._max_videos = int(cfg.get("max_videos", _DEFAULT_MAX_VIDEOS))
+        self._save_persistent = cfg.get("save_persistent", True)
+        
+        # Output dir updates might require restart or migration, ignoring for now unless changed?
+        # self._captures_dir is tricky to change at runtime if we have existing files.
+        # We'll stick to env var or init param for captures_dir for now to avoid complexity.
 
         self._lock = threading.Lock()
         self._capture_thread = None

@@ -554,10 +554,97 @@ def app_api_notifications_test():
     ok, message = client._post("Ankerctl Test", "Test notification sent from ankerctl settings page.", attachments=attachments)
 
     notifier.cleanup_attachments(cleanup)
-
     if ok:
         return {"status": "ok", "message": message}
     return {"error": message}, 400
+
+
+@app.get("/api/settings/timelapse")
+def app_api_settings_timelapse():
+    config = app.config["config"]
+    with config.open() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        timelapse_config = cli.model.merge_dict_defaults(
+            getattr(cfg, "timelapse", {}),
+            cli.model.default_timelapse_config()
+        )
+    return {"timelapse": timelapse_config}
+
+
+@app.post("/api/settings/timelapse")
+def app_api_settings_timelapse_update():
+    config = app.config["config"]
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return {"error": "Invalid JSON payload"}, 400
+
+    tl_payload = payload.get("timelapse") if "timelapse" in payload else payload
+    if not isinstance(tl_payload, dict):
+        return {"error": "Invalid timelapse payload"}, 400
+
+    with config.modify() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        
+        current = cli.model.merge_dict_defaults(
+            getattr(cfg, "timelapse", {}),
+            cli.model.default_timelapse_config()
+        )
+        # Deep update not strictly needed if structure is flat, but good practice
+        new_config = web.__init__._deep_update(current, tl_payload)
+        cfg.timelapse = new_config
+
+    # Reload service
+    with app.svc.borrow("mqttqueue") as mqtt:
+        if mqtt and mqtt.timelapse:
+            mqtt.timelapse.reload_config(config)
+
+    return {"status": "ok", "timelapse": new_config}
+
+
+@app.get("/api/settings/mqtt")
+def app_api_settings_mqtt():
+    config = app.config["config"]
+    with config.open() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        ha_config = cli.model.merge_dict_defaults(
+            getattr(cfg, "home_assistant", {}),
+            cli.model.default_home_assistant_config()
+        )
+    return {"home_assistant": ha_config}
+
+
+@app.post("/api/settings/mqtt")
+def app_api_settings_mqtt_update():
+    config = app.config["config"]
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return {"error": "Invalid JSON payload"}, 400
+
+    ha_payload = payload.get("home_assistant") if "home_assistant" in payload else payload
+    if not isinstance(ha_payload, dict):
+        return {"error": "Invalid home_assistant payload"}, 400
+
+    with config.modify() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        
+        current = cli.model.merge_dict_defaults(
+            getattr(cfg, "home_assistant", {}),
+            cli.model.default_home_assistant_config()
+        )
+        new_config = web.__init__._deep_update(current, ha_payload)
+        cfg.home_assistant = new_config
+
+    # Reload service
+    with app.svc.borrow("mqttqueue") as mqtt:
+        if mqtt and mqtt.ha:
+            mqtt.ha.reload_config(config)
+
+    return {"status": "ok", "home_assistant": new_config}
+
 
 # GCode prefixes that are unsafe to send while a print is active
 _UNSAFE_GCODE_PREFIXES = {"G0", "G1", "G28", "G29", "G91", "G90"}

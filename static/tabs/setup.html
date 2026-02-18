@@ -1,9 +1,5 @@
-<div
-    class="tab-pane fade{% if not configure %} show active{% endif %}"
-    id="setup"
-    role="tabpanel"
-    aria-labelledby="setup-tab"
->
+<div class="tab-pane fade{% if not configure %} show active{% endif %}" id="setup" role="tabpanel"
+    aria-labelledby="setup-tab">
     <div class="container">
         <div class="row g-3">
             <div class="col-12">
@@ -11,30 +7,44 @@
                 <ul class="nav nav-pills setup-pills mb-3" id="setupTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="setup-account-tab" data-bs-toggle="pill"
-                                data-bs-target="#setup-account" type="button" role="tab"
-                                aria-controls="setup-account" aria-selected="true">
+                            data-bs-target="#setup-account" type="button" role="tab" aria-controls="setup-account"
+                            aria-selected="true">
                             {{ macro.bi_icon("person-circle") }} Account
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="setup-printer-tab" data-bs-toggle="pill"
-                                data-bs-target="#setup-printer-pane" type="button" role="tab"
-                                aria-controls="setup-printer-pane" aria-selected="false">
+                            data-bs-target="#setup-printer-pane" type="button" role="tab"
+                            aria-controls="setup-printer-pane" aria-selected="false">
                             {{ macro.bi_icon("printer") }} Printer
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="setup-tools-tab" data-bs-toggle="pill"
-                                data-bs-target="#setup-tools" type="button" role="tab"
-                                aria-controls="setup-tools" aria-selected="false">
+                            data-bs-target="#setup-tools" type="button" role="tab" aria-controls="setup-tools"
+                            aria-selected="false">
                             {{ macro.bi_icon("wrench-adjustable") }} Tools
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="setup-notifications-tab" data-bs-toggle="pill"
-                                data-bs-target="#setup-notifications-pane" type="button" role="tab"
-                                aria-controls="setup-notifications-pane" aria-selected="false">
+                            data-bs-target="#setup-notifications-pane" type="button" role="tab"
+                            aria-controls="setup-notifications-pane" aria-selected="false">
                             {{ macro.bi_icon("bell") }} Notifications
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="setup-timelapse-tab" data-bs-toggle="pill"
+                            data-bs-target="#setup-timelapse-pane" type="button" role="tab"
+                            aria-controls="setup-timelapse-pane" aria-selected="false">
+                            {{ macro.bi_icon("camera-reels") }} Timelapse
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="setup-mqtt-tab" data-bs-toggle="pill"
+                            data-bs-target="#setup-mqtt-pane" type="button" role="tab" aria-controls="setup-mqtt-pane"
+                            aria-selected="false">
+                            {{ macro.bi_icon("share") }} Home Assistant
                         </button>
                     </li>
                 </ul>
@@ -43,15 +53,12 @@
                 <div class="tab-content" id="setupTabContent">
 
                     <!-- ===== ACCOUNT TAB ===== -->
-                    <div class="tab-pane fade show active" id="setup-account" role="tabpanel" aria-labelledby="setup-account-tab">
+                    <div class="tab-pane fade show active" id="setup-account" role="tabpanel"
+                        aria-labelledby="setup-account-tab">
                         <div class="row g-3">
                             <div class="col-xl-7">
-                                <form
-                                    action="{{ url_for('app_api_ankerctl_config_login') }}"
-                                    method="POST"
-                                    class="mb-3"
-                                    id="config-login-form"
-                                >
+                                <form action="{{ url_for('app_api_ankerctl_config_login') }}" method="POST" class="mb-3"
+                                    id="config-login-form">
                                     <div class="card">
                                         <div class="card-header fs-4">
                                             Fetch Config From AnkerMake Server
@@ -61,62 +68,38 @@
                                             <div class="row mb-3 g-3">
                                                 <div class="input-group">
                                                     <div class="input-group-text">Email</div>
-                                                    <input
-                                                        class="form-control"
-                                                        type="email"
-                                                        id="loginEmail"
-                                                        name="login_email"
-                                                        required
-                                                        aria-required="true"
-                                                        value="{{ config_existing_email }}"
-                                                    />
+                                                    <input class="form-control" type="email" id="loginEmail"
+                                                        name="login_email" required aria-required="true"
+                                                        value="{{ config_existing_email }}" />
                                                 </div>
                                             </div>
                                             <div class="row mb-3 g-3">
                                                 <div class="input-group">
                                                     <div class="input-group-text">Password</div>
-                                                    <input
-                                                        class="form-control"
-                                                        type="password"
-                                                        id="loginPassword"
-                                                        name="login_password"
-                                                        required
-                                                        aria-required="true"
-                                                    />
+                                                    <input class="form-control" type="password" id="loginPassword"
+                                                        name="login_password" required aria-required="true" />
                                                 </div>
                                             </div>
                                             <div class="row mb-3 g-3" id="captchaRow">
                                                 <div class="input-group">
-                                                    <div class="input-group-text text-danger-emphasis">Please solve CAPTCHA:</div>
+                                                    <div class="input-group-text text-danger-emphasis">Please solve
+                                                        CAPTCHA:</div>
                                                     <img id="loginCaptchaImg" />
                                                     <div class="input-group-text print-info-label">
                                                         {{ macro.bi_icon("arrow-right") }}
                                                     </div>
-                                                    <input
-                                                        type="hidden"
-                                                        id="loginCaptchaId"
-                                                        name="login_captcha_id"
-                                                        autocomplete="off"
-                                                        value=""
-                                                    />
-                                                    <input
-                                                        class="form-control"
-                                                        id="loginCaptchaText"
-                                                        name="login_captcha_text"
-                                                        autocomplete="off"
-                                                        value=""
-                                                    />
+                                                    <input type="hidden" id="loginCaptchaId" name="login_captcha_id"
+                                                        autocomplete="off" value="" />
+                                                    <input class="form-control" id="loginCaptchaText"
+                                                        name="login_captcha_text" autocomplete="off" value="" />
                                                 </div>
                                             </div>
                                             <div class="row g-3 justify-content-between">
                                                 <div class="col-md-8">
                                                     <div class="input-group">
                                                         <div class="input-group-text">Country</div>
-                                                        <select
-                                                            class="form-select"
-                                                            id="loginCountry"
-                                                            name="login_country"
-                                                            aria-label="Region"
+                                                        <select class="form-select" id="loginCountry"
+                                                            name="login_country" aria-label="Region"
                                                             data-countrycodes="{{ country_codes }}"
                                                             data-country="{{ current_country }}">
                                                             <option value="">Please select your country...</option>
@@ -133,34 +116,24 @@
                                         </div>
                                     </div>
                                 </form>
-                                <form
-                                    action="{{ url_for('app_api_ankerctl_config_upload') }}"
-                                    method="POST"
-                                    enctype="multipart/form-data"
-                                    class="mb-3"
-                                    id="config-upload-form"
-                                >
+                                <form action="{{ url_for('app_api_ankerctl_config_upload') }}" method="POST"
+                                    enctype="multipart/form-data" class="mb-3" id="config-upload-form">
                                     <div class="card">
                                         <div class="card-header fs-4">
                                             Upload AnkerMake Login File
                                         </div>
 
                                         <div class="card-body input-group">
-                                            <input
-                                                class="form-control"
-                                                type="file"
-                                                id="loginFile"
-                                                name="login_file"
-                                                required
-                                                aria-required="true"
-                                            />
+                                            <input class="form-control" type="file" id="loginFile" name="login_file"
+                                                required aria-required="true" />
                                             <button class="btn btn-secondary submit" type="submit" id="upload">
                                                 {{ macro.bi_icon("cloud-arrow-up-fill", "Upload") }}
                                             </button>
                                         </div>
 
                                         <div class="card-footer mt-2">
-                                            Location: <code id="loginFilePath" class="fw-lighter">{{ login_file_path }}</code>
+                                            Location: <code id="loginFilePath"
+                                                class="fw-lighter">{{ login_file_path }}</code>
                                             {{ macro.clipboard_button("#loginFilePath") }}
                                         </div>
                                     </div>
@@ -180,7 +153,8 @@
                     </div>
 
                     <!-- ===== PRINTER TAB ===== -->
-                    <div class="tab-pane fade" id="setup-printer-pane" role="tabpanel" aria-labelledby="setup-printer-tab">
+                    <div class="tab-pane fade" id="setup-printer-pane" role="tabpanel"
+                        aria-labelledby="setup-printer-tab">
                         <div class="row g-3">
                             <div class="col-lg-6">
                                 <div class="card">
@@ -189,12 +163,13 @@
                                     </div>
                                     <div class="card-body">
                                         <p>
-                                            If you are experiencing issues with printing or viewing the video feed reloading
+                                            If you are experiencing issues with printing or viewing the video feed
+                                            reloading
                                             the Ankerctl services will often resolve these issues.
                                         </p>
-                                        <button id="reload" type="button" class="btn btn-danger"
-                                                data-bs-toggle="modal" data-bs-target="#popupModal"
-                                                data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
+                                        <button id="reload" type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                            data-bs-target="#popupModal"
+                                            data-href="{{ url_for('app_api_ankerctl_server_reload') }}">
                                             {{ macro.bi_icon("bootstrap-reboot", "Reload Services") }}
                                         </button>
                                     </div>
@@ -210,7 +185,8 @@
                                             <div class="col-12">
                                                 <select class="form-select" id="upload-rate">
                                                     {% for rate in upload_rate_choices %}
-                                                    <option value="{{ rate }}" {% if upload_rate_mbps == rate %}selected{% endif %}>
+                                                    <option value="{{ rate }}" {% if upload_rate_mbps==rate %}selected{%
+                                                        endif %}>
                                                         {{ rate }} Mbps
                                                     </option>
                                                     {% endfor %}
@@ -257,7 +233,8 @@
                     </div>
 
                     <!-- ===== NOTIFICATIONS TAB ===== -->
-                    <div class="tab-pane fade" id="setup-notifications-pane" role="tabpanel" aria-labelledby="setup-notifications-tab">
+                    <div class="tab-pane fade" id="setup-notifications-pane" role="tabpanel"
+                        aria-labelledby="setup-notifications-tab">
                         <div class="card">
                             <div class="card-header fs-4">
                                 Notifications
@@ -265,24 +242,25 @@
                             <div class="card-body">
                                 <form id="apprise-form" class="vstack gap-3">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="apprise-enabled" />
-                                        <label class="form-check-label" for="apprise-enabled">Enable Apprise notifications</label>
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            id="apprise-enabled" />
+                                        <label class="form-check-label" for="apprise-enabled">Enable Apprise
+                                            notifications</label>
                                     </div>
 
                                     <div class="row g-3">
                                         <div class="col-lg-7">
-                                            <label class="form-label" for="apprise-server-url">Apprise server URL</label>
-                                            <input
-                                                class="form-control"
-                                                type="text"
-                                                id="apprise-server-url"
-                                                placeholder="http://apprise:8000"
-                                            />
+                                            <label class="form-label" for="apprise-server-url">Apprise server
+                                                URL</label>
+                                            <input class="form-control" type="text" id="apprise-server-url"
+                                                placeholder="http://apprise:8000" />
                                         </div>
                                         <div class="col-lg-5 col-md-6">
                                             <label class="form-label" for="apprise-tag">Tag (filter)</label>
-                                            <input class="form-control" type="text" id="apprise-tag" placeholder="optional" />
-                                            <div class="form-text">Only URLs with this tag will receive notifications.</div>
+                                            <input class="form-control" type="text" id="apprise-tag"
+                                                placeholder="optional" />
+                                            <div class="form-text">Only URLs with this tag will receive notifications.
+                                            </div>
                                         </div>
                                     </div>
 
@@ -291,8 +269,10 @@
                                         <div class="row g-3 mt-1">
                                             <div class="col-lg-4 col-md-6">
                                                 <label class="form-label" for="apprise-key">Key</label>
-                                                <input class="form-control" type="text" id="apprise-key" placeholder="ankerctl" />
-                                                <div class="form-text">Used for <code>/notify/&lt;key&gt;</code> on the Apprise server.</div>
+                                                <input class="form-control" type="text" id="apprise-key"
+                                                    placeholder="ankerctl" />
+                                                <div class="form-text">Used for <code>/notify/&lt;key&gt;</code> on the
+                                                    Apprise server.</div>
                                             </div>
                                         </div>
                                     </details>
@@ -302,32 +282,42 @@
                                         <div class="row g-2 mt-1">
                                             <div class="col-md-6">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="apprise-event-print-started" />
-                                                    <label class="form-check-label" for="apprise-event-print-started">Print started</label>
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="apprise-event-print-started" />
+                                                    <label class="form-check-label"
+                                                        for="apprise-event-print-started">Print started</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="apprise-event-print-finished" />
-                                                    <label class="form-check-label" for="apprise-event-print-finished">Print finished</label>
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="apprise-event-print-finished" />
+                                                    <label class="form-check-label"
+                                                        for="apprise-event-print-finished">Print finished</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="apprise-event-print-failed" />
-                                                    <label class="form-check-label" for="apprise-event-print-failed">Print failed</label>
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="apprise-event-print-failed" />
+                                                    <label class="form-check-label"
+                                                        for="apprise-event-print-failed">Print failed</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="apprise-event-gcode-uploaded" />
-                                                    <label class="form-check-label" for="apprise-event-gcode-uploaded">Upload complete</label>
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="apprise-event-gcode-uploaded" />
+                                                    <label class="form-check-label"
+                                                        for="apprise-event-gcode-uploaded">Upload complete</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="apprise-event-print-progress" />
-                                                    <label class="form-check-label" for="apprise-event-print-progress">Print progress</label>
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="apprise-event-print-progress" />
+                                                    <label class="form-check-label"
+                                                        for="apprise-event-print-progress">Print progress</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -335,18 +325,14 @@
 
                                     <div class="row g-3 align-items-end">
                                         <div class="col-md-4">
-                                            <label class="form-label" for="apprise-progress-interval">Progress interval (%)</label>
-                                            <input
-                                                class="form-control"
-                                                type="number"
-                                                min="1"
-                                                max="100"
-                                                step="1"
-                                                id="apprise-progress-interval"
-                                            />
+                                            <label class="form-label" for="apprise-progress-interval">Progress interval
+                                                (%)</label>
+                                            <input class="form-control" type="number" min="1" max="100" step="1"
+                                                id="apprise-progress-interval" />
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label" for="apprise-snapshot-quality">Snapshot quality</label>
+                                            <label class="form-label" for="apprise-snapshot-quality">Snapshot
+                                                quality</label>
                                             <select class="form-select" id="apprise-snapshot-quality">
                                                 <option value="hd">HD (720p)</option>
                                                 <option value="fhd">FHD (1080p)</option>
@@ -354,29 +340,129 @@
                                         </div>
                                         <div class="col-md-4">
                                             <div class="form-check form-switch mt-4">
-                                                <input class="form-check-input" type="checkbox" role="switch" id="apprise-progress-image" />
-                                                <label class="form-check-label" for="apprise-progress-image">Include image when available</label>
+                                                <input class="form-check-input" type="checkbox" role="switch"
+                                                    id="apprise-progress-image" />
+                                                <label class="form-check-label" for="apprise-progress-image">Include
+                                                    image when available</label>
                                             </div>
                                             <div class="form-check form-switch mt-2">
-                                                <input class="form-check-input" type="checkbox" role="switch" id="apprise-snapshot-light" />
-                                                <label class="form-check-label" for="apprise-snapshot-light">Light on snapshot</label>
+                                                <input class="form-check-input" type="checkbox" role="switch"
+                                                    id="apprise-snapshot-light" />
+                                                <label class="form-check-label" for="apprise-snapshot-light">Light on
+                                                    snapshot</label>
                                             </div>
                                             <div class="form-check form-switch mt-2">
-                                                <input class="form-check-input" type="checkbox" role="switch" id="apprise-snapshot-fallback" />
-                                                <label class="form-check-label" for="apprise-snapshot-fallback">Fallback to preview image</label>
+                                                <input class="form-check-input" type="checkbox" role="switch"
+                                                    id="apprise-snapshot-fallback" />
+                                                <label class="form-check-label" for="apprise-snapshot-fallback">Fallback
+                                                    to preview image</label>
                                             </div>
-                                            <div class="form-text">Live snapshots are preferred; fallback uses the GCODE preview.</div>
+                                            <div class="form-text">Live snapshots are preferred; fallback uses the GCODE
+                                                preview.</div>
                                         </div>
                                     </div>
 
                                     <div class="d-flex flex-wrap gap-2">
                                         <button class="btn btn-primary" type="button" id="apprise-save">Save</button>
-                                        <button class="btn btn-secondary" type="button" id="apprise-test">Send test</button>
+                                        <button class="btn btn-secondary" type="button" id="apprise-test">Send
+                                            test</button>
                                     </div>
                                     <div class="form-text">
-                                        Apprise posts to <code>/notify/&lt;key&gt;</code>. Leave tag empty to notify all URLs under the key.
+                                        Apprise posts to <code>/notify/&lt;key&gt;</code>. Leave tag empty to notify all
+                                        URLs under the key.
                                     </div>
-                                    <div class="form-text">Environment variables (<code>APPRISE_*</code>) override these values.</div>
+                                    <div class="form-text">Environment variables (<code>APPRISE_*</code>) override these
+                                        values.</div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== TIMELAPSE TAB ===== -->
+                    <div class="tab-pane fade" id="setup-timelapse-pane" role="tabpanel"
+                        aria-labelledby="setup-timelapse-tab">
+                        <div class="card">
+                            <div class="card-header fs-4">Timelapse</div>
+                            <div class="card-body">
+                                <form id="timelapse-form" class="vstack gap-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            id="timelapse-enabled" />
+                                        <label class="form-check-label" for="timelapse-enabled">Enable Timelapse</label>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="timelapse-interval">Interval
+                                                (seconds)</label>
+                                            <input class="form-control" type="number" id="timelapse-interval" min="1"
+                                                value="10" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="timelapse-max-videos">Max retained
+                                                videos</label>
+                                            <input class="form-control" type="number" id="timelapse-max-videos" min="1"
+                                                value="50" />
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            id="timelapse-persistent" checked />
+                                        <label class="form-check-label" for="timelapse-persistent">Save persistently (to
+                                            disk)</label>
+                                    </div>
+                                    <button class="btn btn-primary" type="button" id="timelapse-save">Save</button>
+                                    <div class="form-text">Environment variables override these values if set.</div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== MQTT / HOME ASSISTANT TAB ===== -->
+                    <div class="tab-pane fade" id="setup-mqtt-pane" role="tabpanel" aria-labelledby="setup-mqtt-tab">
+                        <div class="card">
+                            <div class="card-header fs-4">Home Assistant (MQTT)</div>
+                            <div class="card-body">
+                                <form id="mqtt-form" class="vstack gap-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            id="mqtt-enabled" />
+                                        <label class="form-check-label" for="mqtt-enabled">Enable Home Assistant
+                                            Discovery</label>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-8">
+                                            <label class="form-label" for="mqtt-host">Broker Host</label>
+                                            <input class="form-control" type="text" id="mqtt-host"
+                                                placeholder="homeassistant.local" />
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label" for="mqtt-port">Broker Port</label>
+                                            <input class="form-control" type="number" id="mqtt-port"
+                                                placeholder="1883" />
+                                        </div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="mqtt-user">Username</label>
+                                            <input class="form-control" type="text" id="mqtt-user" autocomplete="off" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="mqtt-password">Password</label>
+                                            <input class="form-control" type="password" id="mqtt-password"
+                                                autocomplete="off" />
+                                        </div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label" for="mqtt-prefix">Discovery Prefix</label>
+                                            <input class="form-control" type="text" id="mqtt-prefix"
+                                                placeholder="homeassistant" />
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-primary" type="button" id="mqtt-save">Save & Restart
+                                        Service</button>
+                                    <div class="form-text">Requires restart of MQTT service (automatic). Environment
+                                        variables override.</div>
                                 </form>
                             </div>
                         </div>
