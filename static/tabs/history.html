@@ -1,0 +1,43 @@
+<div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+    <div class="container-fluid mt-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card">
+                    <div class="card-header fs-5 d-flex justify-content-between align-items-center">
+                        <span>{{ macro.bi_icon("clock-history") }} Print History</span>
+                        <button class="btn btn-sm btn-outline-danger" id="history-clear">
+                            {{ macro.bi_icon("trash") }} Clear
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm mb-0" id="history-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>File</th>
+                                        <th>Status</th>
+                                        <th>Started</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-tbody">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <button class="btn btn-sm btn-outline-secondary" id="history-load-more" style="display:none;">
+                            Load More
+                        </button>
+                        <span class="text-muted small" id="history-count"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

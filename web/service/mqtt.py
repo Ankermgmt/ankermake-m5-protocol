@@ -15,12 +15,15 @@ from libflagship.notifications.events import (
 
 import cli.mqtt
 from ..notifications import AppriseNotifier, format_duration
+from .history import PrintHistory
 
 
 class MqttQueue(Service):
 
     def worker_init(self):
         self._notifier = AppriseNotifier(app.config["config"])
+        config_root = str(app.config["config"].config_root)
+        self._history = PrintHistory(db_path=f"{config_root}/history.db")
         self._reset_print_state()
 
     def worker_start(self):
@@ -45,6 +48,10 @@ class MqttQueue(Service):
     @property
     def is_printing(self):
         return self._print_active
+
+    @property
+    def history(self):
+        return self._history
 
     def worker_run(self, timeout):
         for msg, body in self.client.fetch(timeout=timeout):
@@ -244,6 +251,7 @@ class MqttQueue(Service):
                 EVENT_PRINT_FAILED,
                 self._build_payload(payload, progress, failure_reason=failure_reason),
             )
+            self._history.record_fail(filename=self._last_filename, reason=failure_reason)
             self._failure_sent = True
             self._print_active = False
             return
@@ -257,6 +265,7 @@ class MqttQueue(Service):
                 EVENT_PRINT_STARTED,
                 self._build_payload(payload, progress),
             )
+            self._history.record_start(filename or "unknown")
 
         status_text = self._extract_status_text(payload)
         if self._print_active and status_text:
@@ -266,6 +275,7 @@ class MqttQueue(Service):
                     self._build_payload(payload, 100),
                     include_image=True,
                 )
+                self._history.record_finish(filename=self._last_filename)
                 self._reset_print_state()
                 return
 
@@ -275,6 +285,7 @@ class MqttQueue(Service):
                 self._build_payload(payload, 100),
                 include_image=True,
             )
+            self._history.record_finish(filename=self._last_filename)
             self._reset_print_state()
             return
 

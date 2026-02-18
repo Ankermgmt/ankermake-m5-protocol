@@ -976,4 +976,76 @@ $(function () {
         document.body.classList.add("print-controls-hidden");
     }
 
+    /**
+     * Print History Tab
+     */
+    let historyOffset = 0;
+    const HISTORY_LIMIT = 25;
+
+    function formatDuration(sec) {
+        if (!sec) return "-";
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        const s = sec % 60;
+        return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`;
+    }
+
+    function statusBadge(status) {
+        const map = {
+            started: '<span class="badge bg-primary">In Progress</span>',
+            finished: '<span class="badge bg-success">Finished</span>',
+            failed: '<span class="badge bg-danger">Failed</span>',
+        };
+        return map[status] || `<span class="badge bg-secondary">${status}</span>`;
+    }
+
+    function loadHistory(append) {
+        fetch(`/api/history?limit=${HISTORY_LIMIT}&offset=${historyOffset}`)
+            .then(r => r.json())
+            .then(data => {
+                const tbody = $("#history-tbody");
+                if (!append) tbody.empty();
+                if (data.entries.length === 0 && !append) {
+                    tbody.html('<tr><td colspan="4" class="text-center text-muted py-4">No history yet</td></tr>');
+                }
+                data.entries.forEach(e => {
+                    const started = e.started_at ? new Date(e.started_at + "Z").toLocaleString() : "-";
+                    const row = `<tr>
+                        <td class="text-truncate" style="max-width:200px;" title="${e.filename}">${e.filename}</td>
+                        <td>${statusBadge(e.status)}</td>
+                        <td class="small">${started}</td>
+                        <td>${formatDuration(e.duration_sec)}</td>
+                    </tr>`;
+                    tbody.append(row);
+                });
+                $("#history-count").text(`${Math.min(historyOffset + data.entries.length, data.total)} / ${data.total} entries`);
+                if (historyOffset + data.entries.length < data.total) {
+                    $("#history-load-more").show();
+                } else {
+                    $("#history-load-more").hide();
+                }
+            })
+            .catch(err => console.error("History load failed:", err));
+    }
+
+    // Load on tab switch
+    $('button[data-bs-target="#history"]').on("shown.bs.tab", function () {
+        historyOffset = 0;
+        loadHistory(false);
+    });
+
+    $("#history-load-more").on("click", function () {
+        historyOffset += HISTORY_LIMIT;
+        loadHistory(true);
+    });
+
+    $("#history-clear").on("click", function () {
+        if (!confirm("Clear all print history?")) return;
+        fetch("/api/history", { method: "DELETE" })
+            .then(() => {
+                historyOffset = 0;
+                loadHistory(false);
+            });
+    });
+
 });
