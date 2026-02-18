@@ -42,6 +42,10 @@ class MqttQueue(Service):
         self._failure_sent = False
         self._preview_url = None
 
+    @property
+    def is_printing(self):
+        return self._print_active
+
     def worker_run(self, timeout):
         for msg, body in self.client.fetch(timeout=timeout):
             log.info(f"TOPIC [{msg.topic}]")

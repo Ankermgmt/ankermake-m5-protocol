@@ -558,6 +558,9 @@ def app_api_notifications_test():
         return {"status": "ok", "message": message}
     return {"error": message}, 400
 
+# GCode prefixes that are unsafe to send while a print is active
+_UNSAFE_GCODE_PREFIXES = {"G0", "G1", "G28", "G29", "G91", "G90"}
+
 @app.post("/api/printer/gcode")
 def app_api_printer_gcode():
     payload = request.get_json(silent=True)
@@ -565,7 +568,13 @@ def app_api_printer_gcode():
         return {"error": "Missing gcode"}, 400
 
     gcode = payload["gcode"]
+    lines = [line.strip() for line in gcode.split('\n') if line.strip()]
+
     with app.svc.borrow("mqttqueue") as mqtt:
+        if mqtt.is_printing:
+            unsafe = [l for l in lines if l.split()[0].upper() in _UNSAFE_GCODE_PREFIXES]
+            if unsafe:
+                return {"error": "Motion commands blocked while printing"}, 409
         mqtt.send_gcode(gcode)
 
     return {"status": "ok"}
@@ -591,6 +600,8 @@ def app_api_printer_control():
 @app.post("/api/printer/autolevel")
 def app_api_printer_autolevel():
     with app.svc.borrow("mqttqueue") as mqtt:
+        if mqtt.is_printing:
+            return {"error": "Auto-leveling blocked while printing"}, 409
         mqtt.send_auto_leveling()
     return {"status": "ok"}
 
