@@ -57,9 +57,42 @@ class PrintHistory:
             """, (self._max_entries,))
 
     def record_start(self, filename):
-        """Record a print start. Returns the row id."""
+        """Record a print start. Returns the row id.
+
+        If an open 'started' entry for the same filename already exists (e.g. after a
+        container restart mid-print), that entry is reused so the session continues
+        cleanly.  Any orphaned entries for *different* filenames are closed first.
+        """
         with self._lock:
             with self._connect() as conn:
+                # Resume existing open entry for the same file (restart mid-print)
+                if filename and filename != "unknown":
+                    existing = conn.execute(
+                        "SELECT id FROM print_history WHERE status='started' AND filename=?"
+                        " ORDER BY id DESC LIMIT 1",
+                        (filename,)
+                    ).fetchone()
+                    if existing:
+                        log.info(f"History: resuming entry id={existing['id']} for {filename!r}")
+                        conn.commit()
+                        return existing["id"]
+
+                # Close any orphaned entries that belong to a different (or unknown) job
+                orphans = conn.execute(
+                    "SELECT id, started_at FROM print_history WHERE status='started'"
+                ).fetchall()
+                if orphans:
+                    now = datetime.utcnow()
+                    for row in orphans:
+                        started = datetime.fromisoformat(row["started_at"])
+                        duration = int((now - started).total_seconds())
+                        conn.execute(
+                            "UPDATE print_history SET status='finished', finished_at=?,"
+                            " duration_sec=? WHERE id=?",
+                            (now.isoformat(), duration, row["id"]),
+                        )
+                    log.info(f"History: closed {len(orphans)} orphaned entries before new print")
+
                 cur = conn.execute(
                     "INSERT INTO print_history (filename, status, started_at) VALUES (?, 'started', ?)",
                     (filename, datetime.utcnow().isoformat())

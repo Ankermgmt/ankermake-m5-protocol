@@ -1,0 +1,7 @@
+{
+  "name": "ankerctl-plugin",
+  "description": "Claude Code plugin für AnkerMake M5 Protocol Entwicklung - Commands und Skills für Protokoll, CLI, Web und Notifications",
+  "author": {
+    "name": "AnkerMake Community"
+  }
+}

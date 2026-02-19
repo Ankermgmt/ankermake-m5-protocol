@@ -30,7 +30,8 @@ _AVAILABILITY_TIMEOUT = 60  # seconds between availability pings
 class HomeAssistantService:
     """Bridges ankerctl printer data to Home Assistant via MQTT Discovery."""
 
-    def __init__(self, config, printer_sn=None, printer_name=None):
+    def __init__(self, config_manager, printer_sn=None, printer_name=None):
+        self._config_manager = config_manager
         self._printer_sn = printer_sn or "ankerctl"
         self._printer_name = printer_name or "AnkerMake M5"
         self._node_id = f"ankerctl_{self._printer_sn}"
@@ -58,7 +59,7 @@ class HomeAssistantService:
             "pppp_connected": False,
             "light": False,
         }
-        
+
         # Set defaults
         self._enabled = False
         self._host = _DEFAULT_HOST
@@ -68,10 +69,19 @@ class HomeAssistantService:
         self._discovery_prefix = _DEFAULT_DISCOVERY_PREFIX
         self._topic_prefix = _DEFAULT_TOPIC_PREFIX
 
-        self.reload_config(config)
+        self.reload_config()
 
-    def reload_config(self, config):
-        if not config or not config.home_assistant:
+    def reload_config(self, config=None):
+        # If no config passed, use stored config_manager
+        if config is None:
+            config = self._config_manager
+
+        # If config is a ConfigManager (has .open() method), load the actual config
+        if config and hasattr(config, 'open'):
+            with config.open() as cfg:
+                config = cfg
+
+        if not config or not getattr(config, 'home_assistant', None):
             return
 
         cfg = config.home_assistant

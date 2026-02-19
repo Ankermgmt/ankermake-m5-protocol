@@ -192,7 +192,7 @@ python examples/web_login_test.py    # Test web authentication
 ### Storage Location
 
 - **Linux/macOS:** `~/.config/ankerctl/default.json`
-- **Container:** `/root/.config/ankerctl/` (mounted volume)
+- **Container:** `/home/ankerctl/.config/ankerctl/` (mounted volume)
 
 ### Sensitive Data
 
@@ -344,7 +344,7 @@ CI builds for: `linux/arm/v7`, `linux/arm64`, `linux/amd64`
 
 ### Volume Mounts
 
-- Configuration: `/root/.config` (maps to host config)
+- Configuration: `/home/ankerctl/.config/ankerctl` (maps to host config)
 - SSL certificates: `/app/ssl`
 
 ## Common Tasks
