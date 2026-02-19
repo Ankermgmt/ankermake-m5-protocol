@@ -851,7 +851,45 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
         app.config.update(kwargs)
         if cfg:
             register_services(app)
-        app.run(host=host, port=port)
+
+    @app.context_processor
+    def inject_debug():
+        import os
+        return {"debug_mode": os.getenv("ANKERCTL_DEV_MODE", "false").lower() == "true"}
+
+    app.run(host=host, port=port)
+
+
+@app.get("/api/debug/state")
+def app_api_debug_state():
+    with app.svc.borrow("mqttqueue") as mqtt:
+        if not mqtt:
+            return {"error": "Service unavailable"}, 503
+        return mqtt.get_state()
+
+
+@app.post("/api/debug/config")
+def app_api_debug_config():
+    payload = request.get_json(silent=True) or {}
+    logging = payload.get("debug_logging")
+    with app.svc.borrow("mqttqueue") as mqtt:
+        if not mqtt:
+            return {"error": "Service unavailable"}, 503
+        if logging is not None:
+            mqtt.set_debug_logging(bool(logging))
+    return {"status": "ok"}
+
+
+@app.post("/api/debug/simulate")
+def app_api_debug_simulate():
+    payload = request.get_json(silent=True) or {}
+    event_type = payload.get("type")
+    event_payload = payload.get("payload") or {}
+    with app.svc.borrow("mqttqueue") as mqtt:
+        if not mqtt:
+            return {"error": "Service unavailable"}, 503
+        mqtt.simulate_event(event_type, event_payload)
+    return {"status": "ok"}
 
 # GET endpoints that modify state and require auth despite being GET
 _PROTECTED_GET_PATHS = {

@@ -1357,4 +1357,57 @@ $(function () {
         loadMqttSettings();
     }
 
+    /**
+     * Debug Console Logic
+     */
+    if ($("#debugModal").length) {
+        window.refreshDebugState = async function () {
+            try {
+                const resp = await fetch("/api/debug/state");
+                const data = await resp.json();
+                $("#debug-state-dump").text(JSON.stringify(data, null, 2));
+                // Sync UI with state
+                if (data.debug_logging !== undefined) {
+                    $("#debug-log-mqtt").prop("checked", data.debug_logging);
+                }
+            } catch (err) {
+                $("#debug-state-dump").text("Error fetching state: " + err);
+            }
+        };
+
+        window.simEvent = async function (type, payload) {
+            try {
+                await fetch("/api/debug/simulate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type: type, payload: payload })
+                });
+                refreshDebugState();
+            } catch (err) {
+                alert("Sim failed: " + err);
+            }
+        };
+
+        $("#debug-log-mqtt").on("change", async function () {
+            const enabled = $(this).is(":checked");
+            await fetch("/api/debug/config", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ debug_logging: enabled })
+            });
+            refreshDebugState();
+        });
+
+        // Auto-refresh when modal is opened
+        const debugModal = document.getElementById('debugModal');
+        let refreshInterval = null;
+        debugModal.addEventListener('shown.bs.modal', function () {
+            refreshDebugState();
+            refreshInterval = setInterval(refreshDebugState, 2000);
+        });
+        debugModal.addEventListener('hidden.bs.modal', function () {
+            if (refreshInterval) clearInterval(refreshInterval);
+        });
+    }
+
 });

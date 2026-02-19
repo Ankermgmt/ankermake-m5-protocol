@@ -61,6 +61,9 @@ class MqttQueue(Service):
         self._last_task_id = None
         self._failure_sent = False
         self._preview_url = None
+        # Preserve debug setting across resets if possible, but init here if missing
+        if not hasattr(self, "_debug_log_payloads"):
+             self._debug_log_payloads = False
 
     @property
     def is_printing(self):
@@ -88,7 +91,7 @@ class MqttQueue(Service):
         for msg, body in self.client.fetch(timeout=timeout):
             log.info(f"TOPIC [{msg.topic}]")
             log.debug(enhex(msg.payload[:]))
-            if body:
+            if body and getattr(self, "_debug_log_payloads", False):
                 import json
                 log.info(f"DEBUG MQTT PAYLOAD: {json.dumps(body, default=str)}")
 
@@ -480,6 +483,42 @@ class MqttQueue(Service):
         self._notifier.send(event, payload=payload, attachments=attachments)
         if cleanup_paths:
             self._notifier.cleanup_attachments(cleanup_paths)
+
+    def set_debug_logging(self, enabled):
+        self._debug_log_payloads = enabled
+        log.info(f"Debug logging {'enabled' if enabled else 'disabled'}")
+
+    def get_state(self):
+        """Return internal state for debug inspection."""
+        return {
+            "is_printing": self._print_active,
+            "started_at": self._print_started_at,
+            "last_progress": self._last_progress,
+            "last_filename": self._last_filename,
+            "last_task_id": self._last_task_id,
+            "failure_sent": self._failure_sent,
+            "preview_url": self._preview_url,
+            "debug_logging": getattr(self, "_debug_log_payloads", False)
+        }
+
+    def simulate_event(self, event_type, payload=None):
+        """Simulate an MQTT event for testing."""
+        if not payload:
+            payload = {}
+        log.info(f"Simulating event: {event_type} with payload {payload}")
+        if event_type == "start":
+            self._print_active = True
+            self._print_started_at = time.time()
+            self._send_event(EVENT_PRINT_STARTED, self._build_payload(payload, 0))
+            self._history.record_start(payload.get("filename") or "simulated.gcode")
+        elif event_type == "finish":
+            self._send_event(EVENT_PRINT_FINISHED, self._build_payload(payload, 100))
+            self._history.record_finish(filename=payload.get("filename"))
+            self._reset_print_state()
+        elif event_type == "fail":
+            self._send_event(EVENT_PRINT_FAILED, self._build_payload(payload, 50, failure_reason="Simulation"))
+            self._history.record_fail(filename=payload.get("filename"), reason="Simulation")
+            self._reset_print_state()
 
     def send_gcode(self, gcode):
         if not gcode:
