@@ -88,6 +88,9 @@ class MqttQueue(Service):
         for msg, body in self.client.fetch(timeout=timeout):
             log.info(f"TOPIC [{msg.topic}]")
             log.debug(enhex(msg.payload[:]))
+            if body:
+                import json
+                log.info(f"DEBUG MQTT PAYLOAD: {json.dumps(body, default=str)}")
 
             for obj in body:
                 self.notify(obj)
