@@ -1408,6 +1408,72 @@ $(function () {
         debugModal.addEventListener('hidden.bs.modal', function () {
             if (refreshInterval) clearInterval(refreshInterval);
         });
+
+        // --- Log Viewer Logic ---
+        const debugLogFileSelect = $("#debug-log-file");
+        const debugLogContent = $("#debug-log-content");
+        const debugLogAutoRefresh = $("#debug-log-autorefresh");
+        let logRefreshInterval = null;
+
+        async function refreshLogList() {
+            try {
+                const resp = await fetch("/api/debug/logs");
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const currentVal = debugLogFileSelect.val();
+                    debugLogFileSelect.empty();
+                    $('<option value="" disabled selected>Select Log File...</option>').appendTo(debugLogFileSelect);
+                    data.files.forEach(file => {
+                        const selected = (file === currentVal) ? " selected" : "";
+                        $(`<option value="${file}"${selected}>${file}</option>`).appendTo(debugLogFileSelect);
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to list logs:", err);
+            }
+        }
+
+        window.loadLogContent = async function () {
+            const filename = debugLogFileSelect.val();
+            if (!filename) return;
+
+            try {
+                const resp = await fetch(`/api/debug/logs/${filename}?lines=500`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    debugLogContent.text(data.content);
+                    const pre = debugLogContent.parent();
+                    pre.scrollTop(pre.prop("scrollHeight"));
+                } else {
+                    debugLogContent.text(`Error loading log: ${resp.status}`);
+                }
+            } catch (err) {
+                debugLogContent.text(`Error loading log: ${err}`);
+            }
+        };
+
+        const logsTab = document.getElementById('logs-tab');
+        if (logsTab) {
+            logsTab.addEventListener('shown.bs.tab', refreshLogList);
+        }
+
+        debugLogAutoRefresh.on("change", function () {
+            if (this.checked) {
+                loadLogContent();
+                logRefreshInterval = setInterval(loadLogContent, 5000);
+            } else {
+                if (logRefreshInterval) clearInterval(logRefreshInterval);
+                logRefreshInterval = null;
+            }
+        });
+
+        debugModal.addEventListener('hidden.bs.modal', function () {
+            if (logRefreshInterval) {
+                clearInterval(logRefreshInterval);
+                logRefreshInterval = null;
+                debugLogAutoRefresh.prop("checked", false);
+            }
+        });
     }
 
 });

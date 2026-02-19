@@ -1,5 +1,8 @@
 import click
-import logging as log
+import logging
+
+log = logging.getLogger("cli.mqtt")
+
 
 import cli.util
 

@@ -8,10 +8,13 @@ State updates are published whenever the MQTT service forwards new data.
 """
 
 import json
-import logging as log
+import logging
 import os
 import threading
 import time
+
+log = logging.getLogger("homeassistant")
+
 
 import paho.mqtt.client as paho_mqtt
 

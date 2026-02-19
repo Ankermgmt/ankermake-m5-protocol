@@ -1,4 +1,4 @@
-import logging as log
+import logging
 import time
 
 from ..lib.service import Service
@@ -12,6 +12,9 @@ from libflagship.notifications.events import (
     EVENT_PRINT_FAILED,
     EVENT_PRINT_PROGRESS,
 )
+
+log = logging.getLogger("mqtt")
+
 
 import cli.mqtt
 from ..notifications import AppriseNotifier, format_duration
@@ -372,7 +375,7 @@ class MqttQueue(Service):
                 EVENT_PRINT_FAILED,
                 self._build_payload(payload, progress, failure_reason=failure_reason),
             )
-            self._history.record_fail(filename=self._last_filename, reason=failure_reason)
+            self._history.record_fail(filename=self._last_filename, reason=failure_reason, task_id=self._last_task_id)
             self._timelapse.fail_capture()
             self._ha.update_state(print_status="failed")
             self._failure_sent = True
@@ -388,7 +391,7 @@ class MqttQueue(Service):
                 EVENT_PRINT_STARTED,
                 self._build_payload(payload, progress),
             )
-            self._history.record_start(filename or "unknown")
+            self._history.record_start(filename or "unknown", task_id=task_id)
             self._timelapse.start_capture(filename or "unknown")
             self._ha.update_state(print_status="printing")
 
@@ -400,7 +403,7 @@ class MqttQueue(Service):
                     self._build_payload(payload, 100),
                     include_image=True,
                 )
-                self._history.record_finish(filename=self._last_filename)
+                self._history.record_finish(filename=self._last_filename, task_id=self._last_task_id)
                 self._timelapse.finish_capture()
                 self._ha.update_state(print_status="complete", print_progress=100)
                 self._reset_print_state()
@@ -412,11 +415,12 @@ class MqttQueue(Service):
                 self._build_payload(payload, 100),
                 include_image=True,
             )
-            self._history.record_finish(filename=self._last_filename)
+            self._history.record_finish(filename=self._last_filename, task_id=self._last_task_id)
             self._timelapse.finish_capture()
             self._ha.update_state(print_status="complete", print_progress=100)
             self._reset_print_state()
             return
+
 
         self._emit_progress(payload, progress)
         self._last_progress = progress

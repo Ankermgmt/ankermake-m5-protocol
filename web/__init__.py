@@ -28,9 +28,12 @@ Services:
     - config: Handles configuration manipulation for ankerctl
 """
 import json
-import logging as log
+import logging
 import os
 import time
+
+log = logging.getLogger("web")
+
 
 from secrets import token_urlsafe as token
 from flask import Flask, flash, request, render_template, Response, session, url_for, jsonify
@@ -890,6 +893,39 @@ def app_api_debug_simulate():
             return {"error": "Service unavailable"}, 503
         mqtt.simulate_event(event_type, event_payload)
     return {"status": "ok"}
+
+
+@app.get("/api/debug/logs")
+def app_api_debug_logs_list():
+    import glob
+    log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
+    files = glob.glob(os.path.join(log_dir, "*.log"))
+    return {"files": sorted([os.path.basename(f) for f in files])}
+
+
+@app.get("/api/debug/logs/<filename>")
+def app_api_debug_logs_content(filename):
+    import collections
+    log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
+    # basic path traversal protection
+    if "/" in filename or "\\" in filename or ".." in filename:
+        return {"error": "Invalid filename"}, 400
+    
+    filepath = os.path.join(log_dir, filename)
+    if not os.path.exists(filepath):
+        return {"error": "File not found"}, 404
+        
+    lines_count = request.args.get("lines", 500, type=int)
+    
+    try:
+        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+            # Use collections.deque to keep only last N lines efficienty
+            lines = list(collections.deque(f, lines_count))
+            content = "".join(lines)
+            return {"filename": filename, "content": content}
+    except Exception as e:
+        return {"error": str(e)}, 500
+
 
 # GET endpoints that modify state and require auth despite being GET
 _PROTECTED_GET_PATHS = {

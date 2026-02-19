@@ -16,7 +16,11 @@ services:
         volumes:
             - ankerctl_vol:/home/ankerctl/.config/ankerctl
             - captures_vol:/captures
+            - logs_vol:/logs
 
 volumes:
     ankerctl_vol:
     captures_vol:
+    logs_vol:
+
+

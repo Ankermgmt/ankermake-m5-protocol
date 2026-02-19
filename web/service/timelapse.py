@@ -1,9 +1,12 @@
 """Timelapse capture service — periodic snapshots assembled into video."""
 
-import logging as log
+import logging
 import os
 import shutil
 import subprocess
+
+log = logging.getLogger("timelapse")
+
 import tempfile
 import threading
 import time

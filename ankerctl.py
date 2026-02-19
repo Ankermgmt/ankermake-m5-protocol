@@ -7,7 +7,10 @@ import click
 import platform
 import getpass
 import webbrowser
-import logging as log
+import logging
+
+log = logging.getLogger("main")
+
 from os import path, environ
 from rich import print  # you need python3
 from tqdm import tqdm
@@ -72,18 +75,20 @@ def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
     ctx.ensure_object(Environment)
     env = ctx.obj
     levels = {
-        -3: log.CRITICAL,
-        -2: log.ERROR,
-        -1: log.WARNING,
-        0: log.INFO,
-        1: log.DEBUG,
+        -3: logging.CRITICAL,
+        -2: logging.ERROR,
+        -1: logging.WARNING,
+        0: logging.INFO,
+        1: logging.DEBUG,
     }
     env.config   = cli.config.configmgr()
     env.insecure = insecure
     env.level = max(-3, min(verbose - quiet, 1))
     env.pppp_dump = pppp_dump
+    
+    log_dir = environ.get("ANKERCTL_LOG_DIR")
+    cli.logfmt.setup_logging(levels[env.level], log_dir=log_dir)
 
-    cli.logfmt.setup_logging(levels[env.level])
 
     if insecure:
         import urllib3

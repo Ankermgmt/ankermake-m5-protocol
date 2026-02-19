@@ -3,8 +3,11 @@
 import os
 import sqlite3
 import threading
-import logging as log
+import logging
 from datetime import datetime, timedelta
+
+log = logging.getLogger("history")
+
 
 
 _DEFAULT_RETENTION_DAYS = 90
@@ -19,7 +22,8 @@ CREATE TABLE IF NOT EXISTS print_history (
     finished_at TEXT,
     duration_sec INTEGER,
     progress    INTEGER DEFAULT 0,
-    failure_reason TEXT
+    failure_reason TEXT,
+    task_id     TEXT
 );
 """
 
@@ -37,6 +41,21 @@ class PrintHistory:
     def _init_db(self):
         with self._connect() as conn:
             conn.executescript(_SCHEMA)
+            self._migrate_schema(conn)
+
+    def _migrate_schema(self, conn):
+        """Ensure schema is up to date."""
+        try:
+            # Check if task_id column exists
+            cursor = conn.execute("PRAGMA table_info(print_history)")
+            columns = [row[1] for row in cursor.fetchall()]
+            if "task_id" not in columns:
+                log.info("History: migrating schema, adding task_id column")
+                conn.execute("ALTER TABLE print_history ADD COLUMN task_id TEXT")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_task_id ON print_history(task_id)")
+        except Exception as e:
+            log.warning(f"History: schema migration failed: {e}")
+
 
     def _connect(self):
         conn = sqlite3.connect(self._db_path, check_same_thread=False)
@@ -56,34 +75,41 @@ class PrintHistory:
                 )
             """, (self._max_entries,))
 
-    def record_start(self, filename):
+    def record_start(self, filename, task_id=None):
         """Record a print start. Returns the row id.
 
-        If an open 'started' entry for the same filename already exists (e.g. after a
-        container restart mid-print), that entry is reused so the session continues
-        cleanly.  Any orphaned entries for *different* filenames are closed first.
+        If an open 'started' entry exists with the same task_id, it is resumed.
+        Otherwise, any existing open entries are closed (orphaned) and a new one is created.
         """
         with self._lock:
             with self._connect() as conn:
-                # Resume existing open entry for the same file (restart mid-print)
-                if filename and filename != "unknown":
+                # 1. Resume existing open entry for the same task_id
+                if task_id:
                     existing = conn.execute(
-                        "SELECT id FROM print_history WHERE status='started' AND filename=?"
-                        " ORDER BY id DESC LIMIT 1",
-                        (filename,)
+                        "SELECT id FROM print_history WHERE status='started' AND task_id=?",
+                        (task_id,)
                     ).fetchone()
                     if existing:
-                        log.info(f"History: resuming entry id={existing['id']} for {filename!r}")
+                        log.info(f"History: resuming entry id={existing['id']} for task_id={task_id}")
                         conn.commit()
                         return existing["id"]
 
-                # Close any orphaned entries that belong to a different (or unknown) job
-                orphans = conn.execute(
-                    "SELECT id, started_at FROM print_history WHERE status='started'"
-                ).fetchall()
+                # Fallback: Resume via filename if no task_id or legacy (only if same filename)
+                # This is risky if job restarts, but we prefer task_id now.
+                # If we have task_id, we trust it above filename.
+                
+                # 2. Close any *other* open entries (orphans)
+                # If we reached here, we are starting a NEW print session.
+                orp_sql = "SELECT id, started_at FROM print_history WHERE status='started'"
+                orphans = conn.execute(orp_sql).fetchall()
+                
                 if orphans:
                     now = datetime.utcnow()
                     for row in orphans:
+                        # Optional: If we match via filename here? No, let's strictly rely on task_id for resume if possible.
+                        # If task_id was NOT provided, maybe we fall back to filename matching?
+                        # But caller (mqtt) usually provides task_id now.
+                        
                         started = datetime.fromisoformat(row["started_at"])
                         duration = int((now - started).total_seconds())
                         conn.execute(
@@ -93,20 +119,22 @@ class PrintHistory:
                         )
                     log.info(f"History: closed {len(orphans)} orphaned entries before new print")
 
+                # 3. Create new entry
                 cur = conn.execute(
-                    "INSERT INTO print_history (filename, status, started_at) VALUES (?, 'started', ?)",
-                    (filename, datetime.utcnow().isoformat())
+                    "INSERT INTO print_history (filename, status, started_at, task_id) VALUES (?, 'started', ?, ?)",
+                    (filename, datetime.utcnow().isoformat(), task_id)
                 )
                 row_id = cur.lastrowid
                 self._prune(conn)
                 conn.commit()
                 return row_id
 
-    def record_finish(self, filename=None, progress=100):
+
+    def record_finish(self, filename=None, progress=100, task_id=None):
         """Mark the most recent matching print as finished."""
         with self._lock:
             with self._connect() as conn:
-                row = self._find_active(conn, filename)
+                row = self._find_active(conn, filename, task_id)
                 if not row:
                     log.debug("No active print to finish")
                     return
@@ -119,11 +147,11 @@ class PrintHistory:
                 )
                 conn.commit()
 
-    def record_fail(self, filename=None, reason=None):
+    def record_fail(self, filename=None, reason=None, task_id=None):
         """Mark the most recent matching print as failed."""
         with self._lock:
             with self._connect() as conn:
-                row = self._find_active(conn, filename)
+                row = self._find_active(conn, filename, task_id)
                 if not row:
                     log.debug("No active print to fail")
                     return
@@ -136,8 +164,18 @@ class PrintHistory:
                 )
                 conn.commit()
 
-    def _find_active(self, conn, filename=None):
-        """Find the most recent active print, optionally matching filename."""
+    def _find_active(self, conn, filename=None, task_id=None):
+        """Find the most recent active print, optionally matching task_id or filename."""
+        # 1. Try task_id match (strongest)
+        if task_id:
+            row = conn.execute(
+                "SELECT * FROM print_history WHERE status='started' AND task_id=?",
+                (task_id,)
+            ).fetchone()
+            if row:
+                return row
+
+        # 2. Try filename match (legacy/fallback)
         if filename:
             row = conn.execute(
                 "SELECT * FROM print_history WHERE status='started' AND filename=? ORDER BY id DESC LIMIT 1",
@@ -145,9 +183,12 @@ class PrintHistory:
             ).fetchone()
             if row:
                 return row
+
+        # 3. Fallback: Any active print (weakest)
         return conn.execute(
             "SELECT * FROM print_history WHERE status='started' ORDER BY id DESC LIMIT 1"
         ).fetchone()
+
 
     def get_history(self, limit=50, offset=0):
         """Return recent print history as list of dicts."""
