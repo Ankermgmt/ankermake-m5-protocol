@@ -1,4 +1,4 @@
-import logging as log
+import logging
 import time
 import uuid
 
@@ -10,6 +10,9 @@ from libflagship.ppppapi import FileUploadInfo, PPPPError
 
 import cli.util
 import cli.pppp
+from cli.util import patch_gcode_time
+
+log = logging.getLogger(__name__)
 
 from libflagship.notifications.events import EVENT_GCODE_UPLOADED
 from ..notifications import AppriseNotifier, format_bytes
@@ -33,7 +36,7 @@ class FileTransferService(Service):
             log.warning(f"Upload progress notify failed: {e}")
 
     def send_file(self, fd, user_name, rate_limit_mbps=None, start_print=True):
-        data = fd.read()
+        data = patch_gcode_time(fd.read())
         user_id = "-"
         try:
             with app.config["config"].open() as cfg:

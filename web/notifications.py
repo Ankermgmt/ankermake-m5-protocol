@@ -1,10 +1,12 @@
-import logging as log
+import logging
 import os
 import shutil
 import subprocess
 import tempfile
 import threading
 import time
+
+log = logging.getLogger(__name__)
 
 from libflagship.notifications import AppriseClient
 

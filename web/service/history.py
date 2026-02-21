@@ -4,7 +4,7 @@ import os
 import sqlite3
 import threading
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 log = logging.getLogger("history")
 
@@ -12,6 +12,8 @@ log = logging.getLogger("history")
 
 _DEFAULT_RETENTION_DAYS = 90
 _DEFAULT_MAX_ENTRIES = 500
+
+_PLACEHOLDER_NAMES = frozenset({"unknown", "unknown.gcode", ""})
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS print_history (
@@ -65,7 +67,7 @@ class PrintHistory:
     def _prune(self, conn):
         """Remove old entries beyond retention and max count."""
         if self._retention_days > 0:
-            cutoff = (datetime.utcnow() - timedelta(days=self._retention_days)).isoformat()
+            cutoff = (datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=self._retention_days)).isoformat()
             conn.execute("DELETE FROM print_history WHERE started_at < ?", (cutoff,))
 
         if self._max_entries > 0:
@@ -80,7 +82,14 @@ class PrintHistory:
 
         If an open 'started' entry exists with the same task_id, it is resumed.
         Otherwise, any existing open entries are closed (orphaned) and a new one is created.
+
+        Returns None immediately if *filename* is a placeholder (empty, 'unknown', etc.)
+        to avoid polluting history with uninformative entries.
         """
+        if not filename or filename.strip().lower() in _PLACEHOLDER_NAMES:
+            log.debug(f"History: skipping placeholder filename {filename!r}")
+            return None
+
         with self._lock:
             with self._connect() as conn:
                 # 1. Resume existing open entry for the same task_id
@@ -104,7 +113,7 @@ class PrintHistory:
                 orphans = conn.execute(orp_sql).fetchall()
                 
                 if orphans:
-                    now = datetime.utcnow()
+                    now = datetime.now(timezone.utc).replace(tzinfo=None)
                     for row in orphans:
                         # Optional: If we match via filename here? No, let's strictly rely on task_id for resume if possible.
                         # If task_id was NOT provided, maybe we fall back to filename matching?
@@ -113,16 +122,16 @@ class PrintHistory:
                         started = datetime.fromisoformat(row["started_at"])
                         duration = int((now - started).total_seconds())
                         conn.execute(
-                            "UPDATE print_history SET status='finished', finished_at=?,"
+                            "UPDATE print_history SET status='interrupted', finished_at=?,"
                             " duration_sec=? WHERE id=?",
                             (now.isoformat(), duration, row["id"]),
                         )
-                    log.info(f"History: closed {len(orphans)} orphaned entries before new print")
+                    log.info(f"History: marked {len(orphans)} orphaned entries as 'interrupted' before new print")
 
                 # 3. Create new entry
                 cur = conn.execute(
                     "INSERT INTO print_history (filename, status, started_at, task_id) VALUES (?, 'started', ?, ?)",
-                    (filename, datetime.utcnow().isoformat(), task_id)
+                    (filename, datetime.now(timezone.utc).replace(tzinfo=None).isoformat(), task_id)
                 )
                 row_id = cur.lastrowid
                 self._prune(conn)
@@ -138,7 +147,7 @@ class PrintHistory:
                 if not row:
                     log.debug("No active print to finish")
                     return
-                now = datetime.utcnow()
+                now = datetime.now(timezone.utc).replace(tzinfo=None)
                 started = datetime.fromisoformat(row["started_at"])
                 duration = int((now - started).total_seconds())
                 conn.execute(
@@ -155,7 +164,7 @@ class PrintHistory:
                 if not row:
                     log.debug("No active print to fail")
                     return
-                now = datetime.utcnow()
+                now = datetime.now(timezone.utc).replace(tzinfo=None)
                 started = datetime.fromisoformat(row["started_at"])
                 duration = int((now - started).total_seconds())
                 conn.execute(

@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from dataclasses import dataclass, field
 from libflagship.util import unhex, enhex
@@ -43,15 +44,14 @@ def default_notifications_config():
     }
 
 
-import os
-
 def default_timelapse_config():
     return {
         "enabled": os.getenv("TIMELAPSE_ENABLED", "false").lower() in ("true", "1", "yes"),
         "interval": int(os.getenv("TIMELAPSE_INTERVAL_SEC", 30)),
         "max_videos": int(os.getenv("TIMELAPSE_MAX_VIDEOS", 10)),
         "save_persistent": os.getenv("TIMELAPSE_SAVE_PERSISTENT", "true").lower() in ("true", "1", "yes"),
-        "output_dir": os.getenv("TIMELAPSE_CAPTURES_DIR", "/captures")
+        "output_dir": os.getenv("TIMELAPSE_CAPTURES_DIR", "/captures"),
+        "light": os.getenv("TIMELAPSE_LIGHT", None),
     }
 
 
@@ -89,31 +89,6 @@ class Serialize:
 
     @classmethod
     def from_dict(cls, data):
-        res = {}
-        for k, v in cls.__dataclass_fields__.items():
-            res[k] = data.get(k)  # Safe get
-            if res[k] is None and v.default_factory is not field(default_factory=dict).default_factory: 
-                 # This is a bit hacky, reliance on default factory if missing not automatic here unless we let dataclass handle it.
-                 # But we are constructing manually.
-                 pass
-
-            if k in data:
-                 res[k] = data[k]
-            
-            if v.type == bytes and res.get(k):
-                res[k] = unhex(res[k])
-            elif v.type == datetime and res.get(k):
-                res[k] = datetime.fromtimestamp(res[k])
-        # We need to rely on dataclass defaults if keys are missing
-        # Simple approach: filter out None keys if they are not in data, let __init__ defaults handle it?
-        # But Serialize implementation expects all fields?
-        # Let's look at original implementation.
-        # Original: res[k] = data[k] -> KeyError if missing.
-        # So I must ensure all fields are in 'data' before calling super().from_dict or handle it here.
-        
-        # Actually, looking at Config.from_dict below, it prepares 'data' before calling super().
-        # So I should leave Serialize alone and update Config.from_dict.
-        
         res = {}
         for k, v in cls.__dataclass_fields__.items():
             res[k] = data[k]

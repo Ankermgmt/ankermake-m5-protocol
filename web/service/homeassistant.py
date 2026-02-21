@@ -143,7 +143,10 @@ class HomeAssistantService:
             return
 
         log.info(f"HA MQTT: connecting to {self._host}:{self._port}")
-        self._client = paho_mqtt.Client(client_id=f"ankerctl-{self._printer_sn}", clean_session=True)
+        if hasattr(paho_mqtt, "CallbackAPIVersion"):
+            self._client = paho_mqtt.Client(paho_mqtt.CallbackAPIVersion.VERSION1, client_id=f"ankerctl-{self._printer_sn}", clean_session=True)
+        else:
+            self._client = paho_mqtt.Client(client_id=f"ankerctl-{self._printer_sn}", clean_session=True)
 
         if self._user:
             self._client.username_pw_set(self._user, self._password)

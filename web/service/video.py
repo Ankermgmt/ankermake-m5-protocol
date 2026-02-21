@@ -1,9 +1,11 @@
 import json
-import logging as log
+import logging
 import time
 
 from queue import Empty
 from multiprocessing import Queue
+
+log = logging.getLogger(__name__)
 
 from ..lib.service import Service, ServiceRestartSignal, RunState
 from .. import app
@@ -54,6 +56,7 @@ class VideoQueue(Service):
     def __init__(self):
         self.video_enabled = False
         self.last_frame_at = None
+        self._enable_generation = 0  # increments each time video is enabled
         super().__init__()
 
     def api_start_live(self):
@@ -66,12 +69,13 @@ class VideoQueue(Service):
         self.pppp.api_command(P2PSubCmdType.CLOSE_LIVE)
 
     def api_light_state(self, light):
-        self.saved_light_state = light
+        self.saved_light_state = light  # Track desired state regardless of connection
         if not self.pppp:
             return False
         self.pppp.api_command(P2PSubCmdType.LIGHT_STATE_SWITCH, data={
             "open": light,
         })
+        log.info(f"VideoQueue: light {'on' if light else 'off'}")
         return True
 
     def api_video_mode(self, mode):
@@ -182,6 +186,7 @@ class VideoQueue(Service):
         if not enabled:
             self.last_frame_at = None
         if enabled:
+            self._enable_generation += 1
             if self.state == RunState.Stopped:
                 self.start()
         else:
