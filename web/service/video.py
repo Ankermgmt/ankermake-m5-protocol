@@ -5,6 +5,8 @@ import time
 from queue import Empty
 from multiprocessing import Queue
 
+_STALL_TIMEOUT = 15.0  # seconds without a frame before forcing restart
+
 log = logging.getLogger(__name__)
 
 from ..lib.service import Service, ServiceRestartSignal, RunState
@@ -131,6 +133,7 @@ class VideoQueue(Service):
         self.saved_video_mode = None
         self.saved_video_profile_id = None
         self.last_frame_at = None
+        self._live_started_at = None
         self.pppp = None
 
     def worker_start(self):
@@ -142,6 +145,7 @@ class VideoQueue(Service):
 
         self.pppp.xzyh_handlers.append(self._handler)
 
+        self._live_started_at = time.monotonic()
         self.api_start_live()
 
         if self.saved_light_state is not None:
@@ -164,6 +168,18 @@ class VideoQueue(Service):
 
         if id(self.pppp._api) != self.api_id:
             raise ServiceRestartSignal("New pppp connection detected, restarting video feed")
+
+        # Detect video stream stall: if there are active consumers but no frames
+        # have arrived for _STALL_TIMEOUT seconds, restart to re-trigger api_start_live.
+        # This recovers from printer-side stream failures where PPPP stays up but
+        # the camera stops sending data (e.g. after bed leveling or a firmware quirk).
+        if self.handlers:
+            now = time.monotonic()
+            last = self.last_frame_at or self._live_started_at or now
+            if now - last > _STALL_TIMEOUT:
+                raise ServiceRestartSignal(
+                    f"No video frames received for {_STALL_TIMEOUT:.0f}s — restarting to refresh stream"
+                )
 
     def worker_stop(self):
         try:

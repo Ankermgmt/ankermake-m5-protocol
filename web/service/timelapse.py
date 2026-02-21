@@ -419,23 +419,11 @@ class TimelapseService:
         self._await_video_frame()
 
         frame_path = os.path.join(self._current_dir, f"frame_{self._frame_count:05d}.jpg")
-        result = subprocess.run(
-            [
-                "ffmpeg", "-loglevel", "error", "-nostdin", "-y",
-                "-f", "h264", "-i", url,
-                "-frames:v", "1",
-                frame_path,
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=_SNAPSHOT_TIMEOUT,
-        )
-        if result.returncode != 0:
-            # Retry without format hint
+        try:
             result = subprocess.run(
                 [
                     "ffmpeg", "-loglevel", "error", "-nostdin", "-y",
-                    "-i", url,
+                    "-f", "h264", "-i", url,
                     "-frames:v", "1",
                     frame_path,
                 ],
@@ -443,20 +431,34 @@ class TimelapseService:
                 stderr=subprocess.PIPE,
                 timeout=_SNAPSHOT_TIMEOUT,
             )
+            if result.returncode != 0:
+                # Retry without format hint
+                result = subprocess.run(
+                    [
+                        "ffmpeg", "-loglevel", "error", "-nostdin", "-y",
+                        "-i", url,
+                        "-frames:v", "1",
+                        frame_path,
+                    ],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=_SNAPSHOT_TIMEOUT,
+                )
 
-        if result.returncode == 0 and os.path.exists(frame_path) and os.path.getsize(frame_path) > 0:
-            self._frame_count += 1
-        else:
-            try:
-                os.remove(frame_path)
-            except OSError:
-                pass
-
-        if vq and snap_original_light is not True:
-            time.sleep(1.0)
-            restore = snap_original_light if snap_original_light is not None else False
-            log.info(f"Timelapse: restoring light to {restore} after snapshot")
-            vq.api_light_state(restore)
+            if result.returncode == 0 and os.path.exists(frame_path) and os.path.getsize(frame_path) > 0:
+                self._frame_count += 1
+            else:
+                try:
+                    os.remove(frame_path)
+                except OSError:
+                    pass
+        finally:
+            # Always restore light even if ffmpeg timed out or raised an exception
+            if vq and snap_original_light is not True:
+                time.sleep(1.0)
+                restore = snap_original_light if snap_original_light is not None else False
+                log.info(f"Timelapse: restoring light to {restore} after snapshot")
+                vq.api_light_state(restore)
 
     def _assemble_video(self, suffix=""):
         """Assemble current capture into an MP4 video."""

@@ -562,7 +562,7 @@ class MqttQueue(Service):
             "debug_logging": getattr(self, "_debug_log_payloads", False),
             "timelapse": {
                 "enabled": getattr(self._timelapse, "enabled", None),
-                "capturing": getattr(self._timelapse, "_capturing", None),
+                "capturing": bool(getattr(self._timelapse, "_capture_thread", None)),
             },
         }
 
