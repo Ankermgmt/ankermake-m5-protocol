@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 
 from ..lib.service import Service
@@ -64,6 +65,7 @@ class MqttQueue(Service):
         self._last_task_id = None
         self._failure_sent = False
         self._preview_url = None
+        self._pending_history_start = False
         # Preserve debug setting across resets if possible, but init here if missing
         if not hasattr(self, "_debug_log_payloads"):
              self._debug_log_payloads = False
@@ -324,6 +326,54 @@ class MqttQueue(Service):
         if preview_url:
             self._preview_url = preview_url
 
+        # --- commandType 1044: file upload started, capture filename ---
+        if command_type == 1044:
+            file_path = payload.get("filePath", "")
+            if file_path:
+                self._last_filename = os.path.basename(file_path)
+                log.info(f"History: captured filename from ct 1044: {self._last_filename}")
+            # If ct=1000 value=1 arrived before ct=1044, record the start now that we have the filename
+            if self._print_active and self._pending_history_start and self._last_filename:
+                self._history.record_start(self._last_filename, task_id=self._last_task_id)
+                self._pending_history_start = False
+            return
+
+        # --- commandType 1000: printer state machine transitions ---
+        if command_type == 1000:
+            value = payload.get("value")
+            if value == 1 and not self._print_active:
+                # Print is now running
+                self._print_active = True
+                self._print_started_at = time.monotonic()
+                self._failure_sent = False
+                self._last_progress_bucket = None
+                log.info(f"History: print started (ct 1000 value=1), filename={self._last_filename!r}")
+                if self._last_filename:
+                    self._history.record_start(self._last_filename, task_id=self._last_task_id)
+                    self._pending_history_start = False
+                else:
+                    # ct=1044 (filename) has not arrived yet — defer record_start
+                    self._pending_history_start = True
+                self._timelapse.start_capture(self._last_filename or "unknown")
+                self._ha.update_state(print_status="printing")
+                self._send_event(
+                    EVENT_PRINT_STARTED,
+                    self._build_payload(payload, 0),
+                )
+            elif value == 0 and self._print_active:
+                # Print ended (finished or cancelled)
+                log.info(f"History: print ended (ct 1000 value=0), filename={self._last_filename!r}")
+                self._history.record_finish(filename=self._last_filename, task_id=self._last_task_id)
+                self._timelapse.finish_capture(final=True)
+                self._ha.update_state(print_status="complete", print_progress=100)
+                self._send_event(
+                    EVENT_PRINT_FINISHED,
+                    self._build_payload(payload, 100),
+                    include_image=True,
+                )
+                self._reset_print_state()
+            return
+
         if command_type not in (
             MqttMsgType.ZZ_MQTT_CMD_PRINT_SCHEDULE,
             MqttMsgType.ZZ_MQTT_CMD_EVENT_NOTIFY,
@@ -391,8 +441,13 @@ class MqttQueue(Service):
                 EVENT_PRINT_STARTED,
                 self._build_payload(payload, progress),
             )
-            self._history.record_start(filename or "unknown", task_id=task_id)
-            self._timelapse.start_capture(filename or "unknown")
+            effective_filename = filename or self._last_filename
+            if effective_filename:
+                self._history.record_start(effective_filename, task_id=task_id)
+                self._pending_history_start = False
+            else:
+                self._pending_history_start = True
+            self._timelapse.start_capture(effective_filename or "unknown")
             self._ha.update_state(print_status="printing")
 
         status_text = self._extract_status_text(payload)
@@ -404,7 +459,7 @@ class MqttQueue(Service):
                     include_image=True,
                 )
                 self._history.record_finish(filename=self._last_filename, task_id=self._last_task_id)
-                self._timelapse.finish_capture()
+                self._timelapse.finish_capture(final=True)
                 self._ha.update_state(print_status="complete", print_progress=100)
                 self._reset_print_state()
                 return
@@ -416,7 +471,7 @@ class MqttQueue(Service):
                 include_image=True,
             )
             self._history.record_finish(filename=self._last_filename, task_id=self._last_task_id)
-            self._timelapse.finish_capture()
+            self._timelapse.finish_capture(final=True)
             self._ha.update_state(print_status="complete", print_progress=100)
             self._reset_print_state()
             return
@@ -493,36 +548,104 @@ class MqttQueue(Service):
         log.info(f"Debug logging {'enabled' if enabled else 'disabled'}")
 
     def get_state(self):
-        """Return internal state for debug inspection."""
+        """Return structured internal state for debug inspection."""
         return {
-            "is_printing": self._print_active,
-            "started_at": self._print_started_at,
-            "last_progress": self._last_progress,
-            "last_filename": self._last_filename,
-            "last_task_id": self._last_task_id,
-            "failure_sent": self._failure_sent,
-            "preview_url": self._preview_url,
-            "debug_logging": getattr(self, "_debug_log_payloads", False)
+            "print": {
+                "active": self._print_active,
+                "started_at": self._print_started_at,
+                "last_progress": self._last_progress,
+                "last_filename": self._last_filename,
+                "last_task_id": self._last_task_id,
+                "failure_sent": self._failure_sent,
+                "preview_url": self._preview_url,
+            },
+            "debug_logging": getattr(self, "_debug_log_payloads", False),
+            "timelapse": {
+                "enabled": getattr(self._timelapse, "enabled", None),
+                "capturing": getattr(self._timelapse, "_capturing", None),
+            },
         }
 
     def simulate_event(self, event_type, payload=None):
-        """Simulate an MQTT event for testing."""
+        """Simulate an MQTT event for testing.
+
+        Supported event types:
+          start    — simulate print start
+          finish   — simulate print finish
+          fail     — simulate print failure
+          progress — emit a fake ZZ_MQTT_CMD_PRINT_SCHEDULE message
+                     payload: {progress: 0-100, filename: str, elapsed: int, remaining: int}
+          temperature — emit fake nozzle/bed temp notification
+                        payload: {temp_type: 'nozzle'|'bed', current: int, target: int}
+                        (values in 1/100 degrees, e.g. 21000 = 210 deg C)
+          speed    — emit fake print speed notification
+                     payload: {speed: int}
+          layer    — emit fake layer notification
+                     payload: {current_layer: int, total_layers: int}
+        """
         if not payload:
             payload = {}
         log.info(f"Simulating event: {event_type} with payload {payload}")
+
         if event_type == "start":
             self._print_active = True
-            self._print_started_at = time.time()
+            self._print_started_at = time.monotonic()
             self._send_event(EVENT_PRINT_STARTED, self._build_payload(payload, 0))
             self._history.record_start(payload.get("filename") or "simulated.gcode")
+
         elif event_type == "finish":
             self._send_event(EVENT_PRINT_FINISHED, self._build_payload(payload, 100))
             self._history.record_finish(filename=payload.get("filename"))
             self._reset_print_state()
+
         elif event_type == "fail":
             self._send_event(EVENT_PRINT_FAILED, self._build_payload(payload, 50, failure_reason="Simulation"))
             self._history.record_fail(filename=payload.get("filename"), reason="Simulation")
             self._reset_print_state()
+
+        elif event_type == "progress":
+            progress = int(payload.get("progress", 50))
+            sim_payload = {
+                "commandType": MqttMsgType.ZZ_MQTT_CMD_PRINT_SCHEDULE,
+                "progress": progress,
+                "name": payload.get("filename", "simulated.gcode"),
+                "totalTime": int(payload.get("elapsed", 0)),
+                "time": int(payload.get("remaining", 0)),
+            }
+            self.notify(sim_payload)
+
+        elif event_type == "temperature":
+            temp_type = payload.get("temp_type", "nozzle")
+            current = int(payload.get("current", 0))
+            target = int(payload.get("target", 0))
+            if temp_type == "bed":
+                cmd_type = MqttMsgType.ZZ_MQTT_CMD_HOTBED_TEMP
+            else:
+                cmd_type = MqttMsgType.ZZ_MQTT_CMD_NOZZLE_TEMP
+            sim_payload = {
+                "commandType": cmd_type,
+                "currentTemp": current,
+                "targetTemp": target,
+            }
+            self.notify(sim_payload)
+
+        elif event_type == "speed":
+            speed = int(payload.get("speed", 250))
+            sim_payload = {
+                "commandType": MqttMsgType.ZZ_MQTT_CMD_PRINT_SPEED,
+                "value": speed,
+            }
+            self.notify(sim_payload)
+
+        elif event_type == "layer":
+            current_layer = int(payload.get("current_layer", 1))
+            total_layers = int(payload.get("total_layers", 200))
+            sim_payload = {
+                "commandType": MqttMsgType.ZZ_MQTT_CMD_MODEL_LAYER,
+                "value": current_layer,
+                "totalLayer": total_layers,
+            }
+            self.notify(sim_payload)
 
     def send_gcode(self, gcode):
         if not gcode:
