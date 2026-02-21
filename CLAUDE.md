@@ -44,14 +44,24 @@ ankermake-m5-protocol/
 │   ├── logincache.py       # Authentication & session management
 │   └── notifications/      # Notification system (Apprise)
 ├── web/                    # Flask web server
-│   ├── __init__.py         # Flask app, routes, WebSocket handlers
+│   ├── __init__.py         # Flask app, routes, WebSocket handlers, debug API
 │   ├── config.py           # Web configuration
-│   └── service/            # Backend services (mqtt, pppp, video, filetransfer)
+│   ├── notifications.py    # AppriseNotifier with snapshot support
+│   ├── lib/
+│   │   └── service.py      # Thread-based service framework (Service, ServiceManager)
+│   └── service/            # Backend services
+│       ├── mqtt.py         # MqttQueue (print tracking, notifications, HA, timelapse)
+│       ├── pppp.py         # PPPPService (LAN connection)
+│       ├── video.py        # VideoQueue (camera streaming)
+│       ├── filetransfer.py # FileTransferService (upload handling)
+│       ├── history.py      # PrintHistory (SQLite-backed print log)
+│       ├── homeassistant.py# HomeAssistantService (HA MQTT Discovery)
+│       └── timelapse.py    # TimelapseService (ffmpeg-based capture)
 ├── static/                 # Web UI assets
 │   ├── ankersrv.js         # Main frontend JavaScript
 │   ├── ankersrv.css        # Styling
 │   ├── libflagship.js      # [GENERATED] Protocol JS
-│   ├── tabs/               # UI tab templates
+│   ├── tabs/               # UI tab templates (home, setup, history, timelapse, debug)
 │   └── vendor/             # Third-party libraries (Bootstrap, JMuxer)
 ├── specification/          # Protocol specs for code generation
 │   ├── mqtt.stf            # MQTT protocol specification
@@ -122,16 +132,30 @@ make install-tools
 ./ankerctl.py config import [path/to/login.json]  # Import from file
 ./ankerctl.py config login [COUNTRY]              # Login with email/password
 ./ankerctl.py config show                         # Display current config
+./ankerctl.py config set-password [KEY]           # Set API key (random if omitted)
+./ankerctl.py config remove-password              # Remove API key / disable auth
+./ankerctl.py config decode [path/to/login.json]  # Decode login.json contents
 
 # MQTT commands
-./ankerctl.py mqtt monitor          # Monitor real-time MQTT events
-./ankerctl.py mqtt gcode            # Interactive GCode prompt
-./ankerctl.py mqtt rename-printer NAME  # Set printer nickname
+./ankerctl.py mqtt monitor                    # Monitor real-time MQTT events
+./ankerctl.py mqtt gcode                      # Interactive GCode prompt
+./ankerctl.py mqtt rename-printer NAME        # Set printer nickname
+./ankerctl.py mqtt send <CMD_TYPE> [key=val]  # Send raw MQTT command (expert use)
+./ankerctl.py mqtt gcode-dump GCODE           # Send GCode, collect full ring-buffer output
+                                              # --window SECS  collect window (default 3.0)
+                                              # --drain N       send N M114 drain probes after main response
 
 # PPPP commands
 ./ankerctl.py pppp lan-search       # Find printers on local network
 ./ankerctl.py pppp print-file FILE  # Upload and print a gcode file
 ./ankerctl.py pppp capture-video -m 4mb output.h264  # Capture camera video
+
+# HTTP utility commands
+./ankerctl.py http calc-check-code DUID MAC  # Calculate check code (API v1)
+./ankerctl.py http calc-sec-code DUID MAC    # Calculate security code (API v2)
+
+# Webserver
+./ankerctl.py webserver run                  # Start web UI
 
 # Global options
 ./ankerctl.py -p INDEX ...          # Select printer by index (0-based)
@@ -203,13 +227,29 @@ python examples/web_login_test.py    # Test web authentication
 ### Environment Variables
 
 ```bash
-PRINTER_INDEX    # Select printer (default: 0)
-FLASK_HOST       # Web server host (default: 127.0.0.1)
-FLASK_PORT       # Web server port (default: 4470)
+# --- Server ---
+PRINTER_INDEX          # Select printer (default: 0)
+FLASK_HOST             # Web server host (default: 127.0.0.1)
+FLASK_PORT             # Web server port (default: 4470)
+FLASK_SECRET_KEY       # Session cookie secret (auto-generated if unset)
+UPLOAD_MAX_MB          # Max file upload size in MB (default: 2048)
 
-# Apprise Notification Settings (all optional)
+# --- Security ---
+ANKERCTL_API_KEY       # API key for write-operation auth (unset = no auth)
+
+# --- Feature Flags ---
+ANKERCTL_PRINT_CONTROLS  # Enable Pause/Resume/Stop buttons in UI (experimental)
+ANKERCTL_DEV_MODE=true   # Enable Debug tab and /api/debug/* endpoints (dev only)
+ANKERCTL_LOG_DIR         # Directory for log files; enables file logging when set
+                         # Default in CLI: /logs if /logs exists, else None
+                         # Default in debug API: /logs
+
+# --- Upload Rate ---
+UPLOAD_RATE_MBPS       # Upload speed to printer in Mbit/s (choices: 5, 10, 25, 50, 100)
+
+# --- Apprise Notification Settings (all optional) ---
 APPRISE_ENABLED=true                 # Enable/disable Apprise notifications
-APPRISE_SERVER_URL=http://host:8000 # Apprise API server URL
+APPRISE_SERVER_URL=http://host:8000  # Apprise API server URL
 APPRISE_KEY=ankerctl                 # Apprise notification key
 APPRISE_TAG=critical                 # Optional tag filter
 
@@ -223,9 +263,30 @@ APPRISE_EVENT_PRINT_PROGRESS=true
 # Progress settings
 APPRISE_PROGRESS_INTERVAL=25         # Progress interval (%)
 APPRISE_PROGRESS_INCLUDE_IMAGE=false # Attach snapshots
-APPRISE_SNAPSHOT_QUALITY=hd          # 'sd' or 'hd'
+APPRISE_SNAPSHOT_QUALITY=hd          # 'sd', 'hd', or 'fhd'
 APPRISE_SNAPSHOT_FALLBACK=true       # Fallback to G-code preview
+APPRISE_SNAPSHOT_LIGHT=false         # Turn printer light on for snapshot
 APPRISE_PROGRESS_MAX=0               # Override progress scale (0=auto)
+
+# --- Print History ---
+PRINT_HISTORY_RETENTION_DAYS  # Days to keep history entries (default: 90)
+PRINT_HISTORY_MAX_ENTRIES     # Max history entries (default: 500)
+
+# --- Timelapse ---
+TIMELAPSE_ENABLED=false        # Enable automatic timelapse capture (requires ffmpeg)
+TIMELAPSE_INTERVAL_SEC=30      # Seconds between snapshot captures
+TIMELAPSE_MAX_VIDEOS=10        # Max timelapse videos to keep
+TIMELAPSE_SAVE_PERSISTENT=true # Save assembled videos persistently
+TIMELAPSE_CAPTURES_DIR=/captures  # Directory for timelapse video storage
+
+# --- Home Assistant MQTT Discovery ---
+HA_MQTT_ENABLED=false          # Enable HA MQTT Discovery integration
+HA_MQTT_HOST=localhost         # HA MQTT broker host
+HA_MQTT_PORT=1883              # HA MQTT broker port
+HA_MQTT_USER                   # MQTT broker username (optional)
+HA_MQTT_PASSWORD               # MQTT broker password (optional)
+HA_MQTT_DISCOVERY_PREFIX=homeassistant  # HA discovery prefix
+HA_MQTT_TOPIC_PREFIX=ankerctl  # State/command topic prefix
 ```
 
 ### Apprise Notification System
@@ -235,22 +296,119 @@ ankerctl includes a complete notification system via [Apprise API](https://githu
 **Architecture:**
 - **Client:** `libflagship/notifications/apprise_client.py` - HTTP client for Apprise API
 - **Events:** `libflagship/notifications/events.py` - Event constants
-- **Notifier:** `web/notifications.py` - Main notifier class with attachment support
-- **Hooks:** `web/service/mqtt.py` - Event hooks in MQTT service for print events
+- **Notifier:** `web/notifications.py` - `AppriseNotifier` class with live snapshot support
+- **Hooks:** `web/service/mqtt.py` - Event hooks in `MqttQueue` for print events
 
 **Supported Events:**
 - Print started/finished/failed
 - G-code file uploaded
-- Print progress (configurable interval)
+- Print progress (configurable interval, default every 25%)
 
 **Attachments:**
 - Live camera snapshots (requires `ffmpeg` + active PPPP connection)
+- Optional light control: `APPRISE_SNAPSHOT_LIGHT=true` turns on printer light for snapshot
 - G-code preview images (fallback when live snapshot unavailable)
 
 **Configuration:**
 - Web UI: Setup → Notifications tab
 - Environment variables (Docker deployments)
 - Stored in `default.json` under `notifications.apprise`
+
+### Print History
+
+Automatic SQLite-backed print history log:
+
+**Architecture:**
+- **Service:** `web/service/history.py` - `PrintHistory` class
+- **Storage:** `~/.config/ankerctl/history.db` (SQLite)
+- **Integration:** `MqttQueue` records start/finish/fail events
+
+**API endpoints:**
+- `GET /api/history` - Return entries (supports `limit=` and `offset=` params)
+- `DELETE /api/history` - Clear all history
+
+**Configuration:** `PRINT_HISTORY_RETENTION_DAYS` (default: 90), `PRINT_HISTORY_MAX_ENTRIES` (default: 500)
+
+### Timelapse
+
+Automatic timelapse video capture during prints:
+
+**Architecture:**
+- **Service:** `web/service/timelapse.py` - `TimelapseService` class
+- **UI Tab:** `static/tabs/timelapse.html`
+- **Requires:** `ffmpeg` in `PATH`
+
+**Behavior:**
+- Captures periodic snapshots from the `/video` endpoint
+- Assembles frames into MP4 video on print finish (or partial video on fail)
+- Dynamic FPS to produce approximately 30-second videos
+- Prunes oldest videos when `TIMELAPSE_MAX_VIDEOS` limit is reached
+
+**API endpoints:**
+- `GET /api/timelapses` - List videos with metadata
+- `GET /api/timelapse/<filename>` - Download a video
+- `DELETE /api/timelapse/<filename>` - Delete a video
+- `GET /api/settings/timelapse` / `POST /api/settings/timelapse` - Read/write config
+
+### Home Assistant Integration
+
+MQTT Discovery integration for Home Assistant:
+
+**Architecture:**
+- **Service:** `web/service/homeassistant.py` - `HomeAssistantService` class
+- **Integration:** Started by `MqttQueue`; uses paho-mqtt for HA broker connection
+
+**Publishes (sensors/entities):**
+- Print progress, status, filename, speed, layer
+- Nozzle/bed temperature and targets
+- Time elapsed/remaining
+- MQTT connected, PPPP connected (binary sensors)
+- Printer light (switch, bidirectional — HA can turn light on/off)
+- Camera entity (MJPEG)
+
+**API endpoints:**
+- `GET /api/settings/mqtt` / `POST /api/settings/mqtt` - Read/write HA config
+
+**Configuration:** `HA_MQTT_*` environment variables (see above), or via Setup tab in web UI.
+
+### Debug Tab (Development Mode)
+
+Enable by setting `ANKERCTL_DEV_MODE=true`. A "Debug" tab appears in the web UI.
+
+**Sections:**
+- **State Inspector** — Live JSON dump of `MqttQueue.get_state()` (print state + timelapse)
+- **Controls** — Toggle verbose MQTT payload logging (`set_debug_logging()`)
+- **Simulation** — Fire synthetic events: start, finish, fail, progress, temperature, speed, layer
+- **Services** — Live service health panel (state, refs, restart button) — auto-refreshes every 5s
+- **Log Viewer** — File picker + level/text filter over log files from `ANKERCTL_LOG_DIR`; auto-refresh every 5s
+
+**API endpoints (only registered when `ANKERCTL_DEV_MODE=true`):**
+- `GET /api/debug/state` - MqttQueue state JSON
+- `POST /api/debug/config` - Set `debug_logging` flag
+- `POST /api/debug/simulate` - Fire simulated event (`type`, `payload`)
+- `GET /api/debug/services` - Service health summary
+- `POST /api/debug/services/<name>/restart` - Restart a service
+- `GET /api/debug/logs` - List log files
+- `GET /api/debug/logs/<filename>` - Tail log file (`?lines=N`, default 500)
+- `GET /api/debug/bed-leveling` - Read bed leveling grid (delegates to `_read_bed_leveling_grid()`)
+
+**Security:** All `/api/debug/*` endpoints require authentication when an API key is configured.
+
+### Bed Level Map
+
+Reads the 7×7 bilinear bed leveling compensation grid from the printer via GCode `M420 V`.
+
+**Architecture:**
+- **Public endpoint:** `GET /api/printer/bed-leveling` — opens a short-lived MQTT connection, sends `M420 V` with a 4-second drain window, parses `BL-Grid-*` lines, returns grid + min/max/rows/cols as JSON. Available without Dev Mode.
+- **Debug endpoint:** `GET /api/debug/bed-leveling` — same implementation, registered only when `ANKERCTL_DEV_MODE=true`.
+- **Frontend:** Setup tab → Tools section — renders the grid as a colour-coded heatmap (blue=low, red=high), supports before/after snapshot comparison (snapshots stored in `localStorage`).
+
+**MQTT notifications during G29:**
+- `commandType 1007` — emitted once per probe point; `value` = current point index (total = 49 for 7×7 grid). Used to display a live auto-leveling progress bar.
+
+**Notes:**
+- Takes up to ~15 seconds; do not call during an active print.
+- Grid rows are rendered bottom-to-top so Row 0 (printer front) appears at the bottom of the heatmap.
 
 ## Key Patterns and Idioms
 
@@ -305,6 +463,35 @@ api.aabb_request(b"", frametype=FileTransfer.END)  # Start print
 api.stop()
 ```
 
+### Web Service Borrow Pattern
+
+Always use the context manager to safely access services. All attribute accesses must happen
+inside the `with` block — accessing the service outside is a use-after-release bug.
+
+```python
+# Safe service access (use this pattern everywhere in Flask routes)
+with app.svc.borrow("mqttqueue") as mqtt:
+    state = mqtt.get_state()
+    mqtt.send_gcode("G28")
+
+# Non-blocking read (does not wait for service to start)
+pppp = app.svc.get("pppp", ready=False)
+# ...
+app.svc.put("pppp")
+```
+
+### Logging Convention
+
+```python
+import logging
+log = logging.getLogger(__name__)  # preferred
+# Named loggers with explicit names are also acceptable:
+log = logging.getLogger("mqtt")    # produces mqtt.log when ANKERCTL_LOG_DIR is set
+```
+
+Named loggers that write to separate files: `mqtt`, `web`, `history`, `timelapse`, `homeassistant`.
+Root logger output goes to `ankerctl.log` and stdout simultaneously.
+
 ## Protocol Reference
 
 ### MQTT Topics
@@ -346,6 +533,8 @@ CI builds for: `linux/arm/v7`, `linux/arm64`, `linux/amd64`
 
 - Configuration: `/home/ankerctl/.config/ankerctl` (maps to host config)
 - SSL certificates: `/app/ssl`
+- Log files: `/logs` (mapped when `ANKERCTL_LOG_DIR=/logs`)
+- Timelapse captures: `/captures` (mapped when using `TIMELAPSE_CAPTURES_DIR=/captures`)
 
 ## Common Tasks
 
@@ -361,6 +550,18 @@ CI builds for: `linux/arm/v7`, `linux/arm64`, `linux/amd64`
 1. Check if type exists in `libflagship/mqtt.py` (MqttMsgType enum)
 2. If new type needed, add to `specification/mqtt.stf` and run `make update`
 3. Implement handler following existing patterns
+
+### Adding a New Web Service
+
+1. Create `web/service/<name>.py` inheriting from `Service` (from `web/lib/service.py`)
+2. Implement `worker_init()`, `worker_start()`, `worker_run(timeout)`, `worker_stop()`
+3. Register via `app.svc.register("<name>", MyService())` in `register_services()` in `web/__init__.py`
+4. Access from Flask routes using `with app.svc.borrow("<name>") as svc:`
+
+### Adding a Debug API Endpoint
+
+Add inside the `if os.getenv("ANKERCTL_DEV_MODE", ...) == "true":` block at the bottom of `web/__init__.py`.
+Add the path (or prefix) to `_PROTECTED_GET_PATHS` or rely on the `is_debug_path` prefix check already present in `_check_api_key()`.
 
 ### Modifying Protocol Definitions
 
