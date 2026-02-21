@@ -29,6 +29,7 @@ import libflagship.logincache
 import libflagship.seccode
 
 from libflagship.util import enhex
+from cli.util import patch_gcode_time
 from libflagship.mqtt import MqttMsgType
 from libflagship.pppp import PktLanSearch, P2PCmdType, P2PSubCmdType, FileTransfer
 from libflagship.ppppapi import FileUploadInfo, PPPPError
@@ -86,7 +87,8 @@ def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
     env.level = max(-3, min(verbose - quiet, 1))
     env.pppp_dump = pppp_dump
     
-    log_dir = environ.get("ANKERCTL_LOG_DIR")
+    import os
+    log_dir = environ.get("ANKERCTL_LOG_DIR", "/logs" if os.path.isdir("/logs") else None)
     cli.logfmt.setup_logging(levels[env.level], log_dir=log_dir)
 
 
@@ -188,6 +190,61 @@ def mqtt_rename_printer(env, newname):
     cli.mqtt.mqtt_command(client, cmd)
 
 
+@mqtt.command("gcode-dump")
+@click.argument("gcode", required=True)
+@click.option("--window", "-w", default=3.0, show_default=True,
+              help="Seconds to keep collecting after first response")
+@click.option("--drain", "-d", default=0, show_default=True,
+              help="After main response, send this many M114 drain probes to read "
+                   "accumulated ring-buffer output. Useful for long commands like "
+                   "M503 when no print is running.")
+@pass_env
+def mqtt_gcode_dump(env, gcode, window, drain):
+    """
+    Send a GCode command and collect ALL ring-buffer output.
+
+    The printer's 328-byte ring buffer accumulates GCode output. This command
+    reads the initial response, then optionally sends drain probes (M114) to
+    read any remaining buffered output from long commands like M503 or M420 V.
+
+    Examples:
+
+      ankerctl.py mqtt gcode-dump M503 --drain 5
+
+      ankerctl.py mqtt gcode-dump "M420 V" --drain 3
+    """
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
+
+    all_data = []
+
+    # Main command
+    msgs = cli.mqtt.mqtt_gcode_dump(client, gcode, collect_window=window)
+    if not msgs:
+        log.error("No response from printer")
+        return
+    for m in msgs:
+        all_data.append(m.get("resData", ""))
+
+    # Drain probes — each M114 flushes the current ring-buffer snapshot
+    import time
+    for probe_num in range(drain):
+        time.sleep(0.3)
+        probe_msgs = cli.mqtt.mqtt_gcode_dump(client, "M114", collect_window=1.0)
+        if not probe_msgs:
+            break
+        chunk = probe_msgs[0].get("resData", "")
+        all_data.append(chunk)
+        # Stop draining once ring buffer is stable (same position twice)
+        ringbuf_pos = probe_msgs[0].get("resLen", 0)
+        if probe_num > 0 and ringbuf_pos <= 64 and "echo:" not in chunk and "z1:" not in chunk:
+            break
+
+    full_output = "".join(all_data)
+    total_bytes = len(full_output)
+    click.echo(f"[{len(all_data)} chunk(s), {total_bytes} bytes total]\n")
+    click.echo(full_output)
+
+
 @mqtt.command("gcode")
 @pass_env
 def mqtt_gcode(env):
@@ -265,7 +322,7 @@ def pppp_print_file(env, file, no_act, upload_rate_mbps):
         if cfg and cfg.account and cfg.account.user_id:
             user_id = cfg.account.user_id
 
-    data = file.read()
+    data = patch_gcode_time(file.read())
     file_uuid = uuid.uuid4().hex.upper()
     fui = FileUploadInfo.from_data(data, file.name, user_name="ankerctl", user_id=user_id, machine_id=file_uuid)
     log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")

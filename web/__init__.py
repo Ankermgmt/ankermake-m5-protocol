@@ -354,8 +354,6 @@ def app_api_ankerctl_config_upload():
     Returns:
         A HTML redirect response
     """
-    if request.method != "POST":
-        return web.util.flash_redirect(url_for('app_root'))
     if "login_file" not in request.files:
         return web.util.flash_redirect(url_for('app_root'), "No file found", "danger")
     file = request.files["login_file"]
@@ -375,10 +373,6 @@ def app_api_ankerctl_config_upload():
 
 @app.post("/api/ankerctl/config/login")
 def app_api_ankerctl_config_login():
-    if request.method != "POST":
-        flash(f"Invalid request method '{request.method}", "danger")
-        return jsonify({"redirect": url_for('app_root')})
-
     form_data = request.form.to_dict()
 
     for key in ["login_email", "login_password", "login_country"]:
@@ -700,6 +694,87 @@ def app_api_printer_autolevel():
     return {"status": "ok"}
 
 
+def _read_bed_leveling_grid():
+    """Read the bilinear bed leveling grid from the printer via M420 V.
+
+    Opens a short-lived MQTT connection, sends M420 V with a 4-second
+    drain window, parses BL-Grid lines from the combined response, and
+    returns the grid as a 2-D JSON array together with min/max statistics.
+
+    Returns:
+        (data_dict, None) on success where data_dict contains grid/min/max/rows/cols.
+        (None, (error_dict, http_status)) on failure.
+    """
+    import re
+    import cli.mqtt as cli_mqtt
+
+    config = app.config.get("config")
+    if not config:
+        return None, ({"error": "No configuration loaded"}, 503)
+
+    with config.open() as cfg:
+        if not cfg:
+            return None, ({"error": "No printers configured"}, 503)
+
+    printer_index = app.config.get("printer_index", 0)
+    insecure = app.config.get("insecure", False)
+
+    try:
+        client = cli_mqtt.mqtt_open(config, printer_index, insecure)
+    except Exception as exc:
+        log.warning(f"bed-leveling: MQTT connect failed: {exc}")
+        return None, ({"error": f"MQTT connection failed: {exc}"}, 503)
+
+    try:
+        msgs = cli_mqtt.mqtt_gcode_dump(client, "M420 V", collect_window=4.0)
+    except Exception as exc:
+        log.warning(f"bed-leveling: gcode dump failed: {exc}")
+        return None, ({"error": f"GCode dump failed: {exc}"}, 503)
+
+    # Combine all resData fields into one text block for parsing
+    combined = "\n".join(
+        msg.get("resData", "") for msg in msgs if isinstance(msg, dict)
+    )
+
+    # Parse lines like: " BL-Grid-0 -0.767 -0.642 ..."
+    bl_pattern = re.compile(r"BL-Grid-\d+\s+([-\d.\s]+)")
+    grid = []
+    for line in combined.splitlines():
+        match = bl_pattern.search(line)
+        if match:
+            values = [float(v) for v in match.group(1).split() if v]
+            if values:
+                grid.append(values)
+
+    if not grid:
+        log.warning("bed-leveling: no BL-Grid data found in MQTT response")
+        return None, ({"error": "No bed leveling data received from printer"}, 504)
+
+    all_values = [v for row in grid for v in row]
+    data = {
+        "grid": grid,
+        "min": min(all_values),
+        "max": max(all_values),
+        "rows": len(grid),
+        "cols": max(len(row) for row in grid),
+    }
+    return data, None
+
+
+@app.get("/api/printer/bed-leveling")
+def app_api_printer_bed_leveling():
+    """Read the bilinear bed leveling grid from the printer.
+
+    Opens a short-lived MQTT connection, sends M420 V, parses the BL-Grid
+    response and returns the grid with statistics. Takes up to ~15 seconds.
+    Do not call this during an active print.
+    """
+    data, err = _read_bed_leveling_grid()
+    if err is not None:
+        return err
+    return data
+
+
 @app.get("/api/snapshot")
 def app_api_snapshot():
     """Capture a JPEG snapshot from the camera and return it as a file download."""
@@ -741,23 +816,33 @@ def app_api_snapshot():
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10,
             )
         if result.returncode != 0 or not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
             return {"error": "Snapshot capture failed"}, 500
 
-        from flask import send_file
+        from flask import send_file, after_this_request
         from datetime import datetime
+
+        @after_this_request
+        def _cleanup(response):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+            return response
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         return send_file(temp_path, mimetype="image/jpeg",
                          as_attachment=True,
                          download_name=f"ankerctl_snapshot_{timestamp}.jpg")
     except (subprocess.TimeoutExpired, OSError) as err:
-        return {"error": f"Snapshot failed: {err}"}, 500
-    finally:
-        # Clean up after send_file has read the data
         try:
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
+            os.remove(temp_path)
         except OSError:
             pass
+        return {"error": f"Snapshot failed: {err}"}, 500
 
 @app.get("/api/history")
 def app_api_history():
@@ -785,7 +870,8 @@ def app_api_timelapses():
     """List available timelapse videos."""
     with app.svc.borrow("mqttqueue") as mqtt:
         videos = mqtt.timelapse.list_videos()
-    return {"videos": videos, "enabled": mqtt.timelapse.enabled}
+        enabled = mqtt.timelapse.enabled
+    return {"videos": videos, "enabled": enabled}
 
 
 @app.get("/api/timelapse/<filename>")
@@ -857,79 +943,110 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
 
     @app.context_processor
     def inject_debug():
-        import os
         return {"debug_mode": os.getenv("ANKERCTL_DEV_MODE", "false").lower() == "true"}
 
     app.run(host=host, port=port)
 
 
-@app.get("/api/debug/state")
-def app_api_debug_state():
-    with app.svc.borrow("mqttqueue") as mqtt:
-        if not mqtt:
-            return {"error": "Service unavailable"}, 503
-        return mqtt.get_state()
+if os.getenv("ANKERCTL_DEV_MODE", "false").lower() == "true":
+    @app.get("/api/debug/state")
+    def app_api_debug_state():
+        with app.svc.borrow("mqttqueue") as mqtt:
+            if not mqtt:
+                return {"error": "Service unavailable"}, 503
+            return mqtt.get_state()
+
+    @app.post("/api/debug/config")
+    def app_api_debug_config():
+        payload = request.get_json(silent=True) or {}
+        debug_logging = payload.get("debug_logging")
+        with app.svc.borrow("mqttqueue") as mqtt:
+            if not mqtt:
+                return {"error": "Service unavailable"}, 503
+            if debug_logging is not None:
+                mqtt.set_debug_logging(bool(debug_logging))
+        return {"status": "ok"}
+
+    @app.post("/api/debug/simulate")
+    def app_api_debug_simulate():
+        payload = request.get_json(silent=True) or {}
+        event_type = payload.get("type")
+        event_payload = payload.get("payload") or {}
+        with app.svc.borrow("mqttqueue") as mqtt:
+            if not mqtt:
+                return {"error": "Service unavailable"}, 503
+            mqtt.simulate_event(event_type, event_payload)
+        return {"status": "ok"}
+
+    @app.get("/api/debug/logs")
+    def app_api_debug_logs_list():
+        import glob
+        log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
+        files = glob.glob(os.path.join(log_dir, "*.log"))
+        return {"files": sorted([os.path.basename(f) for f in files])}
+
+    @app.get("/api/debug/logs/<filename>")
+    def app_api_debug_logs_content(filename):
+        import collections
+        log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
+        # basic path traversal protection
+        if "/" in filename or "\\" in filename or ".." in filename:
+            return {"error": "Invalid filename"}, 400
+
+        filepath = os.path.join(log_dir, filename)
+        if not os.path.exists(filepath):
+            return {"error": "File not found"}, 404
+
+        lines_count = request.args.get("lines", 500, type=int)
+
+        try:
+            with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+                # Use collections.deque to keep only last N lines efficiently
+                lines = list(collections.deque(f, lines_count))
+                content = "".join(lines)
+                return {"filename": filename, "content": content}
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+    @app.get("/api/debug/services")
+    def app_api_debug_services():
+        result = {}
+        for name, svc in app.svc.svcs.items():
+            result[name] = {
+                "state": svc.state.name,
+                "wanted": svc.wanted,
+                "refs": app.svc.refs.get(name, 0),
+                "type": type(svc).__name__,
+            }
+        return {"services": result}
+
+    @app.post("/api/debug/services/<name>/restart")
+    def app_api_debug_service_restart(name):
+        if name not in app.svc.svcs:
+            return {"error": f"Unknown service: {name}"}, 404
+        svc = app.svc.svcs[name]
+        svc.restart()
+        return {"status": "ok", "state": svc.state.name}
+
+    @app.get("/api/debug/bed-leveling")
+    def app_api_debug_bed_leveling():
+        """Read the bed leveling grid from the printer (debug endpoint).
+
+        Delegates to _read_bed_leveling_grid() for the actual work.
+        """
+        data, err = _read_bed_leveling_grid()
+        if err is not None:
+            return err
+        return data
 
 
-@app.post("/api/debug/config")
-def app_api_debug_config():
-    payload = request.get_json(silent=True) or {}
-    logging = payload.get("debug_logging")
-    with app.svc.borrow("mqttqueue") as mqtt:
-        if not mqtt:
-            return {"error": "Service unavailable"}, 503
-        if logging is not None:
-            mqtt.set_debug_logging(bool(logging))
-    return {"status": "ok"}
-
-
-@app.post("/api/debug/simulate")
-def app_api_debug_simulate():
-    payload = request.get_json(silent=True) or {}
-    event_type = payload.get("type")
-    event_payload = payload.get("payload") or {}
-    with app.svc.borrow("mqttqueue") as mqtt:
-        if not mqtt:
-            return {"error": "Service unavailable"}, 503
-        mqtt.simulate_event(event_type, event_payload)
-    return {"status": "ok"}
-
-
-@app.get("/api/debug/logs")
-def app_api_debug_logs_list():
-    import glob
-    log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
-    files = glob.glob(os.path.join(log_dir, "*.log"))
-    return {"files": sorted([os.path.basename(f) for f in files])}
-
-
-@app.get("/api/debug/logs/<filename>")
-def app_api_debug_logs_content(filename):
-    import collections
-    log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
-    # basic path traversal protection
-    if "/" in filename or "\\" in filename or ".." in filename:
-        return {"error": "Invalid filename"}, 400
-    
-    filepath = os.path.join(log_dir, filename)
-    if not os.path.exists(filepath):
-        return {"error": "File not found"}, 404
-        
-    lines_count = request.args.get("lines", 500, type=int)
-    
-    try:
-        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-            # Use collections.deque to keep only last N lines efficienty
-            lines = list(collections.deque(f, lines_count))
-            content = "".join(lines)
-            return {"filename": filename, "content": content}
-    except Exception as e:
-        return {"error": str(e)}, 500
-
-
-# GET endpoints that modify state and require auth despite being GET
+# GET endpoints that modify state or expose sensitive debug information
+# and therefore require auth even though they are GET requests.
 _PROTECTED_GET_PATHS = {
     "/api/ankerctl/server/reload",
+    "/api/debug/state",
+    "/api/debug/logs",
+    "/api/debug/services",
 }
 
 # POST endpoints needed for initial printer setup (config import / login)
@@ -975,8 +1092,10 @@ def _check_api_key():
     if request.headers.get("X-Api-Key") == api_key:
         return None
 
-    # Allow read-only (GET/HEAD/OPTIONS) unless the path is explicitly protected
-    if request.method in ("GET", "HEAD", "OPTIONS") and request.path not in _PROTECTED_GET_PATHS:
+    # Allow read-only (GET/HEAD/OPTIONS) unless the path is explicitly protected.
+    # Also protect any path under /api/debug/ (prefix match for dynamic segments).
+    is_debug_path = request.path.startswith("/api/debug/")
+    if request.method in ("GET", "HEAD", "OPTIONS") and request.path not in _PROTECTED_GET_PATHS and not is_debug_path:
         return None
 
     # Allow setup endpoints when no printer is configured yet

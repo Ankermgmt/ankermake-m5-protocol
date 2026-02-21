@@ -1,0 +1,247 @@
+{% import "macro.html" as macro -%}
+<div class="tab-pane fade" id="debug" role="tabpanel" aria-labelledby="debug-tab">
+    <div class="container-fluid mt-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <!-- Debug section navigation (pills) -->
+                <ul class="nav nav-pills mb-3" id="debugSectionNav" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="dbg-inspector-tab" data-bs-toggle="pill"
+                            data-bs-target="#dbg-inspector" type="button" role="tab">
+                            {{ macro.bi_icon("search") }} State Inspector
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="dbg-controls-tab" data-bs-toggle="pill"
+                            data-bs-target="#dbg-controls" type="button" role="tab">
+                            {{ macro.bi_icon("toggles") }} Controls
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="dbg-simulation-tab" data-bs-toggle="pill"
+                            data-bs-target="#dbg-simulation" type="button" role="tab">
+                            {{ macro.bi_icon("play-circle") }} Simulation
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="dbg-services-tab" data-bs-toggle="pill"
+                            data-bs-target="#dbg-services" type="button" role="tab">
+                            {{ macro.bi_icon("hdd-network") }} Services
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="dbg-logs-tab" data-bs-toggle="pill"
+                            data-bs-target="#dbg-logs" type="button" role="tab">
+                            {{ macro.bi_icon("journal-text") }} Logs
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="debugSectionContent">
+
+                    <!-- ====== State Inspector ====== -->
+                    <div class="tab-pane fade show active" id="dbg-inspector" role="tabpanel">
+                        <div class="card border-secondary">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>{{ macro.bi_icon("search") }} State Inspector</span>
+                                <button class="btn btn-sm btn-outline-secondary" id="dbg-refresh-state">
+                                    {{ macro.bi_icon("arrow-clockwise") }} Refresh
+                                </button>
+                            </div>
+                            <div class="card-body" id="dbg-state-tables">
+                                <span class="text-muted small">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ====== Controls ====== -->
+                    <div class="tab-pane fade" id="dbg-controls" role="tabpanel">
+                        <div class="card border-secondary">
+                            <div class="card-header">{{ macro.bi_icon("toggles") }} Controls</div>
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="dbg-log-mqtt">
+                                    <label class="form-check-label" for="dbg-log-mqtt">
+                                        Log MQTT Payloads (Full JSON)
+                                    </label>
+                                </div>
+                                <hr>
+                                <h6 class="text-muted small mb-2">Quick Actions</h6>
+                                <button class="btn btn-sm btn-outline-warning disabled">
+                                    {{ macro.bi_icon("ban") }} Force Close Orphans (TODO)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ====== Simulation ====== -->
+                    <div class="tab-pane fade" id="dbg-simulation" role="tabpanel">
+                        <div class="card border-secondary">
+                            <div class="card-header">{{ macro.bi_icon("play-circle") }} Event Simulation</div>
+                            <div class="card-body">
+
+                                <!-- Print lifecycle events -->
+                                <h6 class="text-muted small mb-2">Print Lifecycle</h6>
+                                <div class="d-grid gap-2 mb-3">
+                                    <button class="btn btn-outline-success" id="dbg-sim-start">
+                                        {{ macro.bi_icon("play-fill") }} Simulate Print Start
+                                    </button>
+                                    <div class="btn-group">
+                                        <button class="btn btn-outline-primary" id="dbg-sim-finish">
+                                            {{ macro.bi_icon("check-circle") }} Simulate Finish
+                                        </button>
+                                        <button class="btn btn-outline-danger" id="dbg-sim-fail">
+                                            {{ macro.bi_icon("x-circle") }} Simulate Fail
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <!-- Progress simulation -->
+                                <h6 class="text-muted small mb-2">Progress</h6>
+                                <div class="row g-2 mb-3 align-items-center">
+                                    <div class="col">
+                                        <input type="range" class="form-range" min="0" max="100" value="50"
+                                            id="dbg-sim-progress-slider">
+                                    </div>
+                                    <div class="col-auto">
+                                        <span class="badge bg-secondary" id="dbg-sim-progress-value">50%</span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <button class="btn btn-sm btn-outline-info" id="dbg-sim-progress-btn">
+                                            Send Progress
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <!-- Temperature simulation -->
+                                <h6 class="text-muted small mb-2">Temperature</h6>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <button class="btn btn-sm btn-outline-warning dbg-sim-temp"
+                                        data-temp-type="nozzle" data-current="21000" data-target="21000">
+                                        Nozzle 210°C
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning dbg-sim-temp"
+                                        data-temp-type="nozzle" data-current="21500" data-target="21500">
+                                        Nozzle 215°C
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-info dbg-sim-temp"
+                                        data-temp-type="bed" data-current="6000" data-target="6000">
+                                        Bed 60°C
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary dbg-sim-temp"
+                                        data-temp-type="nozzle" data-current="2000" data-target="0">
+                                        Nozzle Cold (20°C)
+                                    </button>
+                                </div>
+
+                                <hr>
+
+                                <!-- Speed and layer simulation -->
+                                <h6 class="text-muted small mb-2">Speed &amp; Layer</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-sm btn-outline-primary" id="dbg-sim-speed">
+                                        {{ macro.bi_icon("speedometer") }} Speed 250mm/s
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" id="dbg-sim-layer">
+                                        {{ macro.bi_icon("layers-half") }} Layer 42/200
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ====== Services ====== -->
+                    <div class="tab-pane fade" id="dbg-services" role="tabpanel">
+                        <div class="card border-secondary">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>{{ macro.bi_icon("hdd-network") }} Service Health</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-muted small" id="dbg-services-refresh-indicator"></span>
+                                    <button class="btn btn-sm btn-outline-secondary" id="dbg-refresh-services">
+                                        {{ macro.bi_icon("arrow-clockwise") }} Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3" id="dbg-services-grid">
+                                    <div class="col-12 text-center text-muted py-3">Loading services...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ====== Logs ====== -->
+                    <div class="tab-pane fade" id="dbg-logs" role="tabpanel">
+                        <div class="card border-secondary">
+                            <div class="card-header">{{ macro.bi_icon("journal-text") }} Log Viewer</div>
+                            <div class="card-body">
+                                <!-- File selector + controls row -->
+                                <div class="row g-2 mb-2 align-items-end">
+                                    <div class="col">
+                                        <select class="form-select form-select-sm" id="dbg-log-file">
+                                            <option value="" selected disabled>Select log file...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-auto">
+                                        <button class="btn btn-sm btn-outline-secondary" id="dbg-log-refresh-btn"
+                                            title="Reload">
+                                            {{ macro.bi_icon("arrow-clockwise") }}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Filter row -->
+                                <div class="row g-2 mb-2 align-items-center">
+                                    <div class="col-auto">
+                                        <select class="form-select form-select-sm" id="dbg-log-level"
+                                            style="width: auto;">
+                                            <option value="">All</option>
+                                            <option value="ERROR">ERROR</option>
+                                            <option value="WARNING">WARNING</option>
+                                            <option value="INFO">INFO</option>
+                                            <option value="DEBUG">DEBUG</option>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <input type="search" class="form-control form-control-sm"
+                                            id="dbg-log-search" placeholder="Search...">
+                                    </div>
+                                    <div class="col-auto d-flex align-items-center gap-1">
+                                        <label for="dbg-log-lines" class="small text-muted mb-0">Lines:</label>
+                                        <input type="number" class="form-control form-control-sm" id="dbg-log-lines"
+                                            min="50" max="5000" step="50" value="500"
+                                            style="width: 80px;">
+                                    </div>
+                                    <div class="col-auto">
+                                        <span class="badge bg-secondary text-muted small"
+                                            id="dbg-log-count">0 / 0 lines</span>
+                                    </div>
+                                </div>
+
+                                <!-- Auto-refresh toggle -->
+                                <div class="form-check form-check-inline mb-2">
+                                    <input class="form-check-input" type="checkbox" id="dbg-log-autorefresh">
+                                    <label class="form-check-label small" for="dbg-log-autorefresh">
+                                        Auto-refresh (5s)
+                                    </label>
+                                </div>
+
+                                <!-- Log output -->
+                                <pre class="bg-dark text-light p-2 border rounded"
+                                    style="height: 400px; min-height: 150px; overflow: auto; font-size: 0.8em; resize: vertical;"
+                                    id="dbg-log-pre"><code id="dbg-log-content">...</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /tab-content -->
+            </div>
+        </div>
+    </div>
+</div>

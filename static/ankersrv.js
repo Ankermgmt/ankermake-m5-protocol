@@ -57,7 +57,7 @@ $(function () {
      * @returns {number} percentage
      */
     function getPercentage(progress) {
-        return Math.round(((progress / 100) * 100) / 100);
+        return Math.round(progress);
     }
 
     /**
@@ -123,6 +123,18 @@ $(function () {
         setTimeout(() => {
             bsalert.close();
         }, timeout);
+    }
+
+    /**
+     * Escape a string for safe insertion into HTML to prevent XSS.
+     * @param {string} str
+     * @returns {string} HTML-escaped string
+     */
+    function escapeHtml(str) {
+        const node = document.createTextNode(String(str));
+        const div = document.createElement("div");
+        div.appendChild(node);
+        return div.innerHTML;
     }
 
     /**
@@ -275,19 +287,14 @@ $(function () {
 
         message: function (ev) {
             const data = JSON.parse(ev.data);
-            if (data.commandType == 1001) {
-                // Returns Print Details
-                $("#print-name").text(data.name);
-                $("#time-elapsed").text(getTime(data.totalTime));
+            if (data.commandType == 1000) {
+                // Printer state machine: value=0 idle, value=1 active
+                if (typeof _onMqttStateChange === "function") {
+                    _onMqttStateChange(data.value);
+                }
+            } else if (data.commandType == 1001) {
+                // Returns remaining time only; progress/name/totalTime are not present on ct 1001
                 $("#time-remain").text(getTime(data.time));
-                const progress = getPercentage(data.progress);
-                $("#progressbar").attr("aria-valuenow", progress);
-                $("#progressbar").attr("style", `width: ${progress}%`);
-                $("#progress").text(`${progress}%`);
-                // Update browser tab title with print progress
-                document.title = progress > 0 && progress < 100
-                    ? `\u{1F5A8}\uFE0F ${progress}% | ankerctl`
-                    : "ankerctl";
             } else if (data.commandType == 1003) {
                 // Returns Nozzle Temp
                 const current = getTemp(data.currentTemp);
@@ -310,10 +317,35 @@ $(function () {
                 // Returns Print Speed
                 const X = getSpeedFactor(data.value);
                 $("#print-speed").text(`${data.value}mm/s ${X}`);
+            } else if (data.commandType == 1007) {
+                // auto_leveling: value = current probe point (7×7 = 49 points total)
+                const point = data.value;
+                const total = 49;
+                const pct = Math.min(100, Math.round(point / total * 100));
+                const statusEl = document.getElementById("bed-level-status");
+                if (statusEl) {
+                    statusEl.innerHTML =
+                        `<div class="alert alert-info py-1 small mb-0">` +
+                        `<div class="d-flex justify-content-between mb-1">` +
+                        `<span>Auto-Leveling… Punkt ${point} / ${total}</span>` +
+                        `<span>${pct}%</span></div>` +
+                        `<div class="progress" style="height:6px;">` +
+                        `<div class="progress-bar progress-bar-striped progress-bar-animated" ` +
+                        `style="width:${pct}%" aria-valuenow="${pct}"></div></div></div>`;
+                }
             } else if (data.commandType == 1052) {
-                // Returns Layer Info
+                // Returns Layer Info; derive progress from layer counts
                 const layer = `${data.real_print_layer} / ${data.total_layer}`;
                 $("#print-layer").text(layer);
+                if (data.total_layer > 0) {
+                    const progress = Math.round((data.real_print_layer / data.total_layer) * 100);
+                    $("#progressbar").attr("aria-valuenow", progress);
+                    $("#progressbar").attr("style", `width: ${progress}%`);
+                    $("#progress").text(`${progress}%`);
+                    document.title = progress > 0 && progress < 100
+                        ? `\u{1F5A8}\uFE0F ${progress}% | ankerctl`
+                        : "ankerctl";
+                }
             } else {
                 console.log("Unhandled mqtt message:", data);
             }
@@ -328,7 +360,7 @@ $(function () {
             $("#progress").text("0%");
             $("#nozzle-temp").text("0°C");
             $("#set-nozzle-temp").attr("value", "0°C");
-            $("#bed-temp").text("$0°C");
+            $("#bed-temp").text("0°C");
             $("#set-bed-temp").attr("value", "0°C");
             $("#print-speed").text("0mm/s");
             $("#print-layer").text("0 / 0");
@@ -527,10 +559,20 @@ $(function () {
     });
 
     /**
+     * Highlight the active light button.
+     * @param {boolean|null} on - true = light on, false = light off, null = unknown
+     */
+    function setLightActive(on) {
+        $("#light-on").toggleClass("active", on === true).attr("aria-pressed", on === true ? "true" : "false");
+        $("#light-off").toggleClass("active", on === false).attr("aria-pressed", on === false ? "true" : "false");
+    }
+
+    /**
      * On click of element with id "light-on", sends JSON data to wsctrl to turn light on
      */
     $("#light-on").on("click", function () {
         sockets.ctrl.ws.send(JSON.stringify({ light: true }));
+        setLightActive(true);
         return false;
     });
 
@@ -539,6 +581,7 @@ $(function () {
      */
     $("#light-off").on("click", function () {
         sockets.ctrl.ws.send(JSON.stringify({ light: false }));
+        setLightActive(false);
         return false;
     });
 
@@ -823,6 +866,463 @@ $(function () {
     $("#control-home-z").on("click", function () { sendPrinterGCode("G28 Z"); return false; });
     $("#control-home-all").on("click", function () { sendPrinterGCode("G28"); return false; });
 
+    // ------------------------------------------------------------------
+    // Bed Level Map — shared rendering utilities
+    // (defined at outer scope so they work with or without the debug tab)
+    // ------------------------------------------------------------------
+
+    /**
+     * Map a deviation value to an RGB colour.
+     * Negative values shade from blue (most negative) to white (zero).
+     * Positive values shade from white (zero) to red (most positive).
+     * The scale is symmetric: the larger absolute extreme defines ±range.
+     *
+     * @param {number} val   - cell value in mm
+     * @param {number} range - symmetric range (Math.max(|min|, |max|))
+     * @returns {string} CSS rgb(...) colour string
+     */
+    function bedLevelValueToColor(val, range) {
+        if (range === 0) return "rgb(255,255,255)";
+        const norm = Math.max(-1, Math.min(1, val / range)); // clamp to [-1, 1]
+        if (norm < 0) {
+            // blue → white  (t goes 0→1 as norm goes -1→0)
+            const t = 1 + norm;
+            const c = Math.round(t * 255);
+            return `rgb(${c},${c},255)`;
+        } else {
+            // white → red  (t goes 0→1 as norm goes 0→1)
+            const t = norm;
+            const c = Math.round((1 - t) * 255);
+            return `rgb(255,${c},${c})`;
+        }
+    }
+
+    /**
+     * Render the bed leveling heatmap into the specified wrapper element.
+     * Draws column indices across the top and row indices down the left.
+     *
+     * @param {number[][]} grid     - 2-D array of mm deviation values
+     * @param {number}     min      - global minimum value
+     * @param {number}     max      - global maximum value
+     * @param {string}     targetId - ID of wrapper element (default: "dbg-bedlevel-map-wrap")
+     */
+    function bedLevelRenderGrid(grid, min, max, targetId) {
+        const wrapId = targetId || "dbg-bedlevel-map-wrap";
+        const range = Math.max(Math.abs(min), Math.abs(max));
+        const rows = grid.length;
+        const cols = rows > 0 ? grid[0].length : 0;
+
+        // Build a table: header row + one row per grid row
+        const table = document.createElement("table");
+        table.style.cssText = "border-collapse:separate; border-spacing:3px; font-size:0.75em; font-family:monospace;";
+
+        // Column header row
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+        // Empty corner cell above the row-label column
+        const cornerTh = document.createElement("th");
+        cornerTh.style.cssText = "padding:2px 6px; color:#6c757d; text-align:center;";
+        headerRow.appendChild(cornerTh);
+        for (let c = 0; c < cols; c++) {
+            const th = document.createElement("th");
+            th.style.cssText = "padding:2px 6px; color:#6c757d; text-align:center;";
+            th.textContent = c;
+            headerRow.appendChild(th);
+        }
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Data rows — rendered bottom-to-top so Row 0 (front of printer) appears
+        // at the bottom of the table and Row N-1 (back) at the top, matching
+        // the view when standing in front of the printer.
+        const tbody = document.createElement("tbody");
+        for (let r = rows - 1; r >= 0; r--) {
+            const tr = document.createElement("tr");
+
+            // Row label
+            const rowTh = document.createElement("th");
+            rowTh.style.cssText = "padding:2px 6px; color:#6c757d; text-align:right; white-space:nowrap;";
+            rowTh.textContent = r;
+            tr.appendChild(rowTh);
+
+            for (let c = 0; c < grid[r].length; c++) {
+                const val = grid[r][c];
+                const td = document.createElement("td");
+                const bg = bedLevelValueToColor(val, range);
+                // Choose dark or light text based on perceived luminance of background
+                // For a blue-white-red palette the midpoints are light, extremes need contrast.
+                const normAbs = range > 0 ? Math.abs(val) / range : 0;
+                const textColor = normAbs > 0.65 ? "#ffffff" : "#212529";
+                td.style.cssText = [
+                    `background:${bg}`,
+                    `color:${textColor}`,
+                    "padding:5px 8px",
+                    "border-radius:3px",
+                    "text-align:center",
+                    "white-space:nowrap",
+                    "cursor:default",
+                ].join(";");
+                const display = val >= 0 ? `+${val.toFixed(3)}` : val.toFixed(3);
+                td.textContent = display;
+                td.title = `Row ${r}, Col ${c}: ${display} mm`;
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+
+        const wrap = document.getElementById(wrapId);
+        if (wrap) {
+            wrap.innerHTML = "";
+            wrap.appendChild(table);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Bed Level Map — Setup > Tools card
+    // ------------------------------------------------------------------
+
+    /**
+     * localStorage key and cap for bed level snapshots.
+     */
+    const BED_SNAP_KEY = "ankerctl_bed_snapshots";
+    const BED_SNAP_MAX = 10;
+
+    /**
+     * Currently loaded bed level data (set by bedLevelRead()).
+     * Shape: {grid, min, max, rows, cols} or null.
+     */
+    let _currentBedData = null;
+
+    /** Load snapshots array from localStorage. */
+    function bedSnapLoad() {
+        try {
+            return JSON.parse(localStorage.getItem(BED_SNAP_KEY) || "[]");
+        } catch (_) {
+            return [];
+        }
+    }
+
+    /** Persist snapshots array to localStorage. */
+    function bedSnapSave(snaps) {
+        localStorage.setItem(BED_SNAP_KEY, JSON.stringify(snaps));
+    }
+
+    /**
+     * Add a new snapshot from bed data. Enforces BED_SNAP_MAX limit.
+     * @param {{grid, min, max, rows, cols}} data
+     */
+    function bedSnapAdd(data) {
+        if (!data) return;
+        const snaps = bedSnapLoad();
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        const label =
+            `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())} ` +
+            `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        snaps.push({ id: "snap_" + Date.now(), label, data });
+        while (snaps.length > BED_SNAP_MAX) {
+            snaps.shift();
+        }
+        bedSnapSave(snaps);
+        bedSnapRefreshUI();
+        flash_message("Snapshot saved.", "success", 3000);
+    }
+
+    /**
+     * Delete a snapshot by id and refresh UI.
+     * @param {string} id
+     */
+    function bedSnapDelete(id) {
+        const snaps = bedSnapLoad().filter(s => s.id !== id);
+        bedSnapSave(snaps);
+        bedSnapRefreshUI();
+    }
+
+    /**
+     * Refresh both compare selects and the saved-snapshots list.
+     */
+    function bedSnapRefreshUI() {
+        const snaps = bedSnapLoad();
+
+        // Rebuild Snapshot A select
+        const selA = document.getElementById("bed-snap-a-select");
+        if (selA) {
+            const prevA = selA.value;
+            selA.innerHTML = "";
+            if (snaps.length === 0) {
+                selA.innerHTML = '<option value="" disabled selected>No snapshots saved yet</option>';
+            } else {
+                snaps.forEach(s => {
+                    const opt = document.createElement("option");
+                    opt.value = s.id;
+                    opt.textContent = escapeHtml(s.label);
+                    if (s.id === prevA) opt.selected = true;
+                    selA.appendChild(opt);
+                });
+            }
+        }
+
+        // Rebuild Snapshot B select (always has "live" option first)
+        const selB = document.getElementById("bed-snap-b-select");
+        if (selB) {
+            const prevB = selB.value;
+            selB.innerHTML = '<option value="live">Read live from printer</option>';
+            snaps.forEach(s => {
+                const opt = document.createElement("option");
+                opt.value = s.id;
+                opt.textContent = escapeHtml(s.label);
+                if (s.id === prevB) opt.selected = true;
+                selB.appendChild(opt);
+            });
+        }
+
+        // Rebuild saved-snapshots list
+        const listEl = document.getElementById("bed-snap-list");
+        if (listEl) {
+            if (snaps.length === 0) {
+                listEl.innerHTML = '<span class="text-muted small">No snapshots saved yet.</span>';
+            } else {
+                listEl.innerHTML = "";
+                snaps.forEach(s => {
+                    const row = document.createElement("div");
+                    row.className = "d-flex justify-content-between align-items-center border-bottom py-1";
+                    row.innerHTML =
+                        `<span class="small">${escapeHtml(s.label)}</span>` +
+                        `<button class="btn btn-sm btn-outline-danger bed-snap-delete-btn" ` +
+                        `data-snap-id="${escapeHtml(s.id)}">` +
+                        `<i class="bi bi-trash"></i></button>`;
+                    listEl.appendChild(row);
+                });
+            }
+        }
+    }
+
+    /**
+     * Compute cell-wise diff grid: B minus A.
+     * Returns null if grids have mismatched dimensions.
+     * @param {number[][]} gridA
+     * @param {number[][]} gridB
+     * @returns {number[][]|null}
+     */
+    function bedLevelDiffGrid(gridA, gridB) {
+        if (!gridA || !gridB || gridA.length !== gridB.length) return null;
+        const result = [];
+        for (let r = 0; r < gridA.length; r++) {
+            if (gridA[r].length !== gridB[r].length) return null;
+            result.push(gridA[r].map((v, c) => gridB[r][c] - v));
+        }
+        return result;
+    }
+
+    /**
+     * Fetch bed level from printer and display in the Setup > Tools card.
+     * Sets _currentBedData on success and enables the Save Snapshot button.
+     */
+    async function bedLevelRead() {
+        const statusEl = document.getElementById("bed-level-status");
+        const gridEl = document.getElementById("bed-level-grid");
+        const statsEl = document.getElementById("bed-level-stats");
+        const saveBtn = document.getElementById("bed-level-save-btn");
+        const readBtn = document.getElementById("bed-level-read-btn");
+
+        if (!statusEl) return;
+
+        statusEl.innerHTML =
+            '<div class="alert alert-info py-2 small mb-0">' +
+            '<span class="spinner-border spinner-border-sm me-2" role="status"></span>' +
+            'Sending M420 V \u2014 waiting for printer response (up to 15 s)...</div>';
+        if (gridEl) gridEl.style.display = "none";
+        if (readBtn) readBtn.prop ? $(readBtn).prop("disabled", true) : (readBtn.disabled = true);
+
+        try {
+            const resp = await fetch("/api/printer/bed-leveling");
+            const data = await resp.json();
+
+            if (!resp.ok) {
+                statusEl.innerHTML =
+                    `<div class="alert alert-danger py-2 small mb-0">` +
+                    `Error ${resp.status}: ${escapeHtml(data.error || "Unknown error")}</div>`;
+                return;
+            }
+
+            _currentBedData = data;
+
+            if (statsEl) {
+                statsEl.innerHTML =
+                    `<span><strong>Min:</strong> ${data.min.toFixed(3)} mm</span>` +
+                    `<span><strong>Max:</strong> +${data.max.toFixed(3)} mm</span>` +
+                    `<span><strong>Range:</strong> ${(data.max - data.min).toFixed(3)} mm</span>` +
+                    `<span class="text-muted">(${data.rows}&times;${data.cols} grid)</span>`;
+            }
+
+            bedLevelRenderGrid(data.grid, data.min, data.max, "bed-level-map-wrap");
+
+            statusEl.innerHTML = "";
+            if (gridEl) gridEl.style.display = "block";
+            if (saveBtn) saveBtn.disabled = false;
+        } catch (err) {
+            statusEl.innerHTML =
+                `<div class="alert alert-danger py-2 small mb-0">` +
+                `Request failed: ${escapeHtml(String(err))}</div>`;
+        } finally {
+            if (readBtn) readBtn.disabled = false;
+        }
+    }
+
+    /**
+     * Compare two bed level grids and render a 3-panel diff view.
+     */
+    async function bedLevelCompare() {
+        const statusEl = document.getElementById("bed-compare-status");
+        const resultEl = document.getElementById("bed-compare-result");
+        const selA = document.getElementById("bed-snap-a-select");
+        const selB = document.getElementById("bed-snap-b-select");
+        const diffStatsEl = document.getElementById("bed-compare-diff-stats");
+
+        if (!statusEl) return;
+        statusEl.innerHTML = "";
+        if (resultEl) resultEl.style.display = "none";
+
+        const snapIdA = selA ? selA.value : "";
+        if (!snapIdA) {
+            statusEl.innerHTML = '<div class="alert alert-warning py-2 small mb-0">Please select Snapshot A first.</div>';
+            return;
+        }
+
+        const snaps = bedSnapLoad();
+        const snapA = snaps.find(s => s.id === snapIdA);
+        if (!snapA) {
+            statusEl.innerHTML = '<div class="alert alert-danger py-2 small mb-0">Snapshot A not found.</div>';
+            return;
+        }
+
+        const snapBId = selB ? selB.value : "live";
+        let dataB = null;
+
+        if (snapBId === "live") {
+            statusEl.innerHTML =
+                '<div class="alert alert-info py-2 small mb-0">' +
+                '<span class="spinner-border spinner-border-sm me-2" role="status"></span>' +
+                'Reading live data from printer...</div>';
+            try {
+                const resp = await fetch("/api/printer/bed-leveling");
+                const parsed = await resp.json();
+                if (!resp.ok) {
+                    statusEl.innerHTML =
+                        `<div class="alert alert-danger py-2 small mb-0">` +
+                        `Printer error: ${escapeHtml(parsed.error || "Unknown error")}</div>`;
+                    return;
+                }
+                dataB = parsed;
+            } catch (err) {
+                statusEl.innerHTML =
+                    `<div class="alert alert-danger py-2 small mb-0">` +
+                    `Request failed: ${escapeHtml(String(err))}</div>`;
+                return;
+            }
+        } else {
+            const snapB = snaps.find(s => s.id === snapBId);
+            if (!snapB) {
+                statusEl.innerHTML = '<div class="alert alert-danger py-2 small mb-0">Snapshot B not found.</div>';
+                return;
+            }
+            dataB = snapB.data;
+        }
+
+        const dataA = snapA.data;
+        const diffGrid = bedLevelDiffGrid(dataA.grid, dataB.grid);
+
+        if (!diffGrid) {
+            statusEl.innerHTML =
+                '<div class="alert alert-warning py-2 small mb-0">' +
+                'Cannot compare: grids have different dimensions.</div>';
+            return;
+        }
+
+        // Render grids
+        bedLevelRenderGrid(dataA.grid, dataA.min, dataA.max, "bed-compare-a-wrap");
+        bedLevelRenderGrid(dataB.grid, dataB.min, dataB.max, "bed-compare-b-wrap");
+
+        const diffFlat = diffGrid.flat();
+        const diffMin = Math.min(...diffFlat);
+        const diffMax = Math.max(...diffFlat);
+        bedLevelRenderGrid(diffGrid, diffMin, diffMax, "bed-compare-diff-wrap");
+
+        // Diff stats
+        if (diffStatsEl) {
+            const avg = diffFlat.reduce((a, b) => a + b, 0) / diffFlat.length;
+            const maxImprovement = -diffMin; // most negative diff = biggest improvement (lower deviation)
+            const maxRegression = diffMax;   // most positive diff = biggest regression
+            diffStatsEl.innerHTML =
+                `<div><strong>Avg shift:</strong> ${avg >= 0 ? "+" : ""}${avg.toFixed(3)} mm</div>` +
+                `<div><strong>Max improvement:</strong> ${maxImprovement.toFixed(3)} mm</div>` +
+                `<div><strong>Max regression:</strong> +${maxRegression.toFixed(3)} mm</div>`;
+        }
+
+        statusEl.innerHTML = "";
+        if (resultEl) resultEl.style.display = "block";
+    }
+
+    // Wire up Setup > Tools bed level buttons
+    $("#bed-level-read-btn").on("click", function () { bedLevelRead(); });
+    $("#bed-level-save-btn").on("click", function () {
+        bedSnapAdd(_currentBedData);
+    });
+    $("#bed-compare-btn").on("click", function () { bedLevelCompare(); });
+
+    // Delegate delete buttons in snapshot list
+    $(document).on("click", ".bed-snap-delete-btn", function () {
+        const id = $(this).data("snap-id");
+        if (id) bedSnapDelete(id);
+    });
+
+    // Initialize snapshot UI on page load
+    bedSnapRefreshUI();
+
+    /**
+     * Auto-Leveling — state machine for polling after bed level command.
+     * We listen on the MQTT WebSocket (commandType 1000) to detect completion.
+     *
+     * State:
+     *   _waitingForBedLevel: false = idle, "heating" = saw active, "idle" = done
+     */
+    let _waitingForBedLevel = false;
+    let _bedLevelPollTimeout = null;
+    const BED_LEVEL_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
+    /**
+     * Called by the MQTT message handler when commandType 1000 arrives.
+     * value=0 → idle/finished, value=1 → active.
+     */
+    function _onMqttStateChange(value) {
+        if (!_waitingForBedLevel) return;
+
+        if (value === 1) {
+            // Printer became active (heating / probing)
+            _waitingForBedLevel = "active";
+        } else if (value === 0 && _waitingForBedLevel === "active") {
+            // Printer returned to idle after being active → leveling done
+            _cancelBedLevelWait();
+            const statusEl = document.getElementById("bed-level-status");
+            if (statusEl) {
+                statusEl.innerHTML =
+                    '<div class="alert alert-success py-2 small mb-0">' +
+                    '<span class="spinner-border spinner-border-sm me-2" role="status"></span>' +
+                    'Bed leveling complete — reading grid...</div>';
+            }
+            bedLevelRead();
+        }
+    }
+
+    function _cancelBedLevelWait() {
+        _waitingForBedLevel = false;
+        if (_bedLevelPollTimeout) {
+            clearTimeout(_bedLevelPollTimeout);
+            _bedLevelPollTimeout = null;
+        }
+    }
+
     /**
      * Auto-Leveling
      */
@@ -834,6 +1334,30 @@ $(function () {
             const resp = await fetch("/api/printer/autolevel", { method: "POST" });
             if (resp.ok) {
                 flash_message("Auto-Leveling started — the printer will now probe the bed.", "success");
+
+                // Start waiting for bed leveling to complete via MQTT state changes
+                _waitingForBedLevel = true;
+                const statusEl = document.getElementById("bed-level-status");
+                const gridEl = document.getElementById("bed-level-grid");
+                if (statusEl) {
+                    statusEl.innerHTML =
+                        '<div class="alert alert-info py-2 small mb-0">' +
+                        '<span class="spinner-border spinner-border-sm me-2" role="status"></span>' +
+                        'Waiting for bed leveling to complete\u2026</div>';
+                }
+                if (gridEl) gridEl.style.display = "none";
+
+                // Timeout after 10 minutes
+                _bedLevelPollTimeout = setTimeout(function () {
+                    if (_waitingForBedLevel) {
+                        _cancelBedLevelWait();
+                        if (statusEl) {
+                            statusEl.innerHTML =
+                                '<div class="alert alert-warning py-2 small mb-0">' +
+                                'Bed leveling timed out (10 min). Click "Read" to check manually.</div>';
+                        }
+                    }
+                }, BED_LEVEL_TIMEOUT_MS);
             } else {
                 const data = await resp.json().catch(() => ({}));
                 const msg = data.error ? data.error : `HTTP ${resp.status}`;
@@ -1120,8 +1644,9 @@ $(function () {
                 }
                 data.entries.forEach(e => {
                     const started = e.started_at ? new Date(e.started_at + "Z").toLocaleString() : "-";
+                    const safeFilename = escapeHtml(e.filename);
                     const row = `<tr>
-                        <td class="text-truncate" style="max-width:200px;" title="${e.filename}">${e.filename}</td>
+                        <td class="text-truncate" style="max-width:200px;" title="${safeFilename}">${safeFilename}</td>
                         <td>${statusBadge(e.status)}</td>
                         <td class="small">${started}</td>
                         <td>${formatDuration(e.duration_sec)}</td>
@@ -1188,20 +1713,21 @@ $(function () {
                 }
                 data.videos.forEach(v => {
                     const created = v.created_at ? new Date(v.created_at).toLocaleString() : "-";
+                    const safeFilename = escapeHtml(v.filename);
                     const item = $(`<div class="p-3 border-bottom">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <strong class="text-truncate me-2">${v.filename}</strong>
+                            <strong class="text-truncate me-2">${safeFilename}</strong>
                             <div class="flex-shrink-0">
-                                <a href="/api/timelapse/${v.filename}" class="btn btn-sm btn-outline-primary me-1" download title="Download">
+                                <a href="/api/timelapse/${safeFilename}" class="btn btn-sm btn-outline-primary me-1" download title="Download">
                                     <i class="bi bi-download"></i>
                                 </a>
-                                <button class="btn btn-sm btn-outline-danger timelapse-delete" data-file="${v.filename}" title="Delete">
+                                <button class="btn btn-sm btn-outline-danger timelapse-delete" data-file="${safeFilename}" title="Delete">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
                         </div>
                         <video controls preload="none" class="w-100 rounded mb-1" style="max-height:360px;"
-                               src="/api/timelapse/${v.filename}"></video>
+                               src="/api/timelapse/${safeFilename}"></video>
                         <small class="text-muted">${created} · ${formatSize(v.size_bytes)}</small>
                     </div>`);
                     gallery.append(item);
@@ -1210,10 +1736,23 @@ $(function () {
             .catch(err => console.error("Timelapse load failed:", err));
     }
 
-    // Load timelapses when the dedicated timelapse tab is shown
+    // Load timelapses when the dedicated timelapse tab is shown, poll
+    // every 15 s while the tab is active so new videos appear automatically.
     const timelapseTabBtn = document.querySelector('button[data-bs-target="#timelapse"]');
+    let _timelapseInterval = null;
     if (timelapseTabBtn) {
-        timelapseTabBtn.addEventListener("shown.bs.tab", loadTimelapses);
+        timelapseTabBtn.addEventListener("shown.bs.tab", function () {
+            loadTimelapses();
+            if (!_timelapseInterval) {
+                _timelapseInterval = setInterval(loadTimelapses, 15000);
+            }
+        });
+        timelapseTabBtn.addEventListener("hidden.bs.tab", function () {
+            if (_timelapseInterval) {
+                clearInterval(_timelapseInterval);
+                _timelapseInterval = null;
+            }
+        });
     }
 
     // Delete timelapse
@@ -1234,6 +1773,7 @@ $(function () {
             interval: $("#timelapse-interval"),
             maxVideos: $("#timelapse-max-videos"),
             persistent: $("#timelapse-persistent"),
+            light: $("#timelapse-light"),
         };
         const tlSaveBtn = $("#timelapse-save");
 
@@ -1247,6 +1787,7 @@ $(function () {
                     tlFields.interval.val(cfg.interval || 30);
                     tlFields.maxVideos.val(cfg.max_videos || 10);
                     tlFields.persistent.prop("checked", cfg.save_persistent !== false);
+                    tlFields.light.val(cfg.light || "");
                 }
             } catch (err) {
                 console.error("Failed to load timelapse settings:", err);
@@ -1261,7 +1802,8 @@ $(function () {
                     enabled: tlFields.enabled.is(":checked"),
                     interval: parseInt(tlFields.interval.val(), 10) || 30,
                     max_videos: parseInt(tlFields.maxVideos.val(), 10) || 10,
-                    save_persistent: tlFields.persistent.is(":checked")
+                    save_persistent: tlFields.persistent.is(":checked"),
+                    light: tlFields.light.val() || null
                 }
             };
             try {
@@ -1358,122 +1900,529 @@ $(function () {
     }
 
     /**
-     * Debug Console Logic
+     * Debug Tab Logic
+     * Only initialised when the debug tab element is present (ANKERCTL_DEV_MODE=true).
      */
-    if ($("#debugModal").length) {
-        window.refreshDebugState = async function () {
+    if ($("#debug").length) {
+
+        // ------------------------------------------------------------------
+        // Helpers
+        // ------------------------------------------------------------------
+
+        /**
+         * Build a Bootstrap table.table-sm.table-dark with key-value rows.
+         * Values are colour-coded: true=success, false=danger, null=muted.
+         * @param {string} title
+         * @param {Object} obj
+         * @returns {HTMLElement} card element
+         */
+        function renderSection(title, obj) {
+            const card = document.createElement("div");
+            card.className = "card border-secondary mb-3";
+
+            const header = document.createElement("div");
+            header.className = "card-header small fw-semibold";
+            header.textContent = title;
+            card.appendChild(header);
+
+            const table = document.createElement("table");
+            table.className = "table table-sm table-dark mb-0";
+
+            const tbody = document.createElement("tbody");
+            Object.entries(obj).forEach(([key, value]) => {
+                const tr = document.createElement("tr");
+
+                const tdKey = document.createElement("td");
+                tdKey.className = "text-muted small w-50";
+                tdKey.textContent = key;
+
+                const tdVal = document.createElement("td");
+                tdVal.className = "small font-monospace";
+
+                if (value === true) {
+                    tdVal.innerHTML = '<span class="text-success">true</span>';
+                } else if (value === false) {
+                    tdVal.innerHTML = '<span class="text-danger">false</span>';
+                } else if (value === null || value === undefined) {
+                    tdVal.innerHTML = '<span class="text-muted">null</span>';
+                } else {
+                    tdVal.textContent = String(value);
+                }
+
+                tr.appendChild(tdKey);
+                tr.appendChild(tdVal);
+                tbody.appendChild(tr);
+            });
+
+            table.appendChild(tbody);
+            card.appendChild(table);
+            return card;
+        }
+
+        // ------------------------------------------------------------------
+        // State Inspector
+        // ------------------------------------------------------------------
+
+        async function dbgRefreshState() {
             try {
                 const resp = await fetch("/api/debug/state");
+                if (!resp.ok) {
+                    document.getElementById("dbg-state-tables").textContent = `Error: HTTP ${resp.status}`;
+                    return;
+                }
                 const data = await resp.json();
-                $("#debug-state-dump").text(JSON.stringify(data, null, 2));
-                // Sync UI with state
+
+                const container = document.getElementById("dbg-state-tables");
+                container.innerHTML = "";
+
+                // Top-level scalar values (e.g. debug_logging)
+                const scalars = {};
+                Object.entries(data).forEach(([key, val]) => {
+                    if (typeof val !== "object" || val === null) {
+                        scalars[key] = val;
+                    }
+                });
+                if (Object.keys(scalars).length > 0) {
+                    container.appendChild(renderSection("General", scalars));
+                }
+
+                // Nested objects rendered as separate tables
+                Object.entries(data).forEach(([key, val]) => {
+                    if (typeof val === "object" && val !== null) {
+                        container.appendChild(renderSection(key.charAt(0).toUpperCase() + key.slice(1), val));
+                    }
+                });
+
+                // Sync controls checkbox
                 if (data.debug_logging !== undefined) {
-                    $("#debug-log-mqtt").prop("checked", data.debug_logging);
+                    $("#dbg-log-mqtt").prop("checked", data.debug_logging);
                 }
             } catch (err) {
-                $("#debug-state-dump").text("Error fetching state: " + err);
+                document.getElementById("dbg-state-tables").textContent = "Error fetching state: " + err;
             }
-        };
+        }
 
-        window.simEvent = async function (type, payload) {
-            try {
-                await fetch("/api/debug/simulate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ type: type, payload: payload })
-                });
-                refreshDebugState();
-            } catch (err) {
-                alert("Sim failed: " + err);
-            }
-        };
+        document.getElementById("dbg-refresh-state").addEventListener("click", dbgRefreshState);
 
-        $("#debug-log-mqtt").on("change", async function () {
+        // Auto-refresh state while the inspector sub-tab is active
+        const dbgInspectorTab = document.getElementById("dbg-inspector-tab");
+        let dbgStateInterval = null;
+        if (dbgInspectorTab) {
+            dbgInspectorTab.addEventListener("shown.bs.tab", function () {
+                dbgRefreshState();
+                dbgStateInterval = setInterval(dbgRefreshState, 3000);
+            });
+            dbgInspectorTab.addEventListener("hidden.bs.tab", function () {
+                if (dbgStateInterval) { clearInterval(dbgStateInterval); dbgStateInterval = null; }
+            });
+        }
+
+        // Also refresh when the top-level Debug tab itself is shown
+        const mainDebugTabBtn = document.getElementById("debug-tab");
+        if (mainDebugTabBtn) {
+            mainDebugTabBtn.addEventListener("shown.bs.tab", function () {
+                dbgRefreshState();
+            });
+        }
+
+        // ------------------------------------------------------------------
+        // Controls
+        // ------------------------------------------------------------------
+
+        $("#dbg-log-mqtt").on("change", async function () {
             const enabled = $(this).is(":checked");
             await fetch("/api/debug/config", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ debug_logging: enabled })
             });
-            refreshDebugState();
+            dbgRefreshState();
         });
 
-        // Auto-refresh when modal is opened
-        const debugModal = document.getElementById('debugModal');
-        let refreshInterval = null;
-        debugModal.addEventListener('shown.bs.modal', function () {
-            refreshDebugState();
-            refreshInterval = setInterval(refreshDebugState, 2000);
+        // ------------------------------------------------------------------
+        // Simulation
+        // ------------------------------------------------------------------
+
+        async function dbgSimEvent(type, payload) {
+            try {
+                await fetch("/api/debug/simulate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type: type, payload: payload })
+                });
+                dbgRefreshState();
+            } catch (err) {
+                flash_message("Sim failed: " + err, "danger");
+            }
+        }
+
+        document.getElementById("dbg-sim-start").addEventListener("click", function () {
+            dbgSimEvent("start", { filename: "debug_test.gcode" });
         });
-        debugModal.addEventListener('hidden.bs.modal', function () {
-            if (refreshInterval) clearInterval(refreshInterval);
+        document.getElementById("dbg-sim-finish").addEventListener("click", function () {
+            dbgSimEvent("finish", { filename: "debug_test.gcode" });
+        });
+        document.getElementById("dbg-sim-fail").addEventListener("click", function () {
+            dbgSimEvent("fail", { filename: "debug_test.gcode" });
         });
 
-        // --- Log Viewer Logic ---
-        const debugLogFileSelect = $("#debug-log-file");
-        const debugLogContent = $("#debug-log-content");
-        const debugLogAutoRefresh = $("#debug-log-autorefresh");
-        let logRefreshInterval = null;
+        // Progress slider
+        const progressSlider = document.getElementById("dbg-sim-progress-slider");
+        const progressValue = document.getElementById("dbg-sim-progress-value");
+        if (progressSlider) {
+            progressSlider.addEventListener("input", function () {
+                progressValue.textContent = this.value + "%";
+            });
+        }
+        document.getElementById("dbg-sim-progress-btn").addEventListener("click", function () {
+            const pct = progressSlider ? parseInt(progressSlider.value, 10) : 50;
+            dbgSimEvent("progress", {
+                progress: pct,
+                filename: "debug_test.gcode",
+                elapsed: 120,
+                remaining: 60,
+            });
+        });
 
-        async function refreshLogList() {
+        // Temperature buttons
+        $(".dbg-sim-temp").on("click", function () {
+            const btn = $(this);
+            dbgSimEvent("temperature", {
+                temp_type: btn.data("temp-type"),
+                current: parseInt(btn.data("current"), 10),
+                target: parseInt(btn.data("target"), 10),
+            });
+        });
+
+        // Speed button
+        document.getElementById("dbg-sim-speed").addEventListener("click", function () {
+            dbgSimEvent("speed", { speed: 250 });
+        });
+
+        // Layer button
+        document.getElementById("dbg-sim-layer").addEventListener("click", function () {
+            dbgSimEvent("layer", { current_layer: 42, total_layers: 200 });
+        });
+
+        // ------------------------------------------------------------------
+        // Services Health Dashboard
+        // ------------------------------------------------------------------
+
+        /**
+         * Return a Bootstrap badge colour class for a service state name.
+         * @param {string} state
+         * @returns {string}
+         */
+        function serviceStateClass(state) {
+            switch (state) {
+                case "Running": return "bg-success";
+                case "Starting":
+                case "Stopping": return "bg-warning text-dark";
+                default: return "bg-secondary";
+            }
+        }
+
+        async function dbgRefreshServices() {
+            try {
+                const resp = await fetch("/api/debug/services");
+                if (!resp.ok) {
+                    $("#dbg-services-grid").html(`<div class="col-12 text-danger small">Error: HTTP ${resp.status}</div>`);
+                    return;
+                }
+                const data = await resp.json();
+                const grid = $("#dbg-services-grid");
+                grid.empty();
+
+                // Determine if a print is currently active (for restart warning)
+                let isPrinting = false;
+                try {
+                    const stateResp = await fetch("/api/debug/state");
+                    if (stateResp.ok) {
+                        const stateData = await stateResp.json();
+                        isPrinting = !!(stateData.print && stateData.print.active);
+                    }
+                } catch (_) { /* ignore */ }
+
+                Object.entries(data.services).forEach(([name, svc]) => {
+                    const badgeClass = serviceStateClass(svc.state);
+                    const card = $(`<div class="col-md-6 col-lg-4">
+                        <div class="card border-secondary h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center small">
+                                <strong>${escapeHtml(name)}</strong>
+                                <span class="badge ${badgeClass}">${escapeHtml(svc.state)}</span>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="small text-muted mb-1">
+                                    <span class="me-2">Type: <code>${escapeHtml(svc.type)}</code></span>
+                                </div>
+                                <div class="small text-muted mb-2">
+                                    <span class="me-2">Refs: ${svc.refs}</span>
+                                    <span>Wanted: <span class="${svc.wanted ? 'text-success' : 'text-danger'}">${svc.wanted}</span></span>
+                                </div>
+                                <button class="btn btn-sm btn-outline-warning w-100 dbg-restart-svc"
+                                    data-svc-name="${escapeHtml(name)}"
+                                    data-is-printing="${isPrinting}">
+                                    <i class="bi-arrow-clockwise"></i> Restart
+                                </button>
+                            </div>
+                        </div>
+                    </div>`);
+                    grid.append(card);
+                });
+
+                const ts = new Date().toLocaleTimeString();
+                $("#dbg-services-refresh-indicator").text(`Last updated: ${ts}`);
+            } catch (err) {
+                $("#dbg-services-grid").html(`<div class="col-12 text-danger small">Error: ${escapeHtml(String(err))}</div>`);
+            }
+        }
+
+        // Restart button handler (delegated)
+        $(document).on("click", ".dbg-restart-svc", async function () {
+            const name = $(this).data("svc-name");
+            const isPrinting = $(this).data("is-printing");
+            const printWarning = isPrinting
+                ? "\n\nWarning: A print is currently active. Restarting may interrupt it."
+                : "";
+            if (!confirm(`Restart service "${name}"?${printWarning}`)) return;
+
+            try {
+                const resp = await fetch(`/api/debug/services/${encodeURIComponent(name)}/restart`, {
+                    method: "POST",
+                });
+                if (resp.ok) {
+                    flash_message(`Service "${name}" restarted`, "success");
+                    dbgRefreshServices();
+                } else {
+                    const data = await resp.json().catch(() => ({}));
+                    flash_message(`Restart failed: ${data.error || resp.statusText}`, "danger");
+                }
+            } catch (err) {
+                flash_message(`Restart failed: ${err}`, "danger");
+            }
+        });
+
+        document.getElementById("dbg-refresh-services").addEventListener("click", dbgRefreshServices);
+
+        // Auto-refresh when the services pill is active
+        const dbgServicesTab = document.getElementById("dbg-services-tab");
+        let dbgServicesInterval = null;
+        if (dbgServicesTab) {
+            dbgServicesTab.addEventListener("shown.bs.tab", function () {
+                dbgRefreshServices();
+                dbgServicesInterval = setInterval(dbgRefreshServices, 5000);
+            });
+            dbgServicesTab.addEventListener("hidden.bs.tab", function () {
+                if (dbgServicesInterval) { clearInterval(dbgServicesInterval); dbgServicesInterval = null; }
+            });
+        }
+
+        // ------------------------------------------------------------------
+        // Log Viewer (enhanced)
+        // ------------------------------------------------------------------
+
+        let _rawLogLines = [];
+
+        const dbgLogFileSelect = $("#dbg-log-file");
+        const dbgLogContent = document.getElementById("dbg-log-content");
+        const dbgLogPre = document.getElementById("dbg-log-pre");
+        const dbgLogLevelFilter = document.getElementById("dbg-log-level");
+        const dbgLogSearch = document.getElementById("dbg-log-search");
+        const dbgLogCount = document.getElementById("dbg-log-count");
+        const dbgLogAutoRefresh = document.getElementById("dbg-log-autorefresh");
+        const dbgLogLinesInput = document.getElementById("dbg-log-lines");
+        let dbgLogRefreshInterval = null;
+
+        // Restore persisted viewer height from localStorage
+        const _savedLogHeight = localStorage.getItem("dbg_log_height");
+        if (_savedLogHeight && dbgLogPre) {
+            dbgLogPre.style.height = _savedLogHeight;
+        }
+
+        // Persist viewer height on resize via ResizeObserver
+        if (dbgLogPre && typeof ResizeObserver !== "undefined") {
+            new ResizeObserver(function () {
+                localStorage.setItem("dbg_log_height", dbgLogPre.style.height || dbgLogPre.offsetHeight + "px");
+            }).observe(dbgLogPre);
+        }
+
+        // Restore and persist the lines-to-fetch setting
+        if (dbgLogLinesInput) {
+            const _savedLines = localStorage.getItem("dbg_log_lines");
+            if (_savedLines) {
+                dbgLogLinesInput.value = _savedLines;
+            }
+            dbgLogLinesInput.addEventListener("change", function () {
+                localStorage.setItem("dbg_log_lines", this.value);
+            });
+        }
+
+        async function dbgRefreshLogList() {
             try {
                 const resp = await fetch("/api/debug/logs");
-                if (resp.ok) {
-                    const data = await resp.json();
-                    const currentVal = debugLogFileSelect.val();
-                    debugLogFileSelect.empty();
-                    $('<option value="" disabled selected>Select Log File...</option>').appendTo(debugLogFileSelect);
-                    data.files.forEach(file => {
-                        const selected = (file === currentVal) ? " selected" : "";
-                        $(`<option value="${file}"${selected}>${file}</option>`).appendTo(debugLogFileSelect);
-                    });
-                }
+                if (!resp.ok) return;
+                const data = await resp.json();
+                const currentVal = dbgLogFileSelect.val();
+                dbgLogFileSelect.empty();
+                $('<option value="" disabled selected>Select log file...</option>').appendTo(dbgLogFileSelect);
+                data.files.forEach(file => {
+                    const opt = $(`<option value="${escapeHtml(file)}">${escapeHtml(file)}</option>`);
+                    if (file === currentVal) opt.prop("selected", true);
+                    dbgLogFileSelect.append(opt);
+                });
             } catch (err) {
                 console.error("Failed to list logs:", err);
             }
         }
 
-        window.loadLogContent = async function () {
-            const filename = debugLogFileSelect.val();
-            if (!filename) return;
+        /**
+         * Render filtered log lines into the DOM, applying level filter,
+         * text search with <mark> highlighting, and updating the line counter.
+         */
+        function dbgApplyLogFilters() {
+            const levelFilter = dbgLogLevelFilter ? dbgLogLevelFilter.value.trim().toUpperCase() : "";
+            const searchTerm = dbgLogSearch ? dbgLogSearch.value.trim() : "";
+            const searchLower = searchTerm.toLowerCase();
 
-            try {
-                const resp = await fetch(`/api/debug/logs/${filename}?lines=500`);
-                if (resp.ok) {
-                    const data = await resp.json();
-                    debugLogContent.text(data.content);
-                    const pre = debugLogContent.parent();
-                    pre.scrollTop(pre.prop("scrollHeight"));
-                } else {
-                    debugLogContent.text(`Error loading log: ${resp.status}`);
-                }
-            } catch (err) {
-                debugLogContent.text(`Error loading log: ${err}`);
+            let filtered = _rawLogLines;
+
+            if (levelFilter) {
+                filtered = filtered.filter(line => line.toUpperCase().includes(levelFilter));
             }
-        };
+            if (searchTerm) {
+                filtered = filtered.filter(line => line.toLowerCase().includes(searchLower));
+            }
 
-        const logsTab = document.getElementById('logs-tab');
-        if (logsTab) {
-            logsTab.addEventListener('shown.bs.tab', refreshLogList);
+            dbgLogCount.textContent = `${filtered.length} / ${_rawLogLines.length} lines`;
+
+            if (!searchTerm) {
+                // No search — just escape and join
+                dbgLogContent.innerHTML = filtered.map(l => escapeHtml(l)).join("\n");
+            } else {
+                // Highlight search term with <mark>
+                const escapedSearch = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                const re = new RegExp(`(${escapedSearch})`, "gi");
+                dbgLogContent.innerHTML = filtered
+                    .map(l => escapeHtml(l).replace(re, "<mark>$1</mark>"))
+                    .join("\n");
+            }
+
+            // Auto-scroll to bottom only when the user is already near the bottom,
+            // so that manually scrolling up to read earlier lines is not interrupted.
+            if (dbgLogPre) {
+                const atBottom = dbgLogPre.scrollHeight - dbgLogPre.scrollTop - dbgLogPre.clientHeight < 40;
+                if (atBottom) {
+                    dbgLogPre.scrollTop = dbgLogPre.scrollHeight;
+                }
+            }
         }
 
-        debugLogAutoRefresh.on("change", function () {
-            if (this.checked) {
-                loadLogContent();
-                logRefreshInterval = setInterval(loadLogContent, 5000);
-            } else {
-                if (logRefreshInterval) clearInterval(logRefreshInterval);
-                logRefreshInterval = null;
+        async function dbgLoadLogContent() {
+            const filename = dbgLogFileSelect.val();
+            if (!filename) return;
+            try {
+                const lines = dbgLogLinesInput ? (parseInt(dbgLogLinesInput.value, 10) || 500) : 500;
+                const resp = await fetch(`/api/debug/logs/${encodeURIComponent(filename)}?lines=${lines}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    _rawLogLines = data.content.split("\n");
+                    dbgApplyLogFilters();
+                } else {
+                    dbgLogContent.textContent = `Error loading log: ${resp.status}`;
+                }
+            } catch (err) {
+                dbgLogContent.textContent = `Error loading log: ${err}`;
             }
-        });
+        }
 
-        debugModal.addEventListener('hidden.bs.modal', function () {
-            if (logRefreshInterval) {
-                clearInterval(logRefreshInterval);
-                logRefreshInterval = null;
-                debugLogAutoRefresh.prop("checked", false);
+        dbgLogFileSelect.on("change", dbgLoadLogContent);
+        document.getElementById("dbg-log-refresh-btn").addEventListener("click", dbgLoadLogContent);
+
+        if (dbgLogLevelFilter) {
+            dbgLogLevelFilter.addEventListener("change", dbgApplyLogFilters);
+        }
+        if (dbgLogSearch) {
+            dbgLogSearch.addEventListener("input", dbgApplyLogFilters);
+        }
+
+        const dbgLogsTab = document.getElementById("dbg-logs-tab");
+        if (dbgLogsTab) {
+            dbgLogsTab.addEventListener("shown.bs.tab", dbgRefreshLogList);
+        }
+
+        if (dbgLogAutoRefresh) {
+            dbgLogAutoRefresh.addEventListener("change", function () {
+                if (this.checked) {
+                    dbgLoadLogContent();
+                    dbgLogRefreshInterval = setInterval(dbgLoadLogContent, 5000);
+                } else {
+                    if (dbgLogRefreshInterval) { clearInterval(dbgLogRefreshInterval); dbgLogRefreshInterval = null; }
+                }
+            });
+        }
+
+        // Clean up intervals when leaving the Debug tab
+        if (mainDebugTabBtn) {
+            mainDebugTabBtn.addEventListener("hidden.bs.tab", function () {
+                if (dbgStateInterval) { clearInterval(dbgStateInterval); dbgStateInterval = null; }
+                if (dbgServicesInterval) { clearInterval(dbgServicesInterval); dbgServicesInterval = null; }
+                if (dbgLogRefreshInterval) {
+                    clearInterval(dbgLogRefreshInterval);
+                    dbgLogRefreshInterval = null;
+                    if (dbgLogAutoRefresh) dbgLogAutoRefresh.checked = false;
+                }
+            });
+        }
+
+        async function dbgRefreshBedLevel() {
+            const statusEl = document.getElementById("dbg-bedlevel-status");
+            const gridEl = document.getElementById("dbg-bedlevel-grid");
+            const statsEl = document.getElementById("dbg-bedlevel-stats");
+            const btn = document.getElementById("dbg-bedlevel-refresh");
+
+            if (!statusEl || !gridEl) return;
+
+            // Show loading state
+            statusEl.innerHTML =
+                '<div class="alert alert-info py-2 small mb-0">' +
+                '<span class="spinner-border spinner-border-sm me-2" role="status"></span>' +
+                'Sending M420 V — waiting for printer response (up to 15 s)...</div>';
+            gridEl.style.display = "none";
+            if (btn) btn.disabled = true;
+
+            try {
+                const resp = await fetch("/api/debug/bed-leveling");
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    statusEl.innerHTML =
+                        `<div class="alert alert-danger py-2 small mb-0">` +
+                        `Error ${resp.status}: ${escapeHtml(data.error || "Unknown error")}</div>`;
+                    return;
+                }
+
+                // Render stats bar
+                if (statsEl) {
+                    statsEl.innerHTML =
+                        `<span><strong>Min:</strong> ${data.min.toFixed(3)} mm</span>` +
+                        `<span><strong>Max:</strong> +${data.max.toFixed(3)} mm</span>` +
+                        `<span><strong>Range:</strong> ${(data.max - data.min).toFixed(3)} mm</span>` +
+                        `<span class="text-muted">(${data.rows}&times;${data.cols} grid)</span>`;
+                }
+
+                bedLevelRenderGrid(data.grid, data.min, data.max);
+
+                statusEl.innerHTML = "";
+                gridEl.style.display = "block";
+            } catch (err) {
+                statusEl.innerHTML =
+                    `<div class="alert alert-danger py-2 small mb-0">` +
+                    `Request failed: ${escapeHtml(String(err))}</div>`;
+            } finally {
+                if (btn) btn.disabled = false;
             }
-        });
-    }
+        }
+
+    } // end debug tab block
 
 });
