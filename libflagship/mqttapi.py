@@ -161,3 +161,40 @@ class AnkerMQTTBaseClient:
                         return obj
 
         return None
+
+    def await_responses(self, msgtype, timeout=10, collect_window=3.0):
+        """Collect ALL matching MQTT responses within a time window.
+
+        Waits up to `timeout` seconds for the first matching message, then
+        keeps listening for `collect_window` more seconds to catch any
+        follow-up packets the firmware may send for long GCode responses.
+
+        Returns a list of matching response objects (may be empty).
+        """
+        msgtype = int(msgtype)
+        results = []
+
+        # Phase 1: wait for first response
+        end = datetime.now() + timedelta(seconds=timeout)
+        while datetime.now() < end:
+            self._mqtt.loop(timeout=min(0.1, (end - datetime.now()).total_seconds()))
+            for _, body in self.clear_queue():
+                for obj in body:
+                    if obj["commandType"] == msgtype:
+                        results.append(obj)
+            if results:
+                break
+
+        if not results:
+            return results
+
+        # Phase 2: keep collecting for collect_window seconds
+        window_end = datetime.now() + timedelta(seconds=collect_window)
+        while datetime.now() < window_end:
+            self._mqtt.loop(timeout=min(0.1, (window_end - datetime.now()).total_seconds()))
+            for _, body in self.clear_queue():
+                for obj in body:
+                    if obj["commandType"] == msgtype:
+                        results.append(obj)
+
+        return results
