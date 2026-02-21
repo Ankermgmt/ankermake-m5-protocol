@@ -15,6 +15,10 @@ ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
 {% endif %}
 
 {% include "tabs/setup.html" %}
+
+{% if debug_mode %}
+{% include "tabs/debug.html" %}
+{% endif %}
 {% endblock %}
 
 {% block menu %}
@@ -43,4 +47,10 @@ ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
 {% call macro.menu_button(id="setup-tab", target="setup", active=not configure) %}
 {{ macro.bi_icon("gear-fill", "Setup") }}
 {% endcall %}
+
+{% if debug_mode %}
+{% call macro.menu_button(id="debug-tab", target="debug") %}
+{{ macro.bi_icon("bug-fill", "Debug") }}
+{% endcall %}
+{% endif %}
 {% endblock %}

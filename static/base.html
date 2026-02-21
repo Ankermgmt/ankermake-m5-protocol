@@ -24,11 +24,6 @@
             <ul class="nav nav-pills align-items-baseline" id="tab" role="tablist">
                 {% block menu %}{% endblock %}
             </ul>
-            {% if debug_mode %}
-            <button class="btn btn-danger btn-sm ms-3" data-bs-toggle="modal" data-bs-target="#debugModal">
-                <i class="bi bi-bug-fill"></i>
-            </button>
-            {% endif %}
         </header>
     </div>
 
@@ -47,90 +42,6 @@
             </div>
         </div>
     </div>
-
-    {% if debug_mode %}
-    <!-- Debug Modal -->
-    <div class="modal fade" id="debugModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="bi bi-bug-fill me-2"></i>Debug Console</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <ul class="nav nav-tabs mb-3" id="debugTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="inspector-tab" data-bs-toggle="tab"
-                                data-bs-target="#inspector" type="button" role="tab">State Inspector</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="controls-tab" data-bs-toggle="tab" data-bs-target="#controls"
-                                type="button" role="tab">Controls</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="simulation-tab" data-bs-toggle="tab"
-                                data-bs-target="#simulation" type="button" role="tab">Simulation</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs"
-                                type="button" role="tab">Logs</button>
-                        </li>
-                    </ul>
-                    <div class="tab-content" id="debugTabContent">
-                        <!-- Inspector -->
-                        <div class="tab-pane fade show active" id="inspector" role="tabpanel">
-                            <pre><code id="debug-state-dump" class="text-success">Loading...</code></pre>
-                            <button class="btn btn-sm btn-secondary mt-2" onclick="refreshDebugState()">Refresh</button>
-                        </div>
-                        <!-- Controls -->
-                        <div class="tab-pane fade" id="controls" role="tabpanel">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" id="debug-log-mqtt">
-                                <label class="form-check-label" for="debug-log-mqtt">Log MQTT Payloads (Full
-                                    JSON)</label>
-                            </div>
-                            <hr>
-                            <h6>Quick Actions</h6>
-                            <button class="btn btn-sm btn-outline-warning disabled">Force Close Orphans (TODO)</button>
-                        </div>
-                        <!-- Simulation -->
-                        <div class="tab-pane fade" id="simulation" role="tabpanel">
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-outline-success"
-                                    onclick="simEvent('start', {'filename': 'debug_test.gcode'})">Simulate Print
-                                    Start</button>
-                                <div class="btn-group">
-                                    <button class="btn btn-outline-primary"
-                                        onclick="simEvent('finish', {'filename': 'debug_test.gcode'})">Simulate
-                                        Finish</button>
-                                    <button class="btn btn-outline-danger"
-                                        onclick="simEvent('fail', {'filename': 'debug_test.gcode'})">Simulate
-                                        Fail</button>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Logs -->
-                        <div class="tab-pane fade" id="logs" role="tabpanel">
-                            <div class="input-group mb-2">
-                                <select class="form-select" id="debug-log-file" onchange="loadLogContent()">
-                                    <option value="" selected>Select Log File...</option>
-                                </select>
-                                <button class="btn btn-outline-secondary" type="button" onclick="loadLogContent()"><i
-                                        class="bi bi-arrow-clockwise"></i></button>
-                            </div>
-                            <div class="form-check form-check-inline mb-2">
-                                <input class="form-check-input" type="checkbox" id="debug-log-autorefresh">
-                                <label class="form-check-label" for="debug-log-autorefresh">Auto-refresh (5s)</label>
-                            </div>
-                            <pre class="bg-dark text-light p-2 border rounded"
-                                style="max-height: 500px; overflow-y: scroll; font-size: 0.8em;"><code id="debug-log-content">...</code></pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
     <!-- Message Center -->
     <div class="container text-center" id="messages">
