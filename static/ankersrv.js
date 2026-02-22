@@ -1738,12 +1738,34 @@ $(function () {
     });
 
     /**
-     * Timelapse Gallery
+     * Timelapse — list + player layout
      */
     function formatSize(bytes) {
         if (!bytes) return "-";
         const mb = bytes / (1024 * 1024);
         return mb >= 1 ? `${mb.toFixed(1)} MB` : `${(bytes / 1024).toFixed(0)} KB`;
+    }
+
+    function timelapseSelectVideo(v) {
+        const card        = document.getElementById("timelapse-player-card");
+        const placeholder = document.getElementById("timelapse-player-placeholder");
+        const videoEl     = document.getElementById("timelapse-player");
+        const titleEl     = document.getElementById("timelapse-player-title");
+        const metaEl      = document.getElementById("timelapse-player-meta");
+        const deleteBtn   = document.getElementById("timelapse-player-delete");
+        if (!card || !videoEl) return;
+
+        document.querySelectorAll("#timelapse-list .list-group-item").forEach(el => {
+            el.classList.toggle("active", el.dataset.file === v.filename);
+        });
+
+        titleEl.textContent = v.filename;
+        metaEl.textContent  = `${v.created_at ? new Date(v.created_at).toLocaleString() : "-"} · ${formatSize(v.size_bytes)}`;
+        videoEl.src         = `/api/timelapse/${escapeHtml(v.filename)}`;
+        videoEl.load();
+        if (deleteBtn) deleteBtn.dataset.file = v.filename;
+        card.style.display        = "";
+        placeholder.style.display = "none";
     }
 
     function loadTimelapses() {
@@ -1753,40 +1775,41 @@ $(function () {
                 const banner = document.getElementById("timelapse-disabled-banner");
                 if (banner) banner.style.display = data.enabled ? "none" : "";
 
-                const gallery = $("#timelapse-gallery");
-                gallery.empty();
+                const list = document.getElementById("timelapse-list");
+                if (!list) return;
+                list.innerHTML = "";
 
                 if (data.videos.length === 0) {
-                    gallery.html('<div class="text-center text-muted py-4">No timelapse videos yet</div>');
+                    list.innerHTML = '<div class="text-center text-muted py-4">No timelapse videos yet</div>';
                     return;
                 }
                 data.videos.forEach(v => {
-                    const created = v.created_at ? new Date(v.created_at).toLocaleString() : "-";
+                    const created      = v.created_at ? new Date(v.created_at).toLocaleString() : "-";
                     const safeFilename = escapeHtml(v.filename);
-                    const item = $(`<div class="p-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <strong class="text-truncate me-2">${safeFilename}</strong>
-                            <div class="flex-shrink-0">
-                                <a href="/api/timelapse/${safeFilename}" class="btn btn-sm btn-outline-primary me-1" download title="Download">
-                                    <i class="bi bi-download"></i>
-                                </a>
-                                <button class="btn btn-sm btn-outline-danger timelapse-delete" data-file="${safeFilename}" title="Delete">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
+                    const item         = document.createElement("div");
+                    item.className     = "list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3";
+                    item.dataset.file  = v.filename;
+                    item.innerHTML     = `
+                        <div class="overflow-hidden me-2" style="cursor:pointer; flex:1; min-width:0;">
+                            <div class="text-truncate fw-semibold small">${safeFilename}</div>
+                            <div class="text-muted" style="font-size:0.75em;">${created} · ${formatSize(v.size_bytes)}</div>
                         </div>
-                        <video controls preload="none" class="w-100 rounded mb-1" style="max-height:360px;"
-                               src="/api/timelapse/${safeFilename}"></video>
-                        <small class="text-muted">${created} · ${formatSize(v.size_bytes)}</small>
-                    </div>`);
-                    gallery.append(item);
+                        <div class="d-flex gap-1 flex-shrink-0">
+                            <a href="/api/timelapse/${safeFilename}" class="btn btn-sm btn-outline-secondary" download title="Download">
+                                <i class="bi bi-download"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger timelapse-delete" data-file="${safeFilename}" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>`;
+                    item.querySelector(".overflow-hidden").addEventListener("click", () => timelapseSelectVideo(v));
+                    list.appendChild(item);
                 });
             })
             .catch(err => console.error("Timelapse load failed:", err));
     }
 
-    // Load timelapses when the dedicated timelapse tab is shown, poll
-    // every 15 s while the tab is active so new videos appear automatically.
+    // Load on tab show; auto-refresh every 15 s while active.
     const timelapseTabBtn = document.querySelector('button[data-bs-target="#timelapse"]');
     let _timelapseInterval = null;
     if (timelapseTabBtn) {
@@ -1804,12 +1827,23 @@ $(function () {
         });
     }
 
-    // Delete timelapse
+    // Delete timelapse (list button or player delete button)
     $(document).on("click", ".timelapse-delete", function () {
         const file = $(this).data("file");
         if (!confirm(`Delete timelapse ${file}?`)) return;
         fetch(`/api/timelapse/${file}`, { method: "DELETE" })
-            .then(() => loadTimelapses());
+            .then(() => {
+                // If the deleted video is currently loaded in the player, clear it
+                const videoEl     = document.getElementById("timelapse-player");
+                const card        = document.getElementById("timelapse-player-card");
+                const placeholder = document.getElementById("timelapse-player-placeholder");
+                if (videoEl && videoEl.src.endsWith(encodeURIComponent(file))) {
+                    videoEl.src = "";
+                    if (card)        card.style.display        = "none";
+                    if (placeholder) placeholder.style.display = "";
+                }
+                loadTimelapses();
+            });
     });
 
     /**

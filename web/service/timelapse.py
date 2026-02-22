@@ -1,5 +1,6 @@
 """Timelapse capture service — periodic snapshots assembled into video."""
 
+import json
 import logging
 import math
 import os
@@ -8,7 +9,6 @@ import subprocess
 
 log = logging.getLogger("timelapse")
 
-import tempfile
 import threading
 import time
 from datetime import datetime
@@ -18,6 +18,8 @@ _DEFAULT_INTERVAL_SEC = 30
 _DEFAULT_MAX_VIDEOS = 10
 _SNAPSHOT_TIMEOUT = 10
 _RESUME_WINDOW_SEC = 60 * 60  # 60 minutes
+_IN_PROGRESS_SUBDIR = "in_progress"
+_MAX_ORPHAN_AGE_SEC = 24 * 3600  # 24 hours
 
 
 class TimelapseService:
@@ -55,6 +57,7 @@ class TimelapseService:
         self._finalize_timer = None
 
         self.reload_config()
+        self._scan_in_progress_captures()
 
     def reload_config(self, config=None):
         """Update configuration from Config object or ConfigManager."""
@@ -281,7 +284,11 @@ class TimelapseService:
                 self._cancel_pending_resume()
                 self._enable_video_for_timelapse()
                 self._current_filename = filename
-                self._current_dir = tempfile.mkdtemp(prefix="timelapse_")
+                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                safe_name = "".join(c if c.isalnum() or c in "-_." else "_" for c in filename)
+                self._current_dir = os.path.join(self._in_progress_base(), f"{safe_name}_{ts}")
+                os.makedirs(self._current_dir, exist_ok=True)
+                self._write_meta(self._current_dir, filename, 0)
                 self._frame_count = 0
 
             self._stop_event.clear()
@@ -447,6 +454,7 @@ class TimelapseService:
 
             if result.returncode == 0 and os.path.exists(frame_path) and os.path.getsize(frame_path) > 0:
                 self._frame_count += 1
+                self._write_meta(self._current_dir, self._current_filename, self._frame_count)
             else:
                 try:
                     os.remove(frame_path)
@@ -459,6 +467,87 @@ class TimelapseService:
                 restore = snap_original_light if snap_original_light is not None else False
                 log.info(f"Timelapse: restoring light to {restore} after snapshot")
                 vq.api_light_state(restore)
+
+    def _in_progress_base(self):
+        """Return (and create) the persistent in-progress frames directory."""
+        path = os.path.join(self._captures_dir, _IN_PROGRESS_SUBDIR)
+        os.makedirs(path, exist_ok=True)
+        return path
+
+    def _write_meta(self, dir_path, filename, frame_count):
+        """Write a small JSON sidecar so state survives container restarts."""
+        try:
+            with open(os.path.join(dir_path, ".meta"), "w") as f:
+                json.dump({"filename": filename, "frame_count": frame_count}, f)
+        except OSError as err:
+            log.warning(f"Timelapse: could not write .meta: {err}")
+
+    def _read_meta(self, dir_path):
+        """Read the JSON sidecar, or return None if missing/corrupt."""
+        try:
+            with open(os.path.join(dir_path, ".meta")) as f:
+                return json.load(f)
+        except (OSError, ValueError):
+            return None
+
+    def _scan_in_progress_captures(self):
+        """On startup, detect persisted in-progress frame directories.
+
+        - Loads the most recent dir (≤24h old) as resume state.
+        - Assembles and removes any older/excess orphaned dirs.
+        """
+        base = os.path.join(self._captures_dir, _IN_PROGRESS_SUBDIR)
+        if not os.path.isdir(base):
+            return
+        now = time.time()
+        candidates = []
+        for name in sorted(os.listdir(base)):
+            dir_path = os.path.join(base, name)
+            if not os.path.isdir(dir_path):
+                continue
+            frames = [f for f in os.listdir(dir_path) if f.startswith("frame_") and f.endswith(".jpg")]
+            frame_count = len(frames)
+            if frame_count == 0:
+                shutil.rmtree(dir_path, ignore_errors=True)
+                continue
+            meta = self._read_meta(dir_path)
+            filename = (meta or {}).get("filename", "unknown")
+            age = now - os.path.getmtime(dir_path)
+            candidates.append((age, dir_path, filename, frame_count))
+
+        if not candidates:
+            return
+
+        # Sort by age ascending (youngest first)
+        candidates.sort()
+        youngest_age, youngest_dir, youngest_filename, youngest_frames = candidates[0]
+
+        # Assemble/delete all but the youngest (shouldn't normally happen)
+        for age, dir_path, filename, frame_count in candidates[1:]:
+            if frame_count >= 2:
+                log.info(f"Timelapse: recovering orphaned capture '{filename}' ({frame_count} frames)")
+                self._assemble_video_from(dir_path, filename, frame_count, suffix="_recovered")
+                self._prune_old_videos()
+            shutil.rmtree(dir_path, ignore_errors=True)
+
+        # Handle the youngest candidate
+        if youngest_age <= _MAX_ORPHAN_AGE_SEC:
+            log.info(
+                f"Timelapse: found persisted capture '{youngest_filename}' "
+                f"({youngest_frames} frames, {youngest_age / 3600:.1f}h ago) — "
+                f"resumable for {_RESUME_WINDOW_SEC // 60} min"
+            )
+            self._resume_dir = youngest_dir
+            self._resume_filename = youngest_filename
+            self._resume_frame_count = youngest_frames
+            # Schedule finalize so orphaned frames are eventually assembled
+            self._schedule_finalize(youngest_dir, youngest_filename, youngest_frames)
+        else:
+            if youngest_frames >= 2:
+                log.info(f"Timelapse: assembling stale capture '{youngest_filename}' ({youngest_frames} frames, {youngest_age / 3600:.1f}h old)")
+                self._assemble_video_from(youngest_dir, youngest_filename, youngest_frames, suffix="_recovered")
+                self._prune_old_videos()
+            shutil.rmtree(youngest_dir, ignore_errors=True)
 
     def _assemble_video(self, suffix=""):
         """Assemble current capture into an MP4 video."""

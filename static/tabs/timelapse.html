@@ -1,19 +1,39 @@
 <div class="tab-pane fade" id="timelapse" role="tabpanel" aria-labelledby="timelapse-tab">
     <div class="container-fluid mt-3">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div id="timelapse-disabled-banner" class="alert alert-warning mb-3" style="display:none;">
-                    {{ macro.bi_icon("exclamation-triangle") }}
-                    Timelapse is disabled. Enable it in <strong>Setup → Timelapse</strong>.
+        <div id="timelapse-disabled-banner" class="alert alert-warning mb-3" style="display:none;">
+            {{ macro.bi_icon("exclamation-triangle") }}
+            Timelapse is disabled. Enable it in <strong>Setup → Timelapse</strong>.
+        </div>
+        <div class="row g-3">
+            <!-- Left: Video player -->
+            <div class="col-lg-8">
+                <div class="card" id="timelapse-player-card" style="display:none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span id="timelapse-player-title" class="text-truncate me-2 fw-semibold"></span>
+                        <button type="button" class="btn btn-sm btn-outline-danger timelapse-delete flex-shrink-0" id="timelapse-player-delete">
+                            {{ macro.bi_icon("trash") }} Delete
+                        </button>
+                    </div>
+                    <div class="card-body p-2">
+                        <video id="timelapse-player" controls class="w-100 rounded" style="max-height:500px;"></video>
+                        <p class="text-muted small mt-1 mb-0" id="timelapse-player-meta"></p>
+                    </div>
                 </div>
+                <div id="timelapse-player-placeholder" class="card d-flex align-items-center justify-content-center text-muted" style="min-height:300px;">
+                    <div class="text-center py-5">
+                        <i class="bi bi-play-circle fs-1 d-block mb-2"></i>
+                        Select a video to play
+                    </div>
+                </div>
+            </div>
+            <!-- Right: Video list -->
+            <div class="col-lg-4">
                 <div class="card">
                     <div class="card-header fs-5">
                         {{ macro.bi_icon("camera-reels") }} Timelapse Videos
                     </div>
-                    <div class="card-body p-0">
-                        <div id="timelapse-gallery">
-                            <div class="text-center text-muted py-4">Loading...</div>
-                        </div>
+                    <div id="timelapse-list" class="list-group list-group-flush">
+                        <div class="text-center text-muted py-4">Loading...</div>
                     </div>
                 </div>
             </div>
