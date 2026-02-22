@@ -30,6 +30,7 @@ Services:
 import json
 import logging
 import os
+import threading
 import time
 
 log = logging.getLogger("web")
@@ -1025,8 +1026,8 @@ if os.getenv("ANKERCTL_DEV_MODE", "false").lower() == "true":
         if name not in app.svc.svcs:
             return {"error": f"Unknown service: {name}"}, 404
         svc = app.svc.svcs[name]
-        svc.restart()
-        return {"status": "ok", "state": svc.state.name}
+        threading.Thread(target=svc.restart, daemon=True).start()
+        return {"status": "restarting"}
 
     @app.get("/api/debug/bed-leveling")
     def app_api_debug_bed_leveling():

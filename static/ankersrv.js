@@ -2191,8 +2191,9 @@ $(function () {
                     method: "POST",
                 });
                 if (resp.ok) {
-                    flash_message(`Service "${name}" restarted`, "success");
-                    dbgRefreshServices();
+                    flash_message(`Service "${name}" restarting...`, "info");
+                    setTimeout(dbgRefreshServices, 1500);
+                    setTimeout(dbgRefreshServices, 3500);
                 } else {
                     const data = await resp.json().catch(() => ({}));
                     flash_message(`Restart failed: ${data.error || resp.statusText}`, "danger");
