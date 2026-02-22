@@ -236,11 +236,12 @@ _LAYER_COUNT_PATTERNS = [
 
 
 def extract_layer_count(data: bytes) -> int | None:
-    """Extract the total layer count from GCode header comments.
+    """Extract the total layer count from GCode.
 
-    Supports OrcaSlicer (;LAYER_COUNT:N, ; total layer number: N)
-    and PrusaSlicer (; total layers count = N) formats.
-    Returns None if no layer count comment is found.
+    First tries header comments (OrcaSlicer: ;LAYER_COUNT:N,
+    ; total layer number: N). Falls back to counting ;LAYER_CHANGE
+    markers for PrusaSlicer which has no header count comment.
+    Returns None if neither method yields a result.
     """
     try:
         text = data.decode("utf-8", errors="replace")
@@ -255,4 +256,7 @@ def extract_layer_count(data: bytes) -> int | None:
             m = pattern.match(line)
             if m:
                 return int(m.group(1))
-    return None
+
+    # Fallback: count ;LAYER_CHANGE markers (PrusaSlicer)
+    count = text.count(";LAYER_CHANGE")
+    return count if count > 0 else None
