@@ -1264,8 +1264,57 @@ $(function () {
         if (resultEl) resultEl.style.display = "block";
     }
 
+    async function bedLevelLoadLast() {
+        const statusEl = document.getElementById("bed-level-status");
+        const gridEl = document.getElementById("bed-level-grid");
+        const statsEl = document.getElementById("bed-level-stats");
+        const saveBtn = document.getElementById("bed-level-save-btn");
+
+        if (!statusEl) return;
+        statusEl.innerHTML =
+            '<div class="alert alert-info py-2 small mb-0">' +
+            '<span class="spinner-border spinner-border-sm me-2" role="status"></span>' +
+            'Loading last saved map\u2026</div>';
+        if (gridEl) gridEl.style.display = "none";
+
+        try {
+            const resp = await fetch("/api/printer/bed-leveling/last");
+            const data = await resp.json();
+
+            if (!resp.ok) {
+                statusEl.innerHTML =
+                    `<div class="alert alert-warning py-2 small mb-0">` +
+                    `${escapeHtml(data.error || "No saved map found")}</div>`;
+                return;
+            }
+
+            _currentBedData = data;
+
+            if (statsEl) {
+                const ts = data.saved_at
+                    ? ` &mdash; saved ${data.saved_at.replace(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/, "$1-$2-$3 $4:$5:$6")}`
+                    : "";
+                statsEl.innerHTML =
+                    `<span><strong>Min:</strong> ${data.min.toFixed(3)} mm</span>` +
+                    `<span><strong>Max:</strong> +${data.max.toFixed(3)} mm</span>` +
+                    `<span><strong>Range:</strong> ${(data.max - data.min).toFixed(3)} mm</span>` +
+                    `<span class="text-muted">(${data.rows}&times;${data.cols} grid${ts})</span>`;
+            }
+
+            bedLevelRenderGrid(data.grid, data.min, data.max, "bed-level-map-wrap");
+            statusEl.innerHTML = "";
+            if (gridEl) gridEl.style.display = "block";
+            if (saveBtn) saveBtn.disabled = false;
+        } catch (err) {
+            statusEl.innerHTML =
+                `<div class="alert alert-danger py-2 small mb-0">` +
+                `Request failed: ${escapeHtml(String(err))}</div>`;
+        }
+    }
+
     // Wire up Setup > Tools bed level buttons
     $("#bed-level-read-btn").on("click", function () { bedLevelRead(); });
+    $("#bed-level-load-last-btn").on("click", function () { bedLevelLoadLast(); });
     $("#bed-level-save-btn").on("click", function () {
         bedSnapAdd(_currentBedData);
     });

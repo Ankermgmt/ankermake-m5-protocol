@@ -759,6 +759,21 @@ def _read_bed_leveling_grid():
         "rows": len(grid),
         "cols": max(len(row) for row in grid),
     }
+
+    # Persist grid to log directory as a timestamped .bed file
+    log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
+    bed_dir = os.path.join(log_dir, "bed_leveling")
+    try:
+        from datetime import datetime
+        os.makedirs(bed_dir, exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        bed_path = os.path.join(bed_dir, f"{ts}.bed")
+        with open(bed_path, "w") as f:
+            json.dump(data, f)
+        log.info(f"bed-leveling: saved grid to {bed_path}")
+    except Exception as exc:
+        log.warning(f"bed-leveling: could not save grid: {exc}")
+
     return data, None
 
 
@@ -773,6 +788,21 @@ def app_api_printer_bed_leveling():
     data, err = _read_bed_leveling_grid()
     if err is not None:
         return err
+    return data
+
+
+@app.get("/api/printer/bed-leveling/last")
+def app_api_printer_bed_leveling_last():
+    """Return the most recently saved bed leveling grid from the log directory."""
+    import glob
+    log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
+    bed_dir = os.path.join(log_dir, "bed_leveling")
+    files = sorted(glob.glob(os.path.join(bed_dir, "*.bed")))
+    if not files:
+        return {"error": "No saved bed leveling data found"}, 404
+    with open(files[-1]) as f:
+        data = json.load(f)
+    data["saved_at"] = os.path.basename(files[-1]).replace(".bed", "")
     return data
 
 
