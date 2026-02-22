@@ -404,7 +404,7 @@ Reads the 7×7 bilinear bed leveling compensation grid from the printer via GCod
 - **Frontend:** Setup tab → Tools section — renders the grid as a colour-coded heatmap (blue=low, red=high), supports before/after snapshot comparison (snapshots stored in `localStorage`).
 
 **MQTT notifications during G29:**
-- `commandType 1007` — emitted once per probe point; `value` = current point index (total = 49 for 7×7 grid). Used to display a live auto-leveling progress bar.
+- `commandType 1007` — emitted once per probe point; `value` = current point index (total = 50: 1 initial center probe + 7×7 grid). Used to display a live auto-leveling progress bar.
 
 **Notes:**
 - Takes up to ~15 seconds; do not call during an active print.

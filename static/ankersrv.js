@@ -318,9 +318,9 @@ $(function () {
                 const X = getSpeedFactor(data.value);
                 $("#print-speed").text(`${data.value}mm/s ${X}`);
             } else if (data.commandType == 1007) {
-                // auto_leveling: value = current probe point (7×7 = 49 points total)
+                // auto_leveling: value = current probe point (1 center + 7×7 = 50 points total)
                 const point = data.value;
-                const total = 49;
+                const total = 50;
                 const pct = Math.min(100, Math.round(point / total * 100));
                 const statusEl = document.getElementById("bed-level-status");
                 if (statusEl) {
