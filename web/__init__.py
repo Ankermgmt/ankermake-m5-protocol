@@ -336,6 +336,12 @@ def app_root():
         )
 
 
+@app.get("/api/health")
+def app_api_health():
+    """Lightweight liveness probe — always returns 200 OK (no auth required)."""
+    return {"status": "ok"}
+
+
 @app.get("/api/version")
 def app_api_version():
     """

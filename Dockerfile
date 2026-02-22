@@ -50,6 +50,9 @@ COPY --from=build-env /usr/local/lib/python3.11/site-packages /usr/local/lib/pyt
 
 STOPSIGNAL SIGINT
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python3 -c "import urllib.request, os; urllib.request.urlopen('http://127.0.0.1:' + os.getenv('FLASK_PORT', '4470') + '/api/health', timeout=4)" 2>/dev/null || exit 1
+
 # Run as non-root user
 USER ankerctl
 
