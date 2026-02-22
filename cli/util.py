@@ -227,3 +227,32 @@ def patch_gcode_time(data: bytes) -> bytes:
     lines.insert(g28_index, f";TIME:{seconds}\n")
     log.debug(f"patch_gcode_time: inserted ;TIME:{seconds} before line {g28_index + 1}")
     return "".join(lines).encode("utf-8")
+
+
+_LAYER_COUNT_PATTERNS = [
+    re.compile(r"^;LAYER_COUNT:(\d+)", re.IGNORECASE),
+    re.compile(r"^;\s*total layer(?:s)?\s*(?:number|count)?\s*[=:]\s*(\d+)", re.IGNORECASE),
+]
+
+
+def extract_layer_count(data: bytes) -> int | None:
+    """Extract the total layer count from GCode header comments.
+
+    Supports OrcaSlicer (;LAYER_COUNT:N, ; total layer number: N)
+    and PrusaSlicer (; total layers count = N) formats.
+    Returns None if no layer count comment is found.
+    """
+    try:
+        text = data.decode("utf-8", errors="replace")
+    except Exception:
+        return None
+
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith(";"):
+            break  # Header ends at first non-comment line
+        for pattern in _LAYER_COUNT_PATTERNS:
+            m = pattern.match(line)
+            if m:
+                return int(m.group(1))
+    return None

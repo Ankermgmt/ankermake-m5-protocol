@@ -44,6 +44,11 @@ class MqttQueue(Service):
         self._ha.start()
 
         self._reset_print_state()
+        self._gcode_layer_count = None  # Override from GCode header, survives print resets
+
+    def set_gcode_layer_count(self, count: int):
+        """Store the layer count extracted from a GCode header for UI display."""
+        self._gcode_layer_count = count
 
     def worker_start(self):
         self.client = cli.mqtt.mqtt_open(
@@ -101,6 +106,13 @@ class MqttQueue(Service):
                 log.info(f"DEBUG MQTT PAYLOAD: {json.dumps(body, default=str)}")
 
             for obj in body:
+                # Override total_layer with GCode header value when available
+                if (
+                    isinstance(obj, dict)
+                    and obj.get("commandType") == MqttMsgType.ZZ_MQTT_CMD_MODEL_LAYER.value
+                    and self._gcode_layer_count is not None
+                ):
+                    obj = dict(obj, total_layer=self._gcode_layer_count)
                 self.notify(obj)
                 self._forward_to_ha(obj)
                 self._handle_notification(obj)

@@ -10,7 +10,7 @@ from libflagship.ppppapi import FileUploadInfo, PPPPError
 
 import cli.util
 import cli.pppp
-from cli.util import patch_gcode_time
+from cli.util import patch_gcode_time, extract_layer_count
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +36,16 @@ class FileTransferService(Service):
             log.warning(f"Upload progress notify failed: {e}")
 
     def send_file(self, fd, user_name, rate_limit_mbps=None, start_print=True):
-        data = patch_gcode_time(fd.read())
+        raw = fd.read()
+        layer_count = extract_layer_count(raw)
+        data = patch_gcode_time(raw)
+        if layer_count is not None:
+            try:
+                with app.svc.borrow("mqttqueue") as mqtt:
+                    mqtt.set_gcode_layer_count(layer_count)
+                log.info(f"GCode layer count from header: {layer_count}")
+            except Exception as e:
+                log.warning(f"Could not store layer count in mqttqueue: {e}")
         user_id = "-"
         try:
             with app.config["config"].open() as cfg:
