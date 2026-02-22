@@ -372,6 +372,19 @@ class MqttQueue(Service):
                     include_image=True,
                 )
                 self._reset_print_state()
+            elif value == 8 and self._print_active:
+                # Print aborted directly on the printer (user cancelled via touchscreen)
+                log.info(f"History: print aborted on printer (ct 1000 value=8), filename={self._last_filename!r}")
+                self._history.record_fail(filename=self._last_filename, reason="aborted", task_id=self._last_task_id)
+                self._timelapse.fail_capture()
+                self._ha.update_state(print_status="failed")
+                self._send_event(
+                    EVENT_PRINT_FAILED,
+                    self._build_payload(payload, self._last_progress or 0, failure_reason="aborted"),
+                )
+                self._failure_sent = True
+                self._print_active = False
+                self._reset_print_state()
             return
 
         if command_type not in (
