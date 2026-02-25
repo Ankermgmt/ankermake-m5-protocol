@@ -139,6 +139,3 @@ code {
     white-space: nowrap;
 }
 
-.print-controls-hidden #print-controls {
-    display: none !important;
-}

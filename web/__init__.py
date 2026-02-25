@@ -332,7 +332,6 @@ def app_root():
             printer=printer,
             video_profiles=web.service.video.VIDEO_PROFILES,
             video_profile_default=web.service.video.VIDEO_PROFILE_DEFAULT_ID,
-            print_controls_enabled=bool(os.getenv("ANKERCTL_PRINT_CONTROLS")),
         )
 
 

@@ -446,7 +446,7 @@ def _find_login_file():
 @main.group("config", help="View and update configuration")
 @click.pass_context
 def config(ctx):
-    if ctx.invoked_subcommand in {"import", "decode", "set-password", "remove-password"}:
+    if ctx.invoked_subcommand in {"import", "decode", "set-password", "remove-password", "login"}:
         return
 
     env = ctx.obj

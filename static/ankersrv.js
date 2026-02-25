@@ -288,7 +288,8 @@ $(function () {
         message: function (ev) {
             const data = JSON.parse(ev.data);
             if (data.commandType == 1000) {
-                // Printer state machine: value=0 idle, value=1 active
+                // Printer state machine: value=0 idle, value=1 printing, value=2 paused
+                _updatePrintControlButtons(data.value);
                 if (typeof _onMqttStateChange === "function") {
                     _onMqttStateChange(data.value);
                 }
@@ -365,6 +366,7 @@ $(function () {
             $("#print-speed").text("0mm/s");
             $("#print-layer").text("0 / 0");
             document.title = "ankerctl";
+            _updatePrintControlButtons(PRINT_STATE.IDLE);
         },
     });
 
@@ -827,7 +829,6 @@ $(function () {
     /**
      * Printer Control Logic
      */
-    const PRINT_CONTROLS_VISIBLE = document.body.dataset.printControls === "true";
     function sendPrinterGCode(gcode) {
         if (!gcode) return;
         console.log("Sending GCode:", gcode);
@@ -848,10 +849,25 @@ $(function () {
     }
 
     const PRINT_CONTROL = {
-        STOP: 0,
-        PAUSE: 1,
-        RESUME: 2,
+        PAUSE: 2,
+        RESUME: 3,
+        STOP: 4,
     };
+
+    // ct=1000 state values
+    const PRINT_STATE = { IDLE: 0, PRINTING: 1, PAUSED: 2, CALIBRATING: 8 };
+
+    let _currentPrintState = PRINT_STATE.IDLE;
+
+    function _updatePrintControlButtons(state) {
+        _currentPrintState = state;
+        const printing = state === PRINT_STATE.PRINTING;
+        const paused = state === PRINT_STATE.PAUSED;
+        const active = printing || paused;
+        $("#print-pause").toggleClass("d-none", !printing);
+        $("#print-resume").toggleClass("d-none", !paused);
+        $("#print-stop").toggleClass("d-none", !active);
+    }
 
     const getStepDist = () => $('input[name="step-dist"]:checked').val() || "1";
 
@@ -1528,28 +1544,24 @@ $(function () {
         }
     });
 
-    if (PRINT_CONTROLS_VISIBLE) {
-        document.body.classList.remove("print-controls-hidden");
-        $("#print-pause").on("click", function () {
-            sendPrintControl(PRINT_CONTROL.PAUSE);
-            sendPrinterGCode("M25");
-            return false;
-        });
-        $("#print-resume").on("click", function () {
-            sendPrintControl(PRINT_CONTROL.RESUME);
-            sendPrinterGCode("M24");
-            return false;
-        });
-        $("#print-stop").on("click", function () {
-            if (confirm("Are you sure you want to stop the print? This will also turn off heaters.")) {
-                sendPrintControl(PRINT_CONTROL.STOP);
-                sendPrinterGCode("M25\nM104 S0\nM140 S0\nM106 S0\nM524\nM77");
-            }
-            return false;
-        });
-    } else {
-        document.body.classList.add("print-controls-hidden");
-    }
+    $("#print-pause").on("click", function () {
+        sendPrintControl(PRINT_CONTROL.PAUSE);
+        _updatePrintControlButtons(PRINT_STATE.PAUSED);
+        return false;
+    });
+    $("#print-resume").on("click", function () {
+        sendPrintControl(PRINT_CONTROL.RESUME);
+        _updatePrintControlButtons(PRINT_STATE.PRINTING);
+        return false;
+    });
+    $("#print-stop").on("click", function () {
+        if (confirm("Are you sure you want to stop the print? This will also turn off heaters.")) {
+            sendPrintControl(PRINT_CONTROL.STOP);
+            sendPrinterGCode("M104 S0\nM140 S0\nM106 S0");
+            _updatePrintControlButtons(PRINT_STATE.IDLE);
+        }
+        return false;
+    });
 
     /**
      * Temperature Graph — client‑side ring buffer + Chart.js

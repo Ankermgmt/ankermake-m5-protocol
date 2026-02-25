@@ -238,7 +238,6 @@ UPLOAD_MAX_MB          # Max file upload size in MB (default: 2048)
 ANKERCTL_API_KEY       # API key for write-operation auth (unset = no auth)
 
 # --- Feature Flags ---
-ANKERCTL_PRINT_CONTROLS  # Enable Pause/Resume/Stop buttons in UI (experimental)
 ANKERCTL_DEV_MODE=true   # Enable Debug tab and /api/debug/* endpoints (dev only)
 ANKERCTL_LOG_DIR         # Directory for log files; enables file logging when set
                          # Default in CLI: /logs if /logs exists, else None

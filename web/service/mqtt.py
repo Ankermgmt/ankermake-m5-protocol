@@ -71,6 +71,7 @@ class MqttQueue(Service):
         self._failure_sent = False
         self._preview_url = None
         self._pending_history_start = False
+        self._stop_requested = False
         # Preserve debug setting across resets if possible, but init here if missing
         if not hasattr(self, "_debug_log_payloads"):
              self._debug_log_payloads = False
@@ -373,16 +374,28 @@ class MqttQueue(Service):
                     self._build_payload(payload, 0),
                 )
             elif value == 0 and self._print_active:
-                # Print ended (finished or cancelled)
-                log.info(f"History: print ended (ct 1000 value=0), filename={self._last_filename!r}")
-                self._history.record_finish(filename=self._last_filename, task_id=self._last_task_id)
-                self._timelapse.finish_capture(final=True)
-                self._ha.update_state(print_status="complete", print_progress=100)
-                self._send_event(
-                    EVENT_PRINT_FINISHED,
-                    self._build_payload(payload, 100),
-                    include_image=True,
-                )
+                if self._stop_requested:
+                    # Print was cancelled via stop command
+                    log.info(f"History: print cancelled (ct 1000 value=0 after stop), filename={self._last_filename!r}")
+                    self._history.record_fail(filename=self._last_filename, reason="cancelled", task_id=self._last_task_id)
+                    self._timelapse.fail_capture()
+                    self._ha.update_state(print_status="failed")
+                    self._send_event(
+                        EVENT_PRINT_FAILED,
+                        self._build_payload(payload, self._last_progress or 0, failure_reason="cancelled"),
+                    )
+                    self._failure_sent = True
+                else:
+                    # Print ended normally
+                    log.info(f"History: print finished (ct 1000 value=0), filename={self._last_filename!r}")
+                    self._history.record_finish(filename=self._last_filename, task_id=self._last_task_id)
+                    self._timelapse.finish_capture(final=True)
+                    self._ha.update_state(print_status="complete", print_progress=100)
+                    self._send_event(
+                        EVENT_PRINT_FINISHED,
+                        self._build_payload(payload, 100),
+                        include_image=True,
+                    )
                 self._reset_print_state()
             elif value == 8 and self._print_active:
                 # Print aborted directly on the printer (user cancelled via touchscreen)
@@ -687,6 +700,8 @@ class MqttQueue(Service):
             time.sleep(0.1)
 
     def send_print_control(self, value):
+        if int(value) == 4:
+            self._stop_requested = True
         cmd = {
             "commandType": MqttMsgType.ZZ_MQTT_CMD_PRINT_CONTROL.value,
             "value": int(value)

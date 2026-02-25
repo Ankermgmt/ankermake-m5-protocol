@@ -206,7 +206,6 @@ ankerctl is configured via environment variables. For Docker deployments, copy `
 | **Security** | | |
 | `ANKERCTL_API_KEY` | *(unset)* | API key for write-operation authentication |
 | **Feature Flags** | | |
-| `ANKERCTL_PRINT_CONTROLS` | *(unset)* | Show Pause/Resume/Stop buttons (experimental) |
 | `ANKERCTL_DEV_MODE` | `false` | Enable Debug tab and `/api/debug/*` endpoints (development only) |
 | `ANKERCTL_LOG_DIR` | *(unset)* | Directory for log files; enables file logging when set |
 | **Apprise Notifications** | | |
