@@ -2698,8 +2698,8 @@ $(function () {
                             .catch(err => console.error("Duplicate failed:", err));
                     });
                     tr.querySelector(".filament-preheat").addEventListener("click", () => {
-                        const nozzle = p.nozzle_temp_other_layer ?? p.nozzle_temp ?? "?";
-                        const bed    = p.bed_temp_other_layer ?? p.bed_temp ?? "?";
+                        const nozzle = p.nozzle_temp_first_layer ?? p.nozzle_temp_other_layer ?? p.nozzle_temp ?? "?";
+                        const bed    = p.bed_temp_first_layer ?? p.bed_temp_other_layer ?? p.bed_temp ?? "?";
                         if (!confirm(`Preheat printer for ${p.name}?\nNozzle: ${nozzle}°C, Bed: ${bed}°C`)) return;
                         fetch(`/api/filaments/${safeId}/apply`, { method: "POST" })
                             .then(r => r.json())

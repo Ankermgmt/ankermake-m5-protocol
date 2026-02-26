@@ -1030,8 +1030,8 @@ def app_api_filaments_apply(profile_id):
     profile = app.filaments.get(profile_id)
     if profile is None:
         return {"error": "Profile not found"}, 404
-    nozzle = profile.get("nozzle_temp_other_layer") or profile.get("nozzle_temp", 0)
-    bed    = profile.get("bed_temp_other_layer") or profile.get("bed_temp", 0)
+    nozzle = profile.get("nozzle_temp_first_layer") or profile.get("nozzle_temp_other_layer") or profile.get("nozzle_temp", 0)
+    bed    = profile.get("bed_temp_first_layer") or profile.get("bed_temp_other_layer") or profile.get("bed_temp", 0)
     gcode = f"M104 S{nozzle}\nM140 S{bed}"
     with app.svc.borrow("mqttqueue") as mqtt:
         mqtt.send_gcode(gcode)
