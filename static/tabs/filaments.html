@@ -3,8 +3,13 @@
         <div class="row justify-content-center">
             <div class="col-lg-11">
                 <div class="card">
-                    <div class="card-header fs-5 d-flex justify-content-between align-items-center">
-                        <span>{{ macro.bi_icon("droplet-fill") }} Filament Profiles</span>
+                    <div class="card-header d-flex flex-wrap gap-2 align-items-center">
+                        <span class="fs-5 me-auto">{{ macro.bi_icon("droplet-fill") }} Filament Profiles</span>
+                        <input type="search" class="form-control form-control-sm" id="filament-search"
+                               placeholder="Search…" style="width:14rem;">
+                        <button class="btn btn-sm btn-outline-secondary" id="filament-sort-btn" title="Sort by name">
+                            <i class="bi bi-sort-alpha-down" id="filament-sort-icon"></i>
+                        </button>
                         <button class="btn btn-sm btn-outline-primary" id="filament-new-btn">
                             {{ macro.bi_icon("plus-lg") }} New Profile
                         </button>
@@ -80,20 +85,20 @@
                 <h6 class="text-uppercase text-muted small mb-2">Temperatures</h6>
                 <div class="row g-3 mb-3">
                     <div class="col-sm-6">
-                        <label for="filament-nozzle-temp-other" class="form-label">Nozzle Temp - Other Layers (°C)</label>
-                        <input type="number" class="form-control" id="filament-nozzle-temp-other" min="0" max="500" step="1">
-                    </div>
-                    <div class="col-sm-6">
                         <label for="filament-nozzle-temp-first" class="form-label">Nozzle Temp - First Layer (°C)</label>
                         <input type="number" class="form-control" id="filament-nozzle-temp-first" min="0" max="500" step="1">
                     </div>
                     <div class="col-sm-6">
-                        <label for="filament-bed-temp-other" class="form-label">Bed Temp - Other Layers (°C)</label>
-                        <input type="number" class="form-control" id="filament-bed-temp-other" min="0" max="200" step="1">
+                        <label for="filament-nozzle-temp-other" class="form-label">Nozzle Temp - Other Layers (°C)</label>
+                        <input type="number" class="form-control" id="filament-nozzle-temp-other" min="0" max="500" step="1">
                     </div>
                     <div class="col-sm-6">
                         <label for="filament-bed-temp-first" class="form-label">Bed Temp - First Layer (°C)</label>
                         <input type="number" class="form-control" id="filament-bed-temp-first" min="0" max="200" step="1">
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="filament-bed-temp-other" class="form-label">Bed Temp - Other Layers (°C)</label>
+                        <input type="number" class="form-control" id="filament-bed-temp-other" min="0" max="200" step="1">
                     </div>
                 </div>
 

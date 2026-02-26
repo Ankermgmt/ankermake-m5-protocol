@@ -2634,19 +2634,31 @@ $(function () {
         if (bsFilamentModal) bsFilamentModal.show();
     }
 
-    function loadFilaments() {
-        fetch("/api/filaments")
-            .then(r => r.json())
-            .then(data => {
-                const tbody = document.getElementById("filaments-tbody");
-                if (!tbody) return;
-                const profiles = data.filaments || [];
-                if (profiles.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No filament profiles yet</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = "";
-                profiles.forEach(p => {
+    let _filamentSortAsc = true;
+    let _filamentAllProfiles = [];
+
+    function _renderFilaments() {
+        const tbody = document.getElementById("filaments-tbody");
+        if (!tbody) return;
+        const query = (document.getElementById("filament-search")?.value || "").toLowerCase().trim();
+        let profiles = _filamentAllProfiles.slice();
+        if (query) {
+            profiles = profiles.filter(p =>
+                (p.name || "").toLowerCase().includes(query) ||
+                (p.material || "").toLowerCase().includes(query) ||
+                (p.brand || "").toLowerCase().includes(query)
+            );
+        }
+        profiles.sort((a, b) => {
+            const cmp = (a.name || "").localeCompare(b.name || "");
+            return _filamentSortAsc ? cmp : -cmp;
+        });
+        if (profiles.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No filament profiles found</td></tr>';
+            return;
+        }
+        tbody.innerHTML = "";
+        profiles.forEach(p => {
                     const safeName     = escapeHtml(p.name);
                     const safeMaterial = escapeHtml(p.material || "");
                     const safeBrand    = escapeHtml(p.brand || "");
@@ -2705,8 +2717,35 @@ $(function () {
                     });
                     tbody.appendChild(tr);
                 });
+    }
+
+    function loadFilaments() {
+        fetch("/api/filaments")
+            .then(r => r.json())
+            .then(data => {
+                _filamentAllProfiles = data.filaments || [];
+                _renderFilaments();
             })
             .catch(err => console.error("Filaments load failed:", err));
+    }
+
+    // Sort button
+    const filamentSortBtn = document.getElementById("filament-sort-btn");
+    if (filamentSortBtn) {
+        filamentSortBtn.addEventListener("click", function () {
+            _filamentSortAsc = !_filamentSortAsc;
+            const icon = document.getElementById("filament-sort-icon");
+            if (icon) {
+                icon.className = _filamentSortAsc ? "bi bi-sort-alpha-down" : "bi bi-sort-alpha-up";
+            }
+            _renderFilaments();
+        });
+    }
+
+    // Search input
+    const filamentSearch = document.getElementById("filament-search");
+    if (filamentSearch) {
+        filamentSearch.addEventListener("input", function () { _renderFilaments(); });
     }
 
     // Save button: create or update
