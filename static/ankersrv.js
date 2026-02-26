@@ -2524,4 +2524,277 @@ $(function () {
 
     } // end debug tab block
 
+    /**
+     * Filament Profiles
+     */
+    const filamentModal = document.getElementById("filamentModal");
+    const bsFilamentModal = filamentModal ? new bootstrap.Modal(filamentModal) : null;
+
+    function filamentToggleScarf() {
+        const enabled = document.getElementById("filament-scarf-enabled");
+        const opts    = document.getElementById("filament-scarf-opts");
+        if (enabled && opts) opts.style.display = enabled.checked ? "" : "none";
+    }
+
+    function filamentToggleWipe() {
+        const enabled = document.getElementById("filament-wipe-enabled");
+        const opts    = document.getElementById("filament-wipe-opts");
+        if (enabled && opts) opts.style.display = enabled.checked ? "" : "none";
+    }
+
+    function filamentReadForm() {
+        return {
+            name:                    document.getElementById("filament-name").value.trim(),
+            brand:                   document.getElementById("filament-brand").value.trim(),
+            material:                document.getElementById("filament-material").value.trim(),
+            color:                   document.getElementById("filament-color").value,
+            nozzle_temp_other_layer: parseInt(document.getElementById("filament-nozzle-temp-other").value, 10) || 0,
+            nozzle_temp_first_layer: parseInt(document.getElementById("filament-nozzle-temp-first").value, 10) || 0,
+            bed_temp_other_layer:    parseInt(document.getElementById("filament-bed-temp-other").value, 10) || 0,
+            bed_temp_first_layer:    parseInt(document.getElementById("filament-bed-temp-first").value, 10) || 0,
+            flow_rate:               parseFloat(document.getElementById("filament-flow-rate").value) || 1.0,
+            filament_diameter:       parseFloat(document.getElementById("filament-diameter").value) || 1.75,
+            pressure_advance:        parseFloat(document.getElementById("filament-pressure-advance").value) || 0,
+            max_volumetric_speed:    parseFloat(document.getElementById("filament-max-vol-speed").value) || 0,
+            travel_speed:            parseInt(document.getElementById("filament-travel-speed").value, 10) || 0,
+            perimeter_speed:         parseInt(document.getElementById("filament-perimeter-speed").value, 10) || 0,
+            infill_speed:            parseInt(document.getElementById("filament-infill-speed").value, 10) || 0,
+            cooling_enabled:         document.getElementById("filament-cooling-enabled").checked ? 1 : 0,
+            cooling_min_fan_speed:   parseInt(document.getElementById("filament-cooling-min").value, 10) || 0,
+            cooling_max_fan_speed:   parseInt(document.getElementById("filament-cooling-max").value, 10) || 100,
+            seam_position:           document.getElementById("filament-seam-position").value,
+            seam_gap:                parseFloat(document.getElementById("filament-seam-gap").value) || 0,
+            scarf_enabled:           document.getElementById("filament-scarf-enabled").checked ? 1 : 0,
+            scarf_conditional:       document.getElementById("filament-scarf-conditional").checked ? 1 : 0,
+            scarf_angle_threshold:   parseInt(document.getElementById("filament-scarf-angle").value, 10) || 155,
+            scarf_length:            parseFloat(document.getElementById("filament-scarf-length").value) || 20.0,
+            scarf_steps:             parseInt(document.getElementById("filament-scarf-steps").value, 10) || 10,
+            scarf_speed:             parseInt(document.getElementById("filament-scarf-speed").value, 10) || 100,
+            retract_length:          parseFloat(document.getElementById("filament-retract-length").value) || 0,
+            retract_speed:           parseInt(document.getElementById("filament-retract-speed").value, 10) || 45,
+            retract_lift_z:          parseFloat(document.getElementById("filament-retract-lift-z").value) || 0,
+            wipe_enabled:            document.getElementById("filament-wipe-enabled").checked ? 1 : 0,
+            wipe_distance:           parseFloat(document.getElementById("filament-wipe-distance").value) || 1.5,
+            wipe_speed:              parseInt(document.getElementById("filament-wipe-speed").value, 10) || 40,
+            wipe_retract_before:     document.getElementById("filament-wipe-retract-before").checked ? 1 : 0,
+            notes:                   document.getElementById("filament-notes").value.trim(),
+        };
+    }
+
+    function filamentFillForm(p) {
+        document.getElementById("filament-id").value                       = p.id || "";
+        document.getElementById("filament-name").value                     = p.name || "";
+        document.getElementById("filament-brand").value                    = p.brand || "";
+        document.getElementById("filament-material").value                 = p.material || "";
+        document.getElementById("filament-color").value                    = p.color || "#FFFFFF";
+        document.getElementById("filament-nozzle-temp-other").value        = p.nozzle_temp_other_layer ?? p.nozzle_temp ?? 220;
+        document.getElementById("filament-nozzle-temp-first").value        = p.nozzle_temp_first_layer ?? (p.nozzle_temp_other_layer ?? p.nozzle_temp ?? 220) + 5;
+        document.getElementById("filament-bed-temp-other").value           = p.bed_temp_other_layer ?? p.bed_temp ?? 60;
+        document.getElementById("filament-bed-temp-first").value           = p.bed_temp_first_layer ?? (p.bed_temp_other_layer ?? p.bed_temp ?? 60) + 5;
+        document.getElementById("filament-flow-rate").value                = p.flow_rate ?? 1.0;
+        document.getElementById("filament-diameter").value                 = p.filament_diameter ?? 1.75;
+        document.getElementById("filament-pressure-advance").value         = p.pressure_advance ?? 0;
+        document.getElementById("filament-max-vol-speed").value            = p.max_volumetric_speed ?? 15;
+        document.getElementById("filament-travel-speed").value             = p.travel_speed ?? 120;
+        document.getElementById("filament-perimeter-speed").value          = p.perimeter_speed ?? 60;
+        document.getElementById("filament-infill-speed").value             = p.infill_speed ?? 80;
+        document.getElementById("filament-cooling-enabled").checked        = !!p.cooling_enabled;
+        document.getElementById("filament-cooling-min").value              = p.cooling_min_fan_speed ?? 0;
+        document.getElementById("filament-cooling-max").value              = p.cooling_max_fan_speed ?? 100;
+        document.getElementById("filament-seam-position").value            = p.seam_position || "aligned";
+        document.getElementById("filament-seam-gap").value                 = p.seam_gap ?? 0;
+        document.getElementById("filament-scarf-enabled").checked          = !!p.scarf_enabled;
+        document.getElementById("filament-scarf-conditional").checked      = !!p.scarf_conditional;
+        document.getElementById("filament-scarf-angle").value              = p.scarf_angle_threshold ?? 155;
+        document.getElementById("filament-scarf-length").value             = p.scarf_length ?? 20;
+        document.getElementById("filament-scarf-steps").value              = p.scarf_steps ?? 10;
+        document.getElementById("filament-scarf-speed").value              = p.scarf_speed ?? 100;
+        document.getElementById("filament-retract-length").value           = p.retract_length ?? 0.8;
+        document.getElementById("filament-retract-speed").value            = p.retract_speed ?? 45;
+        document.getElementById("filament-retract-lift-z").value           = p.retract_lift_z ?? 0;
+        document.getElementById("filament-wipe-enabled").checked           = !!p.wipe_enabled;
+        document.getElementById("filament-wipe-distance").value            = p.wipe_distance ?? 1.5;
+        document.getElementById("filament-wipe-speed").value               = p.wipe_speed ?? 40;
+        document.getElementById("filament-wipe-retract-before").checked    = !!p.wipe_retract_before;
+        document.getElementById("filament-notes").value                    = p.notes || "";
+        // Sync conditional sub-section visibility
+        filamentToggleScarf();
+        filamentToggleWipe();
+    }
+
+    function filamentOpenNew() {
+        filamentFillForm({});
+        document.getElementById("filamentModalLabel").textContent = "New Filament Profile";
+        if (bsFilamentModal) bsFilamentModal.show();
+    }
+
+    function filamentOpenEdit(profile) {
+        filamentFillForm(profile);
+        document.getElementById("filamentModalLabel").textContent = "Edit Filament Profile";
+        if (bsFilamentModal) bsFilamentModal.show();
+    }
+
+    function loadFilaments() {
+        fetch("/api/filaments")
+            .then(r => r.json())
+            .then(data => {
+                const tbody = document.getElementById("filaments-tbody");
+                if (!tbody) return;
+                const profiles = data.filaments || [];
+                if (profiles.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No filament profiles yet</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = "";
+                profiles.forEach(p => {
+                    const safeName     = escapeHtml(p.name);
+                    const safeMaterial = escapeHtml(p.material || "");
+                    const safeBrand    = escapeHtml(p.brand || "");
+                    const safeId       = parseInt(p.id, 10);
+                    const dotColor     = escapeHtml(p.color || "#FFFFFF");
+                    const colorDot     = `<span style="display:inline-block;width:1.1rem;height:1.1rem;border-radius:50%;background:${dotColor};border:1px solid #aaa;vertical-align:middle;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08);"></span>`;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td class="text-center">${colorDot}</td>
+                        <td class="fw-semibold">${safeName}</td>
+                        <td>${safeMaterial}</td>
+                        <td class="text-muted small">${safeBrand}</td>
+                        <td>${p.nozzle_temp_other_layer ?? p.nozzle_temp ?? "-"}&thinsp;°C</td>
+                        <td>${p.bed_temp_other_layer ?? p.bed_temp ?? "-"}&thinsp;°C</td>
+                        <td>${p.filament_diameter}&thinsp;mm</td>
+                        <td class="text-end" style="white-space:nowrap;">
+                            <div class="d-flex gap-1 justify-content-end">
+                                <button class="btn btn-sm btn-outline-secondary filament-edit" data-id="${safeId}" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info filament-duplicate" data-id="${safeId}" title="Duplicate">
+                                    <i class="bi bi-files"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning filament-preheat" data-id="${safeId}" title="Preheat printer to these temperatures">
+                                    <i class="bi bi-thermometer-half"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger filament-delete" data-id="${safeId}" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>`;
+                    tr.querySelector(".filament-edit").addEventListener("click", () => filamentOpenEdit(p));
+                    tr.querySelector(".filament-duplicate").addEventListener("click", () => {
+                        fetch(`/api/filaments/${safeId}/duplicate`, { method: "POST" })
+                            .then(r => r.json())
+                            .then(() => loadFilaments())
+                            .catch(err => console.error("Duplicate failed:", err));
+                    });
+                    tr.querySelector(".filament-preheat").addEventListener("click", () => {
+                        const nozzle = p.nozzle_temp_other_layer ?? p.nozzle_temp ?? "?";
+                        const bed    = p.bed_temp_other_layer ?? p.bed_temp ?? "?";
+                        if (!confirm(`Preheat printer for ${p.name}?\nNozzle: ${nozzle}°C, Bed: ${bed}°C`)) return;
+                        fetch(`/api/filaments/${safeId}/apply`, { method: "POST" })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res.error) { alert("Error: " + res.error); return; }
+                                console.log("Preheat sent:", res.gcode);
+                            })
+                            .catch(err => console.error("Preheat failed:", err));
+                    });
+                    tr.querySelector(".filament-delete").addEventListener("click", () => {
+                        if (!confirm(`Delete filament profile "${p.name}"?`)) return;
+                        fetch(`/api/filaments/${safeId}`, { method: "DELETE" })
+                            .then(() => loadFilaments())
+                            .catch(err => console.error("Delete failed:", err));
+                    });
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => console.error("Filaments load failed:", err));
+    }
+
+    // Save button: create or update
+    const filamentSaveBtn = document.getElementById("filament-save-btn");
+    if (filamentSaveBtn) {
+        filamentSaveBtn.addEventListener("click", function () {
+            const profileId = document.getElementById("filament-id").value;
+            const payload   = filamentReadForm();
+            if (!payload.name) {
+                document.getElementById("filament-name").classList.add("is-invalid");
+                return;
+            }
+            document.getElementById("filament-name").classList.remove("is-invalid");
+
+            const isNew  = !profileId;
+            const url    = isNew ? "/api/filaments" : `/api/filaments/${profileId}`;
+            const method = isNew ? "POST" : "PUT";
+
+            fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.error) { alert("Error: " + res.error); return; }
+                    if (bsFilamentModal) bsFilamentModal.hide();
+                    loadFilaments();
+                })
+                .catch(err => console.error("Save failed:", err));
+        });
+    }
+
+    const filamentNewBtn = document.getElementById("filament-new-btn");
+    if (filamentNewBtn) {
+        filamentNewBtn.addEventListener("click", filamentOpenNew);
+    }
+
+    // Scarf sub-section toggle
+    const scarfEnabledEl = document.getElementById("filament-scarf-enabled");
+    if (scarfEnabledEl) {
+        scarfEnabledEl.addEventListener("change", filamentToggleScarf);
+    }
+
+    // Wipe sub-section toggle
+    const wipeEnabledEl = document.getElementById("filament-wipe-enabled");
+    if (wipeEnabledEl) {
+        wipeEnabledEl.addEventListener("change", filamentToggleWipe);
+    }
+
+    // Load when tab becomes active
+    const filamentsTabBtn = document.querySelector('button[data-bs-target="#filaments"]');
+    if (filamentsTabBtn) {
+        filamentsTabBtn.addEventListener("shown.bs.tab", function () {
+            loadFilaments();
+        });
+    }
+
+    // Printer selector — switch active printer from the navbar dropdown
+    document.querySelectorAll("#printer-selector .dropdown-item").forEach(function(item) {
+        item.addEventListener("click", function(e) {
+            e.preventDefault();
+            var newIndex = parseInt(this.getAttribute("data-printer-index"), 10);
+            if (isNaN(newIndex) || this.classList.contains("active")) return;
+
+            if (!confirm("Switch printer? All connections will be restarted.")) return;
+
+            fetch("/api/printers/active", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({index: newIndex})
+            })
+            .then(function(resp) {
+                return resp.json().then(function(data) { return {ok: resp.ok, data: data}; });
+            })
+            .then(function(r) {
+                if (!r.ok) {
+                    alert("Error: " + (r.data.error || "Failed to switch printer"));
+                    return;
+                }
+                // Reload after 2.5s to allow services to restart
+                setTimeout(function() { window.location.reload(); }, 2500);
+            })
+            .catch(function(err) {
+                alert("Failed to switch printer: " + err);
+            });
+        });
+    });
+
 });
+

@@ -115,6 +115,7 @@ import web.service.pppp
 import web.service.video
 import web.service.mqtt
 import web.service.filetransfer
+from web.service.filament import FilamentStore
 # autopep8: on
 
 
@@ -296,12 +297,20 @@ def app_root():
         user_agent = user_agent_parse(request.headers.get("User-Agent"))
         user_os = web.platform.os_platform(user_agent.os.family)
 
+        printers_list = []
         if cfg:
             anker_config = str(web.config.config_show(cfg))
             config_existing_email = cfg.account.email
             printer = cfg.printers[app.config["printer_index"]]
             upload_rate_mbps = getattr(cfg, "upload_rate_mbps", None)
             country = cfg.account.country
+            for i, p in enumerate(cfg.printers):
+                printers_list.append({
+                    "index": i,
+                    "name": p.name,
+                    "sn": p.sn,
+                    "model": p.model,
+                })
         else:
             anker_config = "No printers found, please load your login config..."
             config_existing_email = ""
@@ -332,6 +341,9 @@ def app_root():
             printer=printer,
             video_profiles=web.service.video.VIDEO_PROFILES,
             video_profile_default=web.service.video.VIDEO_PROFILE_DEFAULT_ID,
+            printers=printers_list,
+            active_printer_index=app.config["printer_index"],
+            printer_index_locked=app.config.get("printer_index_locked", False),
         )
 
 
@@ -339,6 +351,77 @@ def app_root():
 def app_api_health():
     """Lightweight liveness probe — always returns 200 OK (no auth required)."""
     return {"status": "ok"}
+
+
+@app.get("/api/printers")
+def app_api_printers():
+    """Return list of configured printers and the currently active index."""
+    config = app.config["config"]
+    with config.open() as cfg:
+        printers = []
+        if cfg:
+            for i, p in enumerate(cfg.printers):
+                printers.append({
+                    "index": i,
+                    "name": p.name,
+                    "sn": p.sn,
+                    "model": p.model,
+                    "ip_addr": p.ip_addr,
+                })
+        return jsonify({
+            "printers": printers,
+            "active_index": app.config["printer_index"],
+            "locked": app.config.get("printer_index_locked", False),
+        })
+
+
+@app.post("/api/printers/active")
+def app_api_set_active_printer():
+    """Switch the active printer. Blocked when PRINTER_INDEX env var is set or during a print."""
+    if app.config.get("printer_index_locked"):
+        return jsonify({"error": "Printer selection locked by PRINTER_INDEX environment variable"}), 403
+
+    payload = request.get_json(silent=True) or {}
+    new_index = payload.get("index")
+    if not isinstance(new_index, int):
+        return jsonify({"error": "Missing or invalid 'index' parameter"}), 400
+
+    config = app.config["config"]
+    with config.open() as cfg:
+        if not cfg or new_index < 0 or new_index >= len(cfg.printers):
+            return jsonify({"error": f"Printer index {new_index} out of range"}), 400
+
+        # Block switch during active print
+        try:
+            with app.svc.borrow("mqttqueue") as mqtt:
+                if mqtt.is_printing:
+                    return jsonify({"error": "Cannot switch printer during an active print"}), 409
+        except Exception:
+            pass  # mqttqueue may not be running
+
+        printer = cfg.printers[new_index]
+        video_supported = printer.model not in PRINTERS_WITHOUT_CAMERA
+
+    old_index = app.config["printer_index"]
+    if new_index == old_index:
+        return jsonify({"status": "ok", "message": "Already active"})
+
+    # Update in-memory state
+    app.config["printer_index"] = new_index
+    app.config["video_supported"] = video_supported
+
+    # Persist selection to config file
+    with config.modify() as cfg:
+        cfg.active_printer_index = new_index
+
+    # Restart all services so they reconnect to the new printer
+    try:
+        app.svc.restart_all(await_ready=False)
+    except Exception as err:
+        log.warning(f"Service restart after printer switch raised: {err}")
+
+    log.info(f"Switched active printer: index {old_index} -> {new_index} ({printer.name})")
+    return jsonify({"status": "ok", "printer": {"index": new_index, "name": printer.name, "sn": printer.sn}})
 
 
 @app.get("/api/version")
@@ -901,6 +984,69 @@ def app_api_history_clear():
     return {"status": "ok"}
 
 
+@app.get("/api/filaments")
+def app_api_filaments_list():
+    """List all filament profiles."""
+    return {"filaments": app.filaments.list_all()}
+
+
+@app.post("/api/filaments")
+def app_api_filaments_create():
+    """Create a new filament profile."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return {"error": "Invalid JSON payload"}, 400
+    try:
+        profile = app.filaments.create(data)
+    except ValueError as exc:
+        return {"error": str(exc)}, 400
+    return profile, 201
+
+
+@app.put("/api/filaments/<int:profile_id>")
+def app_api_filaments_update(profile_id):
+    """Update an existing filament profile."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return {"error": "Invalid JSON payload"}, 400
+    profile = app.filaments.update(profile_id, data)
+    if profile is None:
+        return {"error": "Profile not found"}, 404
+    return profile
+
+
+@app.delete("/api/filaments/<int:profile_id>")
+def app_api_filaments_delete(profile_id):
+    """Delete a filament profile."""
+    deleted = app.filaments.delete(profile_id)
+    if not deleted:
+        return {"error": "Profile not found"}, 404
+    return {"status": "ok"}
+
+
+@app.post("/api/filaments/<int:profile_id>/apply")
+def app_api_filaments_apply(profile_id):
+    """Send M104/M140 GCode to the printer for the given filament profile."""
+    profile = app.filaments.get(profile_id)
+    if profile is None:
+        return {"error": "Profile not found"}, 404
+    nozzle = profile.get("nozzle_temp_other_layer") or profile.get("nozzle_temp", 0)
+    bed    = profile.get("bed_temp_other_layer") or profile.get("bed_temp", 0)
+    gcode = f"M104 S{nozzle}\nM140 S{bed}"
+    with app.svc.borrow("mqttqueue") as mqtt:
+        mqtt.send_gcode(gcode)
+    return {"status": "ok", "gcode": gcode}
+
+
+@app.post("/api/filaments/<int:profile_id>/duplicate")
+def app_api_filaments_duplicate(profile_id):
+    """Duplicate a filament profile."""
+    profile = app.filaments.duplicate(profile_id)
+    if profile is None:
+        return {"error": "Profile not found"}, 404
+    return profile, 201
+
+
 @app.get("/api/timelapses")
 def app_api_timelapses():
     """List available timelapse videos."""
@@ -952,6 +1098,10 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
     Returns:
         - None
     """
+    # Filament profile store — initialized once at startup
+    config_root = str(config.config_root)
+    app.filaments = FilamentStore(db_path=f"{config_root}/filament.db")
+
     # Resolve API key: ENV var takes precedence over config file
     api_key = cli.config.resolve_api_key(config)
     app.config["api_key"] = api_key
@@ -960,7 +1110,17 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
     else:
         log.info("No API key set. Authentication disabled.")
 
+    printer_index_locked = os.getenv("PRINTER_INDEX") is not None
+    app.config["printer_index_locked"] = printer_index_locked
+
     with config.open() as cfg:
+        # If PRINTER_INDEX env var is not set, use the persisted active_printer_index
+        # from the config file (only if it is within valid range).
+        if not printer_index_locked and cfg and hasattr(cfg, "active_printer_index"):
+            saved = cfg.active_printer_index
+            if 0 <= saved < len(cfg.printers):
+                printer_index = saved
+
         if cfg and printer_index >= len(cfg.printers):
             log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
         video_supported = False

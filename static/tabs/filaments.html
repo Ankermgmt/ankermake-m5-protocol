@@ -1,0 +1,265 @@
+<div class="tab-pane fade" id="filaments" role="tabpanel" aria-labelledby="filaments-tab">
+    <div class="container-fluid mt-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-11">
+                <div class="card">
+                    <div class="card-header fs-5 d-flex justify-content-between align-items-center">
+                        <span>{{ macro.bi_icon("droplet-fill") }} Filament Profiles</span>
+                        <button class="btn btn-sm btn-outline-primary" id="filament-new-btn">
+                            {{ macro.bi_icon("plus-lg") }} New Profile
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm mb-0" id="filaments-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:2.5rem;"></th>
+                                        <th>Name</th>
+                                        <th>Material</th>
+                                        <th>Brand</th>
+                                        <th>Nozzle</th>
+                                        <th>Bed</th>
+                                        <th>Diameter</th>
+                                        <th style="width:14rem;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="filaments-tbody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filament Profile Modal -->
+<div class="modal fade" id="filamentModal" tabindex="-1" aria-labelledby="filamentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filamentModalLabel">Filament Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="filament-id">
+
+                <!-- Basic -->
+                <h6 class="text-uppercase text-muted small mb-2 mt-1">Basic</h6>
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        <label for="filament-name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="filament-name" placeholder="e.g. My PLA+" required>
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="filament-brand" class="form-label">Brand</label>
+                        <input type="text" class="form-control" id="filament-brand" placeholder="e.g. eSUN">
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="filament-material" class="form-label">Material</label>
+                        <input type="text" class="form-control" id="filament-material" placeholder="e.g. PLA">
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="filament-color" class="form-label">Color</label>
+                        <input type="color" class="form-control form-control-color w-100" id="filament-color" value="#FFFFFF" title="Pick a color">
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="filament-notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="filament-notes" rows="1" placeholder="Optional notes"></textarea>
+                    </div>
+                </div>
+
+                <!-- Temperatures -->
+                <h6 class="text-uppercase text-muted small mb-2">Temperatures</h6>
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        <label for="filament-nozzle-temp-other" class="form-label">Nozzle Temp - Other Layers (°C)</label>
+                        <input type="number" class="form-control" id="filament-nozzle-temp-other" min="0" max="500" step="1">
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="filament-nozzle-temp-first" class="form-label">Nozzle Temp - First Layer (°C)</label>
+                        <input type="number" class="form-control" id="filament-nozzle-temp-first" min="0" max="500" step="1">
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="filament-bed-temp-other" class="form-label">Bed Temp - Other Layers (°C)</label>
+                        <input type="number" class="form-control" id="filament-bed-temp-other" min="0" max="200" step="1">
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="filament-bed-temp-first" class="form-label">Bed Temp - First Layer (°C)</label>
+                        <input type="number" class="form-control" id="filament-bed-temp-first" min="0" max="200" step="1">
+                    </div>
+                </div>
+
+                <!-- Filament -->
+                <h6 class="text-uppercase text-muted small mb-2">Filament</h6>
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-4">
+                        <label for="filament-diameter" class="form-label">Diameter (mm)</label>
+                        <input type="number" class="form-control" id="filament-diameter" min="0.1" max="5.0" step="0.01">
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="filament-flow-rate" class="form-label">Flow Rate (e.g. 1.0)</label>
+                        <input type="number" class="form-control" id="filament-flow-rate" min="0.5" max="2.0" step="0.01">
+                    </div>
+                    <div class="col-sm-4 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="filament-cooling-enabled">
+                            <label class="form-check-label" for="filament-cooling-enabled">
+                                Cooling Enabled
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="filament-cooling-min" class="form-label">Min Fan Speed (%)</label>
+                        <input type="number" class="form-control" id="filament-cooling-min" min="0" max="100" step="1">
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="filament-cooling-max" class="form-label">Max Fan Speed (%)</label>
+                        <input type="number" class="form-control" id="filament-cooling-max" min="0" max="100" step="1">
+                    </div>
+                </div>
+
+                <!-- Seam -->
+                <h6 class="text-uppercase text-muted small mb-2">Seam</h6>
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        <label for="filament-seam-position" class="form-label">Seam Position</label>
+                        <select class="form-select" id="filament-seam-position">
+                            <option value="nearest">Nearest</option>
+                            <option value="aligned">Aligned</option>
+                            <option value="rear">Rear</option>
+                            <option value="random">Random</option>
+                            <option value="scarf">Scarf</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="filament-seam-gap" class="form-label">Seam Gap (mm)</label>
+                        <input type="number" class="form-control" id="filament-seam-gap" min="0" max="1" step="0.01">
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="filament-scarf-enabled">
+                            <label class="form-check-label" for="filament-scarf-enabled">
+                                Scarf Seam
+                            </label>
+                        </div>
+                    </div>
+                    <div id="filament-scarf-opts" class="col-sm-12" style="display:none;">
+                        <div class="row g-3">
+                            <div class="col-sm-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filament-scarf-conditional">
+                                    <label class="form-check-label" for="filament-scarf-conditional">
+                                        Conditional Scarf
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="filament-scarf-angle" class="form-label">Angle Threshold (°)</label>
+                                <input type="number" class="form-control" id="filament-scarf-angle" min="115" max="155" step="1">
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="filament-scarf-length" class="form-label">Length (mm)</label>
+                                <input type="number" class="form-control" id="filament-scarf-length" min="0" max="100" step="0.1">
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="filament-scarf-steps" class="form-label">Steps</label>
+                                <input type="number" class="form-control" id="filament-scarf-steps" min="1" max="50" step="1">
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="filament-scarf-speed" class="form-label">Speed (% wall speed)</label>
+                                <input type="number" class="form-control" id="filament-scarf-speed" min="1" max="200" step="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Retraction -->
+                <h6 class="text-uppercase text-muted small mb-2">Retraction</h6>
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-4">
+                        <label for="filament-retract-length" class="form-label">Retract Length (mm)</label>
+                        <input type="number" class="form-control" id="filament-retract-length" min="0" max="20" step="0.1">
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="filament-retract-speed" class="form-label">Retract Speed (mm/s)</label>
+                        <input type="number" class="form-control" id="filament-retract-speed" min="1" max="200" step="1">
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="filament-retract-lift-z" class="form-label">Z-Hop (mm)</label>
+                        <input type="number" class="form-control" id="filament-retract-lift-z" min="0" max="5" step="0.1">
+                    </div>
+                </div>
+
+                <!-- Wipe -->
+                <h6 class="text-uppercase text-muted small mb-2">Wipe</h6>
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="filament-wipe-enabled">
+                            <label class="form-check-label" for="filament-wipe-enabled">
+                                Wipe on Retract
+                            </label>
+                        </div>
+                    </div>
+                    <div id="filament-wipe-opts" class="col-sm-12" style="display:none;">
+                        <div class="row g-3">
+                            <div class="col-sm-4">
+                                <label for="filament-wipe-distance" class="form-label">Wipe Distance (mm)</label>
+                                <input type="number" class="form-control" id="filament-wipe-distance" min="0" max="20" step="0.1">
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="filament-wipe-speed" class="form-label">Wipe Speed (mm/s)</label>
+                                <input type="number" class="form-control" id="filament-wipe-speed" min="1" max="200" step="1">
+                            </div>
+                            <div class="col-sm-4 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="filament-wipe-retract-before">
+                                    <label class="form-check-label" for="filament-wipe-retract-before">
+                                        Retract Before Wipe
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced -->
+                <h6 class="text-uppercase text-muted small mb-2">Advanced (M5 Tuning)</h6>
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <label for="filament-pressure-advance" class="form-label">Pressure Advance</label>
+                        <input type="number" class="form-control" id="filament-pressure-advance" min="0" max="2" step="0.001">
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="filament-max-vol-speed" class="form-label">Max Vol. Speed (mm³/s)</label>
+                        <input type="number" class="form-control" id="filament-max-vol-speed" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="filament-travel-speed" class="form-label">Travel Speed (mm/s)</label>
+                        <input type="number" class="form-control" id="filament-travel-speed" min="0" max="1000" step="1">
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="filament-perimeter-speed" class="form-label">Perimeter Speed (mm/s)</label>
+                        <input type="number" class="form-control" id="filament-perimeter-speed" min="0" max="1000" step="1">
+                    </div>
+                    <div class="col-sm-4">
+                        <label for="filament-infill-speed" class="form-label">Infill Speed (mm/s)</label>
+                        <input type="number" class="form-control" id="filament-infill-speed" min="0" max="1000" step="1">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="filament-save-btn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>

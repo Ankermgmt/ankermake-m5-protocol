@@ -21,6 +21,33 @@
                 <img src="{{ url_for('static', filename='img/logo.svg') }}" class="me-2" alt="logo">
                 <span class="text-body-emphasis align-self-baseline fs-4">ankerctl</span>
             </a>
+            {% if printers is defined and printers|length == 1 %}
+            <span class="text-muted small me-3">
+                <i class="bi bi-printer me-1"></i>{{ printers[0].name }} ({{ printers[0].sn[-5:] }})
+            </span>
+            {% elif printers is defined and printers|length > 1 %}
+            <div class="dropdown me-3" id="printer-selector">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false"
+                        {% if printer_index_locked is defined and printer_index_locked %}disabled title="Locked by PRINTER_INDEX env var"{% endif %}>
+                    <i class="bi bi-printer me-1"></i>
+                    {% set ap = printers[active_printer_index] %}
+                    {{ ap.name }} ({{ ap.sn[-5:] }})
+                    {% if printer_index_locked is defined and printer_index_locked %}<i class="bi bi-lock-fill ms-1"></i>{% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    {% for p in printers %}
+                    <li>
+                        <a class="dropdown-item{% if p.index == active_printer_index %} active{% endif %}"
+                           href="#" data-printer-index="{{ p.index }}">
+                            {% if p.index == active_printer_index %}<i class="bi bi-check-lg me-1"></i>{% endif %}
+                            {{ p.name }} ({{ p.sn[-5:] }})
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
             <ul class="nav nav-pills align-items-baseline" id="tab" role="tablist">
                 {% block menu %}{% endblock %}
             </ul>

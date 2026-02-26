@@ -40,7 +40,7 @@ The following command types are known (hexadecimal values):
 | `ZZ_MQTT_CMD_FAN_SPEED` | `0x03ed` | Set fan speed |
 | `ZZ_MQTT_CMD_PRINT_SPEED` | `0x03ee` | Set print speed multiplier |
 | `ZZ_MQTT_CMD_AUTO_LEVELING` | `0x03ef` | Start auto-leveling procedure |
-| `ZZ_MQTT_CMD_PRINT_CONTROL` | `0x03f0` | Start/Pause/Stop print |
+| `ZZ_MQTT_CMD_PRINT_CONTROL` | `0x03f0` | Print state control: value=2 pause, value=3 resume, value=4 stop/cancel, value=0 restart from beginning |
 | `ZZ_MQTT_CMD_FILE_LIST_REQUEST` | `0x03f1` | List files on SD card (value=1) or USB (value≠1) |
 | `ZZ_MQTT_CMD_GCODE_FILE_REQUEST` | `0x03f2` | Request specific GCode file |
 | `ZZ_MQTT_CMD_ALLOW_FIRMWARE_UPDATE` | `0x03f3` | Trigger firmware update |
@@ -82,12 +82,12 @@ The following `commandType` values are emitted by the printer as unsolicited sta
 
 | commandType (decimal) | Hex | Field(s) | Description |
 | :--- | :--- | :--- | :--- |
-| `1000` | `0x03e8` | `value` | Printer state machine: `0` = idle/finished, `1` = active (printing/heating) |
+| `1000` | `0x03e8` | `value` | Printer state machine: `0` = idle/finished, `1` = active/printing, `2` = paused, `8` = aborted (user cancelled via touchscreen or calibration phase) |
 | `1001` | `0x03e9` | `time` | Remaining print time in seconds |
 | `1003` | `0x03eb` | `currentTemp`, `targetTemp` | Nozzle temperature (units: 1/100 °C) |
 | `1004` | `0x03ec` | `currentTemp`, `targetTemp` | Hotbed temperature (units: 1/100 °C) |
 | `1006` | `0x03ee` | `value` | Print speed in mm/s |
-| `1007` | `0x03ef` | `value` | Auto-leveling probe progress — emitted after each probe point during G29; `value` = current point index (49 total for 7×7 grid). Use this to display a live progress bar. |
+| `1007` | `0x03ef` | `value` | Auto-leveling probe progress — emitted after each probe point during G29; `value` = current point index (50 total: 1 initial center probe + 7×7 grid). Use this to display a live progress bar. |
 | `1044` | `0x0414` | `filePath` | GCode file path — sent when a print job starts; basename is used as the filename |
 | `1052` | `0x041c` | `real_print_layer`, `total_layer` | Current and total layer counts; derive print progress from these |
 
@@ -122,3 +122,21 @@ The following `commandType` values are emitted by the printer as unsolicited sta
 }
 ```
 *(Note: Value is Celsius * 100)*
+
+### Print Control (`0x03f0`)
+
+Empirically verified values (2026-02-24):
+
+```json
+{"commandType": 1008, "value": 2}
+```
+
+| value | Action | Notes |
+|-------|--------|-------|
+| `0` | Restart print from beginning | Does NOT stop — restarts the job |
+| `2` | Pause print | Printer enters paused state; ct=1000 value=2 confirms |
+| `3` | Resume print | Returns to printing; ct=1000 value=1 confirms |
+| `4` | Stop / cancel print | Terminates the job |
+
+`reply=0` = command received (not necessarily executed). `reply=6` = invalid command.
+Sending via PPPP P2P_JSON_CMD returns error `0x2710` — use MQTT only for print control.

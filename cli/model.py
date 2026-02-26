@@ -170,12 +170,21 @@ class Config(Serialize):
     notifications: dict = field(default_factory=default_notifications_config)
     timelapse: dict = field(default_factory=default_timelapse_config)
     home_assistant: dict = field(default_factory=default_home_assistant_config)
+    active_printer_index: int = field(default=0)
 
     @classmethod
     def from_dict(cls, data):
         if "upload_rate_mbps" not in data:
             data = {**data, "upload_rate_mbps": DEFAULT_UPLOAD_RATE_MBPS}
-        
+
+        if "active_printer_index" not in data:
+            data = {**data, "active_printer_index": 0}
+        else:
+            try:
+                data = {**data, "active_printer_index": int(data["active_printer_index"])}
+            except (ValueError, TypeError):
+                data = {**data, "active_printer_index": 0}
+
         data = {
             **data,
             "notifications": merge_dict_defaults(
