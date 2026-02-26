@@ -294,8 +294,11 @@ $(function () {
                     _onMqttStateChange(data.value);
                 }
             } else if (data.commandType == 1001) {
-                // Returns remaining time only; progress/name/totalTime are not present on ct 1001
+                // ZZ_MQTT_CMD_PRINT_SCHEDULE: time=remaining, totalTime=elapsed
                 $("#time-remain").text(getTime(data.time));
+                if (data.totalTime !== undefined) {
+                    $("#time-elapsed").text(getTime(data.totalTime));
+                }
             } else if (data.commandType == 1003) {
                 // Returns Nozzle Temp
                 const current = getTemp(data.currentTemp);
