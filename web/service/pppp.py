@@ -10,8 +10,13 @@ from libflagship.pktdump import PacketWriter
 from libflagship.pppp import P2PCmdType, PktClose, Duid, Type, Xzyh, Aabb
 from libflagship.ppppapi import AnkerPPPPAsyncApi, PPPPState
 
+import cli.pppp
 
 class PPPPService(Service):
+
+    def __init__(self):
+        self.xzyh_handlers = []
+        super().__init__()
 
     def api_command(self, commandType, **kwargs):
         if not hasattr(self, "_api"):
@@ -36,14 +41,23 @@ class PPPPService(Service):
                 raise ServiceStoppedError("No config available")
             printer = cfg.printers[app.config["printer_index"]]
 
-        api = AnkerPPPPAsyncApi.open_lan(Duid.from_string(printer.p2p_duid), host=printer.ip_addr)
+        ip_addr = cli.pppp.pppp_resolve_printer_ip(
+            config,
+            printer,
+            app.config["printer_index"],
+            dumpfile=app.config.get("pppp_dump"),
+        )
+        if not ip_addr:
+            raise ConnectionRefusedError("No printer IP found; ensure printer is online on the same network")
+
+        api = AnkerPPPPAsyncApi.open_lan(Duid.from_string(printer.p2p_duid), host=ip_addr)
         if app.config["pppp_dump"]:
             dumpfile = app.config["pppp_dump"]
             log.info(f"Logging all pppp traffic to {dumpfile!r}")
             pktwr = PacketWriter.open(dumpfile)
             api.set_dumper(pktwr)
 
-        log.info(f"Trying connect to printer {printer.name} ({printer.p2p_duid}) over pppp using ip {printer.ip_addr}")
+        log.info(f"Trying connect to printer {printer.name} ({printer.p2p_duid}) over pppp using ip {ip_addr}")
 
         api.connect_lan_search()
 
@@ -56,6 +70,35 @@ class PPPPService(Service):
 
         log.info("Established pppp connection")
         self._api = api
+
+    def _drain_xzyh(self, chan):
+        if not hasattr(self, "_api") or not hasattr(self._api, "chans"):
+            return
+
+        if chan < 0 or chan >= len(self._api.chans):
+            return
+
+        fd = self._api.chans[chan]
+
+        while True:
+            with fd.lock:
+                hdr = fd.peek(16, timeout=0.0)
+                if not hdr:
+                    return
+                if hdr[:4] != b"XZYH":
+                    return
+
+                xzyh = Xzyh.parse(hdr)[0]
+                pkt = fd.read(xzyh.len + 16, timeout=0.0)
+                if not pkt:
+                    return
+                xzyh.data = pkt[16:]
+
+            for handler in self.xzyh_handlers[:]:
+                try:
+                    handler((chan, xzyh))
+                except Exception as e:
+                    log.warning(f"Handler error: {e}")
 
     def _recv_aabb(self, fd):
         data = fd.read(12)
@@ -70,29 +113,30 @@ class PPPPService(Service):
         except ConnectionResetError:
             raise ServiceRestartSignal()
 
+        self._drain_xzyh(chan=1)
+
         if not msg or msg.type != Type.DRW:
             return
 
         ch = self._api.chans[msg.chan]
 
+        drain_xzyh = False
         with ch.lock:
-            data = ch.peek(16, timeout=0)
-            if not data:
+            header = ch.peek(4, timeout=0)
+            if not header:
                 return
 
-            if data[:4] == b'XZYH':
-                hdr = ch.peek(16, timeout=0)
-                if not hdr:
+            if header[:4] == b'XZYH':
+                drain_xzyh = True
+            elif header[:2] == b'\xAA\xBB':
+                aabb_header = ch.peek(12, timeout=0)
+                if not aabb_header:
+                    return
+                aabb = Aabb.parse(aabb_header)[0]
+                frame_len = 12 + aabb.len + 2
+                if not ch.peek(frame_len, timeout=0):
                     return
 
-                xzyh = Xzyh.parse(hdr)[0]
-                data = ch.read(xzyh.len + 16, timeout=0)
-                if not data:
-                    return None
-
-                xzyh.data = data[16:]
-                self.notify((msg.chan, xzyh))
-            elif data[:2] == b'\xAA\xBB':
                 aabb, data = self._recv_aabb(ch)
                 if len(data) != 1:
                     raise ValueError(f"Unexpected reply from aabb request: {data}")
@@ -100,7 +144,10 @@ class PPPPService(Service):
                 aabb.data = data
                 self.notify((msg.chan, aabb))
             else:
-                raise ValueError(f"Unexpected data in stream: {data!r}")
+                raise ValueError(f"Unexpected data in stream: {header!r}")
+
+        if drain_xzyh:
+            self._drain_xzyh(chan=msg.chan)
 
     def worker_stop(self):
         self._api.send(PktClose())

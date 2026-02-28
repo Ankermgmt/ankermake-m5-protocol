@@ -6,11 +6,11 @@
 
 1. Install the [AnkerMake slicer](https://www.ankermake.com/software) on a supported Operating System.  Make sure you open it and login via the “Account” dropdown in the top toolbar.
 
-2. Retreive the ```login.json``` file from the supported operating system:
+2. Retreive the ```login.json``` file (Windows: ```user_info```) from the supported operating system:
 
   Windows Default Location:
   ```sh
-  %APPDATA%\AnkerMake\AnkerMake_64bit_fp\login.json
+  %APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info
   ```
    
   MacOS Default Location:
@@ -26,7 +26,7 @@
 
 1. Install the [AnkerMake slicer](https://www.ankermake.com/software) on Linux via emulation such as Wine.  Make sure you open it and login via the “Account” dropdown in the top toolbar.
    
-2. Retreive the ```login.json``` file ```~/.wine/drive_c/users/$USER/AppData/Local/AnkerMake/AnkerMake_64bit_fp/login.json```
+2. Retreive the ```login.json``` file (Windows: ```user_info```) ```~/.wine/drive_c/users/$USER/AppData/Roaming/eufyMake Studio Profile/cache/offline/user_info```
 
 3. Take said ```login.json``` file and store it in a location your docker instance will be able to access it from.
 
@@ -40,3 +40,38 @@ To start `ankerctl` using docker compose, run:
 docker compose pull
 docker compose up
 ```
+
+### Customizing UID/GID
+
+The Docker container runs as a non-root user `ankerctl` (UID/GID 1000 by default).
+If your host user has different IDs, customize them in `docker-compose.yaml`:
+
+```yaml
+build:
+    context: .
+    args:
+        UID: 1001   # your host UID (run: id -u)
+        GID: 1001   # your host GID (run: id -g)
+```
+
+Or build directly:
+
+```sh
+docker compose build --build-arg UID=$(id -u) --build-arg GID=$(id -g)
+```
+
+### Enabling API Key Authentication
+
+By default, the web server is open (no authentication). To enable API key authentication, set the `ANKERCTL_API_KEY` environment variable in `docker-compose.yaml`:
+
+```yaml
+environment:
+    - FLASK_HOST=127.0.0.1
+    - FLASK_PORT=4470
+    - ANKERCTL_API_KEY=your-secret-key-here
+```
+
+When set, all API endpoints require authentication via one of:
+
+- **Slicer:** Set the API key as `X-Api-Key` header (OctoPrint-compatible)
+- **Browser:** Append `?apikey=your-secret-key-here` to the URL once — a session cookie will be set automatically

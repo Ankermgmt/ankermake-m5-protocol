@@ -203,7 +203,10 @@ class Service(Thread):
         try:
             yield self
         finally:
-            self.handlers.remove(handler)
+            try:
+                self.handlers.remove(handler)
+            except ValueError:
+                pass
 
     def await_ready(self):
         while True:
@@ -342,6 +345,8 @@ class ServiceManager:
         self.refs[name] -= 1
 
         if not self.refs[name]:
+            if name == "videoqueue" and getattr(svc, "video_enabled", False):
+                return
             svc.stop()
 
     @contextlib.contextmanager
@@ -353,12 +358,17 @@ class ServiceManager:
             self.put(name)
 
     def stream(self, name: str):
+        import queue as _queue
         try:
             with self.borrow(name) as svc:
-                queue = Queue()
+                q = Queue()
 
-                with svc.tap(lambda data: queue.put(data)):
+                with svc.tap(lambda data: q.put(data)):
                     while svc.state == RunState.Running:
-                        yield queue.get()
+                        try:
+                            data = q.get(timeout=1.0)
+                        except _queue.Empty:
+                            continue
+                        yield data
         except (EOFError, OSError, ServiceStoppedError):
             return

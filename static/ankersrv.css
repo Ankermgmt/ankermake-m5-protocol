@@ -44,13 +44,33 @@
     --bs-btn-hover-border-color: var(--ared1);
 }
 
+.video-profile-btn.active,
+.video-profile-btn.active:hover,
+.video-profile-btn.active:focus {
+    --bs-btn-bg: var(--agreen2);
+    --bs-btn-border-color: var(--agreen1);
+    --bs-btn-color: #000000;
+    --bs-btn-active-bg: var(--agreen2);
+    --bs-btn-active-border-color: var(--agreen1);
+    --bs-btn-active-color: #000000;
+}
+
 .progress-bar {
     --bs-progress-bar-color: white;
     --bs-progress-bar-bg: var(--agreen2);
 }
 
-#progress {
+#progress,
+#upload-progress {
     text-shadow: 0 0 7px black, 0 0 7px black;
+}
+
+.collapse-toggle .bi {
+    transition: transform 0.2s ease;
+}
+
+.collapse-toggle[aria-expanded="true"] .bi {
+    transform: rotate(180deg);
 }
 
 footer .btn {
@@ -72,6 +92,10 @@ code {
 
 #printProgress {
     height: 40px;
+}
+
+#uploadProgress {
+    height: 28px;
 }
 
 .icon {
@@ -102,3 +126,41 @@ code {
     border: 0 none;
     padding: 0;
 }
+
+/* Setup pill-tab navigation */
+
+.setup-pills {
+    gap: 0.25rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+
+.setup-pills .nav-link {
+    white-space: nowrap;
+}
+
+/* Bed level compare section — scrollable 3-column layout */
+
+.bed-compare-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.bed-compare-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    min-width: 720px; /* ensures cards don't collapse below usable width */
+}
+
+.bed-compare-grid .card-body table {
+    width: 100%;
+}
+
+@media (max-width: 991.98px) {
+    .bed-compare-grid {
+        grid-template-columns: 1fr;
+        min-width: 0;
+    }
+}
+

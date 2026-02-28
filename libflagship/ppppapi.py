@@ -347,8 +347,14 @@ class AnkerPPPPBaseApi(Thread):
         if self.state in {PPPPState.Idle, PPPPState.Disconnected}:
             raise ConnectionError(f"Tried to recv packet in state {self.state}")
 
+        prev_timeout = self.sock.gettimeout()
         self.sock.settimeout(timeout)
-        data, self.addr = self.sock.recvfrom(4096)
+        try:
+            data, self.addr = self.sock.recvfrom(4096)
+        except BlockingIOError as e:
+            raise TimeoutError("recv would block") from e
+        finally:
+            self.sock.settimeout(prev_timeout)
         if self.dumper:
             self.dumper.rx(data, self.addr)
         msg = Message.parse(data)[0]
@@ -418,10 +424,11 @@ class AnkerPPPPApi(AnkerPPPPBaseApi):
     def recv_aabb(self, chan=1):
         fd = self.chans[chan]
 
-        data = fd.read(12)
-        aabb = Aabb.parse(data)[0]
-        p = data + fd.read(aabb.len + 2)
-        aabb, data = Aabb.parse_with_crc(p)[:2]
+        with fd.lock:
+            data = fd.read(12)
+            aabb = Aabb.parse(data)[0]
+            p = data + fd.read(aabb.len + 2)
+            aabb, data = Aabb.parse_with_crc(p)[:2]
         return aabb, data
 
     def recv_aabb_reply(self, chan=1, check=True):

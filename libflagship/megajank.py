@@ -34,8 +34,7 @@ def mqtt_aes_decrypt(cmsg, key, iv=b"3DPrintAnkerMake"):
 
 def mqtt_checksum_remove(payload):
     if xor_bytes(payload) != 0:
-        # raise ...
-        print(f"MALFORMED MESSAGE: {payload}")
+        raise ValueError(f"MQTT checksum mismatch in message ({len(payload)} bytes)")
     return payload[:-1]
 
 
@@ -62,7 +61,8 @@ anker_ec_v1_public_key = tinyec.ec.Keypair(anker_ec_v1_curve, pub=tinyec.ec.Poin
 
 
 def ec_pubkey_export(key):
-    return f"04{key.x:32x}{key.y:32x}"
+    # Export uncompressed EC public key (04 + 32-byte X + 32-byte Y)
+    return f"04{key.x:064x}{key.y:064x}"
 
 
 def ecdh_encrypt_login_password(password, partner=anker_ec_v1_public_key):

@@ -8,6 +8,7 @@ Methods:
 
 Routes:
     - /ws/mqtt: Handles receiving and sending messages on the 'mqttqueue' stream service through websocket
+    - /ws/pppp-state: Provides the status of the 'pppp' stream service through websocket
     - /ws/video: Handles receiving and sending messages on the 'videoqueue' stream service through websocket
     - /ws/ctrl: Handles controlling of light and video quality through websocket
     - /video: Handles the video streaming/downloading feature in the Flask app
@@ -15,6 +16,7 @@ Routes:
     - /api/version: Returns the version details of api and server as dictionary
     - /api/ankerctl/config/upload: Handles the uploading of configuration file \
         to Flask server and returns a HTML redirect response
+    - /api/ankerctl/config/login: Performs email/password login and saves configuration
     - /api/ankerctl/server/reload: Reloads the Flask server and returns a HTML redirect response
     - /api/files/local: Handles the uploading of files to Flask server and returns a dictionary containing file details
 
@@ -26,16 +28,26 @@ Services:
     - config: Handles configuration manipulation for ankerctl
 """
 import json
-import logging as log
+import logging
+import os
+import threading
+import time
+
+log = logging.getLogger("web")
+
 
 from secrets import token_urlsafe as token
-from flask import Flask, flash, request, render_template, Response, session, url_for
+from flask import Flask, flash, request, render_template, Response, session, url_for, jsonify
 from flask_sock import Sock
+from simple_websocket.errors import ConnectionClosed
 from user_agents import parse as user_agent_parse
 
 from libflagship import ROOT_DIR
+import libflagship.httpapi
+import libflagship.logincache
+from libflagship.notifications import AppriseClient
 
-from web.lib.service import ServiceManager
+from web.lib.service import ServiceManager, RunState, ServiceStoppedError
 
 import web.config
 import web.platform
@@ -43,15 +55,59 @@ import web.util
 
 import cli.util
 import cli.config
+import cli.countrycodes
+from cli.model import (
+    UPLOAD_RATE_MBPS_CHOICES,
+    default_apprise_config,
+    default_notifications_config,
+    merge_dict_defaults,
+)
 
 
 app = Flask(__name__, root_path=ROOT_DIR, static_folder="static", template_folder="static")
-# secret_key is required for flash() to function
-app.secret_key = token(24)
+# secret_key is required for session cookies and flash() to function.
+# Use FLASK_SECRET_KEY env var for persistence across restarts; fall back to random.
+app.secret_key = os.getenv("FLASK_SECRET_KEY") or token(24)
 app.config.from_prefixed_env()
 app.svc = ServiceManager()
 
+# Configurable upload size limit (default: 2 GB)
+max_upload_mb = int(os.getenv("UPLOAD_MAX_MB", "2048"))
+app.config['MAX_CONTENT_LENGTH'] = max_upload_mb * 1024 * 1024
+
+# Session cookie security
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+
 sock = Sock(app)
+
+PRINTERS_WITHOUT_CAMERA = ["V8110"]
+
+
+def _deep_update(base, updates):
+    if not isinstance(base, dict):
+        base = {}
+    if not isinstance(updates, dict):
+        return base
+    for key, value in updates.items():
+        if isinstance(value, dict) and isinstance(base.get(key), dict):
+            base[key] = _deep_update(base.get(key), value)
+        else:
+            base[key] = value
+    return base
+
+
+def _resolve_notifications(cfg):
+    return merge_dict_defaults(getattr(cfg, "notifications", None), default_notifications_config())
+
+
+def _resolve_apprise(cfg):
+    notifications = _resolve_notifications(cfg)
+    apprise = merge_dict_defaults(notifications.get("apprise"), default_apprise_config())
+    progress = apprise.get("progress")
+    if isinstance(progress, dict):
+        progress.pop("max_value", None)
+    return apprise
 
 
 # autopep8: off
@@ -59,6 +115,7 @@ import web.service.pppp
 import web.service.video
 import web.service.mqtt
 import web.service.filetransfer
+from web.service.filament import FilamentStore
 # autopep8: on
 
 
@@ -79,10 +136,74 @@ def video(sock):
     """
     Handles receiving and sending messages on the 'videoqueue' stream service through websocket
     """
-    if not app.config["login"]:
+    if not app.config["login"] or not app.config.get("video_supported"):
+        return
+    vq = app.svc.svcs.get("videoqueue")
+    if not vq or not getattr(vq, "video_enabled", False):
         return
     for msg in app.svc.stream("videoqueue"):
         sock.send(msg.data)
+
+
+@sock.route("/ws/pppp-state")
+def pppp_state(sock):
+    """
+    Provides the status of the 'pppp' stream service through websocket
+    """
+    if not app.config["login"]:
+        log.info("Websocket connection rejected: no printer configured (use 'config import' or 'config login')")
+        return
+
+    log.info("Starting PPPP state websocket handler")
+
+    pppp = None
+    pppp_connected = False
+    last_keepalive = 0.0
+
+    try:
+        # Start PPPP service, but don't block the websocket waiting for it.
+        pppp = app.svc.get("pppp", ready=False)
+
+        while True:
+            now = time.time()
+            current_connected = bool(getattr(pppp, "connected", False))
+
+            if current_connected and not pppp_connected:
+                sock.send(json.dumps({"status": "connected"}))
+                pppp_connected = True
+                last_keepalive = now
+            elif pppp_connected and not current_connected:
+                sock.send(json.dumps({"status": "disconnected"}))
+                break
+            elif pppp_connected and now - last_keepalive >= 10.0:
+                # Keepalive to detect client disconnects.
+                sock.send(json.dumps({"status": "connected"}))
+                last_keepalive = now
+
+            time.sleep(1.0)
+    except ConnectionClosed:
+        log.info("WebSocket connection closed by client")
+    except Exception as e:
+        log.warning(f"Error in PPPP state websocket handler: {e}")
+        log.info("Stack trace:", exc_info=True)
+    finally:
+        if pppp is not None:
+            try:
+                app.svc.put("pppp")
+            except Exception:
+                pass
+        log.info("PPPP state websocket handler ending")
+
+
+@sock.route("/ws/upload")
+def upload(sock):
+    """
+    Provides upload progress updates through websocket
+    """
+    if not app.config["login"]:
+        return
+    for data in app.svc.stream("filetransfer"):
+        sock.send(json.dumps(data))
 
 
 @sock.route("/ws/ctrl")
@@ -95,17 +216,49 @@ def ctrl(sock):
 
     # send a response on connect, to let the client know the connection is ready
     sock.send(json.dumps({"ankerctl": 1}))
+    vq = app.svc.svcs.get("videoqueue")
+    if vq:
+        profile_id = getattr(vq, "saved_video_profile_id", None)
+        if profile_id is None:
+            profile_id = web.service.video.VIDEO_PROFILE_DEFAULT_ID
+        sock.send(json.dumps({"video_profile": profile_id}))
 
     while True:
         msg = json.loads(sock.receive())
 
         if "light" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_light_state(msg["light"])
+            if isinstance(msg["light"], bool):
+                with app.svc.borrow("videoqueue") as vq:
+                    vq.api_light_state(msg["light"])
+            else:
+                log.warning(f"Invalid 'light' value (expected bool): {msg['light']!r}")
 
-        if "quality" in msg:
-            with app.svc.borrow("videoqueue") as vq:
-                vq.api_video_mode(msg["quality"])
+        if "video_profile" in msg:
+            if isinstance(msg["video_profile"], int):
+                with app.svc.borrow("videoqueue") as vq:
+                    vq.api_video_profile(msg["video_profile"])
+            else:
+                log.warning(f"Invalid 'video_profile' value (expected int): {msg['video_profile']!r}")
+        elif "quality" in msg:
+            if isinstance(msg["quality"], int):
+                with app.svc.borrow("videoqueue") as vq:
+                    vq.api_video_mode(msg["quality"])
+            else:
+                log.warning(f"Invalid 'quality' value (expected int): {msg['quality']!r}")
+
+        if "video_enabled" in msg:
+            if not isinstance(msg["video_enabled"], bool):
+                log.warning(f"Invalid 'video_enabled' value (expected bool): {msg['video_enabled']!r}")
+                continue
+            vq = app.svc.svcs.get("videoqueue")
+            if vq:
+                vq.set_video_enabled(msg["video_enabled"])
+                if msg["video_enabled"]:
+                    if vq.state == RunState.Stopped:
+                        vq.start()
+                else:
+                    if vq.state == RunState.Running:
+                        vq.stop()
 
 
 @app.get("/video")
@@ -113,9 +266,21 @@ def video_download():
     """
     Handles the video streaming/downloading feature in the Flask app
     """
+    for_timelapse = request.args.get("for_timelapse") == "1"
+
     def generate():
-        if not app.config["login"]:
+        if not app.config["login"] or not app.config.get("video_supported"):
             return
+        vq = app.svc.svcs.get("videoqueue")
+        if vq:
+            if not for_timelapse and not getattr(vq, "video_enabled", False):
+                return
+            if vq.state == RunState.Stopped:
+                try:
+                    vq.start()
+                    vq.await_ready()
+                except ServiceStoppedError:
+                    return
         for msg in app.svc.stream("videoqueue"):
             yield msg.data
 
@@ -132,12 +297,26 @@ def app_root():
         user_agent = user_agent_parse(request.headers.get("User-Agent"))
         user_os = web.platform.os_platform(user_agent.os.family)
 
+        printers_list = []
         if cfg:
             anker_config = str(web.config.config_show(cfg))
+            config_existing_email = cfg.account.email
             printer = cfg.printers[app.config["printer_index"]]
+            upload_rate_mbps = getattr(cfg, "upload_rate_mbps", None)
+            country = cfg.account.country
+            for i, p in enumerate(cfg.printers):
+                printers_list.append({
+                    "index": i,
+                    "name": p.name,
+                    "sn": p.sn,
+                    "model": p.model,
+                })
         else:
             anker_config = "No printers found, please load your login config..."
+            config_existing_email = ""
             printer = None
+            upload_rate_mbps = None
+            country = ""
 
         if ":" in request.host:
             request_host, request_port = request.host.split(":", 1)
@@ -152,8 +331,97 @@ def app_root():
             configure=app.config["login"],
             login_file_path=web.platform.login_path(user_os),
             anker_config=anker_config,
-            printer=printer
+            config_existing_email=config_existing_email,
+            country_codes=json.dumps(cli.countrycodes.country_codes),
+            current_country=country,
+            video_supported=app.config.get("video_supported", False),
+            upload_rate_mbps=upload_rate_mbps,
+            upload_rate_env=os.getenv("UPLOAD_RATE_MBPS"),
+            upload_rate_choices=UPLOAD_RATE_MBPS_CHOICES,
+            printer=printer,
+            video_profiles=web.service.video.VIDEO_PROFILES,
+            video_profile_default=web.service.video.VIDEO_PROFILE_DEFAULT_ID,
+            printers=printers_list,
+            active_printer_index=app.config["printer_index"],
+            printer_index_locked=app.config.get("printer_index_locked", False),
         )
+
+
+@app.get("/api/health")
+def app_api_health():
+    """Lightweight liveness probe — always returns 200 OK (no auth required)."""
+    return {"status": "ok"}
+
+
+@app.get("/api/printers")
+def app_api_printers():
+    """Return list of configured printers and the currently active index."""
+    config = app.config["config"]
+    with config.open() as cfg:
+        printers = []
+        if cfg:
+            for i, p in enumerate(cfg.printers):
+                printers.append({
+                    "index": i,
+                    "name": p.name,
+                    "sn": p.sn,
+                    "model": p.model,
+                    "ip_addr": p.ip_addr,
+                })
+        return jsonify({
+            "printers": printers,
+            "active_index": app.config["printer_index"],
+            "locked": app.config.get("printer_index_locked", False),
+        })
+
+
+@app.post("/api/printers/active")
+def app_api_set_active_printer():
+    """Switch the active printer. Blocked when PRINTER_INDEX env var is set or during a print."""
+    if app.config.get("printer_index_locked"):
+        return jsonify({"error": "Printer selection locked by PRINTER_INDEX environment variable"}), 403
+
+    payload = request.get_json(silent=True) or {}
+    new_index = payload.get("index")
+    if not isinstance(new_index, int):
+        return jsonify({"error": "Missing or invalid 'index' parameter"}), 400
+
+    config = app.config["config"]
+    with config.open() as cfg:
+        if not cfg or new_index < 0 or new_index >= len(cfg.printers):
+            return jsonify({"error": f"Printer index {new_index} out of range"}), 400
+
+        # Block switch during active print
+        try:
+            with app.svc.borrow("mqttqueue") as mqtt:
+                if mqtt.is_printing:
+                    return jsonify({"error": "Cannot switch printer during an active print"}), 409
+        except Exception:
+            pass  # mqttqueue may not be running
+
+        printer = cfg.printers[new_index]
+        video_supported = printer.model not in PRINTERS_WITHOUT_CAMERA
+
+    old_index = app.config["printer_index"]
+    if new_index == old_index:
+        return jsonify({"status": "ok", "message": "Already active"})
+
+    # Update in-memory state
+    app.config["printer_index"] = new_index
+    app.config["video_supported"] = video_supported
+
+    # Persist selection to config file
+    with config.modify() as cfg:
+        cfg.active_printer_index = new_index
+
+    # Restart all services so they reconnect to the new printer
+    try:
+        app.svc.restart_all(await_ready=False)
+    except Exception as err:
+        log.warning(f"Service restart after printer switch raised: {err}")
+
+    log.info(f"Switched active printer: index {old_index} -> {new_index} ({printer.name})")
+    return jsonify({"status": "ok", "printer": {"index": new_index, "name": printer.name, "sn": printer.sn}})
 
 
 @app.get("/api/version")
@@ -175,22 +443,56 @@ def app_api_ankerctl_config_upload():
     Returns:
         A HTML redirect response
     """
-    if request.method != "POST":
-        return web.util.flash_redirect(url_for('app_root'))
     if "login_file" not in request.files:
         return web.util.flash_redirect(url_for('app_root'), "No file found", "danger")
     file = request.files["login_file"]
 
     try:
         web.config.config_import(file, app.config["config"])
+        session["authenticated"] = True
         return web.util.flash_redirect(url_for('app_api_ankerctl_server_reload'),
                                        "AnkerMake Config Imported!", "success")
     except web.config.ConfigImportError as err:
         log.exception(f"Config import failed: {err}")
-        return web.util.flash_redirect(url_for('app_root'), f"Error: {err}", "danger")
+        return web.util.flash_redirect(url_for('app_root'), "Config import failed. Check server logs for details.", "danger")
     except Exception as err:
         log.exception(f"Config import failed: {err}")
-        return web.util.flash_redirect(url_for('app_root'), f"Unexpected Error occurred: {err}", "danger")
+        return web.util.flash_redirect(url_for('app_root'), "An unexpected error occurred. Check server logs for details.", "danger")
+
+
+@app.post("/api/ankerctl/config/login")
+def app_api_ankerctl_config_login():
+    form_data = request.form.to_dict()
+
+    for key in ["login_email", "login_password", "login_country"]:
+        if key not in form_data:
+            return jsonify({"error": f"Error: Missing form entry '{key}'"})
+
+    if not cli.countrycodes.code_to_country(form_data["login_country"]):
+        return jsonify({"error": f"Error: Invalid country code '{form_data['login_country']}'"})
+
+    try:
+        web.config.config_login(
+            form_data['login_email'],
+            form_data['login_password'],
+            form_data['login_country'],
+            form_data.get('login_captcha_id', ''),
+            form_data.get('login_captcha_text', ''),
+            app.config["config"],
+        )
+        flash("AnkerMake Config Imported!", "success")
+        session["authenticated"] = True
+        return jsonify({"redirect": url_for('app_api_ankerctl_server_reload')})
+    except web.config.ConfigImportError as err:
+        if err.captcha:
+            return jsonify({"captcha_id": err.captcha["id"], "captcha_url": err.captcha["img"]})
+        log.exception(f"Config login failed: {err}")
+        flash("Login failed. Check server logs for details.", "danger")
+        return jsonify({"redirect": url_for('app_root')})
+    except Exception as err:
+        log.exception(f"Config login failed: {err}")
+        flash("An unexpected error occurred. Check server logs for details.", "danger")
+        return jsonify({"redirect": url_for('app_root')})
 
 
 @app.get("/api/ankerctl/server/reload")
@@ -205,10 +507,15 @@ def app_api_ankerctl_server_reload():
 
     with config.open() as cfg:
         app.config["login"] = bool(cfg)
+        app.config["video_supported"] = any(
+            printer.model not in PRINTERS_WITHOUT_CAMERA for printer in (cfg.printers if cfg else [])
+        )
         if not cfg:
             return web.util.flash_redirect(url_for('app_root'), "No printers found in config", "warning")
         if "_flashes" in session:
             session["_flashes"].clear()
+        if cfg and not app.svc.svcs:
+            register_services(app)
 
         try:
             app.svc.restart_all(await_ready=False)
@@ -231,14 +538,13 @@ def app_api_files_local():
 
     no_act = not cli.util.parse_http_bool(request.form["print"])
 
-    if no_act:
-        cli.util.http_abort(409, "Upload-only not supported by Ankermake M5")
-
     fd = request.files["file"]
+    with app.config["config"].open() as cfg:
+        rate_limit_mbps = cli.util.resolve_upload_rate_mbps(cfg)
 
     with app.svc.borrow("filetransfer") as ft:
         try:
-            ft.send_file(fd, user_name)
+            ft.send_file(fd, user_name, rate_limit_mbps=rate_limit_mbps, start_print=not no_act)
         except ConnectionError as E:
             log.error(f"Connection error: {E}")
             # This message will be shown in i.e. PrusaSlicer, so attempt to
@@ -247,12 +553,536 @@ def app_api_files_local():
                 503,
                 "Cannot connect to printer!\n" \
                 "\n" \
-                "Please verify that printer is online, and on the same network as ankerctl.\n" \
-                "\n" \
-                f"Exception information: {E}"
+                "Please verify that printer is online, and on the same network as ankerctl."
             )
 
     return {}
+
+
+@app.post("/api/ankerctl/config/upload-rate")
+def app_api_ankerctl_config_upload_rate():
+    config = app.config["config"]
+    if "upload_rate_mbps" not in request.form:
+        return {"error": "upload_rate_mbps missing"}, 400
+
+    try:
+        rate_limit_mbps = int(request.form["upload_rate_mbps"])
+    except ValueError:
+        return {"error": "upload_rate_mbps must be an integer"}, 400
+
+    if rate_limit_mbps not in UPLOAD_RATE_MBPS_CHOICES:
+        return {"error": f"upload_rate_mbps must be one of {', '.join(map(str, UPLOAD_RATE_MBPS_CHOICES))}"}, 400
+
+    with config.modify() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        cfg.upload_rate_mbps = rate_limit_mbps
+
+    return {"status": "ok", "upload_rate_mbps": rate_limit_mbps}
+
+
+@app.get("/api/notifications/settings")
+def app_api_notifications_settings():
+    config = app.config["config"]
+    with config.open() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        apprise_config = _resolve_apprise(cfg)
+
+    return {"apprise": apprise_config}
+
+
+@app.post("/api/notifications/settings")
+def app_api_notifications_settings_update():
+    config = app.config["config"]
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return {"error": "Invalid JSON payload"}, 400
+
+    apprise_payload = payload.get("apprise") if "apprise" in payload else payload
+    if not isinstance(apprise_payload, dict):
+        return {"error": "Invalid apprise payload"}, 400
+
+    with config.modify() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        notifications = _resolve_notifications(cfg)
+        apprise_config = _resolve_apprise(cfg)
+        apprise_config = _deep_update(apprise_config, apprise_payload)
+        notifications["apprise"] = apprise_config
+        cfg.notifications = notifications
+
+    return {"status": "ok", "apprise": apprise_config}
+
+
+@app.post("/api/notifications/test")
+def app_api_notifications_test():
+    config = app.config["config"]
+    payload = request.get_json(silent=True)
+    apprise_payload = None
+    if isinstance(payload, dict):
+        apprise_payload = payload.get("apprise") if "apprise" in payload else payload
+        if apprise_payload is not None and not isinstance(apprise_payload, dict):
+            return {"error": "Invalid apprise payload"}, 400
+
+    with config.open() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        apprise_config = _resolve_apprise(cfg)
+
+    if apprise_payload is not None:
+        apprise_config = _deep_update(apprise_config, apprise_payload)
+
+    # Use explicit settings for snapshot generation test
+    from web.notifications import AppriseNotifier
+    notifier = AppriseNotifier(config, settings=apprise_config)
+    attachments, cleanup = notifier.build_attachments()
+
+    client = AppriseClient(apprise_config)
+    # Manually send via _post to bypass event checks for testing
+    ok, message = client._post("Ankerctl Test", "Test notification sent from ankerctl settings page.", attachments=attachments)
+
+    notifier.cleanup_attachments(cleanup)
+    if ok:
+        return {"status": "ok", "message": message}
+    return {"error": message}, 400
+
+
+@app.get("/api/settings/timelapse")
+def app_api_settings_timelapse():
+    config = app.config["config"]
+    with config.open() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        timelapse_config = cli.model.merge_dict_defaults(
+            getattr(cfg, "timelapse", {}),
+            cli.model.default_timelapse_config()
+        )
+    return {"timelapse": timelapse_config}
+
+
+@app.post("/api/settings/timelapse")
+def app_api_settings_timelapse_update():
+    config = app.config["config"]
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return {"error": "Invalid JSON payload"}, 400
+
+    tl_payload = payload.get("timelapse") if "timelapse" in payload else payload
+    if not isinstance(tl_payload, dict):
+        return {"error": "Invalid timelapse payload"}, 400
+
+    with config.modify() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        
+        current = cli.model.merge_dict_defaults(
+            getattr(cfg, "timelapse", {}),
+            cli.model.default_timelapse_config()
+        )
+        # Deep update not strictly needed if structure is flat, but good practice
+        new_config = _deep_update(current, tl_payload)
+        cfg.timelapse = new_config
+
+    # Reload service
+    with app.svc.borrow("mqttqueue") as mqtt:
+        if mqtt and mqtt.timelapse:
+            mqtt.timelapse.reload_config(config)
+
+    return {"status": "ok", "timelapse": new_config}
+
+
+@app.get("/api/settings/mqtt")
+def app_api_settings_mqtt():
+    config = app.config["config"]
+    with config.open() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        ha_config = cli.model.merge_dict_defaults(
+            getattr(cfg, "home_assistant", {}),
+            cli.model.default_home_assistant_config()
+        )
+    return {"home_assistant": ha_config}
+
+
+@app.post("/api/settings/mqtt")
+def app_api_settings_mqtt_update():
+    config = app.config["config"]
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return {"error": "Invalid JSON payload"}, 400
+
+    ha_payload = payload.get("home_assistant") if "home_assistant" in payload else payload
+    if not isinstance(ha_payload, dict):
+        return {"error": "Invalid home_assistant payload"}, 400
+
+    with config.modify() as cfg:
+        if not cfg:
+            return {"error": "No printers configured"}, 400
+        
+        current = cli.model.merge_dict_defaults(
+            getattr(cfg, "home_assistant", {}),
+            cli.model.default_home_assistant_config()
+        )
+        new_config = _deep_update(current, ha_payload)
+        cfg.home_assistant = new_config
+
+    # Reload service
+    with app.svc.borrow("mqttqueue") as mqtt:
+        if mqtt and mqtt.ha:
+            mqtt.ha.reload_config(config)
+
+    return {"status": "ok", "home_assistant": new_config}
+
+
+# GCode prefixes that are unsafe to send while a print is active
+_UNSAFE_GCODE_PREFIXES = {"G0", "G1", "G28", "G29", "G91", "G90"}
+
+@app.post("/api/printer/gcode")
+def app_api_printer_gcode():
+    payload = request.get_json(silent=True)
+    if not payload or "gcode" not in payload:
+        return {"error": "Missing gcode"}, 400
+
+    gcode = payload["gcode"]
+    lines = [line.strip() for line in gcode.split('\n') if line.strip()]
+
+    with app.svc.borrow("mqttqueue") as mqtt:
+        if mqtt.is_printing:
+            unsafe = [l for l in lines if l.split()[0].upper() in _UNSAFE_GCODE_PREFIXES]
+            if unsafe:
+                return {"error": "Motion commands blocked while printing"}, 409
+        mqtt.send_gcode(gcode)
+
+    return {"status": "ok"}
+
+
+@app.post("/api/printer/control")
+def app_api_printer_control():
+    payload = request.get_json(silent=True)
+    if not payload or "value" not in payload:
+        return {"error": "Missing value"}, 400
+
+    try:
+        value = int(payload["value"])
+    except (ValueError, TypeError):
+        return {"error": "Value must be an integer"}, 400
+
+    with app.svc.borrow("mqttqueue") as mqtt:
+        mqtt.send_print_control(value)
+
+    return {"status": "ok"}
+
+
+@app.post("/api/printer/autolevel")
+def app_api_printer_autolevel():
+    with app.svc.borrow("mqttqueue") as mqtt:
+        if mqtt.is_printing:
+            return {"error": "Auto-leveling blocked while printing"}, 409
+        mqtt.send_auto_leveling()
+    return {"status": "ok"}
+
+
+def _read_bed_leveling_grid():
+    """Read the bilinear bed leveling grid from the printer via M420 V.
+
+    Opens a short-lived MQTT connection, sends M420 V with a 4-second
+    drain window, parses BL-Grid lines from the combined response, and
+    returns the grid as a 2-D JSON array together with min/max statistics.
+
+    Returns:
+        (data_dict, None) on success where data_dict contains grid/min/max/rows/cols.
+        (None, (error_dict, http_status)) on failure.
+    """
+    import re
+    import cli.mqtt as cli_mqtt
+
+    config = app.config.get("config")
+    if not config:
+        return None, ({"error": "No configuration loaded"}, 503)
+
+    with config.open() as cfg:
+        if not cfg:
+            return None, ({"error": "No printers configured"}, 503)
+
+    printer_index = app.config.get("printer_index", 0)
+    insecure = app.config.get("insecure", False)
+
+    try:
+        client = cli_mqtt.mqtt_open(config, printer_index, insecure)
+    except Exception as exc:
+        log.warning(f"bed-leveling: MQTT connect failed: {exc}")
+        return None, ({"error": f"MQTT connection failed: {exc}"}, 503)
+
+    try:
+        msgs = cli_mqtt.mqtt_gcode_dump(client, "M420 V", collect_window=4.0)
+    except Exception as exc:
+        log.warning(f"bed-leveling: gcode dump failed: {exc}")
+        return None, ({"error": f"GCode dump failed: {exc}"}, 503)
+
+    # Combine all resData fields into one text block for parsing
+    combined = "\n".join(
+        msg.get("resData", "") for msg in msgs if isinstance(msg, dict)
+    )
+
+    # Parse lines like: " BL-Grid-0 -0.767 -0.642 ..."
+    bl_pattern = re.compile(r"BL-Grid-\d+\s+([-\d.\s]+)")
+    grid = []
+    for line in combined.splitlines():
+        match = bl_pattern.search(line)
+        if match:
+            values = [float(v) for v in match.group(1).split() if v]
+            if values:
+                grid.append(values)
+
+    if not grid:
+        log.warning("bed-leveling: no BL-Grid data found in MQTT response")
+        return None, ({"error": "No bed leveling data received from printer"}, 504)
+
+    all_values = [v for row in grid for v in row]
+    data = {
+        "grid": grid,
+        "min": min(all_values),
+        "max": max(all_values),
+        "rows": len(grid),
+        "cols": max(len(row) for row in grid),
+    }
+
+    # Persist grid to log directory as a timestamped .bed file
+    log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
+    bed_dir = os.path.join(log_dir, "bed_leveling")
+    try:
+        from datetime import datetime
+        os.makedirs(bed_dir, exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        bed_path = os.path.join(bed_dir, f"{ts}.bed")
+        with open(bed_path, "w") as f:
+            json.dump(data, f)
+        log.info(f"bed-leveling: saved grid to {bed_path}")
+    except Exception as exc:
+        log.warning(f"bed-leveling: could not save grid: {exc}")
+
+    return data, None
+
+
+@app.get("/api/printer/bed-leveling")
+def app_api_printer_bed_leveling():
+    """Read the bilinear bed leveling grid from the printer.
+
+    Opens a short-lived MQTT connection, sends M420 V, parses the BL-Grid
+    response and returns the grid with statistics. Takes up to ~15 seconds.
+    Do not call this during an active print.
+    """
+    data, err = _read_bed_leveling_grid()
+    if err is not None:
+        return err
+    return data
+
+
+@app.get("/api/printer/bed-leveling/last")
+def app_api_printer_bed_leveling_last():
+    """Return the most recently saved bed leveling grid from the log directory."""
+    import glob
+    log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
+    bed_dir = os.path.join(log_dir, "bed_leveling")
+    files = sorted(glob.glob(os.path.join(bed_dir, "*.bed")))
+    if not files:
+        return {"error": "No saved bed leveling data found"}, 404
+    with open(files[-1]) as f:
+        data = json.load(f)
+    data["saved_at"] = os.path.basename(files[-1]).replace(".bed", "")
+    return data
+
+
+@app.get("/api/snapshot")
+def app_api_snapshot():
+    """Capture a JPEG snapshot from the camera and return it as a file download."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    if not app.config.get("video_supported"):
+        return {"error": "Video not supported on this platform"}, 400
+
+    if not shutil.which("ffmpeg"):
+        return {"error": "ffmpeg not installed"}, 500
+
+    vq = app.svc.svcs.get("videoqueue")
+    if not vq:
+        return {"error": "Video service not available"}, 503
+
+    host = os.getenv("FLASK_HOST") or "127.0.0.1"
+    if host in {"0.0.0.0", "::"}:
+        host = "127.0.0.1"
+    port = os.getenv("FLASK_PORT") or "4470"
+    url = f"http://{host}:{port}/video"
+
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+    temp_path = temp_file.name
+    temp_file.close()
+
+    try:
+        result = subprocess.run(
+            ["ffmpeg", "-loglevel", "error", "-nostdin", "-y",
+             "-f", "h264", "-i", url, "-frames:v", "1", temp_path],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10,
+        )
+        if result.returncode != 0:
+            # Retry without -f h264
+            result = subprocess.run(
+                ["ffmpeg", "-loglevel", "error", "-nostdin", "-y",
+                 "-i", url, "-frames:v", "1", temp_path],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10,
+            )
+        if result.returncode != 0 or not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+            return {"error": "Snapshot capture failed"}, 500
+
+        from flask import send_file, after_this_request
+        from datetime import datetime
+
+        @after_this_request
+        def _cleanup(response):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+            return response
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        return send_file(temp_path, mimetype="image/jpeg",
+                         as_attachment=True,
+                         download_name=f"ankerctl_snapshot_{timestamp}.jpg")
+    except (subprocess.TimeoutExpired, OSError) as err:
+        try:
+            os.remove(temp_path)
+        except OSError:
+            pass
+        return {"error": f"Snapshot failed: {err}"}, 500
+
+@app.get("/api/history")
+def app_api_history():
+    """Return print history as JSON with pagination."""
+    limit = request.args.get("limit", 50, type=int)
+    offset = request.args.get("offset", 0, type=int)
+    with app.svc.borrow("mqttqueue") as mqtt:
+        if not mqtt:
+            return {"entries": [], "total": 0}
+        entries = mqtt.history.get_history(limit=limit, offset=offset)
+        total = mqtt.history.get_count()
+    return {"entries": entries, "total": total}
+
+
+@app.delete("/api/history")
+def app_api_history_clear():
+    """Clear all print history."""
+    with app.svc.borrow("mqttqueue") as mqtt:
+        mqtt.history.clear()
+    return {"status": "ok"}
+
+
+@app.get("/api/filaments")
+def app_api_filaments_list():
+    """List all filament profiles."""
+    return {"filaments": app.filaments.list_all()}
+
+
+@app.post("/api/filaments")
+def app_api_filaments_create():
+    """Create a new filament profile."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return {"error": "Invalid JSON payload"}, 400
+    try:
+        profile = app.filaments.create(data)
+    except ValueError as exc:
+        return {"error": str(exc)}, 400
+    return profile, 201
+
+
+@app.put("/api/filaments/<int:profile_id>")
+def app_api_filaments_update(profile_id):
+    """Update an existing filament profile."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return {"error": "Invalid JSON payload"}, 400
+    profile = app.filaments.update(profile_id, data)
+    if profile is None:
+        return {"error": "Profile not found"}, 404
+    return profile
+
+
+@app.delete("/api/filaments/<int:profile_id>")
+def app_api_filaments_delete(profile_id):
+    """Delete a filament profile."""
+    deleted = app.filaments.delete(profile_id)
+    if not deleted:
+        return {"error": "Profile not found"}, 404
+    return {"status": "ok"}
+
+
+@app.post("/api/filaments/<int:profile_id>/apply")
+def app_api_filaments_apply(profile_id):
+    """Send M104/M140 GCode to the printer for the given filament profile."""
+    profile = app.filaments.get(profile_id)
+    if profile is None:
+        return {"error": "Profile not found"}, 404
+    nozzle = profile.get("nozzle_temp_first_layer") or profile.get("nozzle_temp_other_layer") or profile.get("nozzle_temp", 0)
+    bed    = profile.get("bed_temp_first_layer") or profile.get("bed_temp_other_layer") or profile.get("bed_temp", 0)
+    gcode = f"M104 S{nozzle}\nM140 S{bed}"
+    with app.svc.borrow("mqttqueue") as mqtt:
+        mqtt.send_gcode(gcode)
+    return {"status": "ok", "gcode": gcode}
+
+
+@app.post("/api/filaments/<int:profile_id>/duplicate")
+def app_api_filaments_duplicate(profile_id):
+    """Duplicate a filament profile."""
+    profile = app.filaments.duplicate(profile_id)
+    if profile is None:
+        return {"error": "Profile not found"}, 404
+    return profile, 201
+
+
+@app.get("/api/timelapses")
+def app_api_timelapses():
+    """List available timelapse videos."""
+    with app.svc.borrow("mqttqueue") as mqtt:
+        videos = mqtt.timelapse.list_videos()
+        enabled = mqtt.timelapse.enabled
+    return {"videos": videos, "enabled": enabled}
+
+
+@app.get("/api/timelapse/<filename>")
+def app_api_timelapse_download(filename):
+    """Download a timelapse video."""
+    from flask import send_file
+    with app.svc.borrow("mqttqueue") as mqtt:
+        path = mqtt.timelapse.get_video_path(filename)
+    if not path:
+        return {"error": "Video not found"}, 404
+    return send_file(path, mimetype="video/mp4", as_attachment=False, download_name=filename)
+
+
+@app.delete("/api/timelapse/<filename>")
+def app_api_timelapse_delete(filename):
+    """Delete a timelapse video."""
+    with app.svc.borrow("mqttqueue") as mqtt:
+        deleted = mqtt.timelapse.delete_video(filename)
+    if not deleted:
+        return {"error": "Video not found"}, 404
+    return {"status": "ok"}
+
+
+def register_services(app):
+    app.svc.register("pppp", web.service.pppp.PPPPService())
+    if app.config.get("video_supported"):
+        app.svc.register("videoqueue", web.service.video.VideoQueue())
+    app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
+    app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
 
 
 def webserver(config, printer_index, host, port, insecure=False, **kwargs):
@@ -268,18 +1098,211 @@ def webserver(config, printer_index, host, port, insecure=False, **kwargs):
     Returns:
         - None
     """
+    # Filament profile store — initialized once at startup
+    config_root = str(config.config_root)
+    app.filaments = FilamentStore(db_path=f"{config_root}/filament.db")
+
+    # Resolve API key: ENV var takes precedence over config file
+    api_key = cli.config.resolve_api_key(config)
+    app.config["api_key"] = api_key
+    if api_key:
+        log.info(f"API key authentication enabled (key: {api_key[:4]}...{api_key[-4:]})")
+    else:
+        log.info("No API key set. Authentication disabled.")
+
+    printer_index_locked = os.getenv("PRINTER_INDEX") is not None
+    app.config["printer_index_locked"] = printer_index_locked
+
     with config.open() as cfg:
+        # If PRINTER_INDEX env var is not set, use the persisted active_printer_index
+        # from the config file (only if it is within valid range).
+        if not printer_index_locked and cfg and hasattr(cfg, "active_printer_index"):
+            saved = cfg.active_printer_index
+            if 0 <= saved < len(cfg.printers):
+                printer_index = saved
+
         if cfg and printer_index >= len(cfg.printers):
             log.critical(f"Printer number {printer_index} out of range, max printer number is {len(cfg.printers)-1} ")
+        video_supported = False
+        if cfg and printer_index < len(cfg.printers):
+            video_supported = cfg.printers[printer_index].model not in PRINTERS_WITHOUT_CAMERA
         app.config["config"] = config
         app.config["login"] = bool(cfg)
         app.config["printer_index"] = printer_index
         app.config["port"] = port
         app.config["host"] = host
         app.config["insecure"] = insecure
+        app.config["video_supported"] = video_supported
         app.config.update(kwargs)
-        app.svc.register("pppp", web.service.pppp.PPPPService())
-        app.svc.register("videoqueue", web.service.video.VideoQueue())
-        app.svc.register("mqttqueue", web.service.mqtt.MqttQueue())
-        app.svc.register("filetransfer", web.service.filetransfer.FileTransferService())
-        app.run(host=host, port=port)
+        if cfg:
+            register_services(app)
+
+    @app.context_processor
+    def inject_debug():
+        return {"debug_mode": os.getenv("ANKERCTL_DEV_MODE", "false").lower() == "true"}
+
+    app.run(host=host, port=port)
+
+
+if os.getenv("ANKERCTL_DEV_MODE", "false").lower() == "true":
+    @app.get("/api/debug/state")
+    def app_api_debug_state():
+        with app.svc.borrow("mqttqueue") as mqtt:
+            if not mqtt:
+                return {"error": "Service unavailable"}, 503
+            return mqtt.get_state()
+
+    @app.post("/api/debug/config")
+    def app_api_debug_config():
+        payload = request.get_json(silent=True) or {}
+        debug_logging = payload.get("debug_logging")
+        with app.svc.borrow("mqttqueue") as mqtt:
+            if not mqtt:
+                return {"error": "Service unavailable"}, 503
+            if debug_logging is not None:
+                mqtt.set_debug_logging(bool(debug_logging))
+        return {"status": "ok"}
+
+    @app.post("/api/debug/simulate")
+    def app_api_debug_simulate():
+        payload = request.get_json(silent=True) or {}
+        event_type = payload.get("type")
+        event_payload = payload.get("payload") or {}
+        with app.svc.borrow("mqttqueue") as mqtt:
+            if not mqtt:
+                return {"error": "Service unavailable"}, 503
+            mqtt.simulate_event(event_type, event_payload)
+        return {"status": "ok"}
+
+    @app.get("/api/debug/logs")
+    def app_api_debug_logs_list():
+        import glob
+        log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
+        files = glob.glob(os.path.join(log_dir, "*.log"))
+        return {"files": sorted([os.path.basename(f) for f in files])}
+
+    @app.get("/api/debug/logs/<filename>")
+    def app_api_debug_logs_content(filename):
+        import collections
+        log_dir = os.getenv("ANKERCTL_LOG_DIR", "/logs")
+        # basic path traversal protection
+        if "/" in filename or "\\" in filename or ".." in filename:
+            return {"error": "Invalid filename"}, 400
+
+        filepath = os.path.join(log_dir, filename)
+        if not os.path.exists(filepath):
+            return {"error": "File not found"}, 404
+
+        lines_count = request.args.get("lines", 500, type=int)
+
+        try:
+            with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+                # Use collections.deque to keep only last N lines efficiently
+                lines = list(collections.deque(f, lines_count))
+                content = "".join(lines)
+                return {"filename": filename, "content": content}
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+    @app.get("/api/debug/services")
+    def app_api_debug_services():
+        result = {}
+        for name, svc in app.svc.svcs.items():
+            result[name] = {
+                "state": svc.state.name,
+                "wanted": svc.wanted,
+                "refs": app.svc.refs.get(name, 0),
+                "type": type(svc).__name__,
+            }
+        return {"services": result}
+
+    @app.post("/api/debug/services/<name>/restart")
+    def app_api_debug_service_restart(name):
+        if name not in app.svc.svcs:
+            return {"error": f"Unknown service: {name}"}, 404
+        svc = app.svc.svcs[name]
+        threading.Thread(target=svc.restart, daemon=True).start()
+        return {"status": "restarting"}
+
+    @app.get("/api/debug/bed-leveling")
+    def app_api_debug_bed_leveling():
+        """Read the bed leveling grid from the printer (debug endpoint).
+
+        Delegates to _read_bed_leveling_grid() for the actual work.
+        """
+        data, err = _read_bed_leveling_grid()
+        if err is not None:
+            return err
+        return data
+
+
+# GET endpoints that modify state or expose sensitive debug information
+# and therefore require auth even though they are GET requests.
+_PROTECTED_GET_PATHS = {
+    "/api/ankerctl/server/reload",
+    "/api/debug/state",
+    "/api/debug/logs",
+    "/api/debug/services",
+}
+
+# POST endpoints needed for initial printer setup (config import / login)
+_SETUP_PATHS = {
+    "/api/ankerctl/config/upload",
+    "/api/ankerctl/config/login",
+}
+
+
+@app.before_request
+def _check_api_key():
+    """Middleware: enforce API key on write operations (POST/PUT/DELETE).
+
+    Read-only requests (GET) are allowed without auth so the WebUI
+    stays accessible.  The API key is only required for mutations.
+    Setup endpoints are exempted when no printer is configured yet.
+    """
+    api_key = app.config.get("api_key")
+    if not api_key:
+        # No key configured → allow all requests (backwards compatible)
+        return None
+
+    # Allow static assets without auth
+    if request.path.startswith("/static/"):
+        return None
+
+    # Check ?apikey= URL parameter early (before GET shortcut) so it always
+    # sets the session cookie — even on unprotected GET requests.
+    url_key = request.args.get("apikey")
+    if url_key == api_key:
+        session["authenticated"] = True
+        # Strip ?apikey= from URL so it doesn't stay in browser history
+        from urllib.parse import urlencode, parse_qs, urlparse
+        from flask import redirect
+        params = parse_qs(urlparse(request.url).query)
+        params.pop("apikey", None)
+        clean_url = request.path
+        if params:
+            clean_url += "?" + urlencode(params, doseq=True)
+        return redirect(clean_url)
+
+    # Check X-Api-Key header (slicer / programmatic access)
+    if request.headers.get("X-Api-Key") == api_key:
+        return None
+
+    # Allow read-only (GET/HEAD/OPTIONS) unless the path is explicitly protected.
+    # Also protect any path under /api/debug/ (prefix match for dynamic segments).
+    is_debug_path = request.path.startswith("/api/debug/")
+    if request.method in ("GET", "HEAD", "OPTIONS") and request.path not in _PROTECTED_GET_PATHS and not is_debug_path:
+        return None
+
+    # Allow setup endpoints when no printer is configured yet
+    if not app.config.get("login") and request.path in _SETUP_PATHS:
+        return None
+
+    # --- From here on, auth is required ---
+
+    # Check session cookie (browser)
+    if session.get("authenticated"):
+        return None
+
+    # Unauthorized
+    return jsonify({"error": "Unauthorized. Provide API key via X-Api-Key header or ?apikey= parameter."}), 401

@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 
 import json
+import secrets
+import uuid
 import click
 import platform
-import logging as log
+import getpass
+import webbrowser
+import logging
+
+log = logging.getLogger("main")
+
 from os import path, environ
 from rich import print  # you need python3
 from tqdm import tqdm
@@ -15,12 +22,14 @@ import cli.mqtt
 import cli.util
 import cli.pppp
 import cli.checkver  # check python version
+import cli.countrycodes
 
 import libflagship.httpapi
 import libflagship.logincache
 import libflagship.seccode
 
 from libflagship.util import enhex
+from cli.util import patch_gcode_time
 from libflagship.mqtt import MqttMsgType
 from libflagship.pppp import PktLanSearch, P2PCmdType, P2PSubCmdType, FileTransfer
 from libflagship.ppppapi import FileUploadInfo, PPPPError
@@ -67,18 +76,21 @@ def main(ctx, pppp_dump, verbose, quiet, insecure, printer):
     ctx.ensure_object(Environment)
     env = ctx.obj
     levels = {
-        -3: log.CRITICAL,
-        -2: log.ERROR,
-        -1: log.WARNING,
-        0: log.INFO,
-        1: log.DEBUG,
+        -3: logging.CRITICAL,
+        -2: logging.ERROR,
+        -1: logging.WARNING,
+        0: logging.INFO,
+        1: logging.DEBUG,
     }
     env.config   = cli.config.configmgr()
     env.insecure = insecure
     env.level = max(-3, min(verbose - quiet, 1))
     env.pppp_dump = pppp_dump
+    
+    import os
+    log_dir = environ.get("ANKERCTL_LOG_DIR", "/logs" if os.path.isdir("/logs") else None)
+    cli.logfmt.setup_logging(levels[env.level], log_dir=log_dir)
 
-    cli.logfmt.setup_logging(levels[env.level])
 
     if insecure:
         import urllib3
@@ -178,6 +190,61 @@ def mqtt_rename_printer(env, newname):
     cli.mqtt.mqtt_command(client, cmd)
 
 
+@mqtt.command("gcode-dump")
+@click.argument("gcode", required=True)
+@click.option("--window", "-w", default=3.0, show_default=True,
+              help="Seconds to keep collecting after first response")
+@click.option("--drain", "-d", default=0, show_default=True,
+              help="After main response, send this many M114 drain probes to read "
+                   "accumulated ring-buffer output. Useful for long commands like "
+                   "M503 when no print is running.")
+@pass_env
+def mqtt_gcode_dump(env, gcode, window, drain):
+    """
+    Send a GCode command and collect ALL ring-buffer output.
+
+    The printer's 328-byte ring buffer accumulates GCode output. This command
+    reads the initial response, then optionally sends drain probes (M114) to
+    read any remaining buffered output from long commands like M503 or M420 V.
+
+    Examples:
+
+      ankerctl.py mqtt gcode-dump M503 --drain 5
+
+      ankerctl.py mqtt gcode-dump "M420 V" --drain 3
+    """
+    client = cli.mqtt.mqtt_open(env.config, env.printer_index, env.insecure)
+
+    all_data = []
+
+    # Main command
+    msgs = cli.mqtt.mqtt_gcode_dump(client, gcode, collect_window=window)
+    if not msgs:
+        log.error("No response from printer")
+        return
+    for m in msgs:
+        all_data.append(m.get("resData", ""))
+
+    # Drain probes — each M114 flushes the current ring-buffer snapshot
+    import time
+    for probe_num in range(drain):
+        time.sleep(0.3)
+        probe_msgs = cli.mqtt.mqtt_gcode_dump(client, "M114", collect_window=1.0)
+        if not probe_msgs:
+            break
+        chunk = probe_msgs[0].get("resData", "")
+        all_data.append(chunk)
+        # Stop draining once ring buffer is stable (same position twice)
+        ringbuf_pos = probe_msgs[0].get("resLen", 0)
+        if probe_num > 0 and ringbuf_pos <= 64 and "echo:" not in chunk and "z1:" not in chunk:
+            break
+
+    full_output = "".join(all_data)
+    total_bytes = len(full_output)
+    click.echo(f"[{len(all_data)} chunk(s), {total_bytes} bytes total]\n")
+    click.echo(full_output)
+
+
 @mqtt.command("gcode")
 @pass_env
 def mqtt_gcode(env):
@@ -235,8 +302,10 @@ def pppp_lan_search(env):
 @pppp.command("print-file")
 @click.argument("file", required=True, type=click.File("rb"), metavar="<file>")
 @click.option("--no-act", "-n", is_flag=True, help="Test upload only (do not print)")
+@click.option("--upload-rate-mbps", type=int, default=None,
+              help="Upload rate limit in Mbps (choices: 5, 10, 25, 50, 100)")
 @pass_env
-def pppp_print_file(env, file, no_act):
+def pppp_print_file(env, file, no_act, upload_rate_mbps):
     """
     Transfer print job to printer, and start printing.
 
@@ -247,11 +316,19 @@ def pppp_print_file(env, file, no_act):
     env.load_config()
     api = cli.pppp.pppp_open(env.config, env.printer_index, dumpfile=env.pppp_dump)
 
-    data = file.read()
-    fui = FileUploadInfo.from_file(file.name, user_name="ankerctl", user_id="-", machine_id="-")
+    user_id = "-"
+    with env.config.open() as cfg:
+        rate_limit_mbps = cli.util.resolve_upload_rate_mbps(cfg, override=upload_rate_mbps)
+        if cfg and cfg.account and cfg.account.user_id:
+            user_id = cfg.account.user_id
+
+    data = patch_gcode_time(file.read())
+    file_uuid = uuid.uuid4().hex.upper()
+    fui = FileUploadInfo.from_data(data, file.name, user_name="ankerctl", user_id=user_id, machine_id=file_uuid)
     log.info(f"Going to upload {fui.size} bytes as {fui.name!r}")
+    log.info(f"Using upload rate limit: {rate_limit_mbps} Mbps")
     try:
-        cli.pppp.pppp_send_file(api, fui, data)
+        cli.pppp.pppp_send_file(api, fui, data, rate_limit_mbps=rate_limit_mbps)
         if no_act:
             log.info("File upload complete")
         else:
@@ -338,10 +415,38 @@ def http_calc_sec_code(duid, mac):
     print(f"sec_code: {sec_code}")
 
 
+def _find_login_file():
+    """Auto-detect login.json / user_info file from default install locations."""
+    useros = platform.system()
+
+    darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
+    winfilelocs = [
+        path.expandvars(r'%APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info'),
+        path.expandvars(r'%APPDATA%\eufyMake Studio Profile\cache\offline\user_info'),
+        path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json'),
+        path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json'),
+    ]
+
+    try:
+        if useros == 'Darwin':
+            return open(darfileloc, 'r')
+        elif useros == 'Windows':
+            for winfileloc in winfilelocs:
+                if path.isfile(winfileloc):
+                    return open(winfileloc, 'r')
+            raise FileNotFoundError
+        else:
+            log.critical("This platform does not support autodetection. Please specify file location")
+    except FileNotFoundError:
+        log.critical("Failed to import file - check if you are logged into Ankerslicer")
+
+    return None
+
+
 @main.group("config", help="View and update configuration")
 @click.pass_context
 def config(ctx):
-    if ctx.invoked_subcommand in {"import", "decode"}:
+    if ctx.invoked_subcommand in {"import", "decode", "set-password", "remove-password", "login"}:
         return
 
     env = ctx.obj
@@ -357,24 +462,7 @@ def config_decode(env, fd):
     """
 
     if fd is None:
-        useros = platform.system()
-
-        darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
-        winfileloc1 = path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json')
-        winfileloc2 = path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json')
-
-        try:
-            if useros == 'Darwin':
-                fd = open(darfileloc, 'r')
-            elif useros == 'Windows':
-                if path.isfile(winfileloc1):
-                    fd = open(winfileloc1, 'r')
-                else:
-                    fd = open(winfileloc2, 'r')
-            else:
-                log.critical("This platform does not support autodetection. Please specify file location")
-        except FileNotFoundError:
-            log.critical("Failed to import file - check if you are logged into Ankerslicer")
+        fd = _find_login_file()
 
     log.info("Loading file..")
 
@@ -394,46 +482,91 @@ def config_import(env, fd):
     """
 
     if fd is None:
-        useros = platform.system()
-
-        darfileloc = path.expanduser('~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json')
-        winfileloc1 = path.expandvars(r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json')
-        winfileloc2 = path.expandvars(r'%LOCALAPPDATA%\Ankermake\login.json')
-
-        try:
-            if useros == 'Darwin':
-                fd = open(darfileloc, 'r')
-            elif useros == 'Windows':
-                if path.isfile(winfileloc1):
-                    fd = open(winfileloc1, 'r')
-                else:
-                    fd = open(winfileloc2, 'r')
-            else:
-                log.critical("This platform does not support autodetection. Please specify file location")
-        except FileNotFoundError:
-            log.critical("Failed to import file - check if you are logged into Ankerslicer")
+        fd = _find_login_file()
 
     log.info("Loading cache..")
 
-    # extract auth token
+    # load the login configuration from the provided file
     cache = libflagship.logincache.load(fd.read())["data"]
-    auth_token = cache["auth_token"]
 
-    # extract account region
-    region = libflagship.logincache.guess_region(cache["ab_code"])
-
-    try:
-        config = cli.config.load_config_from_api(auth_token, region, env.insecure)
-    except libflagship.httpapi.APIError as E:
-        log.critical(f"Config import failed: {E} "
-                    "(auth token might be expired: make sure Ankermake Slicer can connect, then try again)")
-    except Exception as E:
-        log.critical(f"Config import failed: {E}")
-
-    # save config to json file named `ankerctl/default.json`
-    env.config.save("default", config)
+    # import the remaining configuration from the server
+    cli.config.import_config_from_server(env.config, cache, env.insecure)
 
     log.info("Finished import")
+
+
+@config.command("login")
+@click.argument("country", required=False, metavar="[COUNTRY (2 letter code)]")
+@click.argument("email", required=False)
+@click.argument("password", required=False)
+@pass_env
+def config_login(env, country, email, password):
+    """
+    Fetch configuration by logging in with provided credentials.
+    """
+    try:
+        with env.config.open() as cfg:
+            if cfg.account:
+                if country is None and cfg.account.country:
+                    country = cfg.account.country
+                    log.info(f"Country: {country.upper()}")
+                if email is None:
+                    email = cfg.account.email
+                    log.info(f"Email address: {email}")
+    except KeyError:
+        pass
+
+    if email is None:
+        email = input("Please enter your email address: ").strip()
+
+    if password is None:
+        password = getpass.getpass("Please enter your password: ")
+
+    if country:
+        country = country.upper()
+    while not cli.countrycodes.code_to_country(country):
+        country = input("Please enter your country (2 digit code): ").strip().upper()
+
+    region = libflagship.logincache.guess_region(country)
+    login = None
+    tries = 3
+    captcha = {"id": None, "answer": None}
+    while not login and tries > 0:
+        tries -= 1
+        try:
+            login = cli.config.fetch_config_by_login(
+                email,
+                password,
+                region,
+                env.insecure,
+                captcha_id=captcha["id"],
+                captcha_answer=captcha["answer"],
+            )
+            break
+        except libflagship.httpapi.APIError as E:
+            if E.json and "data" in E.json:
+                data = E.json["data"]
+                if "captcha_id" in data:
+                    captcha = {
+                        "id": data["captcha_id"],
+                        "img": data["item"]
+                    }
+
+        if captcha["id"]:
+            log.warning("Login requires solving a captcha")
+            if webbrowser.open(captcha["img"], new=2):
+                captcha["answer"] = input("Please enter the captcha answer: ").strip()
+            else:
+                log.critical("Cannot open webbrowser for displaying captcha, aborting.")
+                tries = 0
+        else:
+            log.critical(f"Unknown login error: {E}")
+            tries = 0
+
+    if login:
+        log.info("Login successful, importing configuration from server..")
+        cli.config.import_config_from_server(env.config, login, env.insecure)
+        log.info("Finished import")
 
 
 @config.command("show")
@@ -455,6 +588,8 @@ def config_show(env):
         print(f"    auth_token: {cfg.account.auth_token[:10]}...<REDACTED>")
         print(f"    email:      {cfg.account.email}")
         print(f"    region:     {cfg.account.region.upper()}")
+        print(f"    country:    {'<REDACTED>' if cfg.account.country else ''}")
+        print(f"    upload_rate_mbps: {getattr(cfg, 'upload_rate_mbps', 'unset')}")
         print()
 
         log.info("Printers:")
@@ -473,6 +608,41 @@ def config_show(env):
             print(f"    api_hosts: {', '.join(p.api_hosts)}")
             print(f"    p2p_hosts: {', '.join(p.p2p_hosts)}")
             print()
+
+
+@config.command("set-password")
+@click.argument("key", required=False)
+@pass_env
+def config_set_password(env, key):
+    """
+    Set an API key for web server authentication.
+
+    If no KEY is given, a random one is generated.
+    The key acts as an OctoPrint-compatible X-Api-Key.
+    Allowed characters: [a-zA-Z0-9_-], minimum 16 characters.
+    """
+    if key is None:
+        key = secrets.token_hex(16)
+    else:
+        ok, err = cli.config.validate_api_key(key)
+        if not ok:
+            log.critical(err)
+            return
+
+    env.config.set_api_key(key)
+    log.info(f"API key set: {key}")
+    log.info("Use this key as X-Api-Key header in your slicer,")
+    log.info("or pass it as ?apikey= URL parameter in your browser.")
+
+
+@config.command("remove-password")
+@pass_env
+def config_remove_password(env):
+    """
+    Remove the API key and disable authentication.
+    """
+    env.config.remove_api_key()
+    log.info("API key removed. Authentication disabled.")
 
 
 @main.group("webserver", help="Built-in webserver support")

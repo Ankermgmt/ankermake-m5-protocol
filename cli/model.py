@@ -1,7 +1,88 @@
 import json
+import os
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from libflagship.util import unhex, enhex
+
+
+DEFAULT_UPLOAD_RATE_MBPS = 10
+UPLOAD_RATE_MBPS_CHOICES = (5, 10, 25, 50, 100)
+
+
+def default_apprise_config():
+    return {
+        "enabled": False,
+        "server_url": "",
+        "key": "",
+        "tag": "",
+        "events": {
+            "print_started": True,
+            "print_finished": True,
+            "print_failed": True,
+            "gcode_uploaded": True,
+            "print_progress": True,
+        },
+        "progress": {
+            "interval_percent": 25,
+            "include_image": False,
+            "snapshot_quality": "hd",
+            "snapshot_fallback": True,
+        },
+        "templates": {
+            "print_started": "Print started: {filename}",
+            "print_finished": "Print finished: {filename} ({duration})",
+            "print_failed": "Print failed: {filename} ({reason})",
+            "gcode_uploaded": "Upload complete: {filename} ({size})",
+            "print_progress": "Progress: {percent}% - {filename}",
+        },
+    }
+
+
+def default_notifications_config():
+    return {
+        "apprise": default_apprise_config(),
+    }
+
+
+def default_timelapse_config():
+    return {
+        "enabled": os.getenv("TIMELAPSE_ENABLED", "false").lower() in ("true", "1", "yes"),
+        "interval": int(os.getenv("TIMELAPSE_INTERVAL_SEC", 30)),
+        "max_videos": int(os.getenv("TIMELAPSE_MAX_VIDEOS", 10)),
+        "save_persistent": os.getenv("TIMELAPSE_SAVE_PERSISTENT", "true").lower() in ("true", "1", "yes"),
+        "output_dir": os.getenv("TIMELAPSE_CAPTURES_DIR", "/captures"),
+        "light": os.getenv("TIMELAPSE_LIGHT", None),
+    }
+
+
+def default_home_assistant_config():
+    return {
+        "enabled": os.getenv("HA_MQTT_ENABLED", "false").lower() in ("true", "1", "yes"),
+        "mqtt_host": os.getenv("HA_MQTT_HOST", "localhost"),
+        "mqtt_port": int(os.getenv("HA_MQTT_PORT", 1883)),
+        "mqtt_username": os.getenv("HA_MQTT_USER", ""),
+        "mqtt_password": os.getenv("HA_MQTT_PASSWORD", ""),
+        "discovery_prefix": os.getenv("HA_MQTT_DISCOVERY_PREFIX", "homeassistant"),
+        "node_id": "ankermake_m5", # Not typically env var configured, but derived
+    }
+
+
+def merge_dict_defaults(data, defaults):
+    if not isinstance(data, dict):
+        return defaults
+
+    merged = {}
+    for key, default_value in defaults.items():
+        if isinstance(default_value, dict):
+            merged[key] = merge_dict_defaults(data.get(key), default_value)
+        else:
+            merged[key] = data.get(key, default_value)
+
+    for key, value in data.items():
+        if key not in merged:
+            merged[key] = value
+
+    return merged
 
 
 class Serialize:
@@ -50,6 +131,12 @@ class Printer(Serialize):
     p2p_hosts: str
     p2p_duid: str
     p2p_key: str
+    p2p_did: str = "" # Added field just in case, but keeping original structure
+
+    @classmethod
+    def from_dict(cls, data):
+         # If new fields added to printer, verify here.
+         return super().from_dict(data)
 
 
 @dataclass
@@ -58,6 +145,13 @@ class Account(Serialize):
     region: str
     user_id: str
     email: str
+    country: str = ""
+
+    @classmethod
+    def from_dict(cls, data):
+        if "country" not in data:
+            data = {**data, "country": ""}
+        return super().from_dict(data)
 
     @property
     def mqtt_username(self):
@@ -72,6 +166,41 @@ class Account(Serialize):
 class Config(Serialize):
     account: Account
     printers: list[Printer]
+    upload_rate_mbps: int = DEFAULT_UPLOAD_RATE_MBPS
+    notifications: dict = field(default_factory=default_notifications_config)
+    timelapse: dict = field(default_factory=default_timelapse_config)
+    home_assistant: dict = field(default_factory=default_home_assistant_config)
+    active_printer_index: int = field(default=0)
+
+    @classmethod
+    def from_dict(cls, data):
+        if "upload_rate_mbps" not in data:
+            data = {**data, "upload_rate_mbps": DEFAULT_UPLOAD_RATE_MBPS}
+
+        if "active_printer_index" not in data:
+            data = {**data, "active_printer_index": 0}
+        else:
+            try:
+                data = {**data, "active_printer_index": int(data["active_printer_index"])}
+            except (ValueError, TypeError):
+                data = {**data, "active_printer_index": 0}
+
+        data = {
+            **data,
+            "notifications": merge_dict_defaults(
+                data.get("notifications"),
+                default_notifications_config(),
+            ),
+            "timelapse": merge_dict_defaults(
+                data.get("timelapse"),
+                default_timelapse_config(),
+            ),
+            "home_assistant": merge_dict_defaults(
+                data.get("home_assistant"),
+                default_home_assistant_config(),
+            ),
+        }
+        return super().from_dict(data)
 
     def __bool__(self):
         return bool(self.account)

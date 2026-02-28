@@ -28,7 +28,7 @@ struct _MqttMsg
     # Magic constant: 1
     m4: u8
 
-    # Magic constant: 2
+    # Magic constant: 2 (AnkerMake M5) or 1 (AnkerMake M5C)
     m5: u8
 
     # Magic constant: 5

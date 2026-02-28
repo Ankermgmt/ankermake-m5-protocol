@@ -2,30 +2,60 @@
 {% import "macro.html" as macro %}
 
 {% block title -%}
-    ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
+ankerctl{% if printer %} - {{ printer.name }} ({{ printer.sn }}){% endif %}
 {%- endblock %}
 
 {% block contents %}
-    {% if configure %}
-        {% include "tabs/home.html" %}
-        {% include "tabs/instructions.html" %}
-    {% endif %}
+{% if configure %}
+{% include "tabs/home.html" %}
+{% include "tabs/gcode.html" %}
+{% include "tabs/history.html" %}
+{% include "tabs/filaments.html" %}
+{% include "tabs/timelapse.html" %}
+{% include "tabs/instructions.html" %}
+{% endif %}
 
-    {% include "tabs/setup.html" %}
+{% include "tabs/setup.html" %}
+
+{% if debug_mode %}
+{% include "tabs/debug.html" %}
+{% endif %}
 {% endblock %}
 
 {% block menu %}
-    {% if configure %}
-        {% call macro.menu_button(id="home-tab", target="home", active=configure) %}
-            {{ macro.bi_icon("house", "Home") }}
-        {% endcall %}
+{% if configure %}
+{% call macro.menu_button(id="home-tab", target="home", active=configure) %}
+{{ macro.bi_icon("house", "Home") }}
+{% endcall %}
 
-        {% call macro.menu_button(id="instructions-tab", target="instructions") %}
-            {{ macro.bi_icon("list-check", "Instructions") }}
-        {% endcall %}
-    {% endif %}
+{% call macro.menu_button(id="gcode-tab", target="gcode") %}
+{{ macro.bi_icon("terminal", "GCode") }}
+{% endcall %}
 
-    {% call macro.menu_button(id="setup-tab", target="setup", active=not configure) %}
-        {{ macro.bi_icon("gear-fill", "Setup") }}
-    {% endcall %}
+{% call macro.menu_button(id="history-tab", target="history") %}
+{{ macro.bi_icon("clock-history", "History") }}
+{% endcall %}
+
+{% call macro.menu_button(id="filaments-tab", target="filaments") %}
+{{ macro.bi_icon("droplet-fill", "Filaments") }}
+{% endcall %}
+
+{% call macro.menu_button(id="timelapse-tab", target="timelapse") %}
+{{ macro.bi_icon("camera-reels", "Timelapse") }}
+{% endcall %}
+
+{% call macro.menu_button(id="instructions-tab", target="instructions") %}
+{{ macro.bi_icon("list-check", "Instructions") }}
+{% endcall %}
+{% endif %}
+
+{% call macro.menu_button(id="setup-tab", target="setup", active=not configure) %}
+{{ macro.bi_icon("gear-fill", "Setup") }}
+{% endcall %}
+
+{% if debug_mode %}
+{% call macro.menu_button(id="debug-tab", target="debug") %}
+{{ macro.bi_icon("bug-fill", "Debug") }}
+{% endcall %}
+{% endif %}
 {% endblock %}

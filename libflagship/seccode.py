@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import hashlib
-import random
+import secrets
 from libflagship.util import enhex
 
 
@@ -55,7 +55,7 @@ def gen_check_code_v1(base_code, seed):
 
 
 def gen_rand_seed(mac):
-    rnd = random.randint(10000000,99999999)
+    rnd = secrets.randbelow(90000000) + 10000000
 
     suffix = cal_hw_id_suffix(mac)
     txtbuf = str(1000 - suffix) + str(rnd)

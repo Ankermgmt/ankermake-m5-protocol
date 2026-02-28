@@ -1,4 +1,12 @@
 *~
 __pycache__
 .DS_Store
+.vscode
 /settings.json
+documentation/done/
+tmp/
+secrets/
+captures
+captures/
+dump/
+.env

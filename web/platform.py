@@ -13,7 +13,7 @@ def login_path(platform: str):
     if platform == 'macos':
         return '~/Library/Application Support/AnkerMake/AnkerMake_64bit_fp/login.json'
     elif platform == 'windows':
-        return r'%LOCALAPPDATA%\Ankermake\AnkerMake_64bit_fp\login.json'
+        return r'%APPDATA%\Roaming\eufyMake Studio Profile\cache\offline\user_info'
     else:
-        return 'Unsupported OS: You must supply path to login.json'
+        return 'Unsupported OS: You must supply path to login.json/user_info'
     

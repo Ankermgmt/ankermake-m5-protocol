@@ -26,8 +26,8 @@ fi
 WINEPREFIX=${WINEPREFIX:-$HOME/.wine}
 
 for root in "${APPDATA}" "${HOME}"; do
-    for prefix in "Library/Application Support" "$WINEPREFIX/drive_c/users/${USER}/AppData/Local"; do
-        for suffix in "AnkerMake/AnkerMake_64bit_fp/login.json" "Ankermake/AnkerMake_64bit_fp/login.json"; do
+    for prefix in "Library/Application Support" "$WINEPREFIX/drive_c/users/${USER}/AppData/Local" "$WINEPREFIX/drive_c/users/${USER}/AppData/Roaming"; do
+        for suffix in "eufyMake Studio Profile/cache/offline/user_info" "AnkerMake/AnkerMake_64bit_fp/login.json" "Ankermake/AnkerMake_64bit_fp/login.json"; do
             name="$root/$prefix/$suffix";
             if [ -f "${name}" ]; then
                 echo "** Importing ${name} credentials **";

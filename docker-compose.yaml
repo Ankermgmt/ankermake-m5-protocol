@@ -1,20 +1,26 @@
 services:
     ankerctl:
-        image: ghcr.io/ankermgmt/ankermake-m5-protocol:latest
+        image: django01982/ankerctl:local
         container_name: ankerctl
         restart: unless-stopped
-        build: .
 
         # host-mode networking is required for pppp communication with the
         # printer, since it is an asymmetrical udp protocol.
         network_mode: host
 
-        # bind to localhost by default
-        environment:
-            - FLASK_HOST=127.0.0.1
-            - FLASK_PORT=4470
+        # Load environment variables from .env file.
+        # Copy .env.example to .env and adjust values as needed.
+        env_file:
+            - .env
+
         volumes:
-            - ankerctl_vol:/root/.config/ankerctl
+            - ankerctl_vol:/home/ankerctl/.config/ankerctl
+            - captures_vol:/captures
+            - logs_vol:/logs
 
 volumes:
     ankerctl_vol:
+    captures_vol:
+    logs_vol:
+
+
