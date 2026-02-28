@@ -208,9 +208,11 @@
 
                     <!-- ===== TOOLS TAB ===== -->
                     <div class="tab-pane fade" id="setup-tools" role="tabpanel" aria-labelledby="setup-tools-tab">
-                        <div class="row g-3">
-                            <div class="col-lg-6">
-                                <div class="card">
+
+                        <!-- Upper: Auto-Leveling + Bed Level Map -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-lg-5">
+                                <div class="card h-100">
                                     <div class="card-header fs-4">
                                         <i class="bi bi-rulers"></i> Auto-Leveling
                                     </div>
@@ -229,8 +231,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-6">
-                                <div class="card">
+                            <div class="col-lg-7">
+                                <div class="card h-100">
                                     <div class="card-header fs-4 d-flex justify-content-between align-items-center">
                                         <span><i class="bi bi-grid-3x3"></i> Bed Level Map</span>
                                         <div class="d-flex gap-2">
@@ -269,84 +271,79 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Compare Snapshots section -->
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <button class="btn btn-link text-decoration-none p-0 fw-semibold"
-                                            type="button"
-                                            data-bs-toggle="collapse"
-                                            data-bs-target="#bed-compare-body"
-                                            aria-expanded="false"
-                                            aria-controls="bed-compare-body">
-                                            <i class="bi bi-arrow-left-right"></i> Compare Snapshots
-                                        </button>
+                        <!-- Lower: Compare Snapshots (full width, independent scroll) -->
+                        <div class="card">
+                            <div class="card-header">
+                                <button class="btn btn-link text-decoration-none p-0 fw-semibold"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#bed-compare-body"
+                                    aria-expanded="false"
+                                    aria-controls="bed-compare-body">
+                                    <i class="bi bi-arrow-left-right"></i> Compare Snapshots
+                                </button>
+                            </div>
+                            <div class="collapse" id="bed-compare-body">
+                                <div class="card-body">
+                                    <div class="row g-3 align-items-end mb-3">
+                                        <div class="col-md-5">
+                                            <label class="form-label small" for="bed-snap-a-select">Snapshot A (Reference)</label>
+                                            <select class="form-select form-select-sm" id="bed-snap-a-select">
+                                                <option value="" disabled selected>No snapshots saved yet</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label class="form-label small" for="bed-snap-b-select">Snapshot B</label>
+                                            <select class="form-select form-select-sm" id="bed-snap-b-select">
+                                                <option value="live">Read live from printer</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button id="bed-compare-btn" type="button" class="btn btn-sm btn-primary w-100">
+                                                <i class="bi bi-arrow-left-right"></i> Compare
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="collapse" id="bed-compare-body">
-                                        <div class="card-body">
-                                            <div class="row g-3 align-items-end mb-3">
-                                                <div class="col-md-5">
-                                                    <label class="form-label small" for="bed-snap-a-select">Snapshot A (Reference)</label>
-                                                    <select class="form-select form-select-sm" id="bed-snap-a-select">
-                                                        <option value="" disabled selected>No snapshots saved yet</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-5">
-                                                    <label class="form-label small" for="bed-snap-b-select">Snapshot B</label>
-                                                    <select class="form-select form-select-sm" id="bed-snap-b-select">
-                                                        <option value="live">Read live from printer</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <button id="bed-compare-btn" type="button" class="btn btn-sm btn-primary w-100">
-                                                        <i class="bi bi-arrow-left-right"></i> Compare
-                                                    </button>
-                                                </div>
-                                            </div>
 
-                                            <div id="bed-compare-status" class="mb-2"></div>
+                                    <div id="bed-compare-status" class="mb-2"></div>
 
-                                            <div id="bed-compare-result" style="display:none;">
-                                                <div class="d-flex gap-3" style="overflow-x:auto;">
-                                                    <div style="flex:1 1 0; min-width:240px;">
-                                                        <div class="card border-secondary">
-                                                            <div class="card-header small fw-semibold">Snapshot A</div>
-                                                            <div class="card-body p-2">
-                                                                <div id="bed-compare-a-wrap"></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div style="flex:1 1 0; min-width:240px;">
-                                                        <div class="card border-secondary">
-                                                            <div class="card-header small fw-semibold">Diff (B &minus; A)</div>
-                                                            <div class="card-body p-2">
-                                                                <div id="bed-compare-diff-wrap"></div>
-                                                                <div id="bed-compare-diff-stats" class="mt-2 small text-muted"></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div style="flex:1 1 0; min-width:240px;">
-                                                        <div class="card border-secondary">
-                                                            <div class="card-header small fw-semibold">Snapshot B</div>
-                                                            <div class="card-body p-2">
-                                                                <div id="bed-compare-b-wrap"></div>
-                                                            </div>
-                                                        </div>
+                                    <div id="bed-compare-result" style="display:none;">
+                                        <div class="bed-compare-scroll">
+                                            <div class="bed-compare-grid">
+                                                <div class="card border-secondary">
+                                                    <div class="card-header small fw-semibold">Snapshot A</div>
+                                                    <div class="card-body p-2">
+                                                        <div id="bed-compare-a-wrap"></div>
                                                     </div>
                                                 </div>
-                                            </div>
-
-                                            <hr class="mt-4">
-                                            <h6 class="small fw-semibold text-muted mb-2">Saved Snapshots</h6>
-                                            <div id="bed-snap-list" class="vstack gap-1">
-                                                <span class="text-muted small">No snapshots saved yet.</span>
+                                                <div class="card border-secondary">
+                                                    <div class="card-header small fw-semibold">Diff (B &minus; A)</div>
+                                                    <div class="card-body p-2">
+                                                        <div id="bed-compare-diff-wrap"></div>
+                                                        <div id="bed-compare-diff-stats" class="mt-2 small text-muted"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="card border-secondary">
+                                                    <div class="card-header small fw-semibold">Snapshot B</div>
+                                                    <div class="card-body p-2">
+                                                        <div id="bed-compare-b-wrap"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    <hr class="mt-4">
+                                    <h6 class="small fw-semibold text-muted mb-2">Saved Snapshots</h6>
+                                    <div id="bed-snap-list" class="vstack gap-1">
+                                        <span class="text-muted small">No snapshots saved yet.</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                     </div>
 
                     <!-- ===== NOTIFICATIONS TAB ===== -->

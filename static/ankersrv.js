@@ -924,27 +924,33 @@ $(function () {
      * @param {number}     min      - global minimum value
      * @param {number}     max      - global maximum value
      * @param {string}     targetId - ID of wrapper element (default: "dbg-bedlevel-map-wrap")
+     * @param {object}     [opts]   - optional settings
+     * @param {boolean}    [opts.compact] - use smaller cells for side-by-side compare layout
      */
-    function bedLevelRenderGrid(grid, min, max, targetId) {
+    function bedLevelRenderGrid(grid, min, max, targetId, opts) {
         const wrapId = targetId || "dbg-bedlevel-map-wrap";
+        const compact = opts && opts.compact;
         const range = Math.max(Math.abs(min), Math.abs(max));
         const rows = grid.length;
         const cols = rows > 0 ? grid[0].length : 0;
 
         // Build a table: header row + one row per grid row
         const table = document.createElement("table");
-        table.style.cssText = "border-collapse:separate; border-spacing:3px; font-size:0.75em; font-family:monospace;";
+        const fontSize = compact ? "0.65em" : "0.75em";
+        const spacing = compact ? "2px" : "3px";
+        table.style.cssText = `border-collapse:separate; border-spacing:${spacing}; font-size:${fontSize}; font-family:monospace;`;
 
         // Column header row
         const thead = document.createElement("thead");
         const headerRow = document.createElement("tr");
+        const hdrPad = compact ? "1px 3px" : "2px 6px";
         // Empty corner cell above the row-label column
         const cornerTh = document.createElement("th");
-        cornerTh.style.cssText = "padding:2px 6px; color:#6c757d; text-align:center;";
+        cornerTh.style.cssText = `padding:${hdrPad}; color:#6c757d; text-align:center;`;
         headerRow.appendChild(cornerTh);
         for (let c = 0; c < cols; c++) {
             const th = document.createElement("th");
-            th.style.cssText = "padding:2px 6px; color:#6c757d; text-align:center;";
+            th.style.cssText = `padding:${hdrPad}; color:#6c757d; text-align:center;`;
             th.textContent = c;
             headerRow.appendChild(th);
         }
@@ -955,12 +961,14 @@ $(function () {
         // at the bottom of the table and Row N-1 (back) at the top, matching
         // the view when standing in front of the printer.
         const tbody = document.createElement("tbody");
+        const cellPad = compact ? "2px 3px" : "5px 8px";
+        const cellRadius = compact ? "2px" : "3px";
         for (let r = rows - 1; r >= 0; r--) {
             const tr = document.createElement("tr");
 
             // Row label
             const rowTh = document.createElement("th");
-            rowTh.style.cssText = "padding:2px 6px; color:#6c757d; text-align:right; white-space:nowrap;";
+            rowTh.style.cssText = `padding:${hdrPad}; color:#6c757d; text-align:right; white-space:nowrap;`;
             rowTh.textContent = r;
             tr.appendChild(rowTh);
 
@@ -975,8 +983,8 @@ $(function () {
                 td.style.cssText = [
                     `background:${bg}`,
                     `color:${textColor}`,
-                    "padding:5px 8px",
-                    "border-radius:3px",
+                    `padding:${cellPad}`,
+                    `border-radius:${cellRadius}`,
                     "text-align:center",
                     "white-space:nowrap",
                     "cursor:default",
@@ -1259,14 +1267,15 @@ $(function () {
             return;
         }
 
-        // Render grids
-        bedLevelRenderGrid(dataA.grid, dataA.min, dataA.max, "bed-compare-a-wrap");
-        bedLevelRenderGrid(dataB.grid, dataB.min, dataB.max, "bed-compare-b-wrap");
+        // Render grids — compact mode for side-by-side compare layout
+        const cmpOpts = { compact: true };
+        bedLevelRenderGrid(dataA.grid, dataA.min, dataA.max, "bed-compare-a-wrap", cmpOpts);
+        bedLevelRenderGrid(dataB.grid, dataB.min, dataB.max, "bed-compare-b-wrap", cmpOpts);
 
         const diffFlat = diffGrid.flat();
         const diffMin = Math.min(...diffFlat);
         const diffMax = Math.max(...diffFlat);
-        bedLevelRenderGrid(diffGrid, diffMin, diffMax, "bed-compare-diff-wrap");
+        bedLevelRenderGrid(diffGrid, diffMin, diffMax, "bed-compare-diff-wrap", cmpOpts);
 
         // Diff stats
         if (diffStatsEl) {
